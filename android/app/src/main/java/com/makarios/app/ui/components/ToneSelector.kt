@@ -1,11 +1,12 @@
 package com.makarios.app.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -16,7 +17,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -31,102 +31,115 @@ fun ToneSelector(
     onCreateWallpaperClicked: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(modifier = modifier.fillMaxWidth()) {
-        // Tone Pills & Another Row
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 6.dp)
+    ) {
+        // Tone Triad & Cycle Action Row
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 22.dp, vertical = 14.dp),
+                .padding(vertical = 8.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Tones on Left
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            // Editorial Tone Triad
+            Row(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(ParchmentWarm)
+                    .border(0.75.dp, HairlineRule, RoundedCornerShape(4.dp))
+                    .padding(3.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
                 AffirmationTone.values().forEach { tone ->
                     val isSelected = tone == selectedTone
                     val label = when (tone) {
-                        AffirmationTone.STILL -> "Still"
-                        AffirmationTone.RESOLUTE -> "Resolute"
-                        AffirmationTone.GENTLE -> "Gentle"
+                        AffirmationTone.STILL -> "STILL"
+                        AffirmationTone.RESOLUTE -> "RESOLUTE"
+                        AffirmationTone.GENTLE -> "GENTLE"
                     }
 
                     Box(
                         modifier = Modifier
-                            .clip(RoundedCornerShape(999.dp))
-                            .background(if (isSelected) ToneResoluteSand else Color.Transparent)
+                            .clip(RoundedCornerShape(3.dp))
+                            .background(if (isSelected) InkLampblack else Color.Transparent)
                             .clickable { onToneSelected(tone) }
-                            .padding(horizontal = 14.dp, vertical = 7.dp),
+                            .padding(horizontal = 10.dp, vertical = 6.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = label,
-                            color = if (isSelected) TextPrimary else TextSecondary,
-                            fontFamily = FontFamily.SansSerif,
-                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-                            fontSize = 13.sp
+                            color = if (isSelected) GoldLeaf else InkIronGall,
+                            fontFamily = BodyFontFamily,
+                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
+                            fontSize = 10.sp,
+                            letterSpacing = 1.4.sp
                         )
                     }
                 }
             }
 
-            // "Another" Button on Right
+            // "Cycle Folio" Action
             Row(
                 modifier = Modifier
-                    .clip(RoundedCornerShape(999.dp))
+                    .clip(RoundedCornerShape(4.dp))
                     .clickable(onClick = onAnotherClicked)
                     .padding(horizontal = 8.dp, vertical = 6.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                horizontalArrangement = Arrangement.spacedBy(5.dp)
             ) {
                 Icon(
                     imageVector = Icons.Default.Refresh,
-                    contentDescription = "Cycle affirmation",
-                    tint = TextPrimary,
-                    modifier = Modifier.size(14.dp)
+                    contentDescription = "Cycle folio declaration",
+                    tint = InkLampblack,
+                    modifier = Modifier.size(13.dp)
                 )
                 Text(
-                    text = "Another",
-                    color = TextPrimary,
-                    fontFamily = FontFamily.SansSerif,
+                    text = "CYCLE FOLIO",
+                    color = InkLampblack,
+                    fontFamily = BodyFontFamily,
                     fontWeight = FontWeight.SemiBold,
-                    fontSize = 13.sp
+                    fontSize = 10.sp,
+                    letterSpacing = 1.4.sp
                 )
             }
         }
 
-        // Primary Action Button: Create Wallpaper
-        Box(
+        Spacer(modifier = Modifier.height(6.dp))
+
+        // Luxury Editorial CTA: Illuminate Wallpaper
+        Button(
+            onClick = onCreateWallpaperClicked,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = InkLampblack,
+                contentColor = GoldLeaf
+            ),
+            shape = RoundedCornerShape(4.dp),
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 22.dp, vertical = 8.dp)
+                .height(48.dp)
+                .border(0.75.dp, BorderBroadsheet, RoundedCornerShape(4.dp))
         ) {
-            Button(
-                onClick = onCreateWallpaperClicked,
-                colors = ButtonDefaults.buttonColors(containerColor = BrandPlum),
-                shape = RoundedCornerShape(999.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp)
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Image,
-                        contentDescription = null,
-                        tint = AmberGold,
-                        modifier = Modifier.size(17.dp)
-                    )
-                    Text(
-                        text = "Create Wallpaper",
-                        color = Color.White,
-                        fontFamily = FontFamily.SansSerif,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 14.5.sp,
-                        letterSpacing = 0.3.sp
-                    )
-                }
+                Icon(
+                    imageVector = Icons.Default.AutoAwesome,
+                    contentDescription = null,
+                    tint = GoldLeaf,
+                    modifier = Modifier.size(15.dp)
+                )
+                Text(
+                    text = "ILLUMINATE WALLPAPER",
+                    color = GoldLeaf,
+                    fontFamily = BodyFontFamily,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 12.sp,
+                    letterSpacing = 2.sp
+                )
             }
         }
     }

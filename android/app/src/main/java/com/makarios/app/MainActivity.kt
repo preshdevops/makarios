@@ -4,14 +4,18 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.BookmarkBorder
+import androidx.compose.material.icons.filled.MenuBook
+import androidx.compose.material.icons.filled.Widgets
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.makarios.app.ui.screens.ExploreScreen
@@ -36,58 +40,74 @@ fun MainAppScaffold() {
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        containerColor = PorcelainBackground,
+        containerColor = ParchmentBackground,
         bottomBar = {
-            NavigationBar(
-                containerColor = SurfaceWhite,
-                tonalElevation = 0.dp,
-                modifier = Modifier.padding(top = 1.dp)
-            ) {
-                val tabs = listOf(
-                    "Home" to Icons.Default.LocalFireDepartment,
-                    "Explore" to Icons.Default.Explore,
-                    "Create" to Icons.Default.AutoAwesome,
-                    "Saved" to Icons.Default.BookmarkBorder,
-                    "Profile" to Icons.Default.Eco
+            Column {
+                // Delicate Top Hairline Rule
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(0.75.dp)
+                        .background(HairlineRule)
                 )
 
-                tabs.forEachIndexed { index, (label, icon) ->
-                    val isSelected = selectedTab == index
-                    NavigationBarItem(
-                        selected = isSelected,
-                        onClick = { selectedTab = index },
-                        icon = {
-                            Icon(
-                                imageVector = icon,
-                                contentDescription = label,
-                                tint = if (isSelected) BrandPlum else TextMuted
-                            )
-                        },
-                        label = {
-                            Text(
-                                text = label,
-                                color = if (isSelected) BrandPlum else TextMuted,
-                                fontSize = 11.sp
-                            )
-                        },
-                        colors = NavigationBarItemDefaults.colors(
-                            indicatorColor = Color.Transparent
-                        )
+                NavigationBar(
+                    containerColor = PaperSurface,
+                    tonalElevation = 0.dp,
+                    modifier = Modifier.height(64.dp)
+                ) {
+                    val tabs = listOf(
+                        "TODAY" to Icons.Default.MenuBook,
+                        "ATELIER" to Icons.Default.Widgets,
+                        "SAVED" to Icons.Default.BookmarkBorder
                     )
+
+                    tabs.forEachIndexed { index, (label, icon) ->
+                        val isSelected = selectedTab == index
+                        NavigationBarItem(
+                            selected = isSelected,
+                            onClick = { selectedTab = index },
+                            icon = {
+                                Icon(
+                                    imageVector = icon,
+                                    contentDescription = label,
+                                    tint = if (isSelected) RubricVermilion else InkMuted,
+                                    modifier = Modifier.size(19.dp)
+                                )
+                            },
+                            label = {
+                                Text(
+                                    text = label,
+                                    color = if (isSelected) RubricVermilion else InkMuted,
+                                    fontFamily = BodyFontFamily,
+                                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                                    fontSize = 9.5.sp,
+                                    letterSpacing = 1.6.sp
+                                )
+                            },
+                            colors = NavigationBarItemDefaults.colors(
+                                indicatorColor = Color.Transparent
+                            )
+                        )
+                    }
                 }
             }
         }
     ) { innerPadding ->
         when (selectedTab) {
             0 -> HomeScreen(
-                onNavigateToCreate = { _ -> selectedTab = 2 },
+                onNavigateToCreate = { _ -> selectedTab = 1 },
                 modifier = Modifier.padding(innerPadding)
             )
             1 -> ExploreScreen(
                 modifier = Modifier.padding(innerPadding)
             )
+            2 -> HomeScreen(
+                onNavigateToCreate = { _ -> selectedTab = 1 },
+                modifier = Modifier.padding(innerPadding)
+            )
             else -> HomeScreen(
-                onNavigateToCreate = { _ -> selectedTab = 2 },
+                onNavigateToCreate = { _ -> selectedTab = 1 },
                 modifier = Modifier.padding(innerPadding)
             )
         }

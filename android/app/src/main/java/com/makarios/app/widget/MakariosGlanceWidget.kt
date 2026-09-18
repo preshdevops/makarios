@@ -44,32 +44,32 @@ class MakariosGlanceWidget : GlanceAppWidget() {
                 Text(
                     text = reference.uppercase(),
                     style = TextStyle(
-                        color = ColorProvider(Color(0xFFC46851)),
+                        color = ColorProvider(Color(0xFFB34335)),
                         fontWeight = FontWeight.Bold,
-                        fontSize = 11.sp
+                        fontSize = 10.5.sp
                     )
                 )
 
-                Spacer(modifier = GlanceModifier.height(8.dp))
+                Spacer(modifier = GlanceModifier.height(6.dp))
 
                 // Headline
                 Text(
-                    text = declaration.uppercase(),
+                    text = "“${declaration.uppercase()}”",
                     style = TextStyle(
-                        color = ColorProvider(Color(0xFF1F1118)),
+                        color = ColorProvider(Color(0xFF161311)),
                         fontWeight = FontWeight.Bold,
-                        fontSize = 15.sp
+                        fontSize = 14.5.sp
                     ),
                     maxLines = 2
                 )
 
-                Spacer(modifier = GlanceModifier.height(6.dp))
+                Spacer(modifier = GlanceModifier.height(5.dp))
 
                 // Reflection
                 Text(
                     text = contextText,
                     style = TextStyle(
-                        color = ColorProvider(Color(0xFF6C625D)),
+                        color = ColorProvider(Color(0xFF5A524C)),
                         fontSize = 11.sp
                     ),
                     maxLines = 2

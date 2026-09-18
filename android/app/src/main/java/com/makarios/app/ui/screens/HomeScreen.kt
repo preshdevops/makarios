@@ -1,16 +1,12 @@
 package com.makarios.app.ui.screens
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.makarios.app.data.AffirmationRepository
 import com.makarios.app.data.AffirmationTone
 import com.makarios.app.ui.components.*
@@ -21,7 +17,7 @@ fun HomeScreen(
     onNavigateToCreate: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var promptText by remember { mutableStateOf("Doubt and fear in my new lead") }
+    var promptText by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf("Confidence") }
     var selectedTone by remember { mutableStateOf(AffirmationTone.RESOLUTE) }
     var currentAffirmation by remember { mutableStateOf(AffirmationRepository.starterAffirmation) }
@@ -29,42 +25,19 @@ fun HomeScreen(
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        containerColor = PorcelainBackground
+        containerColor = ParchmentBackground
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
-                .padding(bottom = 32.dp)
+                .padding(bottom = 36.dp)
         ) {
-            // Brand Header
+            // Editorial Masthead
             HeaderBar()
 
-            // Main Question Heading
-            Text(
-                text = "What are you carrying today?",
-                color = TextPrimary,
-                fontFamily = FontFamily.Serif,
-                fontSize = 27.sp,
-                lineHeight = 34.sp,
-                modifier = Modifier.padding(horizontal = 22.dp, vertical = 10.dp)
-            )
-
-            // Prompt Input Pill
-            PromptInput(
-                value = promptText,
-                onValueChange = { promptText = it },
-                onSubmit = {
-                    currentAffirmation = AffirmationRepository.matchAffirmation(
-                        prompt = promptText,
-                        category = selectedCategory,
-                        tone = selectedTone
-                    )
-                }
-            )
-
-            // Category Filter Pills
+            // Canonical Topic Index
             CategoryPills(
                 categories = AffirmationRepository.categories,
                 selectedCategory = selectedCategory,
@@ -78,15 +51,15 @@ fun HomeScreen(
                 }
             )
 
-            // Central Truth Card
+            // The Centerpiece: Illuminated Broadside Plate
             TruthCard(
                 affirmation = currentAffirmation,
                 isSaved = isSaved,
                 onToggleSave = { isSaved = !isSaved },
-                onCardClick = { /* Detail modal or dialog */ }
+                onCardClick = { /* Detail view or contemplation */ }
             )
 
-            // Tone Switcher, Another & Wallpaper CTA
+            // Literary Tone Selector & Illuminate Wallpaper Action
             ToneSelector(
                 selectedTone = selectedTone,
                 onToneSelected = { tone ->
@@ -102,6 +75,23 @@ fun HomeScreen(
                 },
                 onCreateWallpaperClicked = {
                     onNavigateToCreate(currentAffirmation.id)
+                }
+            )
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // Contemplative Inscribe Field
+            PromptInput(
+                value = promptText,
+                onValueChange = { promptText = it },
+                onSubmit = {
+                    if (promptText.isNotBlank()) {
+                        currentAffirmation = AffirmationRepository.matchAffirmation(
+                            prompt = promptText,
+                            category = selectedCategory,
+                            tone = selectedTone
+                        )
+                    }
                 }
             )
         }

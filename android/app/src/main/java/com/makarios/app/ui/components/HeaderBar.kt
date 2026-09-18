@@ -3,20 +3,16 @@ package com.makarios.app.ui.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImage
 import com.makarios.app.ui.theme.*
 
 @Composable
@@ -24,69 +20,66 @@ fun HeaderBar(
     subtitle: String? = null,
     modifier: Modifier = Modifier
 ) {
-    Row(
+    Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 22.dp, vertical = 14.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+            .padding(top = 16.dp, bottom = 4.dp)
     ) {
-        // Brand Squircle & Title
         Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp, vertical = 6.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
+            // Left: Folio Date / Issue
+            Column {
+                Text(
+                    text = (subtitle ?: "THE DAILY CANON · FOLIO XXIV").uppercase(),
+                    color = RubricVermilion,
+                    fontFamily = BodyFontFamily,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 9.sp,
+                    letterSpacing = 2.sp
+                )
+                Spacer(modifier = Modifier.height(3.dp))
+                Text(
+                    text = "M A K A R I O S",
+                    color = InkLampblack,
+                    fontFamily = DisplayFontFamily,
+                    fontWeight = FontWeight.Normal,
+                    fontSize = 21.sp,
+                    letterSpacing = 4.sp
+                )
+            }
+
+            // Right: Refined Editorial Monogram
             Box(
                 modifier = Modifier
-                    .size(32.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(BrandPlum),
+                    .size(34.dp)
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(ParchmentWarm)
+                    .border(0.75.dp, BorderBroadsheet, RoundedCornerShape(4.dp)),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "M",
-                    color = Color.White,
-                    fontFamily = FontFamily.Serif,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 17.sp
+                    text = "✤",
+                    color = GoldLeaf,
+                    fontSize = 15.sp,
+                    textAlign = TextAlign.Center
                 )
-            }
-
-            Column {
-                Text(
-                    text = "Makarios",
-                    color = TextPrimary,
-                    fontFamily = FontFamily.Serif,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 19.sp,
-                    letterSpacing = 0.2.sp
-                )
-                if (subtitle != null) {
-                    Text(
-                        text = subtitle.uppercase(),
-                        color = TextMuted,
-                        fontFamily = FontFamily.SansSerif,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 9.sp,
-                        letterSpacing = 1.2.sp
-                    )
-                }
             }
         }
 
-        // Circular User Avatar
+        Spacer(modifier = Modifier.height(10.dp))
+
+        // Delicate Hairline Rule separating masthead from folio content
         Box(
             modifier = Modifier
-                .size(36.dp)
-                .clip(CircleShape)
-                .border(1.5.dp, BorderSubtle, CircleShape)
-        ) {
-            AsyncImage(
-                model = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80",
-                contentDescription = "User profile avatar",
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop
-            )
-        }
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp)
+                .height(0.75.dp)
+                .background(HairlineRule)
+        )
     }
 }
