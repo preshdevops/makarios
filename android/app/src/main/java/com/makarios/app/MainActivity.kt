@@ -80,14 +80,14 @@ fun MainAppScaffold() {
     ) { innerPadding ->
         when (selectedTab) {
             0 -> HomeScreen(
-                onNavigateToCreate = { selectedTab = 2 },
+                onNavigateToCreate = { _ -> selectedTab = 2 },
                 modifier = Modifier.padding(innerPadding)
             )
             1 -> ExploreScreen(
                 modifier = Modifier.padding(innerPadding)
             )
             else -> HomeScreen(
-                onNavigateToCreate = { selectedTab = 2 },
+                onNavigateToCreate = { _ -> selectedTab = 2 },
                 modifier = Modifier.padding(innerPadding)
             )
         }
