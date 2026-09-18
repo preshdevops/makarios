@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Makarios</string>
+    <string name="widget_name">Everyday Presence</string>
+    <string name="widget_description">Glanceable daily biblical declarations and scripture anchoring.</string>
+</resources>
