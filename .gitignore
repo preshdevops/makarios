@@ -17,3 +17,12 @@ captures/
 # documentation & specs
 makarios_product_requirements_document.md
 *prd*.md
+
+# Local Agent & Impeccable tooling (local only, excluded from repo)
+.agent/
+.agents/
+.claude/
+.codex/
+.gemini/
+.opencode/
+PRODUCT.md
