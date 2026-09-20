@@ -271,8 +271,12 @@ fun WidgetStudioScreen(
                             spotColor = Espresso.copy(alpha = 0.15f)
                         )
                         .clip(RoundedCornerShape(26.dp))
-                        .background(
-                            if (selectedSurface == WidgetSurface.LOCK_SCREEN) AtmosphericGradient else Color(0xFFEFEBE4)
+                        .then(
+                            if (selectedSurface == WidgetSurface.LOCK_SCREEN) {
+                                Modifier.background(AtmosphericGradient)
+                            } else {
+                                Modifier.background(Color(0xFFEFEBE4))
+                            }
                         )
                         .padding(20.dp)
                 ) {

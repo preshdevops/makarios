@@ -558,7 +558,7 @@ private fun WriteStage(
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
-                                    text = ""${seed.declaration}"",
+                                    text = "“${seed.declaration}”",
                                     fontFamily = DisplayFontFamily,
                                     fontSize = 14.sp,
                                     lineHeight = 20.sp,
@@ -659,7 +659,7 @@ private fun MatchStage(
             Column {
                 // Declaration
                 Text(
-                    text = ""$declaration"",
+                    text = "“$declaration”",
                     fontFamily = DisplayFontFamily,
                     fontWeight = FontWeight.Normal,
                     fontSize = 22.sp,
@@ -682,7 +682,7 @@ private fun MatchStage(
 
                 // Scripture
                 Text(
-                    text = ""$scripture"",
+                    text = "“$scripture”",
                     fontFamily = DisplayFontFamily,
                     fontStyle = FontStyle.Italic,
                     fontWeight = FontWeight.Normal,
@@ -968,7 +968,7 @@ private fun DesignStage(
 
                     // Declaration text
                     Text(
-                        text = ""$declaration"",
+                        text = "“$declaration”",
                         fontFamily = DisplayFontFamily,
                         fontWeight = FontWeight.Normal,
                         fontSize = 17.sp,
