@@ -21,21 +21,22 @@ Makarios is a sacred, typographic-led Christian affirmation app. Its signature f
 
 | Token | Hex / Value | Semantic Role |
 |---|---|---|
-| `Porcelain` | `#FAF8F5` | Primary warm ground / canvas background |
-| `PorcelainWarm` | `#EAE3D8` | Warm almond/sand secondary background, pill containers |
-| `Surface` | `#FFFFFF` | Crisp white card surface |
-| `SurfaceMuted` | `#F5F2ED` | Muted input and search fields |
-| `Espresso` | `#1F1118` | Deep espresso-plum primary text, buttons, and active tabs |
-| `EspressoLight` | `#3D2E35` | Secondary display text |
-| `Stone` | `#6B5E66` | Scripture text, body copy |
-| `StoneMuted` | `#9C9297` | Captions, metadata, search placeholder |
-| `Terracotta` | `#C46851` | Primary brand accent — warm salmon/terracotta |
-| `TerracottaLight` | `#FAEDE8` | Soft terracotta background wash |
-| `Sage` | `#5A7362` | Secondary accent — eucalyptus sage |
-| `SageLight` | `#EEF3EE` | Soft sage background wash |
-| `AmberGold` | `#D4AF37` | Sacred gold accent |
-| `Border` | `#E8E2D8` | 1dp card borders, dividers |
-| `AtmosphericGradient` | `#331E2A` → `#1F1118` → `#150B10` | Fullscreen detail, hero cards, atmospheric wallpaper |
+| `Porcelain` | `#FBF9F5` | Primary warm ground — warm alabaster linen |
+| `PorcelainWarm` | `#F3EFE8` | Soft almond/oat neutral secondary background, indicator pills |
+| `Surface` | `#FFFFFF` | Pure crisp white card surface |
+| `SurfaceMuted` | `#F6F3EE` | Muted input and search fields |
+| `Espresso` | `#2C2622` | Deep warm charcoal-umber ink for primary text and dark elements |
+| `EspressoLight` | `#453E38` | Secondary display text |
+| `Stone` | `#787069` | Scripture text, body copy — warm driftwood |
+| `StoneMuted` | `#A39B93` | Captions, metadata, search placeholder |
+| `Terracotta` | `#A85842` | Primary brand accent — quiet earthy terracotta clay |
+| `TerracottaLight` | `#F7EBE7` | Soft terracotta blush wash |
+| `Sage` | `#607768` | Secondary accent — muted eucalyptus sage |
+| `SageLight` | `#F0F4F1` | Soft sage mist wash |
+| `AmberGold` | `#C49B45` | Sacred warm amber/ochre accent |
+| `Border` | `#ECE7DF` | Delicate warm hairline border |
+| `BorderSubtle` | `Color(0x0A2C2622)` | 4% alpha translucent border (~0.5dp) replacing harsh 1dp borders |
+| `AtmosphericGradient` | `#342E2B` → `#24201D` → `#171513` | Candlelit twilight sanctuary gradient |
 
 ---
 
