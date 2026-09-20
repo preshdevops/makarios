@@ -1,7 +1,6 @@
 package com.makarios.app.ui.components
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -15,7 +14,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -34,129 +32,96 @@ fun TruthCard(
     onCardClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Box(
+    Column(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 20.dp, vertical = 8.dp)
             .shadow(
                 elevation = 2.dp,
-                shape = RoundedCornerShape(8.dp),
-                spotColor = InkLampblack.copy(alpha = 0.08f)
+                shape = RoundedCornerShape(16.dp),
+                spotColor = Espresso.copy(alpha = 0.06f)
             )
-            .clip(RoundedCornerShape(8.dp))
-            .background(PaperSurface)
-            .border(1.dp, BorderBroadsheet, RoundedCornerShape(8.dp))
-            .clickable(onClick = onCardClick)
+            .clip(RoundedCornerShape(16.dp))
+            .background(Surface)
+            .clickable(onClick = onCardClick),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Column(
+        // Photo — full-width, rounded top
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .height(180.dp)
         ) {
-            // Folio Header Bar
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Rubric Category & Folio Number
-                Text(
-                    text = "FOLIO № 07 · ${affirmation.category.uppercase()}",
-                    fontFamily = BodyFontFamily,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 10.sp,
-                    letterSpacing = 2.2.sp,
-                    color = RubricVermilion
-                )
-
-                // Refined Bookmark Action
-                Box(
-                    modifier = Modifier
-                        .size(28.dp)
-                        .clickable(onClick = onToggleSave),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = if (isSaved) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
-                        contentDescription = "Save declaration",
-                        tint = if (isSaved) GoldLeaf else InkMuted,
-                        modifier = Modifier.size(18.dp)
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(18.dp))
-
-            // The Central Declaration in Majestic Newsreader Serif
-            Text(
-                text = "“${affirmation.declaration}”",
-                fontFamily = DisplayFontFamily,
-                fontWeight = FontWeight.Normal,
-                fontSize = 25.sp,
-                lineHeight = 35.sp,
-                letterSpacing = (-0.3).sp,
-                textAlign = TextAlign.Center,
-                color = InkLampblack,
-                modifier = Modifier.padding(horizontal = 4.dp)
+            AsyncImage(
+                model = affirmation.imageUrl,
+                contentDescription = "Contemplative imagery",
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Sacred Asterism Divider
-            Text(
-                text = "— ✤ —",
-                color = GoldLeaf,
-                fontSize = 13.sp,
-                textAlign = TextAlign.Center
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Supporting Scripture Passage in Poetic Italic
-            Text(
-                text = "\"${affirmation.scriptureText}\"",
-                fontFamily = DisplayFontFamily,
-                fontStyle = FontStyle.Italic,
-                fontWeight = FontWeight.Normal,
-                fontSize = 15.sp,
-                lineHeight = 23.sp,
-                textAlign = TextAlign.Center,
-                color = InkIronGall,
-                modifier = Modifier.padding(horizontal = 8.dp)
-            )
-
-            Spacer(modifier = Modifier.height(14.dp))
-
-            // Biblical Reference in Tracked Small-Caps
-            Text(
-                text = affirmation.reference.uppercase(),
-                fontFamily = BodyFontFamily,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 10.5.sp,
-                letterSpacing = 2.5.sp,
-                textAlign = TextAlign.Center,
-                color = RubricVermilion
-            )
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // Matted Fine-Art Plate Window
+            // Bookmark overlay — top-right
             Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(140.dp)
-                    .clip(RoundedCornerShape(4.dp))
-                    .background(PaperMuted)
-                    .border(0.75.dp, HairlineRule, RoundedCornerShape(4.dp))
+                    .align(Alignment.TopEnd)
+                    .padding(12.dp)
+                    .size(32.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(Surface.copy(alpha = 0.85f))
+                    .clickable(onClick = onToggleSave),
+                contentAlignment = Alignment.Center
             ) {
-                AsyncImage(
-                    model = affirmation.imageUrl,
-                    contentDescription = "Contemplative architectural plate",
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
+                Icon(
+                    imageVector = if (isSaved) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
+                    contentDescription = "Save",
+                    tint = if (isSaved) Terracotta else Stone,
+                    modifier = Modifier.size(18.dp)
                 )
             }
         }
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // Declaration
+        Text(
+            text = "\u201C${affirmation.declaration}\u201D",
+            fontFamily = DisplayFontFamily,
+            fontWeight = FontWeight.Normal,
+            fontSize = 22.sp,
+            lineHeight = 31.sp,
+            letterSpacing = (-0.2).sp,
+            textAlign = TextAlign.Center,
+            color = Espresso,
+            modifier = Modifier.padding(horizontal = 20.dp)
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Scripture passage
+        Text(
+            text = "\u201C${affirmation.scriptureText}\u201D",
+            fontFamily = DisplayFontFamily,
+            fontStyle = FontStyle.Italic,
+            fontWeight = FontWeight.Normal,
+            fontSize = 15.sp,
+            lineHeight = 23.sp,
+            textAlign = TextAlign.Center,
+            color = Stone,
+            modifier = Modifier.padding(horizontal = 24.dp)
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // Scripture reference
+        Text(
+            text = affirmation.reference.uppercase(),
+            fontFamily = BodyFontFamily,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 11.sp,
+            letterSpacing = 1.5.sp,
+            textAlign = TextAlign.Center,
+            color = Terracotta
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
     }
 }

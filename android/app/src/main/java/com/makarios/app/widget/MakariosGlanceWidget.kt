@@ -32,7 +32,7 @@ class MakariosGlanceWidget : GlanceAppWidget() {
         Box(
             modifier = GlanceModifier
                 .fillMaxSize()
-                .background(Color.White)
+                .background(Color(0xFFFAF8F5)) // Porcelain
                 .padding(16.dp)
         ) {
             Column(
@@ -40,11 +40,11 @@ class MakariosGlanceWidget : GlanceAppWidget() {
                 verticalAlignment = Alignment.Top,
                 horizontalAlignment = Alignment.Start
             ) {
-                // Top Tag: Reference
+                // Reference
                 Text(
                     text = reference.uppercase(),
                     style = TextStyle(
-                        color = ColorProvider(Color(0xFFB34335)),
+                        color = ColorProvider(Color(0xFFC46851)), // Terracotta
                         fontWeight = FontWeight.Bold,
                         fontSize = 10.5.sp
                     )
@@ -52,24 +52,24 @@ class MakariosGlanceWidget : GlanceAppWidget() {
 
                 Spacer(modifier = GlanceModifier.height(6.dp))
 
-                // Headline
+                // Declaration
                 Text(
-                    text = "“${declaration.uppercase()}”",
+                    text = "\u201C${declaration}\u201D",
                     style = TextStyle(
-                        color = ColorProvider(Color(0xFF161311)),
+                        color = ColorProvider(Color(0xFF1F1118)), // Espresso
                         fontWeight = FontWeight.Bold,
                         fontSize = 14.5.sp
                     ),
-                    maxLines = 2
+                    maxLines = 3
                 )
 
                 Spacer(modifier = GlanceModifier.height(5.dp))
 
-                // Reflection
+                // Context
                 Text(
                     text = contextText,
                     style = TextStyle(
-                        color = ColorProvider(Color(0xFF5A524C)),
+                        color = ColorProvider(Color(0xFF6B5E66)), // Stone
                         fontSize = 11.sp
                     ),
                     maxLines = 2

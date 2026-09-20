@@ -36,7 +36,7 @@ fun ToneSelector(
             .fillMaxWidth()
             .padding(horizontal = 20.dp, vertical = 6.dp)
     ) {
-        // Tone Triad & Cycle Action Row
+        // Tone toggles + Another
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -44,83 +44,81 @@ fun ToneSelector(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Editorial Tone Triad
+            // Tone options — normal case, simple border styling
             Row(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(4.dp))
-                    .background(ParchmentWarm)
-                    .border(0.75.dp, HairlineRule, RoundedCornerShape(4.dp))
-                    .padding(3.dp),
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 AffirmationTone.values().forEach { tone ->
                     val isSelected = tone == selectedTone
                     val label = when (tone) {
-                        AffirmationTone.STILL -> "STILL"
-                        AffirmationTone.RESOLUTE -> "RESOLUTE"
-                        AffirmationTone.GENTLE -> "GENTLE"
+                        AffirmationTone.STILL -> "Still"
+                        AffirmationTone.RESOLUTE -> "Resolute"
+                        AffirmationTone.GENTLE -> "Gentle"
                     }
 
                     Box(
                         modifier = Modifier
-                            .clip(RoundedCornerShape(3.dp))
-                            .background(if (isSelected) InkLampblack else Color.Transparent)
+                            .clip(RoundedCornerShape(16.dp))
+                            .then(
+                                if (isSelected) {
+                                    Modifier.border(1.5.dp, Espresso, RoundedCornerShape(16.dp))
+                                } else {
+                                    Modifier
+                                }
+                            )
                             .clickable { onToneSelected(tone) }
-                            .padding(horizontal = 10.dp, vertical = 6.dp),
+                            .padding(horizontal = 14.dp, vertical = 6.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = label,
-                            color = if (isSelected) GoldLeaf else InkIronGall,
+                            color = if (isSelected) Espresso else Stone,
                             fontFamily = BodyFontFamily,
-                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
-                            fontSize = 10.sp,
-                            letterSpacing = 1.4.sp
+                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                            fontSize = 14.sp
                         )
                     }
                 }
             }
 
-            // "Cycle Folio" Action
+            // "Another" action
             Row(
                 modifier = Modifier
-                    .clip(RoundedCornerShape(4.dp))
+                    .clip(RoundedCornerShape(16.dp))
                     .clickable(onClick = onAnotherClicked)
                     .padding(horizontal = 8.dp, vertical = 6.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(5.dp)
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Icon(
                     imageVector = Icons.Default.Refresh,
-                    contentDescription = "Cycle folio declaration",
-                    tint = InkLampblack,
-                    modifier = Modifier.size(13.dp)
+                    contentDescription = "Another declaration",
+                    tint = Stone,
+                    modifier = Modifier.size(14.dp)
                 )
                 Text(
-                    text = "CYCLE FOLIO",
-                    color = InkLampblack,
+                    text = "Another",
+                    color = Stone,
                     fontFamily = BodyFontFamily,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 10.sp,
-                    letterSpacing = 1.4.sp
+                    fontWeight = FontWeight.Normal,
+                    fontSize = 14.sp
                 )
             }
         }
 
-        Spacer(modifier = Modifier.height(6.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
-        // Luxury Editorial CTA: Illuminate Wallpaper
+        // Create Wallpaper CTA — dark, full-width, simple
         Button(
             onClick = onCreateWallpaperClicked,
             colors = ButtonDefaults.buttonColors(
-                containerColor = InkLampblack,
-                contentColor = GoldLeaf
+                containerColor = Espresso,
+                contentColor = Surface
             ),
-            shape = RoundedCornerShape(4.dp),
+            shape = RoundedCornerShape(12.dp),
             modifier = Modifier
                 .fillMaxWidth()
-                .height(48.dp)
-                .border(0.75.dp, BorderBroadsheet, RoundedCornerShape(4.dp))
+                .height(52.dp)
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -129,16 +127,15 @@ fun ToneSelector(
                 Icon(
                     imageVector = Icons.Default.AutoAwesome,
                     contentDescription = null,
-                    tint = GoldLeaf,
-                    modifier = Modifier.size(15.dp)
+                    tint = Surface,
+                    modifier = Modifier.size(18.dp)
                 )
                 Text(
-                    text = "ILLUMINATE WALLPAPER",
-                    color = GoldLeaf,
+                    text = "Create Wallpaper",
+                    color = Surface,
                     fontFamily = BodyFontFamily,
                     fontWeight = FontWeight.SemiBold,
-                    fontSize = 12.sp,
-                    letterSpacing = 2.sp
+                    fontSize = 15.sp
                 )
             }
         }

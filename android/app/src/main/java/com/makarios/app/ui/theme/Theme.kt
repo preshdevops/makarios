@@ -11,24 +11,24 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
 private val LightColorScheme = lightColorScheme(
-    primary = BrandPlum,
-    onPrimary = SurfaceWhite,
-    primaryContainer = BrandPlumLight,
-    onPrimaryContainer = SurfaceWhite,
-    secondary = SalmonTerracotta,
-    onSecondary = SurfaceWhite,
-    secondaryContainer = SalmonLight,
-    onSecondaryContainer = SalmonTerracotta,
-    tertiary = LiveFeedGreen,
-    onTertiary = SurfaceWhite,
+    primary = Espresso,
+    onPrimary = Surface,
+    primaryContainer = EspressoLight,
+    onPrimaryContainer = Surface,
+    secondary = Terracotta,
+    onSecondary = Surface,
+    secondaryContainer = TerracottaLight,
+    onSecondaryContainer = Terracotta,
+    tertiary = Sage,
+    onTertiary = Surface,
     tertiaryContainer = LiveFeedGreenBg,
-    onTertiaryContainer = LiveFeedGreen,
-    background = PorcelainBackground,
-    onBackground = TextPrimary,
-    surface = SurfaceWhite,
-    onSurface = TextPrimary,
-    surfaceVariant = ToneResoluteSand,
-    onSurfaceVariant = TextPrimary,
+    onTertiaryContainer = Sage,
+    background = Porcelain,
+    onBackground = Espresso,
+    surface = Surface,
+    onSurface = Espresso,
+    surfaceVariant = PorcelainWarm,
+    onSurfaceVariant = Espresso,
     outline = BorderSubtle
 )
 
@@ -37,14 +37,14 @@ fun MakariosTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit
 ) {
-    val colorScheme = LightColorScheme // Intentional warm porcelain identity per PRODUCT.md
+    val colorScheme = LightColorScheme
 
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-            window.statusBarColor = PorcelainBackground.toArgb()
-            window.navigationBarColor = SurfaceWhite.toArgb()
+            window.statusBarColor = Porcelain.toArgb()
+            window.navigationBarColor = Surface.toArgb()
             WindowCompat.getInsetsController(window, view).apply {
                 isAppearanceLightStatusBars = true
                 isAppearanceLightNavigationBars = true

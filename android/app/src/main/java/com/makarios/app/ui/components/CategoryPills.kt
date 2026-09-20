@@ -29,31 +29,33 @@ fun CategoryPills(
             .fillMaxWidth()
             .horizontalScroll(rememberScrollState())
             .padding(horizontal = 20.dp, vertical = 10.dp),
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         categories.forEach { category ->
             val isSelected = category.equals(selectedCategory, ignoreCase = true)
             Box(
                 modifier = Modifier
-                    .clip(RoundedCornerShape(3.dp))
-                    .background(if (isSelected) InkLampblack else ParchmentWarm)
-                    .border(
-                        width = 0.75.dp,
-                        color = if (isSelected) InkLampblack else HairlineRule,
-                        shape = RoundedCornerShape(3.dp)
+                    .clip(RoundedCornerShape(20.dp))
+                    .then(
+                        if (isSelected) {
+                            Modifier.background(Terracotta)
+                        } else {
+                            Modifier
+                                .background(Surface)
+                                .border(1.dp, Border, RoundedCornerShape(20.dp))
+                        }
                     )
                     .clickable { onCategorySelected(category) }
-                    .padding(horizontal = 14.dp, vertical = 7.dp),
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = category.uppercase(),
-                    color = if (isSelected) PaperSurface else InkIronGall,
+                    text = category,
+                    color = if (isSelected) Surface else Espresso,
                     fontFamily = BodyFontFamily,
-                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
-                    fontSize = 10.5.sp,
-                    letterSpacing = 1.8.sp
+                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                    fontSize = 14.sp
                 )
             }
         }

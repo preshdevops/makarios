@@ -5,6 +5,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -15,13 +16,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.makarios.app.data.AffirmationRepository
-import com.makarios.app.ui.components.HeaderBar
 import com.makarios.app.ui.theme.*
 
 @Composable
@@ -34,155 +33,172 @@ fun ExploreScreen(
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        containerColor = ParchmentBackground
+        containerColor = Porcelain
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
-                .padding(bottom = 36.dp)
+                .padding(bottom = 24.dp)
         ) {
-            // Editorial Masthead
-            HeaderBar(subtitle = "THE LIVING ARCHIVE")
-
-            // Section Intro
+            // Header
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 24.dp, vertical = 12.dp)
+                    .padding(horizontal = 20.dp)
+                    .padding(top = 16.dp, bottom = 8.dp)
             ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Makarios",
+                        fontFamily = DisplayFontFamily,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 20.sp,
+                        color = Espresso
+                    )
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clip(CircleShape)
+                            .background(PorcelainWarm),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "M",
+                            fontFamily = DisplayFontFamily,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 14.sp,
+                            color = Espresso
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
                 Text(
-                    text = "SACRED PRESENCE · GLANCE WIDGET",
-                    color = RubricVermilion,
-                    fontFamily = BodyFontFamily,
+                    text = "Everyday Presence",
+                    fontFamily = DisplayFontFamily,
                     fontWeight = FontWeight.SemiBold,
-                    fontSize = 10.sp,
-                    letterSpacing = 2.sp
+                    fontSize = 24.sp,
+                    lineHeight = 32.sp,
+                    color = Espresso
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "Everyday Presence",
-                    color = InkLampblack,
-                    fontFamily = DisplayFontFamily,
-                    fontSize = 26.sp,
-                    lineHeight = 34.sp
-                )
-                Spacer(modifier = Modifier.height(6.dp))
-                Text(
-                    text = "Keep eternal declarations anchored to your home screen. Updated quietly throughout the day.",
-                    color = InkIronGall,
-                    fontFamily = DisplayFontFamily,
-                    fontStyle = FontStyle.Italic,
-                    fontSize = 14.5.sp,
+                    text = "Keep declarations on your home screen, updated quietly throughout the day.",
+                    color = Stone,
+                    fontFamily = BodyFontFamily,
+                    fontSize = 15.sp,
                     lineHeight = 22.sp
                 )
             }
 
-            // Size Selector Tabs
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Size selector tabs
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 24.dp, vertical = 8.dp),
+                    .padding(horizontal = 20.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 listOf(
-                    "small" to "PETITE (2×2)",
-                    "medium" to "CANONICAL (4×2)",
-                    "large" to "EXPANSIVE (4×4)"
+                    "small" to "Small 2×2",
+                    "medium" to "Medium 4×2",
+                    "large" to "Large 4×4"
                 ).forEach { (key, label) ->
                     val isSelected = selectedSize == key
                     Box(
                         modifier = Modifier
                             .weight(1f)
-                            .clip(RoundedCornerShape(3.dp))
-                            .background(if (isSelected) InkLampblack else ParchmentWarm)
-                            .border(0.75.dp, if (isSelected) InkLampblack else HairlineRule, RoundedCornerShape(3.dp))
+                            .clip(RoundedCornerShape(12.dp))
+                            .then(
+                                if (isSelected) {
+                                    Modifier.background(Terracotta)
+                                } else {
+                                    Modifier
+                                        .background(Surface)
+                                        .border(1.dp, Border, RoundedCornerShape(12.dp))
+                                }
+                            )
                             .clickable { selectedSize = key }
-                            .padding(vertical = 8.dp),
+                            .padding(vertical = 10.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = label,
-                            color = if (isSelected) GoldLeaf else InkIronGall,
+                            color = if (isSelected) Surface else Espresso,
                             fontFamily = BodyFontFamily,
-                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
-                            fontSize = 9.5.sp,
-                            letterSpacing = 1.2.sp
+                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                            fontSize = 13.sp
                         )
                     }
                 }
             }
 
-            // Exhibition Gallery Widget Plaque
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Widget preview card
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 12.dp)
-                    .shadow(elevation = 2.dp, shape = RoundedCornerShape(6.dp), spotColor = InkLampblack.copy(alpha = 0.08f))
-                    .clip(RoundedCornerShape(6.dp))
-                    .background(PaperSurface)
-                    .border(1.dp, BorderBroadsheet, RoundedCornerShape(6.dp))
-                    .padding(22.dp)
+                    .padding(horizontal = 20.dp)
+                    .shadow(
+                        elevation = 2.dp,
+                        shape = RoundedCornerShape(16.dp),
+                        spotColor = Espresso.copy(alpha = 0.06f)
+                    )
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(Surface)
+                    .padding(20.dp)
             ) {
                 Column {
-                    // Top Meta: Reference & Status
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = currentWidgetTruth.reference.uppercase(),
-                            color = RubricVermilion,
-                            fontFamily = BodyFontFamily,
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 10.5.sp,
-                            letterSpacing = 2.sp
-                        )
-
-                        Text(
-                            text = "✦ LIVE GLANCE",
-                            color = GoldLeaf,
-                            fontFamily = BodyFontFamily,
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 9.5.sp,
-                            letterSpacing = 1.5.sp
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(14.dp))
-
-                    // Declaration in Majestic Serif
+                    // Reference
                     Text(
-                        text = "“${currentWidgetTruth.declaration}”",
+                        text = currentWidgetTruth.reference.uppercase(),
+                        color = Terracotta,
+                        fontFamily = BodyFontFamily,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 11.sp,
+                        letterSpacing = 1.5.sp
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Declaration
+                    Text(
+                        text = "\u201C${currentWidgetTruth.declaration}\u201D",
                         fontFamily = DisplayFontFamily,
                         fontWeight = FontWeight.Normal,
                         fontSize = 18.sp,
                         lineHeight = 26.sp,
-                        color = InkLampblack
+                        color = Espresso
                     )
 
                     Spacer(modifier = Modifier.height(10.dp))
 
-                    // Reflection Commentary
+                    // Context
                     Text(
                         text = currentWidgetTruth.context,
-                        fontFamily = DisplayFontFamily,
-                        fontStyle = FontStyle.Italic,
-                        fontSize = 13.5.sp,
+                        fontFamily = BodyFontFamily,
+                        fontSize = 14.sp,
                         lineHeight = 20.sp,
-                        color = InkIronGall
+                        color = Stone
                     )
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(14.dp))
 
-                    // Hairline separator
+                    // Divider
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(0.75.dp)
-                            .background(HairlineRule)
+                            .height(1.dp)
+                            .background(Border)
                     )
 
                     Spacer(modifier = Modifier.height(10.dp))
@@ -194,114 +210,121 @@ fun ExploreScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "CADENCE: EVERY DAWN",
+                            text = "Evening Examen · 08:30 PM",
                             fontFamily = BodyFontFamily,
-                            fontSize = 9.sp,
-                            letterSpacing = 1.2.sp,
-                            color = InkMuted
+                            fontSize = 12.sp,
+                            color = StoneMuted
                         )
                         Text(
-                            text = "MAKARIOS FOLIO № 01",
+                            text = "Next truth →",
                             fontFamily = BodyFontFamily,
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 9.sp,
-                            letterSpacing = 1.2.sp,
-                            color = InkLampblack
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 12.sp,
+                            color = Terracotta
                         )
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
-            // Cadence Selector Section
+            // Update cadence section
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 24.dp)
+                    .padding(horizontal = 20.dp)
             ) {
-                Text(
-                    text = "REVELATION CADENCE",
-                    color = RubricVermilion,
-                    fontFamily = BodyFontFamily,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 9.5.sp,
-                    letterSpacing = 1.8.sp
-                )
-                Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Update Cadence",
+                        fontFamily = BodyFontFamily,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 14.sp,
+                        color = Espresso
+                    )
+                    Text(
+                        text = "Every Dawn (6 AM)",
+                        fontFamily = BodyFontFamily,
+                        fontSize = 13.sp,
+                        color = StoneMuted
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    listOf("Every Dawn", "Midday", "Eventide").forEach { cadence ->
+                    listOf("Every Dawn", "Every 4h", "On Wake").forEach { cadence ->
                         val isSelected = selectedCadence == cadence
                         Box(
                             modifier = Modifier
                                 .weight(1f)
-                                .clip(RoundedCornerShape(3.dp))
-                                .background(if (isSelected) ParchmentWarm else Color.Transparent)
-                                .border(
-                                    0.75.dp,
-                                    if (isSelected) BorderBroadsheet else HairlineRule,
-                                    RoundedCornerShape(3.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .then(
+                                    if (isSelected) {
+                                        Modifier
+                                            .background(PorcelainWarm)
+                                            .border(1.dp, Border, RoundedCornerShape(12.dp))
+                                    } else {
+                                        Modifier
+                                            .background(Surface)
+                                            .border(1.dp, Border, RoundedCornerShape(12.dp))
+                                    }
                                 )
                                 .clickable { selectedCadence = cadence }
-                                .padding(vertical = 9.dp),
+                                .padding(vertical = 10.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = cadence.uppercase(),
-                                color = if (isSelected) InkLampblack else InkIronGall,
+                                text = cadence,
+                                color = if (isSelected) Espresso else Stone,
                                 fontFamily = BodyFontFamily,
                                 fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-                                fontSize = 10.sp,
-                                letterSpacing = 1.2.sp
+                                fontSize = 13.sp
                             )
                         }
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(18.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
-            // Mount Widget Button
-            Box(
+            // Add to Home Screen CTA
+            Button(
+                onClick = { /* Add to Home Screen prompt */ },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Espresso,
+                    contentColor = Surface
+                ),
+                shape = RoundedCornerShape(12.dp),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 20.dp)
+                    .height(52.dp)
             ) {
-                Button(
-                    onClick = { /* Add to Home Screen prompt */ },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = InkLampblack,
-                        contentColor = GoldLeaf
-                    ),
-                    shape = RoundedCornerShape(4.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp)
-                        .border(0.75.dp, BorderBroadsheet, RoundedCornerShape(4.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Add,
-                            contentDescription = null,
-                            tint = GoldLeaf,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Text(
-                            text = "MOUNT HOME SCREEN WIDGET",
-                            color = GoldLeaf,
-                            fontFamily = BodyFontFamily,
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 11.5.sp,
-                            letterSpacing = 2.sp
-                        )
-                    }
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = null,
+                        tint = Surface,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Text(
+                        text = "Add to Home Screen",
+                        color = Surface,
+                        fontFamily = BodyFontFamily,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 15.sp
+                    )
                 }
             }
         }

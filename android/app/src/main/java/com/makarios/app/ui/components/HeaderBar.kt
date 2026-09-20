@@ -1,16 +1,14 @@
 package com.makarios.app.ui.components
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.makarios.app.ui.theme.*
@@ -23,63 +21,53 @@ fun HeaderBar(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(top = 16.dp, bottom = 4.dp)
+            .padding(horizontal = 20.dp)
+            .padding(top = 16.dp, bottom = 8.dp)
     ) {
+        // Top row: Makarios wordmark + profile avatar
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp, vertical = 6.dp),
+            modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Left: Folio Date / Issue
-            Column {
-                Text(
-                    text = (subtitle ?: "THE DAILY CANON · FOLIO XXIV").uppercase(),
-                    color = RubricVermilion,
-                    fontFamily = BodyFontFamily,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 9.sp,
-                    letterSpacing = 2.sp
-                )
-                Spacer(modifier = Modifier.height(3.dp))
-                Text(
-                    text = "M A K A R I O S",
-                    color = InkLampblack,
-                    fontFamily = DisplayFontFamily,
-                    fontWeight = FontWeight.Normal,
-                    fontSize = 21.sp,
-                    letterSpacing = 4.sp
-                )
-            }
+            // Wordmark — natural serif, no wide tracking
+            Text(
+                text = "Makarios",
+                fontFamily = DisplayFontFamily,
+                fontWeight = FontWeight.Medium,
+                fontSize = 20.sp,
+                color = Espresso
+            )
 
-            // Right: Refined Editorial Monogram
+            // Profile avatar placeholder
             Box(
                 modifier = Modifier
-                    .size(34.dp)
-                    .clip(RoundedCornerShape(4.dp))
-                    .background(ParchmentWarm)
-                    .border(0.75.dp, BorderBroadsheet, RoundedCornerShape(4.dp)),
+                    .size(32.dp)
+                    .clip(CircleShape)
+                    .background(PorcelainWarm),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "✤",
-                    color = GoldLeaf,
-                    fontSize = 15.sp,
-                    textAlign = TextAlign.Center
+                    text = "M",
+                    fontFamily = DisplayFontFamily,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 14.sp,
+                    color = Espresso
                 )
             }
         }
 
-        Spacer(modifier = Modifier.height(10.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
-        // Delicate Hairline Rule separating masthead from folio content
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp)
-                .height(0.75.dp)
-                .background(HairlineRule)
+        // The warm opening question
+        Text(
+            text = subtitle ?: "What are you carrying today?",
+            fontFamily = DisplayFontFamily,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 24.sp,
+            lineHeight = 32.sp,
+            letterSpacing = (-0.3).sp,
+            color = Espresso
         )
     }
 }

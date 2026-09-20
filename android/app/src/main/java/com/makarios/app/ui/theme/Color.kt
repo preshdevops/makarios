@@ -2,45 +2,39 @@ package com.makarios.app.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Paper & Parchment Canvas (Warm, tactile vellum)
-val ParchmentBackground = Color(0xFFFBF9F5)  // Tactile warm broadsheet paper
-val ParchmentWarm = Color(0xFFF4EFE6)        // Aged parchment accent / tabs
-val PaperSurface = Color(0xFFFFFFFF)         // Pure matte rag paper
-val PaperMuted = Color(0xFFF7F4EE)           // Editorial plate matting
+// ── Canvas & Surface ──────────────────────────────────────────
+val Porcelain = Color(0xFFFAF8F5)           // Primary background
+val PorcelainWarm = Color(0xFFEAE3D8)       // Warm almond/sand
+val Surface = Color(0xFFFFFFFF)             // Card surface
+val SurfaceMuted = Color(0xFFF5F2ED)        // Input fields, muted areas
 
-// Ink Tones (Literary & Typographic)
-val InkLampblack = Color(0xFF161311)         // Primary text - deep bistre / lampblack
-val InkCharcoal = Color(0xFF2C2622)          // Sub-headers & secondary display
-val InkIronGall = Color(0xFF5A524C)          // Scripture commentary & reflections
-val InkMuted = Color(0xFF938980)             // Folio pagination, chapter markers, meta
+// ── Text ──────────────────────────────────────────────────────
+val Espresso = Color(0xFF1F1118)            // Primary text — deep espresso-plum
+val EspressoLight = Color(0xFF3D2E35)       // Secondary display text
+val Stone = Color(0xFF6B5E66)              // Body text, scripture
+val StoneMuted = Color(0xFF9C9297)          // Captions, meta, placeholders
 
-// Sacred Rubrication & Illuminated Accents
-val RubricVermilion = Color(0xFFB34335)      // Classic illuminated rubric red (warm cinnabar)
-val RubricVermilionLight = Color(0xFFFAECE8) // Soft tint for rubric highlights
-val GoldLeaf = Color(0xFFC49B58)             // Illuminated metallic gold leaf
-val GoldLeafMuted = Color(0xFFDFB28A)        // Soft amber gold
-val LaurelSage = Color(0xFF435948)           // Restful olive green for peace/healing
+// ── Accent ────────────────────────────────────────────────────
+val Terracotta = Color(0xFFC46851)          // Primary accent — warm salmon
+val TerracottaLight = Color(0xFFFAEDE8)     // Soft terracotta tint
+val Sage = Color(0xFF5A7362)               // Secondary accent — olive green
 
-// Editorial Hairlines & Rules
-val HairlineRule = Color(0xFFE8E2D8)         // 0.75dp delicate separator rules
-val BorderBroadsheet = Color(0xFFE2DDD3)     // Plate framing
-val BorderSubtle = Color(0x12161311)         // ~7% ink alpha
-val BorderCard = Color(0x0F161311)           // Subtle card stroke
+// ── Borders & Dividers ───────────────────────────────────────
+val Border = Color(0xFFE8E2D8)             // Card borders, dividers
+val BorderSubtle = Color(0x0F1F1118)       // Very subtle borders (~6% alpha)
 
-// Core & Compatibility mappings
-val BrandPlum = InkLampblack
-val BrandPlumLight = InkCharcoal
-val BrandPlumDark = Color(0xFF0F0D0C)
-val PorcelainBackground = ParchmentBackground
-val PorcelainWarm = ParchmentWarm
-val SurfaceWhite = PaperSurface
-val ToneResoluteSand = ParchmentWarm
-val SalmonTerracotta = RubricVermilion
-val SalmonLight = RubricVermilionLight
-val LiveFeedGreen = LaurelSage
+// ── Compatibility Aliases (for Theme.kt & existing references) ─
+val BrandPlum = Espresso
+val BrandPlumLight = EspressoLight
+val BrandPlumDark = Color(0xFF150B10)
+val PorcelainBackground = Porcelain
+val SurfaceWhite = Surface
+val ToneResoluteSand = PorcelainWarm
+val SalmonTerracotta = Terracotta
+val SalmonLight = TerracottaLight
+val LiveFeedGreen = Sage
 val LiveFeedGreenBg = Color(0xFFEEF3EE)
-val AmberGold = GoldLeaf
-val TextPrimary = InkLampblack
-val TextSecondary = InkIronGall
-val TextMuted = InkMuted
-val BorderPill = HairlineRule
+val TextPrimary = Espresso
+val TextSecondary = Stone
+val TextMuted = StoneMuted
+val BorderPill = Border

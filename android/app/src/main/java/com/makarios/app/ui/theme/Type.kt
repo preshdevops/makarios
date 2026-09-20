@@ -9,82 +9,92 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.makarios.app.R
 
-// Bundled Newsreader Serif (High-editorial publication face)
-val NewsreaderFontFamily = FontFamily(
-    Font(R.font.newsreader_regular, FontWeight.Normal),
-    Font(R.font.newsreader_regular, FontWeight.Medium),
-    Font(R.font.newsreader_regular, FontWeight.SemiBold),
-    Font(R.font.newsreader_regular, FontWeight.Bold),
-    Font(R.font.newsreader_italic, FontWeight.Normal, FontStyle.Italic)
+// ── Fraunces — Display serif (variable, optical sizing) ──────
+val FrauncesFontFamily = FontFamily(
+    Font(R.font.fraunces_regular, FontWeight.Normal),
+    Font(R.font.fraunces_regular, FontWeight.Medium),
+    Font(R.font.fraunces_regular, FontWeight.SemiBold),
+    Font(R.font.fraunces_regular, FontWeight.Bold),
+    Font(R.font.fraunces_italic, FontWeight.Normal, FontStyle.Italic),
+    Font(R.font.fraunces_italic, FontWeight.Medium, FontStyle.Italic)
 )
 
-val DisplayFontFamily = NewsreaderFontFamily
-val BodyFontFamily = FontFamily.SansSerif
+// ── Work Sans — UI humanist sans ─────────────────────────────
+val WorkSansFontFamily = FontFamily(
+    Font(R.font.worksans_regular, FontWeight.Normal),
+    Font(R.font.worksans_regular, FontWeight.Medium),
+    Font(R.font.worksans_regular, FontWeight.SemiBold),
+    Font(R.font.worksans_regular, FontWeight.Bold)
+)
+
+// Semantic aliases
+val DisplayFontFamily = FrauncesFontFamily
+val BodyFontFamily = WorkSansFontFamily
 
 val MakariosTypography = Typography(
+    // Hero question: "What are you carrying today?"
     displayLarge = TextStyle(
-        fontFamily = DisplayFontFamily,
-        fontWeight = FontWeight.Normal,
-        fontSize = 30.sp,
-        lineHeight = 39.sp,
-        letterSpacing = (-0.4).sp,
-        color = InkLampblack
+        fontFamily = FrauncesFontFamily,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 26.sp,
+        lineHeight = 34.sp,
+        letterSpacing = (-0.3).sp
     ),
+    // Declaration text on truth card
     headlineMedium = TextStyle(
-        fontFamily = DisplayFontFamily,
+        fontFamily = FrauncesFontFamily,
         fontWeight = FontWeight.Normal,
-        fontSize = 25.sp,
-        lineHeight = 33.sp,
-        letterSpacing = (-0.3).sp,
-        color = InkLampblack
+        fontSize = 22.sp,
+        lineHeight = 31.sp,
+        letterSpacing = (-0.2).sp
     ),
+    // Makarios wordmark / section titles
     titleLarge = TextStyle(
-        fontFamily = DisplayFontFamily,
+        fontFamily = FrauncesFontFamily,
         fontWeight = FontWeight.Medium,
-        fontSize = 21.sp,
-        lineHeight = 28.sp,
-        letterSpacing = (-0.2).sp,
-        color = InkLampblack
+        fontSize = 20.sp,
+        lineHeight = 26.sp,
+        letterSpacing = (-0.1).sp
     ),
+    // Section headers, tab labels
     titleMedium = TextStyle(
-        fontFamily = BodyFontFamily,
+        fontFamily = WorkSansFontFamily,
         fontWeight = FontWeight.SemiBold,
         fontSize = 15.sp,
         lineHeight = 22.sp,
-        letterSpacing = 0.5.sp,
-        color = InkLampblack
+        letterSpacing = 0.1.sp
     ),
+    // Body text, descriptions
     bodyLarge = TextStyle(
-        fontFamily = BodyFontFamily,
+        fontFamily = WorkSansFontFamily,
         fontWeight = FontWeight.Normal,
         fontSize = 15.sp,
         lineHeight = 24.sp,
-        letterSpacing = 0.2.sp,
-        color = InkIronGall
+        letterSpacing = 0.1.sp
     ),
+    // Scripture text in italic serif
     bodyMedium = TextStyle(
-        fontFamily = DisplayFontFamily,
+        fontFamily = FrauncesFontFamily,
         fontStyle = FontStyle.Italic,
         fontWeight = FontWeight.Normal,
-        fontSize = 16.sp,
-        lineHeight = 25.sp,
-        letterSpacing = 0.15.sp,
-        color = InkIronGall
+        fontSize = 15.sp,
+        lineHeight = 23.sp,
+        letterSpacing = 0.1.sp
     ),
+    // Button labels, category pills
     labelLarge = TextStyle(
-        fontFamily = BodyFontFamily,
+        fontFamily = WorkSansFontFamily,
         fontWeight = FontWeight.SemiBold,
-        fontSize = 13.sp,
+        fontSize = 14.sp,
         lineHeight = 18.sp,
-        letterSpacing = 1.2.sp,
-        color = PaperSurface
+        letterSpacing = 0.1.sp
     ),
+    // Scripture reference, meta text
     labelSmall = TextStyle(
-        fontFamily = BodyFontFamily,
+        fontFamily = WorkSansFontFamily,
         fontWeight = FontWeight.SemiBold,
-        fontSize = 10.sp,
+        fontSize = 11.sp,
         lineHeight = 14.sp,
-        letterSpacing = 2.5.sp,
-        color = RubricVermilion
+        letterSpacing = 1.5.sp
     )
 )

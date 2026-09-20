@@ -25,19 +25,38 @@ fun HomeScreen(
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        containerColor = ParchmentBackground
+        containerColor = Porcelain
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
-                .padding(bottom = 36.dp)
+                .padding(bottom = 24.dp)
         ) {
-            // Editorial Masthead
+            // 1. Header — wordmark + avatar + warm question
             HeaderBar()
 
-            // Canonical Topic Index
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // 2. Prompt input — rounded pill with mic + send
+            PromptInput(
+                value = promptText,
+                onValueChange = { promptText = it },
+                onSubmit = {
+                    if (promptText.isNotBlank()) {
+                        currentAffirmation = AffirmationRepository.matchAffirmation(
+                            prompt = promptText,
+                            category = selectedCategory,
+                            tone = selectedTone
+                        )
+                    }
+                }
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            // 3. Category pills — rounded, terracotta selected
             CategoryPills(
                 categories = AffirmationRepository.categories,
                 selectedCategory = selectedCategory,
@@ -51,15 +70,17 @@ fun HomeScreen(
                 }
             )
 
-            // The Centerpiece: Illuminated Broadside Plate
+            Spacer(modifier = Modifier.height(4.dp))
+
+            // 4. Truth card — photo + declaration + scripture
             TruthCard(
                 affirmation = currentAffirmation,
                 isSaved = isSaved,
                 onToggleSave = { isSaved = !isSaved },
-                onCardClick = { /* Detail view or contemplation */ }
+                onCardClick = { /* Detail view */ }
             )
 
-            // Literary Tone Selector & Illuminate Wallpaper Action
+            // 5. Tone selector + Another + Create Wallpaper
             ToneSelector(
                 selectedTone = selectedTone,
                 onToneSelected = { tone ->
@@ -75,23 +96,6 @@ fun HomeScreen(
                 },
                 onCreateWallpaperClicked = {
                     onNavigateToCreate(currentAffirmation.id)
-                }
-            )
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            // Contemplative Inscribe Field
-            PromptInput(
-                value = promptText,
-                onValueChange = { promptText = it },
-                onSubmit = {
-                    if (promptText.isNotBlank()) {
-                        currentAffirmation = AffirmationRepository.matchAffirmation(
-                            prompt = promptText,
-                            category = selectedCategory,
-                            tone = selectedTone
-                        )
-                    }
                 }
             )
         }
