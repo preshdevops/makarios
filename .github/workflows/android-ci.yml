@@ -32,7 +32,7 @@ jobs:
         working-directory: android
 
       - name: Build Debug APK
-        run: ./gradlew assembleDebug --stacktrace
+        run: ./gradlew assembleDebug --stacktrace --info
         working-directory: android
 
       - name: Upload Debug APK Artifact

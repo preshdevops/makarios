@@ -12,15 +12,15 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.IosShare
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.filled.WallpaperOutlined
+import androidx.compose.material.icons.filled.Wallpaper
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -754,9 +754,7 @@ private fun MatchStage(
         ) {
             OutlinedButton(
                 onClick = onTryDifferent,
-                border = ButtonDefaults.outlinedButtonBorder.copy(
-                    brush = Brush.linearGradient(listOf(Border, Border))
-                ),
+                border = BorderStroke(1.dp, Border),
                 shape = RoundedCornerShape(14.dp),
                 modifier = Modifier
                     .weight(1f)
@@ -1107,7 +1105,7 @@ private fun DesignStage(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Icon(Icons.Default.IosShare, contentDescription = null, modifier = Modifier.size(17.dp))
+                    Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(17.dp))
                     Text(
                         text = "Share to Social",
                         fontFamily = BodyFontFamily,
@@ -1121,9 +1119,7 @@ private fun DesignStage(
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 OutlinedButton(
                     onClick = onSaveToGallery,
-                    border = ButtonDefaults.outlinedButtonBorder.copy(
-                        brush = Brush.linearGradient(listOf(Border, Border))
-                    ),
+                    border = BorderStroke(1.dp, Border),
                     shape = RoundedCornerShape(14.dp),
                     modifier = Modifier.weight(1f).height(46.dp)
                 ) {
@@ -1138,9 +1134,7 @@ private fun DesignStage(
 
                 OutlinedButton(
                     onClick = onSaveAsWallpaper,
-                    border = ButtonDefaults.outlinedButtonBorder.copy(
-                        brush = Brush.linearGradient(listOf(Border, Border))
-                    ),
+                    border = BorderStroke(1.dp, Border),
                     shape = RoundedCornerShape(14.dp),
                     modifier = Modifier.weight(1f).height(46.dp)
                 ) {
@@ -1149,7 +1143,7 @@ private fun DesignStage(
                         horizontalArrangement = Arrangement.spacedBy(5.dp)
                     ) {
                         Icon(
-                            Icons.Default.WallpaperOutlined,
+                            Icons.Default.Wallpaper,
                             contentDescription = null,
                             tint = Espresso,
                             modifier = Modifier.size(14.dp)
