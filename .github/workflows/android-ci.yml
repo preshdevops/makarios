@@ -32,12 +32,33 @@ jobs:
         working-directory: android
 
       - name: Build Debug APK
-        run: ./gradlew assembleDebug --stacktrace --info
+        run: |
+          set -o pipefail
+          ./gradlew assembleDebug --stacktrace 2>&1 | tee gradle-build.log
         working-directory: android
 
+      - name: Report Build Failures
+        if: failure()
+        run: |
+          echo "### Gradle Build Failure Diagnostics" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          grep -A 8 -B 2 -E "e: |error:|FAILURE:|FAILED|Exception" android/gradle-build.log | tail -n 80 >> $GITHUB_STEP_SUMMARY || tail -n 60 android/gradle-build.log >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "=== GRADLE FAILURE DIAGNOSTICS ==="
+          grep -A 8 -B 2 -E "e: |error:|FAILURE:|FAILED|Exception" android/gradle-build.log | tail -n 80 || tail -n 60 android/gradle-build.log
+
       - name: Upload Debug APK Artifact
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: makarios-debug-apk
           path: android/app/build/outputs/apk/debug/*.apk
           retention-days: 14
+
+      - name: Upload Build Log Artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gradle-build-log
+          path: android/gradle-build.log
+          retention-days: 7
