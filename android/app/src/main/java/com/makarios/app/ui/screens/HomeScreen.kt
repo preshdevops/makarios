@@ -21,7 +21,6 @@ fun HomeScreen(
     var selectedCategory by remember { mutableStateOf("Confidence") }
     var selectedTone by remember { mutableStateOf(AffirmationTone.RESOLUTE) }
     var currentAffirmation by remember { mutableStateOf(AffirmationRepository.starterAffirmation) }
-    var isSaved by remember { mutableStateOf(false) }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -75,9 +74,9 @@ fun HomeScreen(
             // 4. Truth card — photo + declaration + scripture
             TruthCard(
                 affirmation = currentAffirmation,
-                isSaved = isSaved,
-                onToggleSave = { isSaved = !isSaved },
-                onCardClick = { /* Detail view */ }
+                isSaved = AffirmationRepository.isSaved(currentAffirmation.id),
+                onToggleSave = { AffirmationRepository.toggleSave(currentAffirmation.id) },
+                onCardClick = { onNavigateToCreate(currentAffirmation.id) }
             )
 
             // 5. Tone selector + Another + Create Wallpaper

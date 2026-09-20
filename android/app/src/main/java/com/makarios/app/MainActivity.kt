@@ -6,11 +6,11 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material.icons.outlined.Explore
 import androidx.compose.material.icons.outlined.Home
@@ -23,8 +23,11 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.makarios.app.ui.screens.CreateScreen
 import com.makarios.app.ui.screens.ExploreScreen
 import com.makarios.app.ui.screens.HomeScreen
+import com.makarios.app.ui.screens.ProfileScreen
+import com.makarios.app.ui.screens.SavedScreen
 import com.makarios.app.ui.theme.*
 
 class MainActivity : ComponentActivity() {
@@ -48,6 +51,7 @@ private data class TabItem(
 @Composable
 fun MainAppScaffold() {
     var selectedTab by remember { mutableStateOf(0) }
+    var activeAffirmationIdForCreate by remember { mutableStateOf<String?>(null) }
 
     val tabs = listOf(
         TabItem("Home", Icons.Filled.Home, Icons.Outlined.Home),
@@ -97,15 +101,29 @@ fun MainAppScaffold() {
     ) { innerPadding ->
         when (selectedTab) {
             0 -> HomeScreen(
-                onNavigateToCreate = { _ -> selectedTab = 2 },
+                onNavigateToCreate = { id ->
+                    activeAffirmationIdForCreate = id
+                    selectedTab = 2
+                },
                 modifier = Modifier.padding(innerPadding)
             )
             1 -> ExploreScreen(
                 modifier = Modifier.padding(innerPadding)
             )
-            // Create, Saved, Profile — placeholder screens for MVP
-            else -> HomeScreen(
-                onNavigateToCreate = { _ -> selectedTab = 2 },
+            2 -> CreateScreen(
+                affirmationId = activeAffirmationIdForCreate,
+                onBack = { selectedTab = 0 },
+                modifier = Modifier.padding(innerPadding)
+            )
+            3 -> SavedScreen(
+                onNavigateToCreate = { id ->
+                    activeAffirmationIdForCreate = id
+                    selectedTab = 2
+                },
+                modifier = Modifier.padding(innerPadding)
+            )
+            4 -> ProfileScreen(
+                onNavigateToWidgets = { selectedTab = 1 },
                 modifier = Modifier.padding(innerPadding)
             )
         }
