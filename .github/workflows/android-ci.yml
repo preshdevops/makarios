@@ -34,23 +34,23 @@ jobs:
       - name: Build Debug APK
         run: |
           set -o pipefail
-          ./gradlew assembleDebug --stacktrace 2>&1 | tee gradle-build.log
+          ./gradlew assembleDebug --stacktrace --info 2>&1 | tee gradle-build.log
         working-directory: android
 
       - name: Report Build Failures
         if: failure()
         run: |
-          tail -n 200 android/gradle-build.log > android/tail.log
-          PASTE_URL=$(curl -s --data-binary @android/tail.log https://paste.rs || echo "")
-          if [ -n "$PASTE_URL" ]; then
-            echo "::error title=Build Log Tail::$PASTE_URL"
+          grep -C 3 -E "(e: |\[ERROR\]|Compilation error|Unresolved reference)" android/gradle-build.log > android/errors.log || true
+          PASTE_ERRORS=$(curl -s --data-binary @android/errors.log https://paste.rs || echo "")
+          if [ -n "$PASTE_ERRORS" ]; then
+            echo "::error title=Compiler Errors Log::$PASTE_ERRORS"
           fi
           while IFS= read -r line; do
             if [ -n "$line" ]; then
               clean=$(echo "$line" | tr -d '\r' | cut -c 1-200)
-              echo "::error title=WhatWentWrong::$clean"
+              echo "::error title=Compiler Diagnostic::$clean"
             fi
-          done < <(grep -B 2 -A 15 "\* What went wrong:" android/gradle-build.log)
+          done < <(grep -E "(^e: |Compilation error|Unresolved reference)" android/gradle-build.log | head -n 25)
 
       - name: Upload Debug APK Artifact
         if: success()
