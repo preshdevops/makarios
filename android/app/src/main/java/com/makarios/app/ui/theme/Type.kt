@@ -5,89 +5,26 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
-import androidx.compose.ui.text.font.FontVariation
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.makarios.app.R
 
-// ── Fraunces — Display serif with explicit variable weight axis mapping ──────
+// ── Fraunces — Display serif ─────────────────────────────────
 val FrauncesFontFamily = FontFamily(
-    Font(
-        resId = R.font.fraunces_regular,
-        weight = FontWeight.Normal,
-        variationSettings = FontVariation.Settings(
-            FontVariation.weight(400)
-        )
-    ),
-    Font(
-        resId = R.font.fraunces_regular,
-        weight = FontWeight.Medium,
-        variationSettings = FontVariation.Settings(
-            FontVariation.weight(500)
-        )
-    ),
-    Font(
-        resId = R.font.fraunces_regular,
-        weight = FontWeight.SemiBold,
-        variationSettings = FontVariation.Settings(
-            FontVariation.weight(600)
-        )
-    ),
-    Font(
-        resId = R.font.fraunces_regular,
-        weight = FontWeight.Bold,
-        variationSettings = FontVariation.Settings(
-            FontVariation.weight(700)
-        )
-    ),
-    Font(
-        resId = R.font.fraunces_italic,
-        weight = FontWeight.Normal,
-        style = FontStyle.Italic,
-        variationSettings = FontVariation.Settings(
-            FontVariation.weight(400)
-        )
-    ),
-    Font(
-        resId = R.font.fraunces_italic,
-        weight = FontWeight.Medium,
-        style = FontStyle.Italic,
-        variationSettings = FontVariation.Settings(
-            FontVariation.weight(500)
-        )
-    )
+    Font(R.font.fraunces_regular, FontWeight.Normal),
+    Font(R.font.fraunces_regular, FontWeight.Medium),
+    Font(R.font.fraunces_regular, FontWeight.SemiBold),
+    Font(R.font.fraunces_regular, FontWeight.Bold),
+    Font(R.font.fraunces_italic, FontWeight.Normal, FontStyle.Italic),
+    Font(R.font.fraunces_italic, FontWeight.Medium, FontStyle.Italic)
 )
 
-// ── Work Sans — UI humanist sans with explicit variable weight axis mapping ───
+// ── Work Sans — UI humanist sans ─────────────────────────────
 val WorkSansFontFamily = FontFamily(
-    Font(
-        resId = R.font.worksans_regular,
-        weight = FontWeight.Normal,
-        variationSettings = FontVariation.Settings(
-            FontVariation.weight(400)
-        )
-    ),
-    Font(
-        resId = R.font.worksans_regular,
-        weight = FontWeight.Medium,
-        variationSettings = FontVariation.Settings(
-            FontVariation.weight(500)
-        )
-    ),
-    Font(
-        resId = R.font.worksans_regular,
-        weight = FontWeight.SemiBold,
-        variationSettings = FontVariation.Settings(
-            FontVariation.weight(600)
-        )
-    ),
-    Font(
-        resId = R.font.worksans_regular,
-        weight = FontWeight.Bold,
-        variationSettings = FontVariation.Settings(
-            FontVariation.weight(700)
-        )
-    )
+    Font(R.font.worksans_regular, FontWeight.Normal),
+    Font(R.font.worksans_regular, FontWeight.Medium),
+    Font(R.font.worksans_regular, FontWeight.SemiBold),
+    Font(R.font.worksans_regular, FontWeight.Bold)
 )
 
 // Semantic aliases
