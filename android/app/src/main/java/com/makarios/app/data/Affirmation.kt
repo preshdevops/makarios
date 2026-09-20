@@ -15,5 +15,9 @@ data class Affirmation(
     val category: String,
     val tone: AffirmationTone,
     val imageUrl: String,
-    val isFavorite: Boolean = false
+    val isFavorite: Boolean = false,
+    val personalDeclaration: String? = null,
+    val listenerCount: String? = null,
+    val isAddedToDaily: Boolean = false,
+    val isPremium: Boolean = false
 )

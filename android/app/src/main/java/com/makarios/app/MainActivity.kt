@@ -2,6 +2,7 @@ package com.makarios.app
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
@@ -10,12 +11,14 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Bookmark
-import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.MenuBook
+import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.outlined.BookmarkBorder
-import androidx.compose.material.icons.outlined.Explore
 import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.MenuBook
+import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -25,9 +28,11 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.makarios.app.data.Affirmation
+import com.makarios.app.ui.screens.AffirmationDetailScreen
 import com.makarios.app.ui.screens.CreateScreen
-import com.makarios.app.ui.screens.ExploreScreen
 import com.makarios.app.ui.screens.HomeScreen
+import com.makarios.app.ui.screens.LibraryScreen
 import com.makarios.app.ui.screens.ProfileScreen
 import com.makarios.app.ui.screens.SavedScreen
 import com.makarios.app.ui.theme.*
@@ -54,11 +59,28 @@ private data class TabItem(
 fun MainAppScaffold() {
     var selectedTab by remember { mutableStateOf(0) }
     var activeAffirmationIdForCreate by remember { mutableStateOf<String?>(null) }
+    var viewingAffirmation by remember { mutableStateOf<Affirmation?>(null) }
 
+    // If an affirmation is selected for fullscreen contemplation (Page 1 in PDF)
+    if (viewingAffirmation != null) {
+        BackHandler { viewingAffirmation = null }
+        AffirmationDetailScreen(
+            affirmation = viewingAffirmation!!,
+            onClose = { viewingAffirmation = null },
+            onNavigateToCreate = { id ->
+                viewingAffirmation = null
+                activeAffirmationIdForCreate = id
+                selectedTab = 2 // Navigate to Visual Creator
+            }
+        )
+        return
+    }
+
+    // 5 Bottom Navigation Tabs directly from PDF: Home | Library | Create | Saved | Profile
     val tabs = listOf(
         TabItem("Home", Icons.Filled.Home, Icons.Outlined.Home),
-        TabItem("Explore", Icons.Filled.Explore, Icons.Outlined.Explore),
-        TabItem("Create", Icons.Filled.Add, Icons.Default.Add),
+        TabItem("Library", Icons.Filled.MenuBook, Icons.Outlined.MenuBook),
+        TabItem("Create", Icons.Filled.Palette, Icons.Outlined.Palette),
         TabItem("Saved", Icons.Filled.Bookmark, Icons.Outlined.BookmarkBorder),
         TabItem("Profile", Icons.Filled.Person, Icons.Outlined.Person)
     )
@@ -67,7 +89,7 @@ fun MainAppScaffold() {
         modifier = Modifier.fillMaxSize(),
         containerColor = Porcelain,
         bottomBar = {
-            // Refined 58dp editorial navigation bar matching mockup (replaces chunky 80dp Material default)
+            // Sleek 58dp editorial navigation bar matching mockup palette
             Surface(
                 color = Surface,
                 modifier = Modifier
@@ -101,13 +123,13 @@ fun MainAppScaffold() {
                                 Icon(
                                     imageVector = if (isSelected) tab.selectedIcon else tab.unselectedIcon,
                                     contentDescription = tab.label,
-                                    tint = if (isSelected) Espresso else StoneMuted,
+                                    tint = if (isSelected) Terracotta else StoneMuted,
                                     modifier = Modifier.size(20.dp)
                                 )
                                 Spacer(modifier = Modifier.height(3.dp))
                                 Text(
                                     text = tab.label,
-                                    color = if (isSelected) Espresso else StoneMuted,
+                                    color = if (isSelected) Terracotta else StoneMuted,
                                     fontFamily = BodyFontFamily,
                                     fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
                                     fontSize = 11.sp
@@ -121,13 +143,16 @@ fun MainAppScaffold() {
     ) { innerPadding ->
         when (selectedTab) {
             0 -> HomeScreen(
+                onNavigateToDetail = { affirmation -> viewingAffirmation = affirmation },
                 onNavigateToCreate = { id ->
                     activeAffirmationIdForCreate = id
                     selectedTab = 2
                 },
+                onNavigateToLibrary = { selectedTab = 1 },
                 modifier = Modifier.padding(innerPadding)
             )
-            1 -> ExploreScreen(
+            1 -> LibraryScreen(
+                onNavigateToCategory = { _ -> selectedTab = 0 },
                 modifier = Modifier.padding(innerPadding)
             )
             2 -> CreateScreen(
@@ -136,6 +161,7 @@ fun MainAppScaffold() {
                 modifier = Modifier.padding(innerPadding)
             )
             3 -> SavedScreen(
+                onNavigateToDetail = { affirmation -> viewingAffirmation = affirmation },
                 onNavigateToCreate = { id ->
                     activeAffirmationIdForCreate = id
                     selectedTab = 2
