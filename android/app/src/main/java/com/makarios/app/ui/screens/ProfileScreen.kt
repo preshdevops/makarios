@@ -1,5 +1,6 @@
 package com.makarios.app.ui.screens
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -11,13 +12,16 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.NotificationsActive
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Widgets
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -26,12 +30,23 @@ import com.makarios.app.ui.theme.*
 @Composable
 fun ProfileScreen(
     onNavigateToWidgets: () -> Unit,
+    onRevisitOnboarding: () -> Unit = {},
+    onNavigateToSubscription: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
+
+    // Notification states
     var dawnNotification by remember { mutableStateOf(true) }
     var middayNotification by remember { mutableStateOf(false) }
     var eveningNotification by remember { mutableStateOf(true) }
-    var selectedSeason by remember { mutableStateOf("Confidence & Calling") }
+
+    // Widget states
+    var selectedWidgetSource by remember { mutableStateOf("Declaration of the Day") }
+    var selectedSchedule by remember { mutableStateOf("Every Dawn") }
+
+    // Spiritual focus state
+    var selectedSeason by remember { mutableStateOf("Peace over Anxiety") }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -42,9 +57,9 @@ fun ProfileScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
-                .padding(bottom = 32.dp)
+                .padding(bottom = 36.dp)
         ) {
-            // Profile Top Header
+            // ── Profile Top Header ──────────────────────────────────
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -91,139 +106,283 @@ fun ProfileScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
-            // Widget Quick Status Card
+            // ── Makarios+ Membership Card ───────────────────────────
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 20.dp)
+                    .shadow(3.dp, RoundedCornerShape(16.dp), spotColor = Espresso.copy(alpha = 0.08f))
                     .clip(RoundedCornerShape(16.dp))
-                    .background(Surface)
-                    .border(1.dp, Border, RoundedCornerShape(16.dp))
-                    .clickable(onClick = onNavigateToWidgets)
+                    .background(AtmosphericGradient)
+                    .clickable(onClick = onNavigateToSubscription)
                     .padding(18.dp)
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(40.dp)
-                                .clip(RoundedCornerShape(10.dp))
-                                .background(PorcelainWarm),
-                            contentAlignment = Alignment.Center
+                    Column(modifier = Modifier.weight(1f)) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.Widgets,
-                                contentDescription = null,
-                                tint = Espresso,
-                                modifier = Modifier.size(20.dp)
+                            Text(
+                                text = "MAKARIOS+",
+                                fontFamily = BodyFontFamily,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 11.sp,
+                                letterSpacing = 2.sp,
+                                color = TerracottaLight
                             )
-                        }
-                        Column {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(6.dp))
+                                    .background(Color.White.copy(alpha = 0.18f))
+                                    .padding(horizontal = 6.dp, vertical = 2.dp)
                             ) {
                                 Text(
-                                    text = "Android Glance Widget",
+                                    text = "FREE TRIAL",
                                     fontFamily = BodyFontFamily,
-                                    fontWeight = FontWeight.SemiBold,
-                                    fontSize = 14.sp,
-                                    color = Espresso
-                                )
-                                Box(
-                                    modifier = Modifier
-                                        .size(7.dp)
-                                        .clip(CircleShape)
-                                        .background(Sage)
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 9.sp,
+                                    letterSpacing = 1.sp,
+                                    color = Color.White
                                 )
                             }
-                            Text(
-                                text = "Mounted on Home Screen · Synchronized",
-                                fontFamily = BodyFontFamily,
-                                fontSize = 12.sp,
-                                color = StoneMuted
-                            )
                         }
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "Unlock unlimited declarations, 4K wallpapers & all widget themes.",
+                            fontFamily = BodyFontFamily,
+                            fontSize = 12.sp,
+                            lineHeight = 17.sp,
+                            color = Color.White.copy(alpha = 0.85f)
+                        )
                     }
 
+                    Spacer(modifier = Modifier.width(12.dp))
+
                     Text(
-                        text = "Manage →",
+                        text = "Upgrade →",
                         fontFamily = BodyFontFamily,
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 12.sp,
-                        color = Terracotta
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 12.5.sp,
+                        color = TerracottaLight
                     )
                 }
             }
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Ambient Cadence & Reflection Times
+            // ── Section 1: Home & Lock Screen Widgets ───────────────
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 20.dp)
             ) {
                 Text(
-                    text = "Ambient Cadence",
-                    fontFamily = BodyFontFamily,
+                    text = "Home & Lock Screen Widgets",
+                    fontFamily = DisplayFontFamily,
                     fontWeight = FontWeight.SemiBold,
-                    fontSize = 14.sp,
+                    fontSize = 16.sp,
                     color = Espresso
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "Quiet notifications to center your day around biblical declarations.",
+                    text = "Keep living declarations on your home screen and lock screen glance.",
                     fontFamily = BodyFontFamily,
                     fontSize = 13.sp,
                     color = StoneMuted
                 )
 
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
-                Column(
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(16.dp))
+                        .shadow(2.dp, RoundedCornerShape(18.dp), spotColor = Espresso.copy(alpha = 0.06f))
+                        .clip(RoundedCornerShape(18.dp))
                         .background(Surface)
-                        .border(1.dp, Border, RoundedCornerShape(16.dp))
-                        .padding(horizontal = 16.dp, vertical = 6.dp)
+                        .border(1.dp, Border, RoundedCornerShape(18.dp))
+                        .padding(18.dp)
                 ) {
-                    CadenceSwitchRow(
-                        title = "Dawn Revelation",
-                        subtitle = "06:00 AM · Morning awakening",
-                        checked = dawnNotification,
-                        onCheckedChange = { dawnNotification = it }
-                    )
-                    Box(modifier = Modifier.fillMaxWidth().height(0.75.dp).background(Border))
-                    CadenceSwitchRow(
-                        title = "Midday Stillness",
-                        subtitle = "12:30 PM · Peace amidst work",
-                        checked = middayNotification,
-                        onCheckedChange = { middayNotification = it }
-                    )
-                    Box(modifier = Modifier.fillMaxWidth().height(0.75.dp).background(Border))
-                    CadenceSwitchRow(
-                        title = "Evening Examen",
-                        subtitle = "08:30 PM · Restful wind-down",
-                        checked = eveningNotification,
-                        onCheckedChange = { eveningNotification = it }
-                    )
+                    Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                        // Widget Status Header
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(36.dp)
+                                        .clip(RoundedCornerShape(10.dp))
+                                        .background(PorcelainWarm),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Widgets,
+                                        contentDescription = null,
+                                        tint = Espresso,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
+                                Column {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                    ) {
+                                        Text(
+                                            text = "Makarios Glance Widget",
+                                            fontFamily = BodyFontFamily,
+                                            fontWeight = FontWeight.SemiBold,
+                                            fontSize = 13.5.sp,
+                                            color = Espresso
+                                        )
+                                        Box(
+                                            modifier = Modifier
+                                                .size(7.dp)
+                                                .clip(CircleShape)
+                                                .background(Sage)
+                                        )
+                                    }
+                                    Text(
+                                        text = "Active · Synchronized",
+                                        fontFamily = BodyFontFamily,
+                                        fontSize = 11.5.sp,
+                                        color = StoneMuted
+                                    )
+                                }
+                            }
+
+                            Button(
+                                onClick = {
+                                    Toast.makeText(context, "Long-press your home screen to add Makarios widget", Toast.LENGTH_LONG).show()
+                                },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Terracotta,
+                                    contentColor = Color.White
+                                ),
+                                shape = RoundedCornerShape(12.dp),
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                                modifier = Modifier.height(32.dp)
+                            ) {
+                                Text("Add Widget", fontFamily = BodyFontFamily, fontWeight = FontWeight.SemiBold, fontSize = 11.5.sp)
+                            }
+                        }
+
+                        Divider(color = Border, thickness = 0.75.dp)
+
+                        // Widget Source Selector
+                        Column {
+                            Text(
+                                text = "WIDGET FEED SOURCE",
+                                fontFamily = BodyFontFamily,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 10.sp,
+                                letterSpacing = 1.4.sp,
+                                color = StoneMuted
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                listOf("Declaration of the Day", "Saved Only", "Spiritual Focus").forEach { source ->
+                                    val isSelected = selectedWidgetSource == source
+                                    Box(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .clip(RoundedCornerShape(10.dp))
+                                            .background(if (isSelected) Espresso else PorcelainWarm.copy(alpha = 0.5f))
+                                            .clickable { selectedWidgetSource = source }
+                                            .padding(vertical = 8.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            text = source,
+                                            fontFamily = BodyFontFamily,
+                                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                                            fontSize = 11.sp,
+                                            color = if (isSelected) Color.White else Espresso
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
-            // Current Spiritual Season Focus
+            // ── Section 2: Gentle Notifications & Reminders ─────────
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
+            ) {
+                Text(
+                    text = "Gentle Notifications",
+                    fontFamily = DisplayFontFamily,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 16.sp,
+                    color = Espresso
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "Quiet reminders to anchor your mind in God's promises throughout the day.",
+                    fontFamily = BodyFontFamily,
+                    fontSize = 13.sp,
+                    color = StoneMuted
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .shadow(2.dp, RoundedCornerShape(18.dp), spotColor = Espresso.copy(alpha = 0.06f))
+                        .clip(RoundedCornerShape(18.dp))
+                        .background(Surface)
+                        .border(1.dp, Border, RoundedCornerShape(18.dp))
+                        .padding(horizontal = 18.dp, vertical = 6.dp)
+                ) {
+                    Column {
+                        ReminderSwitchRow(
+                            title = "Dawn Revelation",
+                            subtitle = "06:30 AM · Morning awakening declaration",
+                            checked = dawnNotification,
+                            onCheckedChange = { dawnNotification = it }
+                        )
+                        Divider(color = Border, thickness = 0.75.dp)
+                        ReminderSwitchRow(
+                            title = "Midday Stillness",
+                            subtitle = "12:30 PM · Peace amidst the workday",
+                            checked = middayNotification,
+                            onCheckedChange = { middayNotification = it }
+                        )
+                        Divider(color = Border, thickness = 0.75.dp)
+                        ReminderSwitchRow(
+                            title = "Evening Examen",
+                            subtitle = "08:30 PM · Restful wind-down and scripture",
+                            checked = eveningNotification,
+                            onCheckedChange = { eveningNotification = it }
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // ── Section 3: Spiritual Season Focus ───────────────────
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -231,51 +390,62 @@ fun ProfileScreen(
             ) {
                 Text(
                     text = "Current Spiritual Focus",
-                    fontFamily = BodyFontFamily,
+                    fontFamily = DisplayFontFamily,
                     fontWeight = FontWeight.SemiBold,
-                    fontSize = 14.sp,
+                    fontSize = 16.sp,
                     color = Espresso
                 )
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "Sets the primary theme for your daily declarations and widgets.",
+                    fontFamily = BodyFontFamily,
+                    fontSize = 13.sp,
+                    color = StoneMuted
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
 
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(16.dp))
+                        .shadow(2.dp, RoundedCornerShape(18.dp), spotColor = Espresso.copy(alpha = 0.06f))
+                        .clip(RoundedCornerShape(18.dp))
                         .background(Surface)
-                        .border(1.dp, Border, RoundedCornerShape(16.dp))
-                        .padding(8.dp),
+                        .border(1.dp, Border, RoundedCornerShape(18.dp))
+                        .padding(10.dp),
                     verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     listOf(
-                        "Confidence & Calling" to "Exodus 4:12 · Walking boldly in purpose",
-                        "Peace over Anxiety" to "John 14:27 · Quiet protection amidst chaos",
-                        "Rest & Renewal" to "Matthew 11:28 · Surrendering performance"
+                        "Peace over Anxiety" to "PHILIPPIANS 4:7 · Guarding hearts and minds in Christ",
+                        "Confidence & Calling" to "HEBREWS 13:6 · The Lord is my helper; I will not fear",
+                        "Rest & Renewal" to "MATTHEW 11:28 · Come to me, all who are weary",
+                        "Divine Provision" to "PHILIPPIANS 4:19 · Meeting every need in glory"
                     ).forEach { (season, verse) ->
                         val isSelected = selectedSeason == season
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clip(RoundedCornerShape(10.dp))
+                                .clip(RoundedCornerShape(12.dp))
                                 .background(if (isSelected) PorcelainWarm else Color.Transparent)
                                 .clickable { selectedSeason = season }
                                 .padding(horizontal = 14.dp, vertical = 10.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Column {
+                            Column(modifier = Modifier.weight(1f)) {
                                 Text(
                                     text = season,
                                     fontFamily = BodyFontFamily,
-                                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-                                    fontSize = 14.sp,
+                                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
+                                    fontSize = 13.5.sp,
                                     color = Espresso
                                 )
+                                Spacer(modifier = Modifier.height(2.dp))
                                 Text(
                                     text = verse,
                                     fontFamily = BodyFontFamily,
-                                    fontSize = 12.sp,
-                                    color = StoneMuted
+                                    fontSize = 11.5.sp,
+                                    color = if (isSelected) Terracotta else StoneMuted
                                 )
                             }
                             if (isSelected) {
@@ -291,9 +461,54 @@ fun ProfileScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
-            // About Makarios & Brand Stamp
+            // ── Section 4: Welcome Journey ──────────────────────────
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
+                    .shadow(1.dp, RoundedCornerShape(14.dp), spotColor = Espresso.copy(alpha = 0.04f))
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(Surface)
+                    .border(1.dp, Border, RoundedCornerShape(14.dp))
+                    .clickable(onClick = onRevisitOnboarding)
+                    .padding(horizontal = 16.dp, vertical = 14.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text(
+                            text = "Welcome Journey",
+                            fontFamily = BodyFontFamily,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 13.5.sp,
+                            color = Espresso
+                        )
+                        Text(
+                            text = "Revisit the 4-step onboarding introduction",
+                            fontFamily = BodyFontFamily,
+                            fontSize = 11.5.sp,
+                            color = StoneMuted
+                        )
+                    }
+
+                    Text(
+                        text = "View →",
+                        fontFamily = BodyFontFamily,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 12.sp,
+                        color = Terracotta
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(28.dp))
+
+            // ── Section 5: Brand Stamp ──────────────────────────────
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -328,7 +543,7 @@ fun ProfileScreen(
 }
 
 @Composable
-private fun CadenceSwitchRow(
+private fun ReminderSwitchRow(
     title: String,
     subtitle: String,
     checked: Boolean,
@@ -341,18 +556,19 @@ private fun CadenceSwitchRow(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Column {
+        Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = title,
                 fontFamily = BodyFontFamily,
                 fontWeight = FontWeight.Medium,
-                fontSize = 14.sp,
+                fontSize = 13.5.sp,
                 color = Espresso
             )
+            Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = subtitle,
                 fontFamily = BodyFontFamily,
-                fontSize = 12.sp,
+                fontSize = 11.5.sp,
                 color = StoneMuted
             )
         }
@@ -361,7 +577,8 @@ private fun CadenceSwitchRow(
             onCheckedChange = onCheckedChange,
             colors = SwitchDefaults.colors(
                 checkedThumbColor = Surface,
-                checkedTrackColor = Terracotta
+                checkedTrackColor = Terracotta,
+                uncheckedTrackColor = PorcelainWarm
             )
         )
     }

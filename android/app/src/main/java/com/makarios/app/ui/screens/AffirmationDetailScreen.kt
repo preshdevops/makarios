@@ -12,11 +12,13 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Widgets
 import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -26,6 +28,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -47,7 +50,7 @@ fun AffirmationDetailScreen(
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(AtmosphericGradient) // Warm espresso-plum atmospheric gradient
+            .background(AtmosphericGradient)
     ) {
         Column(
             modifier = Modifier
@@ -59,7 +62,7 @@ fun AffirmationDetailScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            // Top Controls: Close 'X' on left, Share & Heart on right
+            // ── Top Controls: Close 'X' on left, Share & Heart on right ──
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -125,14 +128,14 @@ fun AffirmationDetailScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
-            // Center Content: Category pill, Main Declaration, Scripture
+            // ── Center Content ──
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                // Category Pill (e.g. "IDENTITY")
+                // Category Pill
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(16.dp))
@@ -149,168 +152,212 @@ fun AffirmationDetailScreen(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(22.dp))
 
                 // Large Main Declaration in Fraunces Serif
                 Text(
                     text = "“${affirmation.declaration}”",
                     fontFamily = DisplayFontFamily,
                     fontWeight = FontWeight.Normal,
-                    fontSize = 28.sp,
-                    lineHeight = 38.sp,
+                    fontSize = 26.sp,
+                    lineHeight = 36.sp,
                     letterSpacing = (-0.3).sp,
                     textAlign = TextAlign.Center,
                     color = Color.White,
                     modifier = Modifier.padding(horizontal = 8.dp)
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(24.dp))
 
-                // Scripture reference
-                Text(
-                    text = affirmation.reference,
-                    fontFamily = BodyFontFamily,
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 13.sp,
-                    letterSpacing = 1.sp,
-                    color = Color.White.copy(alpha = 0.75f)
-                )
-
-                Spacer(modifier = Modifier.height(32.dp))
-
-                // PERSONAL DECLARATION Card (Page 1 in PDF)
+                // Mandatory Scripture Container — enclosed card with verse text + reference
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(Color.White.copy(alpha = 0.10f))
-                        .border(1.dp, Color.White.copy(alpha = 0.18f), RoundedCornerShape(16.dp))
+                        .clip(RoundedCornerShape(18.dp))
+                        .background(Color.White.copy(alpha = 0.12f))
+                        .border(1.dp, Color.White.copy(alpha = 0.20f), RoundedCornerShape(18.dp))
                         .padding(20.dp)
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
-                            text = "✍  PERSONAL DECLARATION",
+                            text = "GROUNDING SCRIPTURE",
                             fontFamily = BodyFontFamily,
                             fontWeight = FontWeight.SemiBold,
-                            fontSize = 10.5.sp,
-                            letterSpacing = 1.8.sp,
+                            fontSize = 10.sp,
+                            letterSpacing = 1.6.sp,
                             color = TerracottaLight
                         )
+
                         Spacer(modifier = Modifier.height(10.dp))
+
+                        // Full scripture verse text in italic Fraunces
                         Text(
-                            text = "“${affirmation.personalDeclaration ?: "Today, I choose to see myself as God sees me. I will not be moved by my feelings or circumstances."}”",
+                            text = "“${affirmation.scriptureText}”",
                             fontFamily = DisplayFontFamily,
+                            fontStyle = FontStyle.Italic,
                             fontSize = 14.5.sp,
                             lineHeight = 22.sp,
                             textAlign = TextAlign.Center,
-                            color = Color.White.copy(alpha = 0.90f)
+                            color = Color.White.copy(alpha = 0.95f)
                         )
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        // Reference in tracked small caps
+                        Text(
+                            text = affirmation.reference.uppercase(),
+                            fontFamily = BodyFontFamily,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 11.sp,
+                            letterSpacing = 1.4.sp,
+                            color = TerracottaLight
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(18.dp))
+
+                // Personal Declaration / Reflection Card (no emoji)
+                if (affirmation.personalDeclaration != null) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(Color.White.copy(alpha = 0.08f))
+                            .border(1.dp, Color.White.copy(alpha = 0.14f), RoundedCornerShape(16.dp))
+                            .padding(18.dp)
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                text = "PERSONAL CONFESSION",
+                                fontFamily = BodyFontFamily,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 9.5.sp,
+                                letterSpacing = 1.6.sp,
+                                color = Color.White.copy(alpha = 0.7f)
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "“${affirmation.personalDeclaration}”",
+                                fontFamily = DisplayFontFamily,
+                                fontSize = 14.sp,
+                                lineHeight = 21.sp,
+                                textAlign = TextAlign.Center,
+                                color = Color.White.copy(alpha = 0.90f)
+                            )
+                        }
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(28.dp))
 
-            // Bottom Section: Two action cards + Swipe indicator
+            // ── Bottom Action Section ──
             Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 20.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                // Two Side-by-Side Action Cards: "Create Visual" & "Set Reminder"
+                // Primary: Design Studio & Wallpaper
+                Button(
+                    onClick = { onNavigateToCreate(affirmation.id) },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Terracotta,
+                        contentColor = Color.White
+                    ),
+                    shape = RoundedCornerShape(16.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Palette,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Text(
+                            text = "Design Studio & Wallpapers",
+                            fontFamily = BodyFontFamily,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 13.5.sp
+                        )
+                    }
+                }
+
+                // Secondary row: Add to Widget + Set Reminder
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    // Button 1: Create Visual (translucent card with paintbrush icon)
                     Box(
                         modifier = Modifier
                             .weight(1f)
-                            .height(68.dp)
-                            .clip(RoundedCornerShape(16.dp))
+                            .height(46.dp)
+                            .clip(RoundedCornerShape(14.dp))
                             .background(Color.White.copy(alpha = 0.12f))
-                            .border(1.dp, Color.White.copy(alpha = 0.20f), RoundedCornerShape(16.dp))
-                            .clickable { onNavigateToCreate(affirmation.id) }
-                            .padding(12.dp),
+                            .border(1.dp, Color.White.copy(alpha = 0.20f), RoundedCornerShape(14.dp))
+                            .clickable {
+                                Toast.makeText(context, "Added to Home Screen widget", Toast.LENGTH_SHORT).show()
+                            },
                         contentAlignment = Alignment.Center
                     ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             Icon(
-                                imageVector = Icons.Default.Palette,
+                                imageVector = Icons.Default.Widgets,
                                 contentDescription = null,
-                                tint = TerracottaLight,
-                                modifier = Modifier.size(18.dp)
+                                tint = Color.White,
+                                modifier = Modifier.size(15.dp)
                             )
-                            Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = "Create Visual",
+                                text = "Add to Widget",
                                 fontFamily = BodyFontFamily,
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Medium,
+                                fontSize = 12.5.sp,
                                 color = Color.White
                             )
                         }
                     }
 
-                    // Button 2: Set Reminder (clean white card with bell icon)
                     Box(
                         modifier = Modifier
                             .weight(1f)
-                            .height(68.dp)
-                            .shadow(4.dp, RoundedCornerShape(16.dp))
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(Surface)
+                            .height(46.dp)
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(Color.White.copy(alpha = 0.12f))
+                            .border(1.dp, Color.White.copy(alpha = 0.20f), RoundedCornerShape(14.dp))
                             .clickable {
-                                Toast.makeText(context, "Reminder set for this declaration", Toast.LENGTH_SHORT).show()
-                            }
-                            .padding(12.dp),
+                                Toast.makeText(context, "Daily reminder scheduled", Toast.LENGTH_SHORT).show()
+                            },
                         contentAlignment = Alignment.Center
                     ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Notifications,
                                 contentDescription = null,
-                                tint = Terracotta,
-                                modifier = Modifier.size(18.dp)
+                                tint = Color.White,
+                                modifier = Modifier.size(15.dp)
                             )
-                            Spacer(modifier = Modifier.height(4.dp))
                             Text(
                                 text = "Set Reminder",
                                 fontFamily = BodyFontFamily,
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 12.sp,
-                                color = Espresso
+                                fontWeight = FontWeight.Medium,
+                                fontSize = 12.5.sp,
+                                color = Color.White
                             )
                         }
                     }
-                }
-
-                Spacer(modifier = Modifier.height(28.dp))
-
-                // Bottom Indicator: ^ SWIPE FOR NEXT
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.KeyboardArrowUp,
-                        contentDescription = null,
-                        tint = Color.White.copy(alpha = 0.5f),
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Text(
-                        text = "SWIPE FOR NEXT",
-                        fontFamily = BodyFontFamily,
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 10.sp,
-                        letterSpacing = 2.sp,
-                        color = Color.White.copy(alpha = 0.5f)
-                    )
                 }
             }
         }

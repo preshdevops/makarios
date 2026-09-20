@@ -1,5 +1,6 @@
 package com.makarios.app.ui.screens
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -9,42 +10,107 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Bookmark
-import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Wallpaper
+import androidx.compose.material.icons.outlined.BookmarkBorder
+import androidx.compose.material.icons.outlined.Create
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImage
 import com.makarios.app.data.Affirmation
 import com.makarios.app.data.AffirmationRepository
+import com.makarios.app.ui.components.AffirmationCard
 import com.makarios.app.ui.theme.*
 
 enum class SavedTab(val label: String) {
-    AFFIRMATIONS("Affirmations"),
-    VISUALS("Visuals"),
+    DECLARATIONS("Declarations"),
+    WALLPAPERS("Wallpapers"),
     PERSONAL("Personal")
 }
+
+data class WallpaperItem(
+    val id: String,
+    val title: String,
+    val reference: String,
+    val background: Brush,
+    val textColor: Color,
+    val accentColor: Color,
+    val affirmationId: String
+)
+
+val curatedWallpapers = listOf(
+    WallpaperItem(
+        id = "wp-1",
+        title = "I am fearfully and wonderfully made.",
+        reference = "PSALM 139:14",
+        background = Brush.verticalGradient(
+            listOf(Color(0xFF331E2A), Color(0xFF1F1118), Color(0xFF150B10))
+        ),
+        textColor = Color.White,
+        accentColor = Color(0xFFFAEDE8),
+        affirmationId = "ident-1"
+    ),
+    WallpaperItem(
+        id = "wp-2",
+        title = "The peace of God guards my heart.",
+        reference = "PHILIPPIANS 4:7",
+        background = Brush.verticalGradient(
+            listOf(Color(0xFF8A4633), Color(0xFF4A1F2C), Color(0xFF1F1118))
+        ),
+        textColor = Color.White,
+        accentColor = Color(0xFFFAEDE8),
+        affirmationId = "aotd-1"
+    ),
+    WallpaperItem(
+        id = "wp-3",
+        title = "In quietness and trust is my strength.",
+        reference = "ISAIAH 30:15",
+        background = Brush.verticalGradient(
+            listOf(Color(0xFFFAF8F5), Color(0xFFEAE3D8))
+        ),
+        textColor = Color(0xFF1F1118),
+        accentColor = Color(0xFFC46851),
+        affirmationId = "peace-still"
+    ),
+    WallpaperItem(
+        id = "wp-4",
+        title = "The Lord is my helper; I will not fear.",
+        reference = "HEBREWS 13:6",
+        background = Brush.verticalGradient(
+            listOf(Color(0xFF3A5047), Color(0xFF2A3C33), Color(0xFF1A2620))
+        ),
+        textColor = Color.White,
+        accentColor = Color(0xFFEEF3EE),
+        affirmationId = "conf-1"
+    )
+)
 
 @Composable
 fun SavedScreen(
     onNavigateToDetail: (Affirmation) -> Unit,
     onNavigateToCreate: (String) -> Unit,
+    onNavigateToLibrary: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    var selectedTab by remember { mutableStateOf(SavedTab.AFFIRMATIONS) }
-    val favorites = AffirmationRepository.getFavorites()
+    val context = LocalContext.current
+    var selectedTab by remember { mutableStateOf(SavedTab.DECLARATIONS) }
+
+    val savedList = AffirmationRepository.getSaved()
+    val personalList = AffirmationRepository.personalAffirmations
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -55,60 +121,58 @@ fun SavedScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
-                .padding(bottom = 32.dp)
+                .padding(bottom = 36.dp)
         ) {
-            // ── Top Header: Saved with bookmark & search icons (Page 3 in PDF) ──
-            Row(
+            // ── Top Header ──────────────────────────────────────────
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 14.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                    .padding(horizontal = 20.dp)
+                    .padding(top = 16.dp, bottom = 12.dp)
             ) {
-                Text(
-                    text = "Saved",
-                    fontFamily = DisplayFontFamily,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 24.sp,
-                    color = Espresso
-                )
-
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Box(
-                        modifier = Modifier
-                            .size(36.dp)
-                            .clip(CircleShape)
-                            .background(Surface)
-                            .border(1.dp, Border, CircleShape),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Bookmark,
-                            contentDescription = "Bookmarks",
-                            tint = Terracotta,
-                            modifier = Modifier.size(18.dp)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text(
+                            text = "Saved & Created",
+                            fontFamily = DisplayFontFamily,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 24.sp,
+                            color = Espresso
+                        )
+                        Spacer(modifier = Modifier.height(3.dp))
+                        Text(
+                            text = "Declarations you've kept close and truths you've authored.",
+                            fontFamily = BodyFontFamily,
+                            fontSize = 13.sp,
+                            color = Stone
                         )
                     }
 
+                    // Floating add button to create
                     Box(
                         modifier = Modifier
-                            .size(36.dp)
+                            .size(38.dp)
                             .clip(CircleShape)
                             .background(Surface)
-                            .border(1.dp, Border, CircleShape),
+                            .border(1.dp, Border, CircleShape)
+                            .clickable { onNavigateToCreate("") },
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Search,
-                            contentDescription = "Search",
+                            imageVector = Icons.Default.Add,
+                            contentDescription = "Create declaration",
                             tint = Espresso,
-                            modifier = Modifier.size(18.dp)
+                            modifier = Modifier.size(20.dp)
                         )
                     }
                 }
             }
 
-            // ── Segmented Tabs: Affirmations | Visuals | Personal (Page 3 in PDF) ──
+            // ── Segmented Tabs ──────────────────────────────────────
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -120,6 +184,12 @@ fun SavedScreen(
             ) {
                 SavedTab.values().forEach { tab ->
                     val isSelected = selectedTab == tab
+                    val count = when (tab) {
+                        SavedTab.DECLARATIONS -> savedList.size
+                        SavedTab.WALLPAPERS -> curatedWallpapers.size
+                        SavedTab.PERSONAL -> personalList.size
+                    }
+
                     Box(
                         modifier = Modifier
                             .weight(1f)
@@ -127,7 +197,7 @@ fun SavedScreen(
                             .then(
                                 if (isSelected) {
                                     Modifier
-                                        .background(Terracotta)
+                                        .background(Espresso)
                                         .shadow(2.dp, RoundedCornerShape(20.dp))
                                 } else {
                                     Modifier.background(Color.Transparent)
@@ -137,272 +207,407 @@ fun SavedScreen(
                             .padding(vertical = 8.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            text = tab.label,
-                            fontFamily = BodyFontFamily,
-                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-                            fontSize = 13.sp,
-                            color = if (isSelected) Color.White else Espresso
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(5.dp)
+                        ) {
+                            Text(
+                                text = tab.label,
+                                fontFamily = BodyFontFamily,
+                                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                                fontSize = 12.5.sp,
+                                color = if (isSelected) Color.White else Espresso
+                            )
+                            Box(
+                                modifier = Modifier
+                                    .clip(CircleShape)
+                                    .background(
+                                        if (isSelected) Terracotta else PorcelainWarm
+                                    )
+                                    .padding(horizontal = 5.dp, vertical = 1.dp)
+                            ) {
+                                Text(
+                                    text = "$count",
+                                    fontFamily = BodyFontFamily,
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 10.sp,
+                                    color = if (isSelected) Color.White else Stone
+                                )
+                            }
+                        }
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(18.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-            // ── Section 1: My Favorites (12 ITEMS) ──
-            Column(modifier = Modifier.padding(horizontal = 20.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "My Favorites",
-                        fontFamily = BodyFontFamily,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 15.sp,
-                        color = Espresso
-                    )
-                    Text(
-                        text = "12 ITEMS",
-                        fontFamily = BodyFontFamily,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 10.5.sp,
-                        letterSpacing = 1.4.sp,
-                        color = StoneMuted
-                    )
-                }
+            // ── TAB CONTENT ─────────────────────────────────────────
+            when (selectedTab) {
 
-                Spacer(modifier = Modifier.height(10.dp))
-
-                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    favorites.take(2).forEach { item ->
-                        FavoriteRowItem(
-                            affirmation = item,
-                            onClick = { onNavigateToDetail(item) }
+                // ── TAB 1: SAVED DECLARATIONS ───────────────────────
+                SavedTab.DECLARATIONS -> {
+                    if (savedList.isEmpty()) {
+                        EmptySavedState(
+                            title = "No saved declarations yet",
+                            description = "When a declaration speaks into your season, bookmark it to return to it anytime.",
+                            buttonText = "Browse Library",
+                            onAction = onNavigateToLibrary
                         )
+                    } else {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 20.dp),
+                            verticalArrangement = Arrangement.spacedBy(14.dp)
+                        ) {
+                            savedList.forEach { affirmation ->
+                                val isSaved = AffirmationRepository.isSaved(affirmation.id)
+                                AffirmationCard(
+                                    affirmation = affirmation,
+                                    isSaved = isSaved,
+                                    onToggleSave = {
+                                        AffirmationRepository.toggleSave(affirmation.id)
+                                    },
+                                    onShare = {
+                                        Toast.makeText(context, "Shared declaration", Toast.LENGTH_SHORT).show()
+                                    },
+                                    onCardClick = { onNavigateToDetail(affirmation) }
+                                )
+                            }
+                        }
                     }
                 }
-            }
 
-            Spacer(modifier = Modifier.height(24.dp))
+                // ── TAB 2: WALLPAPERS ───────────────────────────────
+                SavedTab.WALLPAPERS -> {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 20.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Phone Wallpapers",
+                                fontFamily = DisplayFontFamily,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 16.sp,
+                                color = Espresso
+                            )
+                            Text(
+                                text = "Lock & Home Screen",
+                                fontFamily = BodyFontFamily,
+                                fontSize = 12.sp,
+                                color = StoneMuted
+                            )
+                        }
 
-            // ── Section 2: Wallpapers (SEE ALL) 2-column image gallery ──
-            Column(modifier = Modifier.padding(horizontal = 20.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Wallpapers",
-                        fontFamily = BodyFontFamily,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 15.sp,
-                        color = Espresso
-                    )
-                    Text(
-                        text = "SEE ALL",
-                        fontFamily = BodyFontFamily,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 10.5.sp,
-                        letterSpacing = 1.4.sp,
-                        color = Terracotta
-                    )
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        // 2-column grid of wallpapers
+                        for (i in curatedWallpapers.indices step 2) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 12.dp),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                WallpaperCard(
+                                    wallpaper = curatedWallpapers[i],
+                                    onOpenStudio = { onNavigateToCreate(curatedWallpapers[i].affirmationId) },
+                                    onSetWallpaper = {
+                                        Toast.makeText(context, "Wallpaper downloaded to photos", Toast.LENGTH_SHORT).show()
+                                    },
+                                    modifier = Modifier.weight(1f)
+                                )
+
+                                if (i + 1 < curatedWallpapers.size) {
+                                    WallpaperCard(
+                                        wallpaper = curatedWallpapers[i + 1],
+                                        onOpenStudio = { onNavigateToCreate(curatedWallpapers[i + 1].affirmationId) },
+                                        onSetWallpaper = {
+                                            Toast.makeText(context, "Wallpaper downloaded to photos", Toast.LENGTH_SHORT).show()
+                                        },
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                } else {
+                                    Spacer(modifier = Modifier.weight(1f))
+                                }
+                            }
+                        }
+                    }
                 }
 
-                Spacer(modifier = Modifier.height(12.dp))
+                // ── TAB 3: PERSONAL DECLARATIONS ────────────────────
+                SavedTab.PERSONAL -> {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 20.dp)
+                    ) {
+                        // Author banner card
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .shadow(2.dp, RoundedCornerShape(18.dp), spotColor = Espresso.copy(alpha = 0.06f))
+                                .clip(RoundedCornerShape(18.dp))
+                                .background(Surface)
+                                .border(1.dp, Border, RoundedCornerShape(18.dp))
+                                .padding(18.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "Author a Declaration",
+                                        fontFamily = DisplayFontFamily,
+                                        fontWeight = FontWeight.SemiBold,
+                                        fontSize = 16.sp,
+                                        color = Espresso
+                                    )
+                                    Spacer(modifier = Modifier.height(3.dp))
+                                    Text(
+                                        text = "Declare God's promises in your own words, matched with scripture.",
+                                        fontFamily = BodyFontFamily,
+                                        fontSize = 12.5.sp,
+                                        lineHeight = 17.sp,
+                                        color = Stone
+                                    )
+                                }
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    // Wallpaper 1: Sunrise (IDENTITY)
-                    WallpaperGridItem(
-                        imageUrl = "https://images.unsplash.com/photo-1507652313519-d4e9174996dd?auto=format&fit=crop&w=600&q=80",
-                        tag = "IDENTITY",
-                        onClick = { onNavigateToCreate("ident-1") },
-                        modifier = Modifier.weight(1f)
-                    )
+                                Spacer(modifier = Modifier.width(12.dp))
 
-                    // Wallpaper 2: Dawn (PEACE)
-                    WallpaperGridItem(
-                        imageUrl = "https://images.unsplash.com/photo-1518495973542-4542c06a5843?auto=format&fit=crop&w=600&q=80",
-                        tag = "PEACE",
-                        onClick = { onNavigateToCreate("aotd-1") },
-                        modifier = Modifier.weight(1f)
-                    )
+                                Button(
+                                    onClick = { onNavigateToCreate("") },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = Terracotta,
+                                        contentColor = Color.White
+                                    ),
+                                    shape = RoundedCornerShape(14.dp),
+                                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)
+                                ) {
+                                    Text(
+                                        text = "Write",
+                                        fontFamily = BodyFontFamily,
+                                        fontWeight = FontWeight.SemiBold,
+                                        fontSize = 12.5.sp
+                                    )
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        if (personalList.isEmpty()) {
+                            EmptySavedState(
+                                title = "No personal declarations yet",
+                                description = "Write declarations rooted in scripture to speak over your life and season.",
+                                buttonText = "Write Declaration",
+                                onAction = { onNavigateToCreate("") }
+                            )
+                        } else {
+                            Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                                personalList.forEach { affirmation ->
+                                    val isSaved = AffirmationRepository.isSaved(affirmation.id)
+                                    AffirmationCard(
+                                        affirmation = affirmation,
+                                        isSaved = isSaved,
+                                        onToggleSave = {
+                                            AffirmationRepository.toggleSave(affirmation.id)
+                                        },
+                                        onShare = {
+                                            Toast.makeText(context, "Shared declaration", Toast.LENGTH_SHORT).show()
+                                        },
+                                        onCardClick = { onNavigateToDetail(affirmation) }
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
-            }
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            // ── Section 3: Personal Affirmations Empty State ──
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(48.dp)
-                        .clip(CircleShape)
-                        .background(TerracottaLight),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(text = "✍", fontSize = 20.sp)
-                }
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                Text(
-                    text = "No Personal Affirmations",
-                    fontFamily = DisplayFontFamily,
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 17.sp,
-                    color = Espresso
-                )
-
-                Spacer(modifier = Modifier.height(4.dp))
-
-                Text(
-                    text = "Create your own declarations to see them here.",
-                    fontFamily = BodyFontFamily,
-                    fontSize = 13.sp,
-                    textAlign = TextAlign.Center,
-                    color = StoneMuted
-                )
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                Text(
-                    text = "Create Now",
-                    fontFamily = BodyFontFamily,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 13.sp,
-                    color = Terracotta,
-                    modifier = Modifier.clickable { onNavigateToCreate("ident-1") }
-                )
             }
         }
     }
 }
 
+// ── Wallpaper Item Card ──────────────────────────────────────────
 @Composable
-private fun FavoriteRowItem(
-    affirmation: Affirmation,
-    onClick: () -> Unit
-) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .shadow(2.dp, RoundedCornerShape(14.dp), spotColor = Espresso.copy(alpha = 0.05f))
-            .clip(RoundedCornerShape(14.dp))
-            .background(Surface)
-            .border(1.dp, Border, RoundedCornerShape(14.dp))
-            .clickable(onClick = onClick)
-            .padding(16.dp)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier.weight(1f)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(32.dp)
-                        .clip(CircleShape)
-                        .background(TerracottaLight),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Favorite,
-                        contentDescription = null,
-                        tint = Terracotta,
-                        modifier = Modifier.size(15.dp)
-                    )
-                }
-
-                Column {
-                    Text(
-                        text = "“${affirmation.declaration}”",
-                        fontFamily = DisplayFontFamily,
-                        fontSize = 14.5.sp,
-                        lineHeight = 20.sp,
-                        color = Espresso
-                    )
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        text = affirmation.category.uppercase(),
-                        fontFamily = BodyFontFamily,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 9.5.sp,
-                        letterSpacing = 1.4.sp,
-                        color = Terracotta
-                    )
-                }
-            }
-
-            Icon(
-                imageVector = Icons.Default.ChevronRight,
-                contentDescription = null,
-                tint = StoneMuted,
-                modifier = Modifier.size(18.dp)
-            )
-        }
-    }
-}
-
-@Composable
-private fun WallpaperGridItem(
-    imageUrl: String,
-    tag: String,
-    onClick: () -> Unit,
+private fun WallpaperCard(
+    wallpaper: WallpaperItem,
+    onOpenStudio: () -> Unit,
+    onSetWallpaper: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Box(
         modifier = modifier
-            .height(210.dp)
-            .shadow(4.dp, RoundedCornerShape(16.dp), spotColor = Espresso.copy(alpha = 0.10f))
-            .clip(RoundedCornerShape(16.dp))
-            .background(Espresso)
-            .clickable(onClick = onClick)
+            .height(260.dp)
+            .shadow(4.dp, RoundedCornerShape(18.dp), spotColor = Espresso.copy(alpha = 0.15f))
+            .clip(RoundedCornerShape(18.dp))
+            .background(wallpaper.background)
+            .clickable(onClick = onOpenStudio)
     ) {
-        AsyncImage(
-            model = imageUrl,
-            contentDescription = null,
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop
-        )
-
-        // Bottom gradient for tag
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(
-                    androidx.compose.ui.graphics.Brush.verticalGradient(
-                        listOf(Color.Transparent, Color.Black.copy(alpha = 0.6f))
-                    )
+                .padding(14.dp),
+            verticalArrangement = Arrangement.SpaceBetween,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // Top tag
+            Text(
+                text = "MAKARIOS",
+                fontFamily = BodyFontFamily,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 8.sp,
+                letterSpacing = 2.sp,
+                color = wallpaper.accentColor.copy(alpha = 0.7f)
+            )
+
+            // Center quote
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = "“${wallpaper.title}”",
+                    fontFamily = DisplayFontFamily,
+                    fontSize = 14.sp,
+                    lineHeight = 20.sp,
+                    textAlign = TextAlign.Center,
+                    color = wallpaper.textColor,
+                    maxLines = 4
                 )
-        )
+                Spacer(modifier = Modifier.height(8.dp))
+                Box(
+                    modifier = Modifier
+                        .width(28.dp)
+                        .height(1.dp)
+                        .background(wallpaper.accentColor.copy(alpha = 0.4f))
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+                Text(
+                    text = wallpaper.reference,
+                    fontFamily = BodyFontFamily,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 9.sp,
+                    letterSpacing = 1.2.sp,
+                    color = wallpaper.accentColor
+                )
+            }
+
+            // Bottom action icons
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(28.dp)
+                        .clip(CircleShape)
+                        .background(wallpaper.textColor.copy(alpha = 0.15f))
+                        .clickable(onClick = onOpenStudio),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = "Edit in Studio",
+                        tint = wallpaper.textColor,
+                        modifier = Modifier.size(13.dp)
+                    )
+                }
+
+                Box(
+                    modifier = Modifier
+                        .size(28.dp)
+                        .clip(CircleShape)
+                        .background(wallpaper.textColor.copy(alpha = 0.15f))
+                        .clickable(onClick = onSetWallpaper),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Download,
+                        contentDescription = "Download Wallpaper",
+                        tint = wallpaper.textColor,
+                        modifier = Modifier.size(13.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
+// ── Empty State ──────────────────────────────────────────────────
+@Composable
+private fun EmptySavedState(
+    title: String,
+    description: String,
+    buttonText: String,
+    onAction: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Box(
+            modifier = Modifier
+                .size(54.dp)
+                .clip(CircleShape)
+                .background(PorcelainWarm),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.BookmarkBorder,
+                contentDescription = null,
+                tint = Espresso,
+                modifier = Modifier.size(24.dp)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(14.dp))
 
         Text(
-            text = tag,
-            fontFamily = BodyFontFamily,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 9.sp,
-            letterSpacing = 1.4.sp,
-            color = Color.White,
-            modifier = Modifier
-                .align(Alignment.BottomStart)
-                .padding(12.dp)
+            text = title,
+            fontFamily = DisplayFontFamily,
+            fontWeight = FontWeight.Medium,
+            fontSize = 18.sp,
+            color = Espresso
         )
+
+        Spacer(modifier = Modifier.height(6.dp))
+
+        Text(
+            text = description,
+            fontFamily = BodyFontFamily,
+            fontSize = 13.sp,
+            lineHeight = 19.sp,
+            textAlign = TextAlign.Center,
+            color = StoneMuted,
+            modifier = Modifier.padding(horizontal = 16.dp)
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(
+            onClick = onAction,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Espresso,
+                contentColor = Color.White
+            ),
+            shape = RoundedCornerShape(16.dp),
+            contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp)
+        ) {
+            Text(
+                text = buttonText,
+                fontFamily = BodyFontFamily,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 13.sp
+            )
+        }
     }
 }

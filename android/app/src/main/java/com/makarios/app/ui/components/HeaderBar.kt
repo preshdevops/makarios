@@ -84,9 +84,18 @@ fun HeaderBar(
 
         Spacer(modifier = Modifier.height(22.dp))
 
-        // Opening headline question from mockup
+        // Time-aware greeting
+        val currentHour = remember { java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY) }
+        val greeting = remember(currentHour) {
+            when (currentHour) {
+                in 4..11 -> "Good morning"
+                in 12..16 -> "Good afternoon"
+                else -> "Good evening"
+            }
+        }
+
         Text(
-            text = subtitle ?: "What are you carrying today?",
+            text = subtitle ?: greeting,
             fontFamily = DisplayFontFamily,
             fontWeight = FontWeight.SemiBold,
             fontSize = 25.sp,

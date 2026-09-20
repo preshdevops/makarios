@@ -13,14 +13,9 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowForward
-import androidx.compose.material.icons.filled.Bookmark
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -31,12 +26,16 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.makarios.app.data.Affirmation
 import com.makarios.app.data.AffirmationRepository
+import com.makarios.app.ui.components.AffirmationCard
+import com.makarios.app.ui.components.CreatorPromptCard
+import com.makarios.app.ui.components.WidgetPreviewCard
 import com.makarios.app.ui.theme.*
 
 @Composable
@@ -44,20 +43,46 @@ fun HomeScreen(
     onNavigateToDetail: (Affirmation) -> Unit,
     onNavigateToCreate: (String) -> Unit,
     onNavigateToLibrary: () -> Unit,
+    onNavigateToWidgets: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    var selectedFocusArea by remember { mutableStateOf("Strength") }
+    var selectedCategory by remember { mutableStateOf("All") }
     val aotd = AffirmationRepository.affirmationOfTheDay
     var isAotdSaved by remember { mutableStateOf(AffirmationRepository.isSaved(aotd.id)) }
+
+    // Time-aware greeting
+    val currentHour = remember { java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY) }
+    val greeting = remember(currentHour) {
+        when (currentHour) {
+            in 4..11 -> "Good morning"
+            in 12..16 -> "Good afternoon"
+            else -> "Good evening"
+        }
+    }
+
+    val categories = remember {
+        listOf("All", "Peace", "Strength", "Identity", "Purpose", "Courage", "Joy", "Provision")
+    }
+
+    // Filter curated affirmations
+    val curatedAffirmations = remember(selectedCategory) {
+        val all = listOf(
+            AffirmationRepository.strengthAffirmation,
+            AffirmationRepository.provisionAffirmation,
+            AffirmationRepository.courageAffirmation,
+            AffirmationRepository.favorite1,
+            AffirmationRepository.favorite2
+        )
+        if (selectedCategory == "All") all else all.filter { it.category.equals(selectedCategory, ignoreCase = true) }
+    }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = Porcelain,
         floatingActionButton = {
-            // Floating Action Button (+) matching Page 5 of PDF
             FloatingActionButton(
-                onClick = { onNavigateToCreate(aotd.id) },
+                onClick = { onNavigateToCreate("") },
                 containerColor = Terracotta,
                 contentColor = Color.White,
                 shape = CircleShape,
@@ -80,7 +105,7 @@ fun HomeScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(bottom = 72.dp)
         ) {
-            // ── Top Header: Makarios + Daily Spiritual Nourishment + Notification + Avatar ──
+            // ── 1. Top Header Bar ─────────────────────────────────
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -99,10 +124,11 @@ fun HomeScreen(
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = "Daily Spiritual Nourishment",
-                        fontFamily = BodyFontFamily,
-                        fontSize = 12.sp,
-                        color = StoneMuted
+                        text = greeting,
+                        fontFamily = DisplayFontFamily,
+                        fontStyle = FontStyle.Italic,
+                        fontSize = 13.sp,
+                        color = Stone
                     )
                 }
 
@@ -110,7 +136,7 @@ fun HomeScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    // Notification Bell with badge dot
+                    // Notification Bell (peaceful, no unread red dot)
                     Box(
                         modifier = Modifier
                             .size(38.dp)
@@ -118,23 +144,15 @@ fun HomeScreen(
                             .background(Surface)
                             .border(1.dp, Border, CircleShape)
                             .clickable {
-                                Toast.makeText(context, "No unread notifications", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, "Notifications enabled for daily declarations", Toast.LENGTH_SHORT).show()
                             },
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.Notifications,
                             contentDescription = "Notifications",
-                            tint = Espresso,
+                            tint = Stone,
                             modifier = Modifier.size(19.dp)
-                        )
-                        Box(
-                            modifier = Modifier
-                                .align(Alignment.TopEnd)
-                                .padding(8.dp)
-                                .size(6.dp)
-                                .clip(CircleShape)
-                                .background(Terracotta)
                         )
                     }
 
@@ -156,46 +174,23 @@ fun HomeScreen(
                 }
             }
 
-            // ── Search Bar: "Search affirmations..." ──
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 6.dp)
-                    .shadow(2.dp, RoundedCornerShape(24.dp), spotColor = Espresso.copy(alpha = 0.05f))
-                    .clip(RoundedCornerShape(24.dp))
-                    .background(Surface)
-                    .border(1.dp, Border, RoundedCornerShape(24.dp))
-                    .padding(horizontal = 16.dp, vertical = 12.dp)
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Search,
-                        contentDescription = "Search",
-                        tint = StoneMuted,
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Text(
-                        text = "Search affirmations...",
-                        fontFamily = BodyFontFamily,
-                        fontSize = 14.sp,
-                        color = StoneMuted
-                    )
-                }
-            }
+            Spacer(modifier = Modifier.height(6.dp))
 
-            Spacer(modifier = Modifier.height(14.dp))
+            // ── 2. Creator Prompt Card ("What do you need to hear today?") ──
+            CreatorPromptCard(
+                onClick = { onNavigateToCreate("") }
+            )
 
-            // ── Hero Card: AFFIRMATION OF THE DAY (Page 5 in PDF) ──
+            Spacer(modifier = Modifier.height(18.dp))
+
+            // ── 3. Today's Declaration Hero Card ──────────────────
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 20.dp)
-                    .shadow(6.dp, RoundedCornerShape(20.dp), spotColor = Espresso.copy(alpha = 0.18f))
-                    .clip(RoundedCornerShape(20.dp))
-                    .background(AtmosphericGradient) // Warm espresso-plum gradient
+                    .shadow(6.dp, RoundedCornerShape(22.dp), spotColor = Espresso.copy(alpha = 0.18f))
+                    .clip(RoundedCornerShape(22.dp))
+                    .background(AtmosphericGradient)
                     .clickable { onNavigateToDetail(aotd) }
                     .padding(22.dp)
             ) {
@@ -208,7 +203,7 @@ fun HomeScreen(
                             .padding(horizontal = 12.dp, vertical = 5.dp)
                     ) {
                         Text(
-                            text = "AFFIRMATION OF THE DAY",
+                            text = "TODAY'S DECLARATION",
                             fontFamily = BodyFontFamily,
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 9.5.sp,
@@ -230,7 +225,20 @@ fun HomeScreen(
                         color = Color.White
                     )
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    // Grounding Scripture Quote
+                    Text(
+                        text = "“${aotd.scriptureText}”",
+                        fontFamily = DisplayFontFamily,
+                        fontStyle = FontStyle.Italic,
+                        fontWeight = FontWeight.Normal,
+                        fontSize = 13.5.sp,
+                        lineHeight = 20.sp,
+                        color = Color.White.copy(alpha = 0.85f)
+                    )
+
+                    Spacer(modifier = Modifier.height(14.dp))
 
                     // Reference & Actions Row
                     Row(
@@ -239,13 +247,34 @@ fun HomeScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = aotd.reference,
+                            text = aotd.reference.uppercase(),
                             fontFamily = BodyFontFamily,
-                            fontSize = 12.sp,
-                            color = Color.White.copy(alpha = 0.75f)
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 11.sp,
+                            letterSpacing = 1.2.sp,
+                            color = TerracottaLight
                         )
 
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            // Share Button
+                            Box(
+                                modifier = Modifier
+                                    .size(34.dp)
+                                    .clip(CircleShape)
+                                    .background(Color.White.copy(alpha = 0.15f))
+                                    .clickable {
+                                        Toast.makeText(context, "Shared declaration", Toast.LENGTH_SHORT).show()
+                                    },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Share,
+                                    contentDescription = "Share",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(15.dp)
+                                )
+                            }
+
                             // Favorite Button
                             Box(
                                 modifier = Modifier
@@ -287,9 +316,9 @@ fun HomeScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
-            // ── Focus Areas: Horizontal circular icons + See All ──
+            // ── 4. Browse Categories (Text-only pills) ────────────
             Column(modifier = Modifier.fillMaxWidth()) {
                 Row(
                     modifier = Modifier
@@ -299,7 +328,7 @@ fun HomeScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Focus Areas",
+                        text = "Browse Categories",
                         fontFamily = BodyFontFamily,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 15.sp,
@@ -322,49 +351,35 @@ fun HomeScreen(
                         .fillMaxWidth()
                         .horizontalScroll(rememberScrollState())
                         .padding(horizontal = 20.dp),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    val focusList = listOf(
-                        "Peace" to "🕊️",
-                        "Strength" to "🛡️",
-                        "Identity" to "👑",
-                        "Purpose" to "🧭",
-                        "Joy" to "☀️"
-                    )
-
-                    focusList.forEach { (name, emoji) ->
-                        val isSelected = name == selectedFocusArea
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            modifier = Modifier.clickable { selectedFocusArea = name }
+                    categories.forEach { category ->
+                        val isSelected = category == selectedCategory
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(20.dp))
+                                .then(
+                                    if (isSelected) {
+                                        Modifier
+                                            .background(Espresso)
+                                            .shadow(2.dp, RoundedCornerShape(20.dp), spotColor = Espresso.copy(alpha = 0.2f))
+                                    } else {
+                                        Modifier
+                                            .background(Surface)
+                                            .border(1.dp, Border, RoundedCornerShape(20.dp))
+                                    }
+                                )
+                                .clickable { selectedCategory = category }
+                                .padding(horizontal = 16.dp, vertical = 9.dp),
+                            contentAlignment = Alignment.Center
                         ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(52.dp)
-                                    .clip(CircleShape)
-                                    .then(
-                                        if (isSelected) {
-                                            Modifier
-                                                .background(Terracotta)
-                                                .shadow(4.dp, CircleShape, spotColor = Terracotta.copy(alpha = 0.3f))
-                                        } else {
-                                            Modifier
-                                                .background(Surface)
-                                                .border(1.dp, Border, CircleShape)
-                                        }
-                                    ),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(text = emoji, fontSize = 20.sp)
-                            }
-                            Spacer(modifier = Modifier.height(6.dp))
                             Text(
-                                text = name,
+                                text = category,
                                 fontFamily = BodyFontFamily,
                                 fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-                                fontSize = 12.sp,
-                                color = if (isSelected) Espresso else StoneMuted
+                                fontSize = 13.sp,
+                                color = if (isSelected) Surface else Espresso
                             )
                         }
                     }
@@ -373,7 +388,7 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // ── Discover More Feed (Page 5 in PDF) ──
+            // ── 5. Curated Declarations ───────────────────────────
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -381,299 +396,59 @@ fun HomeScreen(
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
                 Text(
-                    text = "Discover More",
+                    text = if (selectedCategory == "All") "Curated Declarations" else "$selectedCategory Declarations",
                     fontFamily = BodyFontFamily,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 15.sp,
                     color = Espresso
                 )
 
-                // Card 1: Standard Affirmation Card (Strength)
-                StandardFeedCard(
-                    affirmation = AffirmationRepository.strengthAffirmation,
-                    onCardClick = { onNavigateToDetail(AffirmationRepository.strengthAffirmation) }
-                )
-
-                // Card 2: Banner Card (PREMIUM / Visualise)
-                BannerFeedCard(
-                    affirmation = AffirmationRepository.provisionAffirmation,
-                    onVisualiseClick = { onNavigateToCreate(AffirmationRepository.provisionAffirmation.id) }
-                )
-
-                // Card 3: Action / Added to Daily Card (Courage)
-                AddedToDailyFeedCard(
-                    affirmation = AffirmationRepository.courageAffirmation,
-                    onCardClick = { onNavigateToDetail(AffirmationRepository.courageAffirmation) }
-                )
-            }
-        }
-    }
-}
-
-// ── Feed Card 1: Standard Card with +12k listeners & Bookmark ──
-@Composable
-private fun StandardFeedCard(
-    affirmation: Affirmation,
-    onCardClick: () -> Unit
-) {
-    val context = LocalContext.current
-    var isSaved by remember { mutableStateOf(AffirmationRepository.isSaved(affirmation.id)) }
-
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .shadow(2.dp, RoundedCornerShape(16.dp), spotColor = Espresso.copy(alpha = 0.05f))
-            .clip(RoundedCornerShape(16.dp))
-            .background(Surface)
-            .border(1.dp, Border, RoundedCornerShape(16.dp))
-            .clickable(onClick = onCardClick)
-            .padding(18.dp)
-    ) {
-        Column {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = affirmation.category.uppercase(),
-                    color = Terracotta,
-                    fontFamily = BodyFontFamily,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 10.5.sp,
-                    letterSpacing = 1.4.sp
-                )
-                Icon(
-                    imageVector = Icons.Default.MoreHoriz,
-                    contentDescription = null,
-                    tint = StoneMuted,
-                    modifier = Modifier.size(18.dp)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            Text(
-                text = "“${affirmation.declaration}”",
-                fontFamily = DisplayFontFamily,
-                fontWeight = FontWeight.Normal,
-                fontSize = 17.sp,
-                lineHeight = 24.sp,
-                color = Espresso
-            )
-
-            Spacer(modifier = Modifier.height(14.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Listener count
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    Text(
-                        text = "👥  ${affirmation.listenerCount ?: "+12k"}",
-                        fontFamily = BodyFontFamily,
-                        fontSize = 11.5.sp,
-                        color = StoneMuted
-                    )
-                }
-
-                // Share & Bookmark
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Icon(
-                        imageVector = Icons.Default.Share,
-                        contentDescription = "Share",
-                        tint = StoneMuted,
+                if (curatedAffirmations.isEmpty()) {
+                    Box(
                         modifier = Modifier
-                            .size(16.dp)
-                            .clickable { Toast.makeText(context, "Shared", Toast.LENGTH_SHORT).show() }
-                    )
-                    Icon(
-                        imageVector = if (isSaved) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
-                        contentDescription = "Bookmark",
-                        tint = if (isSaved) Terracotta else StoneMuted,
-                        modifier = Modifier
-                            .size(16.dp)
-                            .clickable {
+                            .fillMaxWidth()
+                            .padding(vertical = 24.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "No affirmations found in $selectedCategory",
+                            fontFamily = BodyFontFamily,
+                            color = StoneMuted,
+                            fontSize = 13.5.sp
+                        )
+                    }
+                } else {
+                    curatedAffirmations.forEach { affirmation ->
+                        var isSaved by remember(affirmation.id) {
+                            mutableStateOf(AffirmationRepository.isSaved(affirmation.id))
+                        }
+
+                        AffirmationCard(
+                            affirmation = affirmation,
+                            isSaved = isSaved,
+                            onToggleSave = {
                                 AffirmationRepository.toggleSave(affirmation.id)
                                 isSaved = !isSaved
-                            }
-                    )
+                            },
+                            onShare = {
+                                Toast.makeText(context, "Shared declaration", Toast.LENGTH_SHORT).show()
+                            },
+                            onCardClick = { onNavigateToDetail(affirmation) }
+                        )
+                    }
                 }
             }
-        }
-    }
-}
 
-// ── Feed Card 2: Banner Card with "PREMIUM" and "Visualise" ──
-@Composable
-private fun BannerFeedCard(
-    affirmation: Affirmation,
-    onVisualiseClick: () -> Unit
-) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .shadow(4.dp, RoundedCornerShape(16.dp), spotColor = Espresso.copy(alpha = 0.12f))
-            .clip(RoundedCornerShape(16.dp))
-            .background(AtmosphericGradient) // Warm espresso atmospheric background
-            .padding(18.dp)
-    ) {
-        Column {
-            Box(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(Color.White.copy(alpha = 0.16f))
-                    .padding(horizontal = 10.dp, vertical = 4.dp)
-            ) {
-                Text(
-                    text = "PREMIUM",
-                    fontFamily = BodyFontFamily,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 9.sp,
-                    letterSpacing = 1.4.sp,
-                    color = TerracottaLight
-                )
-            }
+            Spacer(modifier = Modifier.height(24.dp))
 
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Text(
-                text = "“${affirmation.declaration}”",
-                fontFamily = DisplayFontFamily,
-                fontWeight = FontWeight.Normal,
-                fontSize = 17.sp,
-                lineHeight = 24.sp,
-                color = Color.White
+            // ── 6. Live on Your Phone (Widget Preview) ────────────
+            WidgetPreviewCard(
+                affirmation = AffirmationRepository.widgetAffirmation,
+                onAddToHomeScreen = {
+                    Toast.makeText(context, "Hold your home screen and select Makarios from widgets", Toast.LENGTH_LONG).show()
+                },
+                onSeeAllWidgets = onNavigateToWidgets
             )
-
-            Spacer(modifier = Modifier.height(14.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Category: ${affirmation.category}",
-                    fontFamily = BodyFontFamily,
-                    fontSize = 11.5.sp,
-                    color = Color.White.copy(alpha = 0.7f)
-                )
-
-                Button(
-                    onClick = onVisualiseClick,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Surface,
-                        contentColor = Espresso
-                    ),
-                    shape = RoundedCornerShape(16.dp),
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
-                    modifier = Modifier.height(34.dp)
-                ) {
-                    Text(
-                        text = "Visualise",
-                        fontFamily = BodyFontFamily,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 12.sp
-                    )
-                }
-            }
-        }
-    }
-}
-
-// ── Feed Card 3: Action Card with "✓ ADDED TO DAILY" ──
-@Composable
-private fun AddedToDailyFeedCard(
-    affirmation: Affirmation,
-    onCardClick: () -> Unit
-) {
-    val context = LocalContext.current
-
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .shadow(2.dp, RoundedCornerShape(16.dp), spotColor = Espresso.copy(alpha = 0.05f))
-            .clip(RoundedCornerShape(16.dp))
-            .background(Surface)
-            .border(1.dp, Border, RoundedCornerShape(16.dp))
-            .clickable(onClick = onCardClick)
-            .padding(18.dp)
-    ) {
-        Column {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = affirmation.category.uppercase(),
-                    color = Terracotta,
-                    fontFamily = BodyFontFamily,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 10.5.sp,
-                    letterSpacing = 1.4.sp
-                )
-                Icon(
-                    imageVector = Icons.Default.MoreHoriz,
-                    contentDescription = null,
-                    tint = StoneMuted,
-                    modifier = Modifier.size(18.dp)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            Text(
-                text = "“${affirmation.declaration}”",
-                fontFamily = DisplayFontFamily,
-                fontWeight = FontWeight.Normal,
-                fontSize = 17.sp,
-                lineHeight = 24.sp,
-                color = Espresso
-            )
-
-            Spacer(modifier = Modifier.height(14.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Check,
-                        contentDescription = null,
-                        tint = Sage,
-                        modifier = Modifier.size(14.dp)
-                    )
-                    Text(
-                        text = "ADDED TO DAILY",
-                        fontFamily = BodyFontFamily,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 10.5.sp,
-                        letterSpacing = 1.2.sp,
-                        color = Sage
-                    )
-                }
-
-                Icon(
-                    imageVector = Icons.Default.Share,
-                    contentDescription = "Share",
-                    tint = StoneMuted,
-                    modifier = Modifier
-                        .size(16.dp)
-                        .clickable { Toast.makeText(context, "Shared", Toast.LENGTH_SHORT).show() }
-                )
-            }
         }
     }
 }

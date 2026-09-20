@@ -33,8 +33,11 @@ import com.makarios.app.ui.screens.AffirmationDetailScreen
 import com.makarios.app.ui.screens.CreateScreen
 import com.makarios.app.ui.screens.HomeScreen
 import com.makarios.app.ui.screens.LibraryScreen
+import com.makarios.app.ui.screens.OnboardingScreen
 import com.makarios.app.ui.screens.ProfileScreen
 import com.makarios.app.ui.screens.SavedScreen
+import com.makarios.app.ui.screens.SubscriptionScreen
+import com.makarios.app.ui.screens.WidgetStudioScreen
 import com.makarios.app.ui.theme.*
 
 class MainActivity : ComponentActivity() {
@@ -60,6 +63,9 @@ fun MainAppScaffold() {
     var selectedTab by remember { mutableStateOf(0) }
     var activeAffirmationIdForCreate by remember { mutableStateOf<String?>(null) }
     var viewingAffirmation by remember { mutableStateOf<Affirmation?>(null) }
+    var viewingWidgets by remember { mutableStateOf(false) }
+    var showOnboarding by remember { mutableStateOf(false) }
+    var viewingSubscription by remember { mutableStateOf(false) }
 
     // If an affirmation is selected for fullscreen contemplation (Page 1 in PDF)
     if (viewingAffirmation != null) {
@@ -72,6 +78,33 @@ fun MainAppScaffold() {
                 activeAffirmationIdForCreate = id
                 selectedTab = 2 // Navigate to Visual Creator
             }
+        )
+        return
+    }
+
+    // If Widget Studio is opened
+    if (viewingWidgets) {
+        BackHandler { viewingWidgets = false }
+        WidgetStudioScreen(
+            onBack = { viewingWidgets = false }
+        )
+        return
+    }
+
+    // If Onboarding is opened
+    if (showOnboarding) {
+        BackHandler { showOnboarding = false }
+        OnboardingScreen(
+            onComplete = { showOnboarding = false }
+        )
+        return
+    }
+
+    // If Subscription / Makarios+ is opened
+    if (viewingSubscription) {
+        BackHandler { viewingSubscription = false }
+        SubscriptionScreen(
+            onClose = { viewingSubscription = false }
         )
         return
     }
@@ -149,10 +182,15 @@ fun MainAppScaffold() {
                     selectedTab = 2
                 },
                 onNavigateToLibrary = { selectedTab = 1 },
+                onNavigateToWidgets = { viewingWidgets = true },
                 modifier = Modifier.padding(innerPadding)
             )
             1 -> LibraryScreen(
-                onNavigateToCategory = { _ -> selectedTab = 0 },
+                onNavigateToDetail = { affirmation -> viewingAffirmation = affirmation },
+                onNavigateToCreate = { id ->
+                    activeAffirmationIdForCreate = id
+                    selectedTab = 2
+                },
                 modifier = Modifier.padding(innerPadding)
             )
             2 -> CreateScreen(
@@ -166,10 +204,13 @@ fun MainAppScaffold() {
                     activeAffirmationIdForCreate = id
                     selectedTab = 2
                 },
+                onNavigateToLibrary = { selectedTab = 1 },
                 modifier = Modifier.padding(innerPadding)
             )
             4 -> ProfileScreen(
-                onNavigateToWidgets = { selectedTab = 1 },
+                onNavigateToWidgets = { viewingWidgets = true },
+                onRevisitOnboarding = { showOnboarding = true },
+                onNavigateToSubscription = { viewingSubscription = true },
                 modifier = Modifier.padding(innerPadding)
             )
         }

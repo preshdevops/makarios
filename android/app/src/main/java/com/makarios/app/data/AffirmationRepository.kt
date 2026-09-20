@@ -38,8 +38,7 @@ object AffirmationRepository {
         context = "When human stamina reaches its limit, divine power finds its most potent expression.",
         category = "Strength",
         tone = AffirmationTone.RESOLUTE,
-        imageUrl = "https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&w=1000&q=85",
-        listenerCount = "+12k"
+        imageUrl = "https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&w=1000&q=85"
     )
 
     val provisionAffirmation = Affirmation(
@@ -50,8 +49,7 @@ object AffirmationRepository {
         context = "Paul writes from confinement with unshakable assurance that divine resources are inexhaustible.",
         category = "Provision",
         tone = AffirmationTone.STILL,
-        imageUrl = "https://images.unsplash.com/photo-1499209974431-9dddcece7f88?auto=format&fit=crop&w=1000&q=85",
-        isPremium = true
+        imageUrl = "https://images.unsplash.com/photo-1499209974431-9dddcece7f88?auto=format&fit=crop&w=1000&q=85"
     )
 
     val courageAffirmation = Affirmation(
@@ -62,8 +60,7 @@ object AffirmationRepository {
         context = "Joshua stood on the threshold of unknown territory. Courage is obedience in the presence of fear.",
         category = "Courage",
         tone = AffirmationTone.RESOLUTE,
-        imageUrl = "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=1000&q=85",
-        isAddedToDaily = true
+        imageUrl = "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=1000&q=85"
     )
 
     // ── Page 3: Saved Favorites ─────────────────────────────────
@@ -102,10 +99,54 @@ object AffirmationRepository {
         imageUrl = "https://images.unsplash.com/photo-1507652313519-d4e9174996dd?auto=format&fit=crop&w=1000&q=85"
     )
 
+    val purposeAffirmation = Affirmation(
+        id = "purp-1",
+        declaration = "I am created with intention. My steps are ordered and my days are held in His hands.",
+        scriptureText = "For we are God's handiwork, created in Christ Jesus to do good works, which God prepared in advance for us to do.",
+        reference = "EPHESIANS 2:10",
+        context = "You are not a cosmic coincidence. Your life was intentionally authored for sovereign purpose.",
+        category = "Purpose",
+        tone = AffirmationTone.RESOLUTE,
+        imageUrl = "https://images.unsplash.com/photo-1507652313519-d4e9174996dd?auto=format&fit=crop&w=1000&q=85"
+    )
+
+    val confidenceAffirmation = Affirmation(
+        id = "conf-1",
+        declaration = "I approach every challenge with boldness, knowing the Lord Himself is my defense.",
+        scriptureText = "So we say with confidence, 'The Lord is my helper; I will not be afraid. What can mere mortals do to me?'",
+        reference = "HEBREWS 13:6",
+        context = "True confidence is not reliance on self-sufficiency, but deep reliance on God's unending faithfulness.",
+        category = "Confidence",
+        tone = AffirmationTone.RESOLUTE,
+        imageUrl = "https://images.unsplash.com/photo-1518495973542-4542c06a5843?auto=format&fit=crop&w=1000&q=85"
+    )
+
+    val relationshipsAffirmation = Affirmation(
+        id = "rel-1",
+        declaration = "I walk in love, forgiveness, and understanding, bearing with others as Christ bore with me.",
+        scriptureText = "Be completely humble and gentle; be patient, bearing with one another in love.",
+        reference = "EPHESIANS 4:2",
+        context = "Grace in relationships requires laying down self-preservation and offering the same mercy we received.",
+        category = "Relationships",
+        tone = AffirmationTone.GENTLE,
+        imageUrl = "https://images.unsplash.com/photo-1499209974431-9dddcece7f88?auto=format&fit=crop&w=1000&q=85"
+    )
+
+    val disciplineAffirmation = Affirmation(
+        id = "disc-1",
+        declaration = "I have a spirit of self-control and clarity. I run with endurance the race set before me.",
+        scriptureText = "For God has not given us a spirit of fear, but of power and of love and of a sound mind.",
+        reference = "2 TIMOTHY 1:7",
+        context = "Spiritual discipline is not self-punishment; it is training our affections in alignment with God's truth.",
+        category = "Discipline",
+        tone = AffirmationTone.RESOLUTE,
+        imageUrl = "https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=1000&q=85"
+    )
+
     val starterAffirmation = fullscreenAffirmation
 
-    val focusAreas = listOf("Peace", "Strength", "Identity", "Purpose", "Joy")
-    val categories = listOf("Peace", "Strength", "Identity", "Purpose", "Joy", "Provision", "Courage")
+    val focusAreas = listOf("Peace", "Strength", "Identity", "Purpose", "Joy", "Confidence", "Relationships", "Discipline")
+    val categories = listOf("All", "Identity", "Peace", "Strength", "Purpose", "Courage", "Joy", "Provision", "Confidence", "Relationships", "Discipline")
 
     private val allAffirmations = listOf(
         fullscreenAffirmation,
@@ -115,11 +156,38 @@ object AffirmationRepository {
         courageAffirmation,
         favorite1,
         favorite2,
-        widgetAffirmation
+        widgetAffirmation,
+        purposeAffirmation,
+        confidenceAffirmation,
+        relationshipsAffirmation,
+        disciplineAffirmation
     )
 
-    // Reactive saved IDs (with initial items matching Page 3: 12 ITEMS in favorites)
+    // Reactive saved IDs
     val savedAffirmationIds = mutableStateListOf("ident-1", "fav-1", "fav-2")
+
+    // Personal user-authored declarations
+    val personalAffirmations = mutableStateListOf(
+        Affirmation(
+            id = "personal-1",
+            declaration = "I do not walk in anxiety or overwhelm. God goes before me, and His peace guards my thoughts.",
+            scriptureText = "You will keep in perfect peace those whose minds are steadfast, because they trust in you.",
+            reference = "ISAIAH 26:3",
+            context = "Written for seasons of transition and unexpected decisions.",
+            category = "Peace",
+            tone = AffirmationTone.STILL,
+            imageUrl = "https://images.unsplash.com/photo-1507652313519-d4e9174996dd?auto=format&fit=crop&w=1000&q=85",
+            isFavorite = true,
+            personalDeclaration = "I release the need to control the outcome. My steps are ordered by the Lord."
+        )
+    )
+
+    fun addPersonalAffirmation(affirmation: Affirmation) {
+        personalAffirmations.add(0, affirmation)
+        if (!savedAffirmationIds.contains(affirmation.id)) {
+            savedAffirmationIds.add(affirmation.id)
+        }
+    }
 
     fun isSaved(id: String): Boolean = savedAffirmationIds.contains(id)
 
@@ -135,7 +203,11 @@ object AffirmationRepository {
 
     fun getFavorites(): List<Affirmation> = allAffirmations.filter { it.isFavorite || savedAffirmationIds.contains(it.id) }
 
-    fun getById(id: String): Affirmation = allAffirmations.find { it.id == id } ?: fullscreenAffirmation
+    fun getById(id: String): Affirmation =
+        personalAffirmations.find { it.id == id }
+            ?: allAffirmations.find { it.id == id }
+            ?: fullscreenAffirmation
 
     fun getAll(): List<Affirmation> = allAffirmations
 }
+
