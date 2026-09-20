@@ -28,7 +28,7 @@ fun CategoryPills(
         modifier = modifier
             .fillMaxWidth()
             .horizontalScroll(rememberScrollState())
-            .padding(horizontal = 20.dp, vertical = 10.dp),
+            .padding(horizontal = 20.dp, vertical = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -39,7 +39,7 @@ fun CategoryPills(
                     .clip(RoundedCornerShape(20.dp))
                     .then(
                         if (isSelected) {
-                            Modifier.background(Terracotta)
+                            Modifier.background(Espresso) // Dark plum/espresso per mockup
                         } else {
                             Modifier
                                 .background(Surface)
@@ -47,7 +47,7 @@ fun CategoryPills(
                         }
                     )
                     .clickable { onCategorySelected(category) }
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                    .padding(horizontal = 16.dp, vertical = 7.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
@@ -55,7 +55,7 @@ fun CategoryPills(
                     color = if (isSelected) Surface else Espresso,
                     fontFamily = BodyFontFamily,
                     fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-                    fontSize = 14.sp
+                    fontSize = 13.5.sp
                 )
             }
         }

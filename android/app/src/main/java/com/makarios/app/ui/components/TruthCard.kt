@@ -3,6 +3,7 @@ package com.makarios.app.ui.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bookmark
@@ -35,22 +36,23 @@ fun TruthCard(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 8.dp)
+            .padding(horizontal = 20.dp, vertical = 6.dp)
             .shadow(
-                elevation = 2.dp,
-                shape = RoundedCornerShape(16.dp),
-                spotColor = Espresso.copy(alpha = 0.06f)
+                elevation = 4.dp,
+                shape = RoundedCornerShape(20.dp),
+                spotColor = Espresso.copy(alpha = 0.08f)
             )
-            .clip(RoundedCornerShape(16.dp))
+            .clip(RoundedCornerShape(20.dp))
             .background(Surface)
             .clickable(onClick = onCardClick),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Photo — full-width, rounded top
+        // Photo top plate
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(180.dp)
+                .height(185.dp)
+                .background(PorcelainWarm)
         ) {
             AsyncImage(
                 model = affirmation.imageUrl,
@@ -59,31 +61,31 @@ fun TruthCard(
                 contentScale = ContentScale.Crop
             )
 
-            // Bookmark overlay — top-right
+            // Circular white bookmark button in top-right overlay matching mockup
             Box(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
-                    .padding(12.dp)
-                    .size(32.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(Surface.copy(alpha = 0.85f))
+                    .padding(14.dp)
+                    .size(34.dp)
+                    .clip(CircleShape)
+                    .background(Surface.copy(alpha = 0.90f))
                     .clickable(onClick = onToggleSave),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = if (isSaved) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
-                    contentDescription = "Save",
-                    tint = if (isSaved) Terracotta else Stone,
+                    contentDescription = "Save declaration",
+                    tint = if (isSaved) Terracotta else Espresso,
                     modifier = Modifier.size(18.dp)
                 )
             }
         }
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(22.dp))
 
-        // Declaration
+        // Center Declaration in high-contrast Fraunces Serif
         Text(
-            text = "\u201C${affirmation.declaration}\u201D",
+            text = "“${affirmation.declaration}”",
             fontFamily = DisplayFontFamily,
             fontWeight = FontWeight.Normal,
             fontSize = 22.sp,
@@ -91,35 +93,35 @@ fun TruthCard(
             letterSpacing = (-0.2).sp,
             textAlign = TextAlign.Center,
             color = Espresso,
-            modifier = Modifier.padding(horizontal = 20.dp)
+            modifier = Modifier.padding(horizontal = 22.dp)
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(14.dp))
 
-        // Scripture passage
+        // Scripture quote passage
         Text(
-            text = "\u201C${affirmation.scriptureText}\u201D",
+            text = "“${affirmation.scriptureText}”",
             fontFamily = DisplayFontFamily,
             fontStyle = FontStyle.Italic,
             fontWeight = FontWeight.Normal,
-            fontSize = 15.sp,
-            lineHeight = 23.sp,
+            fontSize = 14.5.sp,
+            lineHeight = 22.sp,
             textAlign = TextAlign.Center,
             color = Stone,
-            modifier = Modifier.padding(horizontal = 24.dp)
+            modifier = Modifier.padding(horizontal = 26.dp)
         )
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Scripture reference
+        // Scripture reference in tracked small caps
         Text(
             text = affirmation.reference.uppercase(),
             fontFamily = BodyFontFamily,
             fontWeight = FontWeight.SemiBold,
-            fontSize = 11.sp,
-            letterSpacing = 1.5.sp,
+            fontSize = 10.5.sp,
+            letterSpacing = 1.6.sp,
             textAlign = TextAlign.Center,
-            color = Terracotta
+            color = StoneMuted
         )
 
         Spacer(modifier = Modifier.height(24.dp))

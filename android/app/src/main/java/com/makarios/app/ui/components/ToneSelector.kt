@@ -16,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -36,17 +37,22 @@ fun ToneSelector(
             .fillMaxWidth()
             .padding(horizontal = 20.dp, vertical = 6.dp)
     ) {
-        // Tone toggles + Another
+        // Tone selector segmented capsule + "Another" action row
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 8.dp),
+                .padding(vertical = 6.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Tone options — normal case, simple border styling
+            // Segmented pill container matching mockup
             Row(
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                modifier = Modifier
+                    .clip(RoundedCornerShape(24.dp))
+                    .background(PorcelainWarm.copy(alpha = 0.65f))
+                    .padding(3.dp),
+                horizontalArrangement = Arrangement.spacedBy(2.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 AffirmationTone.values().forEach { tone ->
                     val isSelected = tone == selectedTone
@@ -58,12 +64,14 @@ fun ToneSelector(
 
                     Box(
                         modifier = Modifier
-                            .clip(RoundedCornerShape(16.dp))
+                            .clip(RoundedCornerShape(20.dp))
                             .then(
                                 if (isSelected) {
-                                    Modifier.border(1.5.dp, Espresso, RoundedCornerShape(16.dp))
-                                } else {
                                     Modifier
+                                        .shadow(elevation = 1.dp, shape = RoundedCornerShape(20.dp))
+                                        .background(Surface)
+                                } else {
+                                    Modifier.background(Color.Transparent)
                                 }
                             )
                             .clickable { onToneSelected(tone) }
@@ -75,13 +83,13 @@ fun ToneSelector(
                             color = if (isSelected) Espresso else Stone,
                             fontFamily = BodyFontFamily,
                             fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-                            fontSize = 14.sp
+                            fontSize = 13.5.sp
                         )
                     }
                 }
             }
 
-            // "Another" action
+            // "Another" action on the right
             Row(
                 modifier = Modifier
                     .clip(RoundedCornerShape(16.dp))
@@ -101,24 +109,29 @@ fun ToneSelector(
                     color = Stone,
                     fontFamily = BodyFontFamily,
                     fontWeight = FontWeight.Normal,
-                    fontSize = 14.sp
+                    fontSize = 13.5.sp
                 )
             }
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(10.dp))
 
-        // Create Wallpaper CTA — dark, full-width, simple
+        // Big Primary CTA: "Create Wallpaper" in deep espresso-plum matching mockup
         Button(
             onClick = onCreateWallpaperClicked,
             colors = ButtonDefaults.buttonColors(
                 containerColor = Espresso,
                 contentColor = Surface
             ),
-            shape = RoundedCornerShape(12.dp),
+            shape = RoundedCornerShape(16.dp),
             modifier = Modifier
                 .fillMaxWidth()
                 .height(52.dp)
+                .shadow(
+                    elevation = 2.dp,
+                    shape = RoundedCornerShape(16.dp),
+                    spotColor = Espresso.copy(alpha = 0.20f)
+                )
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -127,8 +140,8 @@ fun ToneSelector(
                 Icon(
                     imageVector = Icons.Default.AutoAwesome,
                     contentDescription = null,
-                    tint = Surface,
-                    modifier = Modifier.size(18.dp)
+                    tint = Color(0xFFE5B869), // Warm amber gold spark from mockup
+                    modifier = Modifier.size(17.dp)
                 )
                 Text(
                     text = "Create Wallpaper",

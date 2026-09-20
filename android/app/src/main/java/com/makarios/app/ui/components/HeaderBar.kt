@@ -1,16 +1,20 @@
 package com.makarios.app.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.makarios.app.ui.theme.*
 
 @Composable
@@ -22,51 +26,72 @@ fun HeaderBar(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 20.dp)
-            .padding(top = 16.dp, bottom = 8.dp)
+            .padding(top = 16.dp, bottom = 6.dp)
     ) {
-        // Top row: Makarios wordmark + profile avatar
+        // Top row: [M] badge + "Makarios" wordmark on the left, profile photo on the right
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Wordmark — natural serif, no wide tracking
-            Text(
-                text = "Makarios",
-                fontFamily = DisplayFontFamily,
-                fontWeight = FontWeight.Medium,
-                fontSize = 20.sp,
-                color = Espresso
-            )
+            // Left: [M] dark square badge + "Makarios" brand wordmark
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(30.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Espresso),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "M",
+                        fontFamily = DisplayFontFamily,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.sp,
+                        color = Surface
+                    )
+                }
 
-            // Profile avatar placeholder
+                Text(
+                    text = "Makarios",
+                    fontFamily = DisplayFontFamily,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 19.sp,
+                    letterSpacing = (-0.2).sp,
+                    color = Espresso
+                )
+            }
+
+            // Right: Profile photo (portrait) matching mockup
             Box(
                 modifier = Modifier
                     .size(32.dp)
                     .clip(CircleShape)
-                    .background(PorcelainWarm),
-                contentAlignment = Alignment.Center
+                    .background(PorcelainWarm)
+                    .border(1.dp, Border, CircleShape)
             ) {
-                Text(
-                    text = "M",
-                    fontFamily = DisplayFontFamily,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 14.sp,
-                    color = Espresso
+                AsyncImage(
+                    model = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=160&q=80",
+                    contentDescription = "Profile",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
                 )
             }
         }
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(22.dp))
 
-        // The warm opening question
+        // Opening headline question from mockup
         Text(
             text = subtitle ?: "What are you carrying today?",
             fontFamily = DisplayFontFamily,
             fontWeight = FontWeight.SemiBold,
-            fontSize = 24.sp,
-            lineHeight = 32.sp,
-            letterSpacing = (-0.3).sp,
+            fontSize = 25.sp,
+            lineHeight = 33.sp,
+            letterSpacing = (-0.4).sp,
             color = Espresso
         )
     }

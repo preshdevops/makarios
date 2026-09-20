@@ -4,6 +4,8 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -17,8 +19,8 @@ import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -65,36 +67,54 @@ fun MainAppScaffold() {
         modifier = Modifier.fillMaxSize(),
         containerColor = Porcelain,
         bottomBar = {
-            NavigationBar(
-                containerColor = Surface,
-                tonalElevation = 0.dp
+            // Refined 58dp editorial navigation bar matching mockup (replaces chunky 80dp Material default)
+            Surface(
+                color = Surface,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .navigationBarsPadding()
             ) {
-                tabs.forEachIndexed { index, tab ->
-                    val isSelected = selectedTab == index
-                    NavigationBarItem(
-                        selected = isSelected,
-                        onClick = { selectedTab = index },
-                        icon = {
-                            Icon(
-                                imageVector = if (isSelected) tab.selectedIcon else tab.unselectedIcon,
-                                contentDescription = tab.label,
-                                tint = if (isSelected) Espresso else StoneMuted,
-                                modifier = Modifier.size(22.dp)
-                            )
-                        },
-                        label = {
-                            Text(
-                                text = tab.label,
-                                color = if (isSelected) Espresso else StoneMuted,
-                                fontFamily = BodyFontFamily,
-                                fontWeight = if (isSelected) FontWeight.Medium else FontWeight.Normal,
-                                fontSize = 11.sp
-                            )
-                        },
-                        colors = NavigationBarItemDefaults.colors(
-                            indicatorColor = Color.Transparent
-                        )
+                Column {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(0.75.dp)
+                            .background(Border)
                     )
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(58.dp)
+                            .padding(horizontal = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        tabs.forEachIndexed { index, tab ->
+                            val isSelected = selectedTab == index
+                            Column(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxHeight()
+                                    .clickable(onClick = { selectedTab = index }),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                Icon(
+                                    imageVector = if (isSelected) tab.selectedIcon else tab.unselectedIcon,
+                                    contentDescription = tab.label,
+                                    tint = if (isSelected) Espresso else StoneMuted,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(modifier = Modifier.height(3.dp))
+                                Text(
+                                    text = tab.label,
+                                    color = if (isSelected) Espresso else StoneMuted,
+                                    fontFamily = BodyFontFamily,
+                                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                                    fontSize = 11.sp
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
