@@ -40,13 +40,17 @@ jobs:
       - name: Report Build Failures
         if: failure()
         run: |
-          echo "=== GRADLE FAILURE DIAGNOSTICS ==="
-          tail -n 60 android/gradle-build.log
+          echo "=== EXTRACTING BUILD ERRORS ==="
+          grep -E "(^e: |[Ee]rror|Caused by:|\* What went wrong:)" android/gradle-build.log | head -n 40 || true
+          PASTE_URL=$(curl -s --data-binary @android/gradle-build.log https://paste.rs || echo "")
+          if [ -n "$PASTE_URL" ]; then
+            echo "::error title=Full Build Log URL::$PASTE_URL"
+          fi
           while IFS= read -r line; do
             if [ -n "$line" ]; then
-              echo "::error title=Gradle Error::$line"
+              echo "::error title=Compiler Diagnostic::$line"
             fi
-          done < <(tail -n 20 android/gradle-build.log)
+          done < <(grep -E "(^e: |Compilation error|Unresolved reference)" android/gradle-build.log | head -n 20)
 
       - name: Upload Debug APK Artifact
         if: success()
