@@ -113,11 +113,11 @@ fun ProfileScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 20.dp)
-                    .shadow(3.dp, RoundedCornerShape(16.dp), spotColor = Espresso.copy(alpha = 0.08f))
-                    .clip(RoundedCornerShape(16.dp))
+                    .shadow(3.dp, RoundedCornerShape(20.dp), spotColor = Espresso.copy(alpha = 0.08f))
+                    .clip(RoundedCornerShape(20.dp))
                     .background(AtmosphericGradient)
                     .clickable(onClick = onNavigateToSubscription)
-                    .padding(18.dp)
+                    .padding(20.dp)
             ) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -132,26 +132,26 @@ fun ProfileScreen(
                             Text(
                                 text = "MAKARIOS+",
                                 fontFamily = BodyFontFamily,
-                                fontWeight = FontWeight.Bold,
+                                fontWeight = FontWeight.Medium,
                                 fontSize = 11.sp,
                                 letterSpacing = 2.sp,
-                                color = TerracottaLight
+                                color = Color.White
                             )
                             Box(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(6.dp))
                                     .background(Color.White.copy(alpha = 0.18f))
                                     .padding(horizontal = 6.dp, vertical = 2.dp)
-                            ) {
-                                Text(
-                                    text = "FREE TRIAL",
-                                    fontFamily = BodyFontFamily,
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 9.sp,
-                                    letterSpacing = 1.sp,
-                                    color = Color.White
-                                )
-                            }
+                                ) {
+                                    Text(
+                                        text = "FREE TRIAL",
+                                        fontFamily = BodyFontFamily,
+                                        fontWeight = FontWeight.Medium,
+                                        fontSize = 9.sp,
+                                        letterSpacing = 1.sp,
+                                        color = Color.White
+                                    )
+                                }
                         }
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
@@ -168,9 +168,9 @@ fun ProfileScreen(
                     Text(
                         text = "Upgrade →",
                         fontFamily = BodyFontFamily,
-                        fontWeight = FontWeight.SemiBold,
+                        fontWeight = FontWeight.Medium,
                         fontSize = 12.5.sp,
-                        color = TerracottaLight
+                        color = Color.White.copy(alpha = 0.90f)
                     )
                 }
             }
@@ -186,7 +186,7 @@ fun ProfileScreen(
                 Text(
                     text = "Home & Lock Screen Widgets",
                     fontFamily = DisplayFontFamily,
-                    fontWeight = FontWeight.SemiBold,
+                    fontWeight = FontWeight.Medium,
                     fontSize = 16.sp,
                     color = Espresso
                 )
@@ -203,10 +203,10 @@ fun ProfileScreen(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .shadow(2.dp, RoundedCornerShape(18.dp), spotColor = Espresso.copy(alpha = 0.06f))
-                        .clip(RoundedCornerShape(18.dp))
+                        .shadow(1.dp, RoundedCornerShape(20.dp), spotColor = Espresso.copy(alpha = 0.03f))
+                        .clip(RoundedCornerShape(20.dp))
                         .background(Surface)
-                        .border(1.dp, Border, RoundedCornerShape(18.dp))
+                        .border(0.5.dp, BorderSubtle, RoundedCornerShape(20.dp))
                         .padding(18.dp)
                 ) {
                     Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
@@ -349,10 +349,10 @@ fun ProfileScreen(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .shadow(2.dp, RoundedCornerShape(18.dp), spotColor = Espresso.copy(alpha = 0.06f))
-                        .clip(RoundedCornerShape(18.dp))
+                        .shadow(1.dp, RoundedCornerShape(20.dp), spotColor = Espresso.copy(alpha = 0.03f))
+                        .clip(RoundedCornerShape(20.dp))
                         .background(Surface)
-                        .border(1.dp, Border, RoundedCornerShape(18.dp))
+                        .border(0.5.dp, BorderSubtle, RoundedCornerShape(20.dp))
                         .padding(horizontal = 18.dp, vertical = 6.dp)
                 ) {
                     Column {
@@ -362,14 +362,14 @@ fun ProfileScreen(
                             checked = dawnNotification,
                             onCheckedChange = { dawnNotification = it }
                         )
-                        Divider(color = Border, thickness = 0.75.dp)
+                        Divider(color = BorderSubtle, thickness = 0.5.dp)
                         ReminderSwitchRow(
                             title = "Midday Stillness",
                             subtitle = "12:30 PM · Peace amidst the workday",
                             checked = middayNotification,
                             onCheckedChange = { middayNotification = it }
                         )
-                        Divider(color = Border, thickness = 0.75.dp)
+                        Divider(color = BorderSubtle, thickness = 0.5.dp)
                         ReminderSwitchRow(
                             title = "Evening Examen",
                             subtitle = "08:30 PM · Restful wind-down and scripture",
@@ -391,7 +391,7 @@ fun ProfileScreen(
                 Text(
                     text = "Current Spiritual Focus",
                     fontFamily = DisplayFontFamily,
-                    fontWeight = FontWeight.SemiBold,
+                    fontWeight = FontWeight.Medium,
                     fontSize = 16.sp,
                     color = Espresso
                 )
@@ -408,10 +408,10 @@ fun ProfileScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .shadow(2.dp, RoundedCornerShape(18.dp), spotColor = Espresso.copy(alpha = 0.06f))
-                        .clip(RoundedCornerShape(18.dp))
+                        .shadow(1.dp, RoundedCornerShape(20.dp), spotColor = Espresso.copy(alpha = 0.03f))
+                        .clip(RoundedCornerShape(20.dp))
                         .background(Surface)
-                        .border(1.dp, Border, RoundedCornerShape(18.dp))
+                        .border(0.5.dp, BorderSubtle, RoundedCornerShape(20.dp))
                         .padding(10.dp),
                     verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
@@ -436,7 +436,7 @@ fun ProfileScreen(
                                 Text(
                                     text = season,
                                     fontFamily = BodyFontFamily,
-                                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
+                                    fontWeight = if (isSelected) FontWeight.Medium else FontWeight.Normal,
                                     fontSize = 13.5.sp,
                                     color = Espresso
                                 )
@@ -468,10 +468,10 @@ fun ProfileScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 20.dp)
-                    .shadow(1.dp, RoundedCornerShape(14.dp), spotColor = Espresso.copy(alpha = 0.04f))
-                    .clip(RoundedCornerShape(14.dp))
+                    .shadow(1.dp, RoundedCornerShape(16.dp), spotColor = Espresso.copy(alpha = 0.03f))
+                    .clip(RoundedCornerShape(16.dp))
                     .background(Surface)
-                    .border(1.dp, Border, RoundedCornerShape(14.dp))
+                    .border(0.5.dp, BorderSubtle, RoundedCornerShape(16.dp))
                     .clickable(onClick = onRevisitOnboarding)
                     .padding(horizontal = 16.dp, vertical = 14.dp)
             ) {

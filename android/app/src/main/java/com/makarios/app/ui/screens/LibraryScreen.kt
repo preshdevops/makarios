@@ -102,10 +102,10 @@ fun LibraryScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 20.dp, vertical = 4.dp)
-                    .shadow(elevation = 2.dp, shape = RoundedCornerShape(24.dp), spotColor = Espresso.copy(alpha = 0.05f))
+                    .shadow(elevation = 1.dp, shape = RoundedCornerShape(24.dp), spotColor = Espresso.copy(alpha = 0.03f))
                     .clip(RoundedCornerShape(24.dp))
                     .background(Surface)
-                    .border(1.dp, Border, RoundedCornerShape(24.dp))
+                    .border(0.5.dp, BorderSubtle, RoundedCornerShape(24.dp))
                     .padding(horizontal = 16.dp, vertical = 10.dp)
             ) {
                 Row(
@@ -174,11 +174,11 @@ fun LibraryScreen(
                                 if (isSelected) {
                                     Modifier
                                         .background(Espresso)
-                                        .shadow(2.dp, RoundedCornerShape(20.dp), spotColor = Espresso.copy(alpha = 0.2f))
+                                        .shadow(1.dp, RoundedCornerShape(20.dp), spotColor = Espresso.copy(alpha = 0.15f))
                                 } else {
                                     Modifier
                                         .background(Surface)
-                                        .border(1.dp, Border, RoundedCornerShape(20.dp))
+                                        .border(0.5.dp, BorderSubtle, RoundedCornerShape(20.dp))
                                 }
                             )
                             .clickable { selectedCategory = category }
@@ -188,9 +188,9 @@ fun LibraryScreen(
                         Text(
                             text = category,
                             fontFamily = BodyFontFamily,
-                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                            fontWeight = if (isSelected) FontWeight.Medium else FontWeight.Normal,
                             fontSize = 13.sp,
-                            color = if (isSelected) Surface else Espresso
+                            color = if (isSelected) Surface else Stone
                         )
                     }
                 }
@@ -208,7 +208,7 @@ fun LibraryScreen(
                     Text(
                         text = "Life Seasons & Themes",
                         fontFamily = BodyFontFamily,
-                        fontWeight = FontWeight.SemiBold,
+                        fontWeight = FontWeight.Medium,
                         fontSize = 15.sp,
                         color = Espresso
                     )
@@ -218,12 +218,12 @@ fun LibraryScreen(
                     val categoryThemes = listOf(
                         Triple("Identity", "Rooted in who God declares you are", "2 declarations"),
                         Triple("Peace", "Stillness and sovereign rest amid turbulence", "2 declarations"),
-                        Triple("Strength", "Endurance and power made perfect in weakness", "2 declarations"),
-                        Triple("Purpose", "Intentional creation and ordered steps", "1 declaration"),
-                        Triple("Confidence", "Boldness grounded in divine defense", "1 declaration"),
-                        Triple("Courage", "Obedience in the presence of fear", "1 declaration"),
-                        Triple("Provision", "Resting in the inexhaustible Provider", "1 declaration"),
-                        Triple("Joy", "Unshakable delight from the Lord", "1 declaration")
+                        Triple("Strength", "Endurance when your own power is spent", "1 declaration"),
+                        Triple("Purpose", "Calling, divine clarity, and holy alignment", "1 declaration"),
+                        Triple("Courage", "Holy boldness over every fear and shadow", "1 declaration"),
+                        Triple("Joy", "Unshakeable gladness that the world cannot take", "1 declaration"),
+                        Triple("Provision", "Resting in the God who supplies every need", "1 declaration"),
+                        Triple("Confidence", "Unwavering assurance in Christ our cornerstone", "1 declaration")
                     )
 
                     categoryThemes.chunked(2).forEach { rowPairs ->
@@ -237,10 +237,10 @@ fun LibraryScreen(
                                 Box(
                                     modifier = Modifier
                                         .weight(1f)
-                                        .shadow(elevation = 2.dp, shape = RoundedCornerShape(16.dp), spotColor = Espresso.copy(alpha = 0.05f))
-                                        .clip(RoundedCornerShape(16.dp))
+                                        .shadow(elevation = 1.dp, shape = RoundedCornerShape(18.dp), spotColor = Espresso.copy(alpha = 0.03f))
+                                        .clip(RoundedCornerShape(18.dp))
                                         .background(Surface)
-                                        .border(1.dp, Border, RoundedCornerShape(16.dp))
+                                        .border(0.5.dp, BorderSubtle, RoundedCornerShape(18.dp))
                                         .clickable { selectedCategory = catName }
                                         .padding(14.dp)
                                 ) {
@@ -248,8 +248,8 @@ fun LibraryScreen(
                                         Text(
                                             text = catName.uppercase(),
                                             fontFamily = BodyFontFamily,
-                                            fontWeight = FontWeight.SemiBold,
-                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.Medium,
+                                            fontSize = 10.5.sp,
                                             letterSpacing = 1.4.sp,
                                             color = Terracotta
                                         )

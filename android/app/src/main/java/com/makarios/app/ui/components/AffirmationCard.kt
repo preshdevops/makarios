@@ -37,18 +37,18 @@ fun AffirmationCard(
         modifier = modifier
             .fillMaxWidth()
             .shadow(
-                elevation = 2.dp,
-                shape = RoundedCornerShape(18.dp),
-                spotColor = Espresso.copy(alpha = 0.05f)
+                elevation = 1.5.dp,
+                shape = RoundedCornerShape(20.dp),
+                spotColor = Espresso.copy(alpha = 0.04f)
             )
-            .clip(RoundedCornerShape(18.dp))
+            .clip(RoundedCornerShape(20.dp))
             .background(Surface)
-            .border(1.dp, Border, RoundedCornerShape(18.dp))
+            .border(0.5.dp, BorderSubtle, RoundedCornerShape(20.dp))
             .clickable(onClick = onCardClick)
-            .padding(20.dp)
+            .padding(22.dp)
     ) {
         Column {
-            // Category header tag
+            // Header: Category label & action buttons
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -56,22 +56,22 @@ fun AffirmationCard(
             ) {
                 Text(
                     text = affirmation.category.uppercase(),
-                    color = Terracotta,
+                    color = StoneMuted,
                     fontFamily = BodyFontFamily,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 10.5.sp,
-                    letterSpacing = 1.5.sp
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 10.sp,
+                    letterSpacing = 1.8.sp
                 )
 
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Box(
                         modifier = Modifier
                             .size(32.dp)
                             .clip(CircleShape)
-                            .background(Porcelain)
+                            .background(PorcelainWarm.copy(alpha = 0.55f))
                             .clickable(onClick = onShare),
                         contentAlignment = Alignment.Center
                     ) {
@@ -79,7 +79,7 @@ fun AffirmationCard(
                             imageVector = Icons.Default.Share,
                             contentDescription = "Share",
                             tint = Stone,
-                            modifier = Modifier.size(15.dp)
+                            modifier = Modifier.size(14.dp)
                         )
                     }
 
@@ -87,7 +87,7 @@ fun AffirmationCard(
                         modifier = Modifier
                             .size(32.dp)
                             .clip(CircleShape)
-                            .background(Porcelain)
+                            .background(if (isSaved) TerracottaLight else PorcelainWarm.copy(alpha = 0.55f))
                             .clickable(onClick = onToggleSave),
                         contentAlignment = Alignment.Center
                     ) {
@@ -95,54 +95,58 @@ fun AffirmationCard(
                             imageVector = if (isSaved) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
                             contentDescription = "Save declaration",
                             tint = if (isSaved) Terracotta else Stone,
-                            modifier = Modifier.size(16.dp)
+                            modifier = Modifier.size(15.dp)
                         )
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
-            // Main Declaration in Fraunces
+            // Main Declaration in Fraunces Serif
             Text(
                 text = "“${affirmation.declaration}”",
                 fontFamily = DisplayFontFamily,
                 fontWeight = FontWeight.Normal,
-                fontSize = 17.5.sp,
-                lineHeight = 25.sp,
+                fontSize = 18.sp,
+                lineHeight = 26.sp,
                 letterSpacing = (-0.2).sp,
                 color = Espresso
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
-            // Scripture quote & reference (Rule: Every affirmation always displays its grounding Bible verse reference)
-            Column(
+            // Delicate hairline separator for grounded scripture
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(Porcelain)
-                    .padding(horizontal = 14.dp, vertical = 10.dp)
-            ) {
-                Text(
-                    text = "“${affirmation.scriptureText}”",
-                    fontFamily = DisplayFontFamily,
-                    fontStyle = FontStyle.Italic,
-                    fontWeight = FontWeight.Normal,
-                    fontSize = 13.sp,
-                    lineHeight = 19.sp,
-                    color = Stone
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = affirmation.reference.uppercase(),
-                    fontFamily = BodyFontFamily,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 10.sp,
-                    letterSpacing = 1.2.sp,
-                    color = Terracotta
-                )
-            }
+                    .height(0.5.dp)
+                    .background(BorderSubtle)
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Grounding Scripture (mandatory on every card)
+            Text(
+                text = "“${affirmation.scriptureText}”",
+                fontFamily = DisplayFontFamily,
+                fontStyle = FontStyle.Italic,
+                fontWeight = FontWeight.Normal,
+                fontSize = 13.sp,
+                lineHeight = 19.sp,
+                color = Stone
+            )
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            Text(
+                text = affirmation.reference.uppercase(),
+                fontFamily = BodyFontFamily,
+                fontWeight = FontWeight.Medium,
+                fontSize = 9.5.sp,
+                letterSpacing = 1.4.sp,
+                color = Terracotta
+            )
         }
     }
 }

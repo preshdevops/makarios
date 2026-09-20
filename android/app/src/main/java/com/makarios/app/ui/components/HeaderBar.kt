@@ -69,10 +69,10 @@ fun HeaderBar(
             // Right: Profile photo (portrait) matching mockup
             Box(
                 modifier = Modifier
-                    .size(32.dp)
+                    .size(34.dp)
                     .clip(CircleShape)
                     .background(PorcelainWarm)
-                    .border(1.dp, Border, CircleShape)
+                    .border(0.5.dp, BorderSubtle, CircleShape)
             ) {
                 AsyncImage(
                     model = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=160&q=80",
@@ -83,7 +83,7 @@ fun HeaderBar(
             }
         }
 
-        Spacer(modifier = Modifier.height(22.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
         // Time-aware greeting
         val currentHour = remember { java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY) }
@@ -98,10 +98,10 @@ fun HeaderBar(
         Text(
             text = subtitle ?: greeting,
             fontFamily = DisplayFontFamily,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 25.sp,
-            lineHeight = 33.sp,
-            letterSpacing = (-0.4).sp,
+            fontWeight = FontWeight.Normal,
+            fontSize = 24.sp,
+            lineHeight = 32.sp,
+            letterSpacing = (-0.3).sp,
             color = Espresso
         )
     }

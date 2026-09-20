@@ -348,10 +348,10 @@ private fun OnboardingStepSeasons(
                         Box(
                             modifier = Modifier
                                 .weight(1f)
-                                .shadow(if (isSelected) 2.dp else 0.dp, RoundedCornerShape(14.dp), spotColor = Espresso.copy(0.08f))
-                                .clip(RoundedCornerShape(14.dp))
+                                .shadow(if (isSelected) 1.dp else 0.dp, RoundedCornerShape(16.dp), spotColor = Espresso.copy(0.06f))
+                                .clip(RoundedCornerShape(16.dp))
                                 .background(if (isSelected) Espresso else Surface)
-                                .border(1.dp, if (isSelected) Espresso else Border, RoundedCornerShape(14.dp))
+                                .border(0.5.dp, if (isSelected) Espresso else BorderSubtle, RoundedCornerShape(16.dp))
                                 .clickable { onToggleArea(area) }
                                 .padding(horizontal = 12.dp, vertical = 14.dp),
                             contentAlignment = Alignment.Center
@@ -359,7 +359,7 @@ private fun OnboardingStepSeasons(
                             Text(
                                 text = area,
                                 fontFamily = BodyFontFamily,
-                                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                                fontWeight = if (isSelected) FontWeight.Medium else FontWeight.Normal,
                                 fontSize = 12.5.sp,
                                 textAlign = TextAlign.Center,
                                 color = if (isSelected) Color.White else Espresso
@@ -379,10 +379,10 @@ private fun OnboardingStepAesthetic(
     onSelectStyle: (Int) -> Unit
 ) {
     val styles = listOf(
-        Triple("Espresso Plum", "Sacred stillness & deep warm earth", Brush.verticalGradient(listOf(Color(0xFF331E2A), Color(0xFF1F1118)))),
-        Triple("Warm Porcelain", "Sunlit almond ground, crisp editorial type", Brush.verticalGradient(listOf(Color(0xFFFAF8F5), Color(0xFFEAE3D8)))),
-        Triple("Terracotta Sunset", "Radiant earth warmth, bold declaration", Brush.verticalGradient(listOf(Color(0xFF8A4633), Color(0xFF4A1F2C)))),
-        Triple("Eucalyptus Sage", "Restful green, peaceful contemplation", Brush.verticalGradient(listOf(Color(0xFF3A5047), Color(0xFF2A3C33))))
+        Triple("Espresso Charcoal", "Sacred stillness & deep warm earth", Brush.verticalGradient(listOf(Color(0xFF342E2B), Color(0xFF24201D), Color(0xFF171513)))),
+        Triple("Warm Porcelain", "Sunlit almond ground, crisp editorial type", Brush.verticalGradient(listOf(Color(0xFFFBF9F5), Color(0xFFF3EFE8)))),
+        Triple("Terracotta Earth", "Radiant earth warmth, grounded declaration", Brush.verticalGradient(listOf(Color(0xFF63382B), Color(0xFF3A241E), Color(0xFF1F1614)))),
+        Triple("Eucalyptus Sage", "Restful green, peaceful contemplation", Brush.verticalGradient(listOf(Color(0xFF314238), Color(0xFF222F28), Color(0xFF17201B))))
     )
 
     Column(
@@ -392,8 +392,8 @@ private fun OnboardingStepAesthetic(
         Text(
             text = "Choose your aesthetic",
             fontFamily = DisplayFontFamily,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 26.sp,
+            fontWeight = FontWeight.Normal,
+            fontSize = 25.sp,
             letterSpacing = (-0.3).sp,
             color = Espresso
         )
@@ -419,10 +419,10 @@ private fun OnboardingStepAesthetic(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .shadow(if (isSelected) 4.dp else 1.dp, RoundedCornerShape(16.dp), spotColor = Espresso.copy(0.12f))
-                        .clip(RoundedCornerShape(16.dp))
+                        .shadow(if (isSelected) 3.dp else 1.dp, RoundedCornerShape(18.dp), spotColor = Espresso.copy(0.08f))
+                        .clip(RoundedCornerShape(18.dp))
                         .background(brush)
-                        .border(2.dp, if (isSelected) Terracotta else Color.Transparent, RoundedCornerShape(16.dp))
+                        .border(1.5.dp, if (isSelected) Terracotta else Color.Transparent, RoundedCornerShape(18.dp))
                         .clickable { onSelectStyle(index) }
                         .padding(16.dp)
                 ) {

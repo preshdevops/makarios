@@ -173,22 +173,21 @@ fun AffirmationDetailScreen(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(18.dp))
-                        .background(Color.White.copy(alpha = 0.12f))
-                        .border(1.dp, Color.White.copy(alpha = 0.20f), RoundedCornerShape(18.dp))
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(Color.White.copy(alpha = 0.10f))
+                        .border(0.5.dp, Color.White.copy(alpha = 0.14f), RoundedCornerShape(20.dp))
                         .padding(20.dp)
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
-                            text = "GROUNDING SCRIPTURE",
-                            fontFamily = BodyFontFamily,
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 10.sp,
-                            letterSpacing = 1.6.sp,
-                            color = TerracottaLight
+                            text = "Living Scripture",
+                            fontFamily = DisplayFontFamily,
+                            fontStyle = FontStyle.Italic,
+                            fontSize = 12.sp,
+                            color = Color.White.copy(alpha = 0.60f)
                         )
 
-                        Spacer(modifier = Modifier.height(10.dp))
+                        Spacer(modifier = Modifier.height(8.dp))
 
                         // Full scripture verse text in italic Fraunces
                         Text(
@@ -198,7 +197,7 @@ fun AffirmationDetailScreen(
                             fontSize = 14.5.sp,
                             lineHeight = 22.sp,
                             textAlign = TextAlign.Center,
-                            color = Color.White.copy(alpha = 0.95f)
+                            color = Color.White.copy(alpha = 0.92f)
                         )
 
                         Spacer(modifier = Modifier.height(10.dp))
@@ -207,10 +206,10 @@ fun AffirmationDetailScreen(
                         Text(
                             text = affirmation.reference.uppercase(),
                             fontFamily = BodyFontFamily,
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 10.sp,
                             letterSpacing = 1.4.sp,
-                            color = TerracottaLight
+                            color = Color.White.copy(alpha = 0.75f)
                         )
                     }
                 }
@@ -222,21 +221,20 @@ fun AffirmationDetailScreen(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(Color.White.copy(alpha = 0.08f))
-                            .border(1.dp, Color.White.copy(alpha = 0.14f), RoundedCornerShape(16.dp))
+                            .clip(RoundedCornerShape(18.dp))
+                            .background(Color.White.copy(alpha = 0.07f))
+                            .border(0.5.dp, Color.White.copy(alpha = 0.12f), RoundedCornerShape(18.dp))
                             .padding(18.dp)
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(
-                                text = "PERSONAL CONFESSION",
-                                fontFamily = BodyFontFamily,
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 9.5.sp,
-                                letterSpacing = 1.6.sp,
-                                color = Color.White.copy(alpha = 0.7f)
+                                text = "Personal Confession",
+                                fontFamily = DisplayFontFamily,
+                                fontStyle = FontStyle.Italic,
+                                fontSize = 11.5.sp,
+                                color = Color.White.copy(alpha = 0.60f)
                             )
-                            Spacer(modifier = Modifier.height(8.dp))
+                            Spacer(modifier = Modifier.height(6.dp))
                             Text(
                                 text = "“${affirmation.personalDeclaration}”",
                                 fontFamily = DisplayFontFamily,
@@ -264,10 +262,10 @@ fun AffirmationDetailScreen(
                 Button(
                     onClick = { onNavigateToCreate(affirmation.id) },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Terracotta,
-                        contentColor = Color.White
+                        containerColor = Color.White,
+                        contentColor = Espresso
                     ),
-                    shape = RoundedCornerShape(16.dp),
+                    shape = RoundedCornerShape(18.dp),
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(50.dp)
@@ -279,13 +277,15 @@ fun AffirmationDetailScreen(
                         Icon(
                             imageVector = Icons.Default.Palette,
                             contentDescription = null,
+                            tint = Espresso,
                             modifier = Modifier.size(16.dp)
                         )
                         Text(
                             text = "Design Studio & Wallpapers",
                             fontFamily = BodyFontFamily,
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 13.5.sp
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 13.5.sp,
+                            color = Espresso
                         )
                     }
                 }
@@ -299,9 +299,9 @@ fun AffirmationDetailScreen(
                         modifier = Modifier
                             .weight(1f)
                             .height(46.dp)
-                            .clip(RoundedCornerShape(14.dp))
-                            .background(Color.White.copy(alpha = 0.12f))
-                            .border(1.dp, Color.White.copy(alpha = 0.20f), RoundedCornerShape(14.dp))
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(Color.White.copy(alpha = 0.10f))
+                            .border(0.5.dp, Color.White.copy(alpha = 0.15f), RoundedCornerShape(16.dp))
                             .clickable {
                                 Toast.makeText(context, "Added to Home Screen widget", Toast.LENGTH_SHORT).show()
                             },
@@ -331,9 +331,9 @@ fun AffirmationDetailScreen(
                         modifier = Modifier
                             .weight(1f)
                             .height(46.dp)
-                            .clip(RoundedCornerShape(14.dp))
-                            .background(Color.White.copy(alpha = 0.12f))
-                            .border(1.dp, Color.White.copy(alpha = 0.20f), RoundedCornerShape(14.dp))
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(Color.White.copy(alpha = 0.10f))
+                            .border(0.5.dp, Color.White.copy(alpha = 0.15f), RoundedCornerShape(16.dp))
                             .clickable {
                                 Toast.makeText(context, "Daily reminder scheduled", Toast.LENGTH_SHORT).show()
                             },

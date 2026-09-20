@@ -70,27 +70,27 @@ data class DesignStyle(
 val designStyles = listOf(
     DesignStyle(
         "Espresso",
-        Brush.verticalGradient(listOf(Color(0xFF331E2A), Color(0xFF1F1118), Color(0xFF150B10))),
+        Brush.verticalGradient(listOf(Color(0xFF342E2B), Color(0xFF24201D), Color(0xFF171513))),
         Color.White,
-        Color(0xFFFAEDE8)
+        Color(0xFFF7EBE7)
     ),
     DesignStyle(
         "Porcelain",
-        Brush.verticalGradient(listOf(Color(0xFFFAF8F5), Color(0xFFEAE3D8))),
-        Color(0xFF1F1118),
-        Color(0xFFC46851)
+        Brush.verticalGradient(listOf(Color(0xFFFBF9F5), Color(0xFFF3EFE8))),
+        Color(0xFF2C2622),
+        Color(0xFFA85842)
     ),
     DesignStyle(
         "Terracotta",
-        Brush.verticalGradient(listOf(Color(0xFF8A4633), Color(0xFF4A1F2C), Color(0xFF1F1118))),
+        Brush.verticalGradient(listOf(Color(0xFF63382B), Color(0xFF3A241E), Color(0xFF1F1614))),
         Color.White,
-        Color(0xFFFAEDE8)
+        Color(0xFFF7EBE7)
     ),
     DesignStyle(
         "Sage",
-        Brush.verticalGradient(listOf(Color(0xFF3A5047), Color(0xFF2A3C33))),
+        Brush.verticalGradient(listOf(Color(0xFF314238), Color(0xFF222F28), Color(0xFF17201B))),
         Color.White,
-        Color(0xFFEEF3EE)
+        Color(0xFFF0F4F1)
     )
 )
 

@@ -57,10 +57,10 @@ val curatedWallpapers = listOf(
         title = "I am fearfully and wonderfully made.",
         reference = "PSALM 139:14",
         background = Brush.verticalGradient(
-            listOf(Color(0xFF331E2A), Color(0xFF1F1118), Color(0xFF150B10))
+            listOf(Color(0xFF342E2B), Color(0xFF24201D), Color(0xFF171513))
         ),
         textColor = Color.White,
-        accentColor = Color(0xFFFAEDE8),
+        accentColor = Color(0xFFF7EBE7),
         affirmationId = "ident-1"
     ),
     WallpaperItem(
@@ -68,10 +68,10 @@ val curatedWallpapers = listOf(
         title = "The peace of God guards my heart.",
         reference = "PHILIPPIANS 4:7",
         background = Brush.verticalGradient(
-            listOf(Color(0xFF8A4633), Color(0xFF4A1F2C), Color(0xFF1F1118))
+            listOf(Color(0xFF63382B), Color(0xFF3A241E), Color(0xFF1F1614))
         ),
         textColor = Color.White,
-        accentColor = Color(0xFFFAEDE8),
+        accentColor = Color(0xFFF7EBE7),
         affirmationId = "aotd-1"
     ),
     WallpaperItem(
@@ -79,10 +79,10 @@ val curatedWallpapers = listOf(
         title = "In quietness and trust is my strength.",
         reference = "ISAIAH 30:15",
         background = Brush.verticalGradient(
-            listOf(Color(0xFFFAF8F5), Color(0xFFEAE3D8))
+            listOf(Color(0xFFFBF9F5), Color(0xFFF3EFE8))
         ),
-        textColor = Color(0xFF1F1118),
-        accentColor = Color(0xFFC46851),
+        textColor = Color(0xFF2C2622),
+        accentColor = Color(0xFFA85842),
         affirmationId = "peace-still"
     ),
     WallpaperItem(
@@ -90,10 +90,10 @@ val curatedWallpapers = listOf(
         title = "The Lord is my helper; I will not fear.",
         reference = "HEBREWS 13:6",
         background = Brush.verticalGradient(
-            listOf(Color(0xFF3A5047), Color(0xFF2A3C33), Color(0xFF1A2620))
+            listOf(Color(0xFF314238), Color(0xFF222F28), Color(0xFF17201B))
         ),
         textColor = Color.White,
-        accentColor = Color(0xFFEEF3EE),
+        accentColor = Color(0xFFF0F4F1),
         affirmationId = "conf-1"
     )
 )
@@ -177,9 +177,9 @@ fun SavedScreen(
                     .fillMaxWidth()
                     .padding(horizontal = 20.dp, vertical = 8.dp)
                     .clip(RoundedCornerShape(24.dp))
-                    .background(PorcelainWarm.copy(alpha = 0.5f))
-                    .padding(4.dp),
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    .background(PorcelainWarm.copy(alpha = 0.55f))
+                    .padding(3.dp),
+                horizontalArrangement = Arrangement.spacedBy(3.dp)
             ) {
                 SavedTab.values().forEach { tab ->
                     val isSelected = selectedTab == tab
@@ -196,8 +196,8 @@ fun SavedScreen(
                             .then(
                                 if (isSelected) {
                                     Modifier
-                                        .background(Espresso)
-                                        .shadow(2.dp, RoundedCornerShape(20.dp))
+                                        .background(Surface)
+                                        .shadow(1.dp, RoundedCornerShape(20.dp), spotColor = Espresso.copy(alpha = 0.05f))
                                 } else {
                                     Modifier.background(Color.Transparent)
                                 }
@@ -213,24 +213,24 @@ fun SavedScreen(
                             Text(
                                 text = tab.label,
                                 fontFamily = BodyFontFamily,
-                                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                                fontWeight = if (isSelected) FontWeight.Medium else FontWeight.Normal,
                                 fontSize = 12.5.sp,
-                                color = if (isSelected) Color.White else Espresso
+                                color = if (isSelected) Espresso else Stone
                             )
                             Box(
                                 modifier = Modifier
                                     .clip(CircleShape)
                                     .background(
-                                        if (isSelected) Terracotta else PorcelainWarm
+                                        if (isSelected) PorcelainWarm else Color.Transparent
                                     )
-                                    .padding(horizontal = 5.dp, vertical = 1.dp)
+                                    .padding(horizontal = 6.dp, vertical = 1.dp)
                             ) {
                                 Text(
                                     text = "$count",
                                     fontFamily = BodyFontFamily,
-                                    fontWeight = FontWeight.SemiBold,
+                                    fontWeight = FontWeight.Medium,
                                     fontSize = 10.sp,
-                                    color = if (isSelected) Color.White else Stone
+                                    color = if (isSelected) Espresso else StoneMuted
                                 )
                             }
                         }

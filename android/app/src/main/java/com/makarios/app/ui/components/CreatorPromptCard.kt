@@ -34,15 +34,15 @@ fun CreatorPromptCard(
             .fillMaxWidth()
             .padding(horizontal = 20.dp)
             .shadow(
-                elevation = 2.dp,
-                shape = RoundedCornerShape(20.dp),
-                spotColor = Espresso.copy(alpha = 0.06f)
+                elevation = 1.dp,
+                shape = RoundedCornerShape(22.dp),
+                spotColor = Espresso.copy(alpha = 0.03f)
             )
-            .clip(RoundedCornerShape(20.dp))
+            .clip(RoundedCornerShape(22.dp))
             .background(Surface)
-            .border(1.dp, Border, RoundedCornerShape(20.dp))
+            .border(0.5.dp, BorderSubtle, RoundedCornerShape(22.dp))
             .clickable(onClick = onClick)
-            .padding(20.dp)
+            .padding(22.dp)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -57,7 +57,7 @@ fun CreatorPromptCard(
                     fontFamily = DisplayFontFamily,
                     fontStyle = FontStyle.Italic,
                     fontWeight = FontWeight.Normal,
-                    fontSize = 18.sp,
+                    fontSize = 18.5.sp,
                     lineHeight = 25.sp,
                     letterSpacing = (-0.2).sp,
                     color = Espresso
@@ -78,13 +78,13 @@ fun CreatorPromptCard(
                 modifier = Modifier
                     .size(38.dp)
                     .clip(CircleShape)
-                    .background(Espresso),
+                    .background(PorcelainWarm),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Default.ArrowForward,
                     contentDescription = "Create declaration",
-                    tint = Surface,
+                    tint = Espresso,
                     modifier = Modifier.size(16.dp)
                 )
             }

@@ -64,7 +64,7 @@ fun SubscriptionScreen(
                         .size(36.dp)
                         .clip(CircleShape)
                         .background(Surface)
-                        .border(1.dp, Border, CircleShape)
+                        .border(0.5.dp, BorderSubtle, CircleShape)
                         .clickable(onClick = onClose),
                     contentAlignment = Alignment.Center
                 ) {
@@ -105,7 +105,7 @@ fun SubscriptionScreen(
                     Text(
                         text = "MAKARIOS+",
                         fontFamily = BodyFontFamily,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.Medium,
                         fontSize = 10.5.sp,
                         letterSpacing = 2.sp,
                         color = Terracotta
@@ -117,7 +117,7 @@ fun SubscriptionScreen(
                 Text(
                     text = "Unlock the Full Depth of God's Word",
                     fontFamily = DisplayFontFamily,
-                    fontWeight = FontWeight.SemiBold,
+                    fontWeight = FontWeight.Normal,
                     fontSize = 25.sp,
                     lineHeight = 33.sp,
                     letterSpacing = (-0.3).sp,
@@ -156,10 +156,10 @@ fun SubscriptionScreen(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .shadow(1.dp, RoundedCornerShape(16.dp), spotColor = Espresso.copy(alpha = 0.04f))
-                            .clip(RoundedCornerShape(16.dp))
+                            .shadow(1.dp, RoundedCornerShape(18.dp), spotColor = Espresso.copy(alpha = 0.03f))
+                            .clip(RoundedCornerShape(18.dp))
                             .background(Surface)
-                            .border(1.dp, Border, RoundedCornerShape(16.dp))
+                            .border(0.5.dp, BorderSubtle, RoundedCornerShape(18.dp))
                             .padding(14.dp)
                     ) {
                         Row(

@@ -3,50 +3,50 @@ package com.makarios.app.ui.theme
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 
-// ── Canvas & Surface (from media sp 11 5:00 pm) ───────────────
-val Porcelain = Color(0xFFFAF8F5)           // Primary background — warm porcelain ground
-val PorcelainWarm = Color(0xFFEAE3D8)       // Warm almond/sand accent
+// ── Canvas & Surface ──────────────────────────────────────────
+val Porcelain = Color(0xFFFBF9F5)           // Primary background — warm alabaster linen
+val PorcelainWarm = Color(0xFFF3EFE8)       // Soft almond/oat neutral accent
 val Surface = Color(0xFFFFFFFF)             // Pure crisp white card surface
-val SurfaceMuted = Color(0xFFF5F2ED)        // Muted surface for inputs/search
+val SurfaceMuted = Color(0xFFF6F3EE)        // Muted surface for inputs/search
 
 // ── Text & Dark Accents ───────────────────────────────────────
-val Espresso = Color(0xFF1F1118)            // Primary text & dark buttons — deep espresso-plum
-val EspressoLight = Color(0xFF3D2E35)       // Secondary display text
-val Stone = Color(0xFF6B5E66)              // Body text, scripture
-val StoneMuted = Color(0xFF9C9297)          // Captions, metadata, search placeholder
+val Espresso = Color(0xFF2C2622)            // Primary ink & dark buttons — deep warm charcoal-umber
+val EspressoLight = Color(0xFF453E38)       // Secondary display text
+val Stone = Color(0xFF787069)              // Body text, scripture — warm driftwood
+val StoneMuted = Color(0xFFA39B93)          // Captions, metadata, search placeholder
 
-// ── Brand Accents ─────────────────────────────────────────────
-val Terracotta = Color(0xFFC46851)          // Primary accent — warm salmon / terracotta
-val TerracottaLight = Color(0xFFFAEDE8)     // Soft terracotta background wash
-val Sage = Color(0xFF5A7362)               // Secondary accent — eucalyptus sage
-val SageLight = Color(0xFFEEF3EE)           // Soft sage background wash
-val AmberGold = Color(0xFFD4AF37)           // Warm sacred amber/gold
+// ── Brand Accents (Quiet Luxury / Contemplative) ───────────────
+val Terracotta = Color(0xFFA85842)          // Primary accent — quiet earthy terracotta clay
+val TerracottaLight = Color(0xFFF7EBE7)     // Soft terracotta blush wash
+val Sage = Color(0xFF607768)               // Secondary accent — muted eucalyptus sage
+val SageLight = Color(0xFFF0F4F1)           // Soft sage mist wash
+val AmberGold = Color(0xFFC49B45)           // Warm sacred amber/ochre
 
 // ── Borders & Hairlines ───────────────────────────────────────
-val Border = Color(0xFFE8E2D8)             // Delicate 0.75dp–1dp card/divider borders
-val BorderSubtle = Color(0x0F1F1118)       // Subtle borders (~6% alpha)
+val Border = Color(0xFFECE7DF)             // Ultra-delicate warm hairline border
+val BorderSubtle = Color(0x0A2C2622)       // Delicate translucent border (~4% alpha)
 
-// ── Atmospheric Gradients (replacing cold PDF purple with warm espresso glow) ─
+// ── Atmospheric Gradients (Serene Twilight Sanctuary) ─────────
 val AtmosphericGradient = Brush.verticalGradient(
     colors = listOf(
-        Color(0xFF331E2A), // Deep warm plum-espresso top
-        Color(0xFF1F1118), // Rich espresso core
-        Color(0xFF150B10)  // Deepest bottom
+        Color(0xFF342E2B), // Deep candlelit umber top
+        Color(0xFF24201D), // Rich serene twilight core
+        Color(0xFF171513)  // Deepest obsidian bottom
     )
 )
 
 val AtmosphericCardGradient = Brush.horizontalGradient(
     colors = listOf(
-        Color(0xFF2E1925),
-        Color(0xFF1F1118)
+        Color(0xFF322C29),
+        Color(0xFF221E1C)
     )
 )
 
 val AmberAtmosphericGradient = Brush.verticalGradient(
     colors = listOf(
-        Color(0xFF8A4633), // Warm terracotta-amber glow
-        Color(0xFF4A1F2C),
-        Color(0xFF1F1118)
+        Color(0xFF63382B), // Muted warm terracotta glow
+        Color(0xFF3A241E),
+        Color(0xFF1F1614)
     )
 )
 

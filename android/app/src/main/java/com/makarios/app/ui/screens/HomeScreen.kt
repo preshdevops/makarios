@@ -83,17 +83,17 @@ fun HomeScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { onNavigateToCreate("") },
-                containerColor = Terracotta,
-                contentColor = Color.White,
+                containerColor = Espresso,
+                contentColor = Surface,
                 shape = CircleShape,
                 modifier = Modifier
-                    .size(54.dp)
-                    .shadow(6.dp, CircleShape, spotColor = Terracotta.copy(alpha = 0.35f))
+                    .size(50.dp)
+                    .shadow(3.dp, CircleShape, spotColor = Espresso.copy(alpha = 0.18f))
             ) {
                 Icon(
                     imageVector = Icons.Default.Add,
                     contentDescription = "New Declaration",
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(22.dp)
                 )
             }
         }
@@ -117,7 +117,7 @@ fun HomeScreen(
                     Text(
                         text = "Makarios",
                         fontFamily = DisplayFontFamily,
-                        fontWeight = FontWeight.SemiBold,
+                        fontWeight = FontWeight.Medium,
                         fontSize = 22.sp,
                         letterSpacing = (-0.2).sp,
                         color = Espresso
@@ -134,17 +134,17 @@ fun HomeScreen(
 
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    // Notification Bell (peaceful, no unread red dot)
+                    // Notification Bell (peaceful)
                     Box(
                         modifier = Modifier
-                            .size(38.dp)
+                            .size(36.dp)
                             .clip(CircleShape)
                             .background(Surface)
-                            .border(1.dp, Border, CircleShape)
+                            .border(0.5.dp, BorderSubtle, CircleShape)
                             .clickable {
-                                Toast.makeText(context, "Notifications enabled for daily declarations", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, "Daily declarations active", Toast.LENGTH_SHORT).show()
                             },
                         contentAlignment = Alignment.Center
                     ) {
@@ -152,17 +152,17 @@ fun HomeScreen(
                             imageVector = Icons.Default.Notifications,
                             contentDescription = "Notifications",
                             tint = Stone,
-                            modifier = Modifier.size(19.dp)
+                            modifier = Modifier.size(17.dp)
                         )
                     }
 
                     // Profile Avatar
                     Box(
                         modifier = Modifier
-                            .size(38.dp)
+                            .size(36.dp)
                             .clip(CircleShape)
                             .background(PorcelainWarm)
-                            .border(1.dp, Border, CircleShape)
+                            .border(0.5.dp, BorderSubtle, CircleShape)
                     ) {
                         AsyncImage(
                             model = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=160&q=80",
@@ -174,7 +174,7 @@ fun HomeScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(4.dp))
 
             // ── 2. Creator Prompt Card ("What do you need to hear today?") ──
             CreatorPromptCard(
@@ -183,32 +183,40 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(18.dp))
 
-            // ── 3. Today's Declaration Hero Card ──────────────────
+            // ── 3. Today's Declaration Hero Card (Candlelit Sanctuary) ──
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 20.dp)
-                    .shadow(6.dp, RoundedCornerShape(22.dp), spotColor = Espresso.copy(alpha = 0.18f))
-                    .clip(RoundedCornerShape(22.dp))
+                    .shadow(4.dp, RoundedCornerShape(24.dp), spotColor = Espresso.copy(alpha = 0.10f))
+                    .clip(RoundedCornerShape(24.dp))
                     .background(AtmosphericGradient)
                     .clickable { onNavigateToDetail(aotd) }
-                    .padding(22.dp)
+                    .padding(24.dp)
             ) {
                 Column {
-                    // Tag
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(Color.White.copy(alpha = 0.16f))
-                            .padding(horizontal = 12.dp, vertical = 5.dp)
+                    // Header line without kicker eyebrow badge
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "TODAY'S DECLARATION",
+                            text = "Today’s Truth",
+                            fontFamily = DisplayFontFamily,
+                            fontStyle = FontStyle.Italic,
+                            fontWeight = FontWeight.Normal,
+                            fontSize = 13.5.sp,
+                            color = Color.White.copy(alpha = 0.70f)
+                        )
+
+                        Text(
+                            text = aotd.category.uppercase(),
                             fontFamily = BodyFontFamily,
-                            fontWeight = FontWeight.SemiBold,
+                            fontWeight = FontWeight.Medium,
                             fontSize = 9.5.sp,
                             letterSpacing = 1.6.sp,
-                            color = TerracottaLight
+                            color = Color.White.copy(alpha = 0.60f)
                         )
                     }
 
@@ -219,8 +227,8 @@ fun HomeScreen(
                         text = "“${aotd.declaration}”",
                         fontFamily = DisplayFontFamily,
                         fontWeight = FontWeight.Normal,
-                        fontSize = 21.sp,
-                        lineHeight = 30.sp,
+                        fontSize = 22.sp,
+                        lineHeight = 31.sp,
                         letterSpacing = (-0.2).sp,
                         color = Color.White
                     )
@@ -238,7 +246,7 @@ fun HomeScreen(
                         color = Color.White.copy(alpha = 0.85f)
                     )
 
-                    Spacer(modifier = Modifier.height(14.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
 
                     // Reference & Actions Row
                     Row(
@@ -249,10 +257,10 @@ fun HomeScreen(
                         Text(
                             text = aotd.reference.uppercase(),
                             fontFamily = BodyFontFamily,
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 11.sp,
-                            letterSpacing = 1.2.sp,
-                            color = TerracottaLight
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 10.5.sp,
+                            letterSpacing = 1.4.sp,
+                            color = Color.White.copy(alpha = 0.80f)
                         )
 
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -280,7 +288,7 @@ fun HomeScreen(
                                 modifier = Modifier
                                     .size(34.dp)
                                     .clip(CircleShape)
-                                    .background(Color.White.copy(alpha = 0.15f))
+                                    .background(if (isAotdSaved) Color.White.copy(alpha = 0.25f) else Color.White.copy(alpha = 0.15f))
                                     .clickable {
                                         AffirmationRepository.toggleSave(aotd.id)
                                         isAotdSaved = !isAotdSaved
@@ -290,7 +298,7 @@ fun HomeScreen(
                                 Icon(
                                     imageVector = if (isAotdSaved) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
                                     contentDescription = "Favorite",
-                                    tint = if (isAotdSaved) Terracotta else Color.White,
+                                    tint = if (isAotdSaved) TerracottaLight else Color.White,
                                     modifier = Modifier.size(16.dp)
                                 )
                             }
@@ -300,7 +308,7 @@ fun HomeScreen(
                                 modifier = Modifier
                                     .size(34.dp)
                                     .clip(CircleShape)
-                                    .background(Terracotta)
+                                    .background(Color.White.copy(alpha = 0.15f))
                                     .clickable { onNavigateToDetail(aotd) },
                                 contentAlignment = Alignment.Center
                             ) {
@@ -330,7 +338,7 @@ fun HomeScreen(
                     Text(
                         text = "Browse Categories",
                         fontFamily = BodyFontFamily,
-                        fontWeight = FontWeight.SemiBold,
+                        fontWeight = FontWeight.Medium,
                         fontSize = 15.sp,
                         color = Espresso
                     )
@@ -338,8 +346,8 @@ fun HomeScreen(
                         text = "See All",
                         fontFamily = BodyFontFamily,
                         fontWeight = FontWeight.Medium,
-                        fontSize = 12.5.sp,
-                        color = Terracotta,
+                        fontSize = 12.sp,
+                        color = Stone,
                         modifier = Modifier.clickable(onClick = onNavigateToLibrary)
                     )
                 }
@@ -363,23 +371,23 @@ fun HomeScreen(
                                     if (isSelected) {
                                         Modifier
                                             .background(Espresso)
-                                            .shadow(2.dp, RoundedCornerShape(20.dp), spotColor = Espresso.copy(alpha = 0.2f))
+                                            .shadow(1.dp, RoundedCornerShape(20.dp), spotColor = Espresso.copy(alpha = 0.15f))
                                     } else {
                                         Modifier
                                             .background(Surface)
-                                            .border(1.dp, Border, RoundedCornerShape(20.dp))
+                                            .border(0.5.dp, BorderSubtle, RoundedCornerShape(20.dp))
                                     }
                                 )
                                 .clickable { selectedCategory = category }
-                                .padding(horizontal = 16.dp, vertical = 9.dp),
+                                .padding(horizontal = 16.dp, vertical = 8.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
                                 text = category,
                                 fontFamily = BodyFontFamily,
-                                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                                fontWeight = if (isSelected) FontWeight.Medium else FontWeight.Normal,
                                 fontSize = 13.sp,
-                                color = if (isSelected) Surface else Espresso
+                                color = if (isSelected) Surface else Stone
                             )
                         }
                     }

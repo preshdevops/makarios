@@ -36,14 +36,14 @@ fun WidgetPreviewCard(
             .fillMaxWidth()
             .padding(horizontal = 20.dp)
             .shadow(
-                elevation = 2.dp,
-                shape = RoundedCornerShape(20.dp),
-                spotColor = Espresso.copy(alpha = 0.06f)
+                elevation = 1.dp,
+                shape = RoundedCornerShape(22.dp),
+                spotColor = Espresso.copy(alpha = 0.03f)
             )
-            .clip(RoundedCornerShape(20.dp))
+            .clip(RoundedCornerShape(22.dp))
             .background(Surface)
-            .border(1.dp, Border, RoundedCornerShape(20.dp))
-            .padding(20.dp)
+            .border(0.5.dp, BorderSubtle, RoundedCornerShape(22.dp))
+            .padding(22.dp)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -57,16 +57,16 @@ fun WidgetPreviewCard(
                 Icon(
                     imageVector = Icons.Default.Widgets,
                     contentDescription = null,
-                    tint = Terracotta,
-                    modifier = Modifier.size(16.dp)
+                    tint = Stone,
+                    modifier = Modifier.size(15.dp)
                 )
                 Text(
                     text = "HOME SCREEN WIDGET",
                     fontFamily = BodyFontFamily,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 10.5.sp,
-                    letterSpacing = 1.4.sp,
-                    color = Terracotta
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 10.sp,
+                    letterSpacing = 1.6.sp,
+                    color = StoneMuted
                 )
             }
 
@@ -86,14 +86,9 @@ fun WidgetPreviewCard(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .shadow(
-                    elevation = 4.dp,
-                    shape = RoundedCornerShape(18.dp),
-                    spotColor = Espresso.copy(alpha = 0.10f)
-                )
-                .clip(RoundedCornerShape(18.dp))
-                .background(Porcelain)
-                .border(1.dp, Border, RoundedCornerShape(18.dp))
+                .clip(RoundedCornerShape(16.dp))
+                .background(PorcelainWarm.copy(alpha = 0.6f))
+                .border(0.5.dp, BorderSubtle, RoundedCornerShape(16.dp))
                 .padding(16.dp)
         ) {
             Column {
@@ -101,8 +96,8 @@ fun WidgetPreviewCard(
                     text = affirmation.reference.uppercase(),
                     color = Terracotta,
                     fontFamily = BodyFontFamily,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 10.5.sp,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 10.sp,
                     letterSpacing = 1.2.sp
                 )
 
@@ -111,9 +106,9 @@ fun WidgetPreviewCard(
                 Text(
                     text = "“${affirmation.declaration}”",
                     fontFamily = DisplayFontFamily,
-                    fontWeight = FontWeight.SemiBold,
+                    fontWeight = FontWeight.Normal,
                     fontSize = 15.sp,
-                    lineHeight = 21.sp,
+                    lineHeight = 22.sp,
                     color = Espresso,
                     maxLines = 3
                 )
@@ -140,7 +135,7 @@ fun WidgetPreviewCard(
                 containerColor = Espresso,
                 contentColor = Surface
             ),
-            shape = RoundedCornerShape(14.dp),
+            shape = RoundedCornerShape(16.dp),
             modifier = Modifier
                 .fillMaxWidth()
                 .height(46.dp)
@@ -158,7 +153,7 @@ fun WidgetPreviewCard(
                 Text(
                     text = "Add to Home Screen",
                     fontFamily = BodyFontFamily,
-                    fontWeight = FontWeight.SemiBold,
+                    fontWeight = FontWeight.Medium,
                     fontSize = 13.5.sp,
                     color = Surface
                 )
