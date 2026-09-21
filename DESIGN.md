@@ -10,9 +10,11 @@
 Makarios is a sacred, typographic-led Christian affirmation app. Its signature feel is **liturgical restraint meeting modern editorial craft**. It is not a sterile wellness tracker, nor is it a noisy social app with vanity metrics or gamified streaks.
 
 ### Core Design Rules
-- **Typography Is the Interface**: Fraunces (optical display serif) carries spiritual weight, authority, and intimacy; Work Sans provides clarity for metadata, navigation, and controls.
+- **Photo-Forward Sacred Sanctuary**: Every affirmation is paired with breathtaking, emotionally resonant sacred photography (cinematic dawn light, mountain ridges, still waters, sunbeams). Rich dark scrims let Fraunces typography float with high contrast and sacred emotional weight, avoiding sterile text-only card lists.
+- **Visual Mood Exploration**: Categorical discovery is driven by photographic mood tiles (`MoodTile`) that invite the soul to pause and select their spiritual season (*Peace*, *Strength*, *Stillness*, *Courage*, *Joy*).
 - **Mandatory Scripture Grounding**: Every affirmation — whether user-authored or curated — **must** display its grounding Bible verse text and reference beneath it. No affirmation exists in isolation from scripture.
 - **No AI Slop Patterns**: No purple/indigo gradient accents, no arbitrary dark-mode glows, no emoji used as icons or bullet points, no kicker eyebrows stacked over titles, no colored top/left borders on cards.
+- **Native Android Integration**: True system share sheet (`ACTION_SEND`) and one-tap Glance Home Screen widget pinning (`requestPinAppWidget`).
 - **Creation First**: The primary action is authoring personal declarations and matching them to God's word, then formatting them into beautiful typographic artifacts for social sharing, widgets, and wallpapers.
 
 ---
