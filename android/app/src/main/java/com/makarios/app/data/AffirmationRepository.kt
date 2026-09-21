@@ -150,9 +150,8 @@ object AffirmationRepository {
     )
 
     var widgetAffirmation by mutableStateOf(defaultWidgetAffirmation)
-        private set
 
-    fun setWidgetAffirmation(affirmation: Affirmation) {
+    fun updateActiveWidgetAffirmation(affirmation: Affirmation) {
         widgetAffirmation = affirmation
     }
 

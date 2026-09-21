@@ -32,7 +32,7 @@ object WidgetHelper {
     }
 
     fun setWidgetAffirmation(context: Context, affirmation: Affirmation) {
-        AffirmationRepository.setWidgetAffirmation(affirmation)
+        AffirmationRepository.updateActiveWidgetAffirmation(affirmation)
         CoroutineScope(Dispatchers.IO).launch {
             runCatching {
                 MakariosGlanceWidget().updateAll(context)
