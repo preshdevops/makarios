@@ -40,6 +40,7 @@ import com.makarios.app.data.Affirmation
 import com.makarios.app.data.AffirmationRepository
 import com.makarios.app.data.AffirmationTone
 import com.makarios.app.ui.theme.*
+import com.makarios.app.util.ShareHelper
 
 // ── Create Screen Stages ─────────────────────────────────────────
 enum class CreateStage {
@@ -262,7 +263,7 @@ fun CreateScreen(
                                     personalDeclaration = declarationText
                                 )
                                 AffirmationRepository.addPersonalAffirmation(newAffirmation)
-                                Toast.makeText(context, "Shared declaration and saved to Personal", Toast.LENGTH_SHORT).show()
+                                ShareHelper.shareAffirmation(context, newAffirmation)
                             },
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = Terracotta, contentColor = Color.White

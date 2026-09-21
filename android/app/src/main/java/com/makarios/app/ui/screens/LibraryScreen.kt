@@ -32,6 +32,7 @@ import com.makarios.app.data.Affirmation
 import com.makarios.app.data.AffirmationRepository
 import com.makarios.app.ui.components.AffirmationCard
 import com.makarios.app.ui.theme.*
+import com.makarios.app.util.ShareHelper
 
 @Composable
 fun LibraryScreen(
@@ -380,7 +381,7 @@ fun LibraryScreen(
                                 isSaved = !isSaved
                             },
                             onShare = {
-                                Toast.makeText(context, "Shared declaration", Toast.LENGTH_SHORT).show()
+                                ShareHelper.shareAffirmation(context, affirmation)
                             },
                             onCardClick = { onNavigateToDetail(affirmation) }
                         )

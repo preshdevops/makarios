@@ -34,6 +34,7 @@ import com.makarios.app.data.Affirmation
 import com.makarios.app.data.AffirmationRepository
 import com.makarios.app.ui.components.AffirmationCard
 import com.makarios.app.ui.theme.*
+import com.makarios.app.util.ShareHelper
 
 enum class SavedTab(val label: String) {
     DECLARATIONS("Declarations"),
@@ -268,7 +269,7 @@ fun SavedScreen(
                                         AffirmationRepository.toggleSave(affirmation.id)
                                     },
                                     onShare = {
-                                        Toast.makeText(context, "Shared declaration", Toast.LENGTH_SHORT).show()
+                                        ShareHelper.shareAffirmation(context, affirmation)
                                     },
                                     onCardClick = { onNavigateToDetail(affirmation) }
                                 )
@@ -318,7 +319,11 @@ fun SavedScreen(
                                     wallpaper = curatedWallpapers[i],
                                     onOpenStudio = { onNavigateToCreate(curatedWallpapers[i].affirmationId) },
                                     onSetWallpaper = {
-                                        Toast.makeText(context, "Wallpaper downloaded to photos", Toast.LENGTH_SHORT).show()
+                                        ShareHelper.shareText(
+                                            context,
+                                            "Makarios Wallpaper",
+                                            "“${curatedWallpapers[i].title}”\n— ${curatedWallpapers[i].reference}\n\nShared via Makarios"
+                                        )
                                     },
                                     modifier = Modifier.weight(1f)
                                 )
@@ -328,7 +333,11 @@ fun SavedScreen(
                                         wallpaper = curatedWallpapers[i + 1],
                                         onOpenStudio = { onNavigateToCreate(curatedWallpapers[i + 1].affirmationId) },
                                         onSetWallpaper = {
-                                            Toast.makeText(context, "Wallpaper downloaded to photos", Toast.LENGTH_SHORT).show()
+                                            ShareHelper.shareText(
+                                                context,
+                                                "Makarios Wallpaper",
+                                                "“${curatedWallpapers[i + 1].title}”\n— ${curatedWallpapers[i + 1].reference}\n\nShared via Makarios"
+                                            )
                                         },
                                         modifier = Modifier.weight(1f)
                                     )
@@ -421,7 +430,7 @@ fun SavedScreen(
                                             AffirmationRepository.toggleSave(affirmation.id)
                                         },
                                         onShare = {
-                                            Toast.makeText(context, "Shared declaration", Toast.LENGTH_SHORT).show()
+                                            ShareHelper.shareAffirmation(context, affirmation)
                                         },
                                         onCardClick = { onNavigateToDetail(affirmation) }
                                     )

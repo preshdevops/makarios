@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.sp
 import com.makarios.app.data.Affirmation
 import com.makarios.app.data.AffirmationRepository
 import com.makarios.app.ui.theme.*
+import com.makarios.app.util.WidgetHelper
 
 enum class WidgetSurface {
     HOME_SCREEN,
@@ -510,11 +511,7 @@ fun WidgetStudioScreen(
             ) {
                 Button(
                     onClick = {
-                        Toast.makeText(
-                            context,
-                            "To add: Long-press your home screen, tap 'Widgets', and select Makarios.",
-                            Toast.LENGTH_LONG
-                        ).show()
+                        WidgetHelper.pinWidgetToHomeScreen(context)
                     },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Terracotta,

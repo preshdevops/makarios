@@ -26,6 +26,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.makarios.app.ui.theme.*
+import com.makarios.app.util.WidgetHelper
 
 @Composable
 fun ProfileScreen(
@@ -264,7 +265,7 @@ fun ProfileScreen(
 
                             Button(
                                 onClick = {
-                                    Toast.makeText(context, "Long-press your home screen to add Makarios widget", Toast.LENGTH_LONG).show()
+                                    WidgetHelper.pinWidgetToHomeScreen(context)
                                 },
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = Terracotta,

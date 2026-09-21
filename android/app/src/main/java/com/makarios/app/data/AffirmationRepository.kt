@@ -1,10 +1,63 @@
 package com.makarios.app.data
 
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+
+data class MoodCategory(
+    val name: String,
+    val subtitle: String,
+    val imageUrl: String
+)
 
 object AffirmationRepository {
 
-    // ── Page 5: Affirmation of the Day ──────────────────────────
+    // ── Mood categories with atmospheric sacred photography ───────
+    val moodCategories = listOf(
+        MoodCategory(
+            name = "Peace",
+            subtitle = "Stillness over anxiety",
+            imageUrl = "https://images.unsplash.com/photo-1507652313519-d4e9174996dd?auto=format&fit=crop&w=800&q=85"
+        ),
+        MoodCategory(
+            name = "Strength",
+            subtitle = "Endurance in weakness",
+            imageUrl = "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=800&q=85"
+        ),
+        MoodCategory(
+            name = "Identity",
+            subtitle = "Who God says you are",
+            imageUrl = "https://images.unsplash.com/photo-1518495973542-4542c06a5843?auto=format&fit=crop&w=800&q=85"
+        ),
+        MoodCategory(
+            name = "Purpose",
+            subtitle = "Calling & divine alignment",
+            imageUrl = "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=85"
+        ),
+        MoodCategory(
+            name = "Courage",
+            subtitle = "Holy boldness over fear",
+            imageUrl = "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=800&q=85"
+        ),
+        MoodCategory(
+            name = "Joy",
+            subtitle = "Unshakeable gladness",
+            imageUrl = "https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=800&q=85"
+        ),
+        MoodCategory(
+            name = "Provision",
+            subtitle = "Resting in abundance",
+            imageUrl = "https://images.unsplash.com/photo-1499209974431-9dddcece7f88?auto=format&fit=crop&w=800&q=85"
+        ),
+        MoodCategory(
+            name = "Confidence",
+            subtitle = "Christ our defense",
+            imageUrl = "https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=800&q=85"
+        )
+    )
+
+    // ── Curated Affirmations with Evocative Photography ───────────
     val affirmationOfTheDay = Affirmation(
         id = "aotd-1",
         declaration = "I am fully known, deeply loved, and precisely placed for this moment.",
@@ -13,10 +66,9 @@ object AffirmationRepository {
         context = "David meditates on the inescapable love and sovereign knowledge of God. Nothing in your story is an accident.",
         category = "Identity",
         tone = AffirmationTone.RESOLUTE,
-        imageUrl = "https://images.unsplash.com/photo-1507652313519-d4e9174996dd?auto=format&fit=crop&w=1000&q=85"
+        imageUrl = "https://images.unsplash.com/photo-1507652313519-d4e9174996dd?auto=format&fit=crop&w=1200&q=85"
     )
 
-    // ── Page 1: Fullscreen Contemplation Affirmation ────────────
     val fullscreenAffirmation = Affirmation(
         id = "ident-1",
         declaration = "I am the righteousness of God in Christ Jesus. I walk with authority and grace.",
@@ -26,10 +78,9 @@ object AffirmationRepository {
         context = "Paul anchors the believer's standing not in personal performance, but in Christ's finished reconciliation.",
         category = "Identity",
         tone = AffirmationTone.RESOLUTE,
-        imageUrl = "https://images.unsplash.com/photo-1518495973542-4542c06a5843?auto=format&fit=crop&w=1000&q=85"
+        imageUrl = "https://images.unsplash.com/photo-1518495973542-4542c06a5843?auto=format&fit=crop&w=1200&q=85"
     )
 
-    // ── Page 5: Discover More Feed Affirmations ─────────────────
     val strengthAffirmation = Affirmation(
         id = "str-1",
         declaration = "My strength is made perfect in weakness, for He is the one who goes before me.",
@@ -38,7 +89,7 @@ object AffirmationRepository {
         context = "When human stamina reaches its limit, divine power finds its most potent expression.",
         category = "Strength",
         tone = AffirmationTone.RESOLUTE,
-        imageUrl = "https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&w=1000&q=85"
+        imageUrl = "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1200&q=85"
     )
 
     val provisionAffirmation = Affirmation(
@@ -49,7 +100,7 @@ object AffirmationRepository {
         context = "Paul writes from confinement with unshakable assurance that divine resources are inexhaustible.",
         category = "Provision",
         tone = AffirmationTone.STILL,
-        imageUrl = "https://images.unsplash.com/photo-1499209974431-9dddcece7f88?auto=format&fit=crop&w=1000&q=85"
+        imageUrl = "https://images.unsplash.com/photo-1499209974431-9dddcece7f88?auto=format&fit=crop&w=1200&q=85"
     )
 
     val courageAffirmation = Affirmation(
@@ -60,10 +111,9 @@ object AffirmationRepository {
         context = "Joshua stood on the threshold of unknown territory. Courage is obedience in the presence of fear.",
         category = "Courage",
         tone = AffirmationTone.RESOLUTE,
-        imageUrl = "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=1000&q=85"
+        imageUrl = "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=1200&q=85"
     )
 
-    // ── Page 3: Saved Favorites ─────────────────────────────────
     val favorite1 = Affirmation(
         id = "fav-1",
         declaration = "I am more than a conqueror through Him who loved me.",
@@ -72,7 +122,7 @@ object AffirmationRepository {
         context = "Victory is not merely surviving difficulty, but emerging deepened in sovereign love.",
         category = "Strength",
         tone = AffirmationTone.RESOLUTE,
-        imageUrl = "https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=1000&q=85",
+        imageUrl = "https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=1200&q=85",
         isFavorite = true
     )
 
@@ -84,11 +134,11 @@ object AffirmationRepository {
         context = "Spiritual joy is not superficial optimism; it is the deep, immovable wellspring of God's delight.",
         category = "Joy",
         tone = AffirmationTone.GENTLE,
-        imageUrl = "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?auto=format&fit=crop&w=1000&q=85",
+        imageUrl = "https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=1200&q=85",
         isFavorite = true
     )
 
-    val widgetAffirmation = Affirmation(
+    val defaultWidgetAffirmation = Affirmation(
         id = "widget-1",
         declaration = "Be still. The battle is not yours alone.",
         scriptureText = "You will not have to fight this battle. Take up your positions; stand firm and see the deliverance the Lord will give you.",
@@ -96,8 +146,15 @@ object AffirmationRepository {
         context = "Step out of frantic preservation and breathe deeply into sovereign protection. God takes responsibility for the outcome.",
         category = "Peace",
         tone = AffirmationTone.STILL,
-        imageUrl = "https://images.unsplash.com/photo-1507652313519-d4e9174996dd?auto=format&fit=crop&w=1000&q=85"
+        imageUrl = "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=85"
     )
+
+    var widgetAffirmation by mutableStateOf(defaultWidgetAffirmation)
+        private set
+
+    fun setWidgetAffirmation(affirmation: Affirmation) {
+        widgetAffirmation = affirmation
+    }
 
     val purposeAffirmation = Affirmation(
         id = "purp-1",
@@ -107,7 +164,7 @@ object AffirmationRepository {
         context = "You are not a cosmic coincidence. Your life was intentionally authored for sovereign purpose.",
         category = "Purpose",
         tone = AffirmationTone.RESOLUTE,
-        imageUrl = "https://images.unsplash.com/photo-1507652313519-d4e9174996dd?auto=format&fit=crop&w=1000&q=85"
+        imageUrl = "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=85"
     )
 
     val confidenceAffirmation = Affirmation(
@@ -118,7 +175,7 @@ object AffirmationRepository {
         context = "True confidence is not reliance on self-sufficiency, but deep reliance on God's unending faithfulness.",
         category = "Confidence",
         tone = AffirmationTone.RESOLUTE,
-        imageUrl = "https://images.unsplash.com/photo-1518495973542-4542c06a5843?auto=format&fit=crop&w=1000&q=85"
+        imageUrl = "https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=1200&q=85"
     )
 
     val relationshipsAffirmation = Affirmation(
@@ -129,7 +186,7 @@ object AffirmationRepository {
         context = "Grace in relationships requires laying down self-preservation and offering the same mercy we received.",
         category = "Relationships",
         tone = AffirmationTone.GENTLE,
-        imageUrl = "https://images.unsplash.com/photo-1499209974431-9dddcece7f88?auto=format&fit=crop&w=1000&q=85"
+        imageUrl = "https://images.unsplash.com/photo-1499209974431-9dddcece7f88?auto=format&fit=crop&w=1200&q=85"
     )
 
     val disciplineAffirmation = Affirmation(
@@ -140,7 +197,7 @@ object AffirmationRepository {
         context = "Spiritual discipline is not self-punishment; it is training our affections in alignment with God's truth.",
         category = "Discipline",
         tone = AffirmationTone.RESOLUTE,
-        imageUrl = "https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=1000&q=85"
+        imageUrl = "https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=1200&q=85"
     )
 
     val starterAffirmation = fullscreenAffirmation
@@ -156,7 +213,7 @@ object AffirmationRepository {
         courageAffirmation,
         favorite1,
         favorite2,
-        widgetAffirmation,
+        defaultWidgetAffirmation,
         purposeAffirmation,
         confidenceAffirmation,
         relationshipsAffirmation,
@@ -176,7 +233,7 @@ object AffirmationRepository {
             context = "Written for seasons of transition and unexpected decisions.",
             category = "Peace",
             tone = AffirmationTone.STILL,
-            imageUrl = "https://images.unsplash.com/photo-1507652313519-d4e9174996dd?auto=format&fit=crop&w=1000&q=85",
+            imageUrl = "https://images.unsplash.com/photo-1507652313519-d4e9174996dd?auto=format&fit=crop&w=1200&q=85",
             isFavorite = true,
             personalDeclaration = "I release the need to control the outcome. My steps are ordered by the Lord."
         )
@@ -210,4 +267,3 @@ object AffirmationRepository {
 
     fun getAll(): List<Affirmation> = allAffirmations
 }
-
