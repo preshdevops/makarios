@@ -14,6 +14,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Wallpaper
 import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material3.*
@@ -33,8 +34,13 @@ import androidx.compose.ui.unit.sp
 import com.makarios.app.data.Affirmation
 import com.makarios.app.data.AffirmationRepository
 import com.makarios.app.ui.components.AffirmationCard
+import com.makarios.app.ui.components.WallpaperActionDialog
 import com.makarios.app.ui.theme.*
 import com.makarios.app.util.ShareHelper
+import com.makarios.app.util.WallpaperRenderer
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 enum class SavedTab(val label: String) {
     DECLARATIONS("Declarations"),
@@ -46,10 +52,13 @@ data class WallpaperItem(
     val id: String,
     val title: String,
     val reference: String,
+    val scriptureText: String,
+    val category: String = "DECLARATION",
     val background: Brush,
     val textColor: Color,
     val accentColor: Color,
-    val affirmationId: String
+    val affirmationId: String,
+    val styleIndex: Int = 0
 )
 
 val curatedWallpapers = listOf(
@@ -57,37 +66,73 @@ val curatedWallpapers = listOf(
         id = "wp-1",
         title = "I am fearfully and wonderfully made.",
         reference = "PSALM 139:14",
+        scriptureText = "I praise you because I am fearfully and wonderfully made; your works are wonderful, I know that full well.",
+        category = "Identity",
         background = AlabasterDawnGradient,
         textColor = Espresso,
         accentColor = Terracotta,
-        affirmationId = "ident-1"
+        affirmationId = "ident-1",
+        styleIndex = 0
     ),
     WallpaperItem(
         id = "wp-2",
         title = "The Lord is my shepherd; I lack nothing.",
         reference = "PSALM 23:1",
+        scriptureText = "The LORD is my shepherd, I lack nothing. He makes me lie down in green pastures, he leads me beside quiet waters.",
+        category = "Provision",
         background = SunlitGoldGradient,
         textColor = Espresso,
         accentColor = SunlitGold,
-        affirmationId = "aotd-1"
+        affirmationId = "aotd-1",
+        styleIndex = 1
     ),
     WallpaperItem(
         id = "wp-3",
         title = "In quietness and trust is my strength.",
         reference = "ISAIAH 30:15",
+        scriptureText = "In repentance and rest is your salvation, in quietness and trust is your strength.",
+        category = "Peace",
         background = MorningSageGradient,
         textColor = Color(0xFF243329),
         accentColor = Sage,
-        affirmationId = "peace-still"
+        affirmationId = "peace-still",
+        styleIndex = 2
     ),
     WallpaperItem(
         id = "wp-4",
         title = "The peace of God guards my heart.",
         reference = "PHILIPPIANS 4:7",
+        scriptureText = "And the peace of God, which transcends all understanding, will guard your hearts and your minds in Christ Jesus.",
+        category = "Confidence",
         background = LuminousDawnGradient,
         textColor = Color.White,
         accentColor = Color(0xFFFFF0EC),
-        affirmationId = "conf-1"
+        affirmationId = "conf-1",
+        styleIndex = 3
+    ),
+    WallpaperItem(
+        id = "wp-5",
+        title = "Be strong and courageous. Do not be afraid.",
+        reference = "JOSHUA 1:9",
+        scriptureText = "Have I not commanded you? Be strong and courageous. Do not be afraid; do not be discouraged, for the LORD your God will be with you wherever you go.",
+        category = "Courage",
+        background = SunlitAmberGradient,
+        textColor = Espresso,
+        accentColor = AmberGold,
+        affirmationId = "str-1",
+        styleIndex = 1
+    ),
+    WallpaperItem(
+        id = "wp-6",
+        title = "I can do all things through Christ who gives me strength.",
+        reference = "PHILIPPIANS 4:13",
+        scriptureText = "I can do all this through him who gives me strength.",
+        category = "Strength",
+        background = AtmosphericGradient,
+        textColor = Color.White,
+        accentColor = Color(0xFFDEAC46),
+        affirmationId = "str-2",
+        styleIndex = 4
     )
 )
 
@@ -100,6 +145,48 @@ fun SavedScreen(
 ) {
     val context = LocalContext.current
     var selectedTab by remember { mutableStateOf(SavedTab.DECLARATIONS) }
+    var activeWallpaperItem by remember { mutableStateOf<WallpaperItem?>(null) }
+    val coroutineScope = rememberCoroutineScope()
+
+    val handleDownload: (WallpaperItem) -> Unit = { item ->
+        coroutineScope.launch {
+            val uri = withContext(Dispatchers.IO) {
+                val bitmap = WallpaperRenderer.renderBitmap(
+                    context = context,
+                    declaration = item.title,
+                    scripture = item.scriptureText,
+                    reference = item.reference,
+                    category = item.category,
+                    style = WallpaperRenderer.getStyle(item.styleIndex),
+                    format = WallpaperRenderer.OutputFormat.WALLPAPER
+                )
+                WallpaperRenderer.saveToGallery(context, bitmap, "Makarios Wallpaper")
+            }
+            if (uri != null) {
+                Toast.makeText(context, "Saved wallpaper to Photos in Makarios album", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(context, "Failed to save wallpaper", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    val handleShare: (WallpaperItem) -> Unit = { item ->
+        coroutineScope.launch {
+            withContext(Dispatchers.IO) {
+                val bitmap = WallpaperRenderer.renderBitmap(
+                    context = context,
+                    declaration = item.title,
+                    scripture = item.scriptureText,
+                    reference = item.reference,
+                    category = item.category,
+                    style = WallpaperRenderer.getStyle(item.styleIndex),
+                    format = WallpaperRenderer.OutputFormat.WALLPAPER
+                )
+                val caption = "“${item.title}”\n— ${item.reference}\n\nShared via Makarios"
+                ShareHelper.shareAffirmationImage(context, bitmap, "Makarios Wallpaper", caption)
+            }
+        }
+    }
 
     val savedList = AffirmationRepository.getSaved()
     val personalList = AffirmationRepository.personalAffirmations
@@ -261,7 +348,7 @@ fun SavedScreen(
                                         AffirmationRepository.toggleSave(affirmation.id)
                                     },
                                     onShare = {
-                                        ShareHelper.shareAffirmation(context, affirmation)
+                                        ShareHelper.shareAffirmationGraphic(context, affirmation)
                                     },
                                     onCardClick = { onNavigateToDetail(affirmation) }
                                 )
@@ -310,13 +397,9 @@ fun SavedScreen(
                                 WallpaperCard(
                                     wallpaper = curatedWallpapers[i],
                                     onOpenStudio = { onNavigateToCreate(curatedWallpapers[i].affirmationId) },
-                                    onSetWallpaper = {
-                                        ShareHelper.shareText(
-                                            context,
-                                            "Makarios Wallpaper",
-                                            "“${curatedWallpapers[i].title}”\n— ${curatedWallpapers[i].reference}\n\nShared via Makarios"
-                                        )
-                                    },
+                                    onSetWallpaper = { activeWallpaperItem = curatedWallpapers[i] },
+                                    onDownload = { handleDownload(curatedWallpapers[i]) },
+                                    onShare = { handleShare(curatedWallpapers[i]) },
                                     modifier = Modifier.weight(1f)
                                 )
 
@@ -324,13 +407,9 @@ fun SavedScreen(
                                     WallpaperCard(
                                         wallpaper = curatedWallpapers[i + 1],
                                         onOpenStudio = { onNavigateToCreate(curatedWallpapers[i + 1].affirmationId) },
-                                        onSetWallpaper = {
-                                            ShareHelper.shareText(
-                                                context,
-                                                "Makarios Wallpaper",
-                                                "“${curatedWallpapers[i + 1].title}”\n— ${curatedWallpapers[i + 1].reference}\n\nShared via Makarios"
-                                            )
-                                        },
+                                        onSetWallpaper = { activeWallpaperItem = curatedWallpapers[i + 1] },
+                                        onDownload = { handleDownload(curatedWallpapers[i + 1]) },
+                                        onShare = { handleShare(curatedWallpapers[i + 1]) },
                                         modifier = Modifier.weight(1f)
                                     )
                                 } else {
@@ -422,7 +501,7 @@ fun SavedScreen(
                                             AffirmationRepository.toggleSave(affirmation.id)
                                         },
                                         onShare = {
-                                            ShareHelper.shareAffirmation(context, affirmation)
+                                            ShareHelper.shareAffirmationGraphic(context, affirmation)
                                         },
                                         onCardClick = { onNavigateToDetail(affirmation) }
                                     )
@@ -433,6 +512,18 @@ fun SavedScreen(
                 }
             }
         }
+
+        if (activeWallpaperItem != null) {
+            val item = activeWallpaperItem!!
+            WallpaperActionDialog(
+                declaration = item.title,
+                scripture = item.scriptureText,
+                reference = item.reference,
+                category = item.category,
+                styleIndex = item.styleIndex,
+                onDismiss = { activeWallpaperItem = null }
+            )
+        }
     }
 }
 
@@ -442,6 +533,8 @@ private fun WallpaperCard(
     wallpaper: WallpaperItem,
     onOpenStudio: () -> Unit,
     onSetWallpaper: () -> Unit,
+    onDownload: () -> Unit,
+    onShare: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Box(
@@ -450,7 +543,7 @@ private fun WallpaperCard(
             .shadow(4.dp, RoundedCornerShape(18.dp), spotColor = Espresso.copy(alpha = 0.15f))
             .clip(RoundedCornerShape(18.dp))
             .background(wallpaper.background)
-            .clickable(onClick = onOpenStudio)
+            .clickable(onClick = onSetWallpaper)
     ) {
         Column(
             modifier = Modifier
@@ -504,11 +597,12 @@ private fun WallpaperCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                // Edit in Studio
                 Box(
                     modifier = Modifier
                         .size(28.dp)
                         .clip(CircleShape)
-                        .background(wallpaper.textColor.copy(alpha = 0.15f))
+                        .background(wallpaper.textColor.copy(alpha = 0.14f))
                         .clickable(onClick = onOpenStudio),
                     contentAlignment = Alignment.Center
                 ) {
@@ -520,20 +614,55 @@ private fun WallpaperCard(
                     )
                 }
 
-                Box(
-                    modifier = Modifier
-                        .size(28.dp)
-                        .clip(CircleShape)
-                        .background(wallpaper.textColor.copy(alpha = 0.15f))
-                        .clickable(onClick = onSetWallpaper),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Download,
-                        contentDescription = "Download Wallpaper",
-                        tint = wallpaper.textColor,
-                        modifier = Modifier.size(13.dp)
-                    )
+                // Action group: Share, Set Wallpaper, Download
+                Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+                    Box(
+                        modifier = Modifier
+                            .size(28.dp)
+                            .clip(CircleShape)
+                            .background(wallpaper.textColor.copy(alpha = 0.14f))
+                            .clickable(onClick = onShare),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Share,
+                            contentDescription = "Share Wallpaper",
+                            tint = wallpaper.textColor,
+                            modifier = Modifier.size(13.dp)
+                        )
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .size(28.dp)
+                            .clip(CircleShape)
+                            .background(wallpaper.textColor.copy(alpha = 0.14f))
+                            .clickable(onClick = onSetWallpaper),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Wallpaper,
+                            contentDescription = "Set Wallpaper",
+                            tint = wallpaper.textColor,
+                            modifier = Modifier.size(13.dp)
+                        )
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .size(28.dp)
+                            .clip(CircleShape)
+                            .background(wallpaper.textColor.copy(alpha = 0.14f))
+                            .clickable(onClick = onDownload),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Download,
+                            contentDescription = "Download Wallpaper",
+                            tint = wallpaper.textColor,
+                            modifier = Modifier.size(13.dp)
+                        )
+                    }
                 }
             }
         }

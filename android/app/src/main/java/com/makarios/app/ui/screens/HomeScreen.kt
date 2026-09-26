@@ -298,7 +298,7 @@ fun HomeScreen(
                                     .clip(CircleShape)
                                     .background(Color.White.copy(alpha = 0.20f))
                                     .clickable {
-                                        ShareHelper.shareAffirmation(context, aotd)
+                                        ShareHelper.shareAffirmationGraphic(context, aotd)
                                     },
                                 contentAlignment = Alignment.Center
                             ) {
@@ -465,7 +465,7 @@ fun HomeScreen(
                             isSaved = !isSaved
                         },
                         onShare = {
-                            ShareHelper.shareAffirmation(context, affirmation)
+                            ShareHelper.shareAffirmationGraphic(context, affirmation)
                         },
                         onCardClick = { onNavigateToDetail(affirmation) }
                     )

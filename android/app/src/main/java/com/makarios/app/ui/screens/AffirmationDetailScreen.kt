@@ -15,6 +15,7 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Wallpaper
 import androidx.compose.material.icons.filled.Widgets
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.Button
@@ -37,8 +38,10 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.makarios.app.data.Affirmation
 import com.makarios.app.data.AffirmationRepository
+import com.makarios.app.ui.components.WallpaperActionDialog
 import com.makarios.app.ui.theme.*
 import com.makarios.app.util.ShareHelper
+import com.makarios.app.util.WallpaperRenderer
 import com.makarios.app.util.WidgetHelper
 
 @Composable
@@ -50,6 +53,7 @@ fun AffirmationDetailScreen(
 ) {
     val context = LocalContext.current
     var isSaved by remember { mutableStateOf(AffirmationRepository.isSaved(affirmation.id)) }
+    var showWallpaperDialog by remember { mutableStateOf(false) }
 
     Box(
         modifier = modifier.fillMaxSize()
@@ -121,7 +125,12 @@ fun AffirmationDetailScreen(
                             .clip(CircleShape)
                             .background(Color.White.copy(alpha = 0.18f))
                             .clickable {
-                                ShareHelper.shareAffirmation(context, affirmation)
+                                ShareHelper.shareAffirmationGraphic(
+                                    context = context,
+                                    affirmation = affirmation,
+                                    styleIndex = 4,
+                                    format = WallpaperRenderer.OutputFormat.STORY
+                                )
                             },
                         contentAlignment = Alignment.Center
                     ) {
@@ -360,7 +369,7 @@ fun AffirmationDetailScreen(
                             .background(Color.White.copy(alpha = 0.14f))
                             .border(0.5.dp, Color.White.copy(alpha = 0.20f), RoundedCornerShape(16.dp))
                             .clickable {
-                                Toast.makeText(context, "Daily reminder scheduled", Toast.LENGTH_SHORT).show()
+                                showWallpaperDialog = true
                             },
                         contentAlignment = Alignment.Center
                     ) {
@@ -369,13 +378,13 @@ fun AffirmationDetailScreen(
                             horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             Icon(
-                                imageVector = Icons.Default.Notifications,
+                                imageVector = Icons.Default.Wallpaper,
                                 contentDescription = null,
                                 tint = Color.White,
                                 modifier = Modifier.size(16.dp)
                             )
                             Text(
-                                text = "Set Reminder",
+                                text = "Set Wallpaper",
                                 fontFamily = BodyFontFamily,
                                 fontWeight = FontWeight.Medium,
                                 fontSize = 13.sp,
@@ -385,6 +394,17 @@ fun AffirmationDetailScreen(
                     }
                 }
             }
+        }
+
+        if (showWallpaperDialog) {
+            WallpaperActionDialog(
+                declaration = affirmation.declaration,
+                scripture = affirmation.scriptureText,
+                reference = affirmation.reference,
+                category = affirmation.category,
+                styleIndex = 4,
+                onDismiss = { showWallpaperDialog = false }
+            )
         }
     }
 }

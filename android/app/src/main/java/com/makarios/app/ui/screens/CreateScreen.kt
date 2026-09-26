@@ -46,7 +46,11 @@ import com.makarios.app.data.VectorSearchEngine
 import com.makarios.app.data.VerseMatch
 import com.makarios.app.ui.theme.*
 import com.makarios.app.util.ShareHelper
+import com.makarios.app.util.WallpaperRenderer
+import com.makarios.app.ui.components.WallpaperActionDialog
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 // ── Create Screen Stages ─────────────────────────────────────────
 enum class CreateStage {
@@ -132,9 +136,93 @@ fun CreateScreen(
     var matchIndex by remember { mutableIntStateOf(0) }
     var isMatching by remember { mutableStateOf(false) }
     var showPickerSheet by remember { mutableStateOf(false) }
+    var showWallpaperDialog by remember { mutableStateOf(false) }
     var selectedFormatIndex by remember { mutableIntStateOf(0) }
     var selectedStyleIndex by remember { mutableIntStateOf(0) }
     val coroutineScope = rememberCoroutineScope()
+
+    val saveCurrentDesignToGallery: () -> Unit = {
+        coroutineScope.launch {
+            val newAffirmation = Affirmation(
+                id = "personal-${System.currentTimeMillis()}",
+                declaration = declarationText,
+                scriptureText = matchedScripture.ifBlank { "I praise you because I am fearfully and wonderfully made; your works are wonderful, I know that full well." },
+                reference = matchedReference.ifBlank { "PSALM 139:14" },
+                context = "Personal declaration created in Makarios Studio.",
+                category = "Personal",
+                tone = selectedTone ?: AffirmationTone.RESOLUTE,
+                imageUrl = "https://images.unsplash.com/photo-1507652313519-d4e9174996dd?auto=format&fit=crop&w=1000&q=85",
+                isFavorite = true,
+                personalDeclaration = declarationText
+            )
+            AffirmationRepository.addPersonalAffirmation(newAffirmation)
+            val uri = withContext(Dispatchers.IO) {
+                val bitmap = WallpaperRenderer.renderBitmap(
+                    context = context,
+                    declaration = declarationText,
+                    scripture = newAffirmation.scriptureText,
+                    reference = newAffirmation.reference,
+                    category = "Personal",
+                    style = WallpaperRenderer.getStyle(selectedStyleIndex),
+                    format = WallpaperRenderer.OutputFormat.fromIndex(selectedFormatIndex)
+                )
+                WallpaperRenderer.saveToGallery(context, bitmap, "Makarios")
+            }
+            if (uri != null) {
+                Toast.makeText(context, "Saved high-resolution image to Photos / Makarios", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(context, "Failed to save image to gallery", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    val shareCurrentDesign: () -> Unit = {
+        coroutineScope.launch {
+            val newAffirmation = Affirmation(
+                id = "personal-${System.currentTimeMillis()}",
+                declaration = declarationText,
+                scriptureText = matchedScripture.ifBlank { "I praise you because I am fearfully and wonderfully made; your works are wonderful, I know that full well." },
+                reference = matchedReference.ifBlank { "PSALM 139:14" },
+                context = "Personal declaration created in Makarios Studio.",
+                category = "Personal",
+                tone = selectedTone ?: AffirmationTone.RESOLUTE,
+                imageUrl = "https://images.unsplash.com/photo-1507652313519-d4e9174996dd?auto=format&fit=crop&w=1000&q=85",
+                isFavorite = true,
+                personalDeclaration = declarationText
+            )
+            AffirmationRepository.addPersonalAffirmation(newAffirmation)
+            withContext(Dispatchers.IO) {
+                val bitmap = WallpaperRenderer.renderBitmap(
+                    context = context,
+                    declaration = declarationText,
+                    scripture = newAffirmation.scriptureText,
+                    reference = newAffirmation.reference,
+                    category = "Personal",
+                    style = WallpaperRenderer.getStyle(selectedStyleIndex),
+                    format = WallpaperRenderer.OutputFormat.fromIndex(selectedFormatIndex)
+                )
+                val caption = "“${newAffirmation.declaration}”\n— ${newAffirmation.reference}\n\nShared via Makarios"
+                ShareHelper.shareAffirmationImage(context, bitmap, "Makarios Declaration", caption)
+            }
+        }
+    }
+
+    val openWallpaperDialog: () -> Unit = {
+        val newAffirmation = Affirmation(
+            id = "personal-${System.currentTimeMillis()}",
+            declaration = declarationText,
+            scriptureText = matchedScripture.ifBlank { "I praise you because I am fearfully and wonderfully made; your works are wonderful, I know that full well." },
+            reference = matchedReference.ifBlank { "PSALM 139:14" },
+            context = "Personal declaration created in Makarios Studio.",
+            category = "Personal",
+            tone = selectedTone ?: AffirmationTone.RESOLUTE,
+            imageUrl = "https://images.unsplash.com/photo-1507652313519-d4e9174996dd?auto=format&fit=crop&w=1000&q=85",
+            isFavorite = true,
+            personalDeclaration = declarationText
+        )
+        AffirmationRepository.addPersonalAffirmation(newAffirmation)
+        showWallpaperDialog = true
+    }
 
     val runMatch: () -> Unit = {
         if (declarationText.trim().length >= 10 && !isMatching) {
@@ -278,22 +366,7 @@ fun CreateScreen(
                     }
                     CreateStage.DESIGN -> {
                         Button(
-                            onClick = {
-                                val newAffirmation = Affirmation(
-                                    id = "personal-${System.currentTimeMillis()}",
-                                    declaration = declarationText,
-                                    scriptureText = matchedScripture.ifBlank { "I praise you because I am fearfully and wonderfully made; your works are wonderful, I know that full well." },
-                                    reference = matchedReference.ifBlank { "PSALM 139:14" },
-                                    context = "Personal declaration created in Makarios Studio.",
-                                    category = "Personal",
-                                    tone = selectedTone ?: AffirmationTone.RESOLUTE,
-                                    imageUrl = "https://images.unsplash.com/photo-1507652313519-d4e9174996dd?auto=format&fit=crop&w=1000&q=85",
-                                    isFavorite = true,
-                                    personalDeclaration = declarationText
-                                )
-                                AffirmationRepository.addPersonalAffirmation(newAffirmation)
-                                ShareHelper.shareAffirmation(context, newAffirmation)
-                            },
+                            onClick = shareCurrentDesign,
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = Terracotta, contentColor = Color.White
                             ),
@@ -360,55 +433,9 @@ fun CreateScreen(
                     selectedFormatIndex = selectedFormatIndex,
                     onFormatSelect = { selectedFormatIndex = it },
                     selectedStyleIndex = selectedStyleIndex,
-                    onStyleSelect = { selectedStyleIndex = it },
-                    onSaveToGallery = {
-                        val newAffirmation = Affirmation(
-                            id = "personal-${System.currentTimeMillis()}",
-                            declaration = declarationText,
-                            scriptureText = matchedScripture.ifBlank { "I praise you because I am fearfully and wonderfully made; your works are wonderful, I know that full well." },
-                            reference = matchedReference.ifBlank { "PSALM 139:14" },
-                            context = "Personal declaration created in Makarios Studio.",
-                            category = "Personal",
-                            tone = selectedTone ?: AffirmationTone.RESOLUTE,
-                            imageUrl = "https://images.unsplash.com/photo-1507652313519-d4e9174996dd?auto=format&fit=crop&w=1000&q=85",
-                            isFavorite = true,
-                            personalDeclaration = declarationText
-                        )
-                        AffirmationRepository.addPersonalAffirmation(newAffirmation)
-                        Toast.makeText(context, "Saved image to gallery and Personal", Toast.LENGTH_SHORT).show()
-                    },
-                    onSaveAsWallpaper = {
-                        val newAffirmation = Affirmation(
-                            id = "personal-${System.currentTimeMillis()}",
-                            declaration = declarationText,
-                            scriptureText = matchedScripture.ifBlank { "I praise you because I am fearfully and wonderfully made; your works are wonderful, I know that full well." },
-                            reference = matchedReference.ifBlank { "PSALM 139:14" },
-                            context = "Personal declaration created in Makarios Studio.",
-                            category = "Personal",
-                            tone = selectedTone ?: AffirmationTone.RESOLUTE,
-                            imageUrl = "https://images.unsplash.com/photo-1507652313519-d4e9174996dd?auto=format&fit=crop&w=1000&q=85",
-                            isFavorite = true,
-                            personalDeclaration = declarationText
-                        )
-                        AffirmationRepository.addPersonalAffirmation(newAffirmation)
-                        Toast.makeText(context, "Wallpaper saved and added to Personal", Toast.LENGTH_SHORT).show()
-                    },
-                    onShare = {
-                        val newAffirmation = Affirmation(
-                            id = "personal-${System.currentTimeMillis()}",
-                            declaration = declarationText,
-                            scriptureText = matchedScripture.ifBlank { "I praise you because I am fearfully and wonderfully made; your works are wonderful, I know that full well." },
-                            reference = matchedReference.ifBlank { "PSALM 139:14" },
-                            context = "Personal declaration created in Makarios Studio.",
-                            category = "Personal",
-                            tone = selectedTone ?: AffirmationTone.RESOLUTE,
-                            imageUrl = "https://images.unsplash.com/photo-1507652313519-d4e9174996dd?auto=format&fit=crop&w=1000&q=85",
-                            isFavorite = true,
-                            personalDeclaration = declarationText
-                        )
-                        AffirmationRepository.addPersonalAffirmation(newAffirmation)
-                        ShareHelper.shareAffirmation(context, newAffirmation)
-                    }
+                    onSaveToGallery = saveCurrentDesignToGallery,
+                    onSaveAsWallpaper = openWallpaperDialog,
+                    onShare = shareCurrentDesign
                 )
             }
         }
@@ -421,6 +448,17 @@ fun CreateScreen(
                     matchedScripture = text
                     showPickerSheet = false
                 }
+            )
+        }
+
+        if (showWallpaperDialog) {
+            WallpaperActionDialog(
+                declaration = declarationText,
+                scripture = matchedScripture.ifBlank { "I praise you because I am fearfully and wonderfully made; your works are wonderful, I know that full well." },
+                reference = matchedReference.ifBlank { "PSALM 139:14" },
+                category = "Personal",
+                styleIndex = selectedStyleIndex,
+                onDismiss = { showWallpaperDialog = false }
             )
         }
     }

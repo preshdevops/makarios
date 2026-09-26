@@ -396,7 +396,7 @@ fun LibraryScreen(
                                 isSaved = !isSaved
                             },
                             onShare = {
-                                ShareHelper.shareAffirmation(context, affirmation)
+                                ShareHelper.shareAffirmationGraphic(context, affirmation)
                             },
                             onCardClick = { onNavigateToDetail(affirmation) }
                         )
