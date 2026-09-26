@@ -601,7 +601,7 @@ fun ProfileScreen(
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "Gospel. Tech. Precious.",
+                    text = "Biblical declarations for everyday life",
                     fontFamily = BodyFontFamily,
                     fontSize = 12.sp,
                     color = StoneMuted
