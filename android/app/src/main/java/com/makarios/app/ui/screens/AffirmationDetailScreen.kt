@@ -62,16 +62,16 @@ fun AffirmationDetailScreen(
             modifier = Modifier.fillMaxSize()
         )
 
-        // ── 2. Cinematic Atmospheric Scrim ──────────────────────────
+        // ── 2. Luminous Radiant Scrim ───────────────────────────────
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(
                     Brush.verticalGradient(
                         colors = listOf(
-                            Color.Black.copy(alpha = 0.45f),
-                            Color.Black.copy(alpha = 0.60f),
-                            Color(0xFA141110)
+                            Color.Black.copy(alpha = 0.08f),
+                            Color.Black.copy(alpha = 0.30f),
+                            Color(0xD91E1916)
                         )
                     )
                 )

@@ -274,9 +274,9 @@ fun WidgetStudioScreen(
                         .clip(RoundedCornerShape(26.dp))
                         .then(
                             if (selectedSurface == WidgetSurface.LOCK_SCREEN) {
-                                Modifier.background(AtmosphericGradient)
+                                Modifier.background(SunlitAmberGradient)
                             } else {
-                                Modifier.background(Color(0xFFEFEBE4))
+                                Modifier.background(Color(0xFFF7F4EE))
                             }
                         )
                         .padding(20.dp)
@@ -667,9 +667,10 @@ private fun LargeWidgetPreview(affirmation: Affirmation) {
         modifier = Modifier
             .fillMaxWidth()
             .height(240.dp)
-            .shadow(6.dp, RoundedCornerShape(22.dp), spotColor = Espresso.copy(alpha = 0.18f))
+            .shadow(4.dp, RoundedCornerShape(22.dp), spotColor = Espresso.copy(alpha = 0.08f))
             .clip(RoundedCornerShape(22.dp))
-            .background(AtmosphericGradient)
+            .background(Surface)
+            .border(1.dp, Border, RoundedCornerShape(22.dp))
             .padding(20.dp)
     ) {
         Column(
@@ -684,7 +685,7 @@ private fun LargeWidgetPreview(affirmation: Affirmation) {
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(10.dp))
-                        .background(Color.White.copy(alpha = 0.18f))
+                        .background(TerracottaLight)
                         .padding(horizontal = 10.dp, vertical = 4.dp)
                 ) {
                     Text(
@@ -693,7 +694,7 @@ private fun LargeWidgetPreview(affirmation: Affirmation) {
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 9.sp,
                         letterSpacing = 1.4.sp,
-                        color = Color.White
+                        color = Terracotta
                     )
                 }
 
@@ -703,39 +704,47 @@ private fun LargeWidgetPreview(affirmation: Affirmation) {
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 9.sp,
                     letterSpacing = 1.4.sp,
-                    color = TerracottaLight
+                    color = StoneMuted
                 )
             }
 
             Text(
                 text = "“${affirmation.declaration}”",
                 fontFamily = DisplayFontFamily,
-                fontWeight = FontWeight.Normal,
-                fontSize = 18.sp,
+                fontWeight = FontWeight.Medium,
+                fontSize = 18.5.sp,
                 lineHeight = 25.sp,
-                color = Color.White,
+                color = Espresso,
                 maxLines = 4
             )
 
-            Column {
-                Text(
-                    text = "“${affirmation.scriptureText}”",
-                    fontFamily = DisplayFontFamily,
-                    fontStyle = FontStyle.Italic,
-                    fontSize = 12.sp,
-                    lineHeight = 17.sp,
-                    color = Color.White.copy(alpha = 0.85f),
-                    maxLines = 2
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = affirmation.reference.uppercase(),
-                    fontFamily = BodyFontFamily,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 10.sp,
-                    letterSpacing = 1.2.sp,
-                    color = TerracottaLight
-                )
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(Porcelain)
+                    .padding(10.dp)
+            ) {
+                Column {
+                    Text(
+                        text = "“${affirmation.scriptureText}”",
+                        fontFamily = DisplayFontFamily,
+                        fontStyle = FontStyle.Italic,
+                        fontSize = 12.sp,
+                        lineHeight = 17.sp,
+                        color = Stone,
+                        maxLines = 2
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = affirmation.reference.uppercase(),
+                        fontFamily = BodyFontFamily,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 9.5.sp,
+                        letterSpacing = 1.2.sp,
+                        color = Terracotta
+                    )
+                }
             }
         }
     }

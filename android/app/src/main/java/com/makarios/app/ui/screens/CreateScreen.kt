@@ -76,28 +76,34 @@ data class DesignStyle(
 
 val designStyles = listOf(
     DesignStyle(
-        "Espresso",
-        Brush.verticalGradient(listOf(Color(0xFF342E2B), Color(0xFF24201D), Color(0xFF171513))),
+        "Alabaster",
+        AlabasterDawnGradient,
+        Espresso,
+        Terracotta
+    ),
+    DesignStyle(
+        "Sunlit Gold",
+        SunlitGoldGradient,
+        Espresso,
+        SunlitGold
+    ),
+    DesignStyle(
+        "Morning Sage",
+        MorningSageGradient,
+        Color(0xFF243329),
+        Sage
+    ),
+    DesignStyle(
+        "Rose Dawn",
+        LuminousDawnGradient,
+        Color.White,
+        Color(0xFFFFF0EC)
+    ),
+    DesignStyle(
+        "Twilight",
+        AtmosphericGradient,
         Color.White,
         Color(0xFFF7EBE7)
-    ),
-    DesignStyle(
-        "Porcelain",
-        Brush.verticalGradient(listOf(Color(0xFFFBF9F5), Color(0xFFF3EFE8))),
-        Color(0xFF2C2622),
-        Color(0xFFA85842)
-    ),
-    DesignStyle(
-        "Terracotta",
-        Brush.verticalGradient(listOf(Color(0xFF63382B), Color(0xFF3A241E), Color(0xFF1F1614))),
-        Color.White,
-        Color(0xFFF7EBE7)
-    ),
-    DesignStyle(
-        "Sage",
-        Brush.verticalGradient(listOf(Color(0xFF314238), Color(0xFF222F28), Color(0xFF17201B))),
-        Color.White,
-        Color(0xFFF0F4F1)
     )
 )
 
@@ -719,12 +725,13 @@ private fun MatchStage(
             modifier = Modifier
                 .fillMaxWidth()
                 .shadow(
-                    elevation = 8.dp,
+                    elevation = 2.dp,
                     shape = RoundedCornerShape(22.dp),
-                    spotColor = Espresso.copy(alpha = 0.20f)
+                    spotColor = Espresso.copy(alpha = 0.06f)
                 )
                 .clip(RoundedCornerShape(22.dp))
-                .background(AtmosphericGradient)
+                .background(Surface)
+                .border(1.dp, Border, RoundedCornerShape(22.dp))
                 .padding(24.dp)
         ) {
             Column {
@@ -732,46 +739,47 @@ private fun MatchStage(
                 Text(
                     text = "“$declaration”",
                     fontFamily = DisplayFontFamily,
-                    fontWeight = FontWeight.Normal,
+                    fontWeight = FontWeight.Medium,
                     fontSize = 22.sp,
                     lineHeight = 31.sp,
                     letterSpacing = (-0.2).sp,
-                    color = Color.White
+                    color = Espresso
                 )
 
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(18.dp))
 
-                // Hairline divider
+                // Grounding Scripture Container
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(1.dp)
-                        .background(Color.White.copy(alpha = 0.18f))
-                )
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(PorcelainWarm.copy(alpha = 0.65f))
+                        .border(0.5.dp, BorderSubtle, RoundedCornerShape(14.dp))
+                        .padding(16.dp)
+                ) {
+                    Column {
+                        Text(
+                            text = "“$scripture”",
+                            fontFamily = DisplayFontFamily,
+                            fontStyle = FontStyle.Italic,
+                            fontWeight = FontWeight.Normal,
+                            fontSize = 14.5.sp,
+                            lineHeight = 22.sp,
+                            color = EspressoLight
+                        )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(10.dp))
 
-                // Scripture
-                Text(
-                    text = "“$scripture”",
-                    fontFamily = DisplayFontFamily,
-                    fontStyle = FontStyle.Italic,
-                    fontWeight = FontWeight.Normal,
-                    fontSize = 14.sp,
-                    lineHeight = 21.sp,
-                    color = Color.White.copy(alpha = 0.85f)
-                )
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                Text(
-                    text = reference.uppercase(),
-                    fontFamily = BodyFontFamily,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 10.sp,
-                    letterSpacing = 1.4.sp,
-                    color = Color(0xFFFAEDE8)
-                )
+                        Text(
+                            text = reference.uppercase(),
+                            fontFamily = BodyFontFamily,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 10.sp,
+                            letterSpacing = 1.4.sp,
+                            color = Terracotta
+                        )
+                    }
+                }
             }
         }
 

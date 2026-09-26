@@ -57,44 +57,36 @@ val curatedWallpapers = listOf(
         id = "wp-1",
         title = "I am fearfully and wonderfully made.",
         reference = "PSALM 139:14",
-        background = Brush.verticalGradient(
-            listOf(Color(0xFF342E2B), Color(0xFF24201D), Color(0xFF171513))
-        ),
-        textColor = Color.White,
-        accentColor = Color(0xFFF7EBE7),
+        background = AlabasterDawnGradient,
+        textColor = Espresso,
+        accentColor = Terracotta,
         affirmationId = "ident-1"
     ),
     WallpaperItem(
         id = "wp-2",
-        title = "The peace of God guards my heart.",
-        reference = "PHILIPPIANS 4:7",
-        background = Brush.verticalGradient(
-            listOf(Color(0xFF63382B), Color(0xFF3A241E), Color(0xFF1F1614))
-        ),
-        textColor = Color.White,
-        accentColor = Color(0xFFF7EBE7),
+        title = "The Lord is my shepherd; I lack nothing.",
+        reference = "PSALM 23:1",
+        background = SunlitGoldGradient,
+        textColor = Espresso,
+        accentColor = SunlitGold,
         affirmationId = "aotd-1"
     ),
     WallpaperItem(
         id = "wp-3",
         title = "In quietness and trust is my strength.",
         reference = "ISAIAH 30:15",
-        background = Brush.verticalGradient(
-            listOf(Color(0xFFFBF9F5), Color(0xFFF3EFE8))
-        ),
-        textColor = Color(0xFF2C2622),
-        accentColor = Color(0xFFA85842),
+        background = MorningSageGradient,
+        textColor = Color(0xFF243329),
+        accentColor = Sage,
         affirmationId = "peace-still"
     ),
     WallpaperItem(
         id = "wp-4",
-        title = "The Lord is my helper; I will not fear.",
-        reference = "HEBREWS 13:6",
-        background = Brush.verticalGradient(
-            listOf(Color(0xFF314238), Color(0xFF222F28), Color(0xFF17201B))
-        ),
+        title = "The peace of God guards my heart.",
+        reference = "PHILIPPIANS 4:7",
+        background = LuminousDawnGradient,
         textColor = Color.White,
-        accentColor = Color(0xFFF0F4F1),
+        accentColor = Color(0xFFFFF0EC),
         affirmationId = "conf-1"
     )
 )

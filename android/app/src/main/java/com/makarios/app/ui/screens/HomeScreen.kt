@@ -195,16 +195,16 @@ fun HomeScreen(
                     modifier = Modifier.matchParentSize()
                 )
 
-                // Atmospheric Deep Scrim
+                // Luminous Breathable Scrim
                 Box(
                     modifier = Modifier
                         .matchParentSize()
                         .background(
                             Brush.verticalGradient(
                                 colors = listOf(
-                                    Color.Black.copy(alpha = 0.35f),
-                                    Color.Black.copy(alpha = 0.55f),
-                                    Color(0xF5161311)
+                                    Color.Black.copy(alpha = 0.08f),
+                                    Color.Black.copy(alpha = 0.30f),
+                                    Color(0xD91E1916)
                                 )
                             )
                         )

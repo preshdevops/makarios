@@ -42,9 +42,9 @@ fun MoodTile(
             .clip(RoundedCornerShape(22.dp))
             .then(
                 if (isSelected) {
-                    Modifier.border(1.5.dp, Color.White, RoundedCornerShape(22.dp))
+                    Modifier.border(2.dp, AmberGold, RoundedCornerShape(22.dp))
                 } else {
-                    Modifier.border(0.5.dp, Color.White.copy(alpha = 0.25f), RoundedCornerShape(22.dp))
+                    Modifier.border(0.5.dp, Color.White.copy(alpha = 0.35f), RoundedCornerShape(22.dp))
                 }
             )
             .clickable(onClick = onClick)
@@ -57,16 +57,16 @@ fun MoodTile(
             modifier = Modifier.fillMaxSize()
         )
 
-        // Atmospheric Dark Scrim Overlay
+        // Luminous Breathable Scrim
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(
                     Brush.verticalGradient(
                         colors = listOf(
+                            Color.Transparent,
                             Color.Black.copy(alpha = 0.15f),
-                            Color.Black.copy(alpha = 0.40f),
-                            Color(0xDD181412)
+                            Color(0xB81A1512)
                         )
                     )
                 )

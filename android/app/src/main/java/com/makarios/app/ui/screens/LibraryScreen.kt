@@ -216,15 +216,23 @@ fun LibraryScreen(
 
                     Spacer(modifier = Modifier.height(12.dp))
 
+                    data class ThemeItem(
+                        val name: String,
+                        val description: String,
+                        val count: String,
+                        val accentColor: Color,
+                        val badgeBg: Color
+                    )
+
                     val categoryThemes = listOf(
-                        Triple("Identity", "Rooted in who God declares you are", "2 declarations"),
-                        Triple("Peace", "Stillness and sovereign rest amid turbulence", "2 declarations"),
-                        Triple("Strength", "Endurance when your own power is spent", "1 declaration"),
-                        Triple("Purpose", "Calling, divine clarity, and holy alignment", "1 declaration"),
-                        Triple("Courage", "Holy boldness over every fear and shadow", "1 declaration"),
-                        Triple("Joy", "Unshakeable gladness that the world cannot take", "1 declaration"),
-                        Triple("Provision", "Resting in the God who supplies every need", "1 declaration"),
-                        Triple("Confidence", "Unwavering assurance in Christ our cornerstone", "1 declaration")
+                        ThemeItem("Identity", "Rooted in who God declares you are", "2 declarations", Terracotta, TerracottaLight),
+                        ThemeItem("Peace", "Stillness and sovereign rest amid turbulence", "2 declarations", Sage, SageLight),
+                        ThemeItem("Strength", "Endurance when your own power is spent", "1 declaration", SunlitGold, SunlitGoldLight),
+                        ThemeItem("Purpose", "Calling, divine clarity, and holy alignment", "1 declaration", Espresso, PorcelainWarm),
+                        ThemeItem("Courage", "Holy boldness over every fear and shadow", "1 declaration", Terracotta, DawnBlush),
+                        ThemeItem("Joy", "Unshakeable gladness that the world cannot take", "1 declaration", SunlitGold, SunlitGoldLight),
+                        ThemeItem("Provision", "Resting in the God who supplies every need", "1 declaration", Sage, SageLight),
+                        ThemeItem("Confidence", "Unwavering assurance in Christ our cornerstone", "1 declaration", Espresso, PorcelainWarm)
                     )
 
                     categoryThemes.chunked(2).forEach { rowPairs ->
@@ -234,38 +242,45 @@ fun LibraryScreen(
                                 .padding(bottom = 10.dp),
                             horizontalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
-                            rowPairs.forEach { (catName, description, count) ->
+                            rowPairs.forEach { item ->
                                 Box(
                                     modifier = Modifier
                                         .weight(1f)
-                                        .shadow(elevation = 1.dp, shape = RoundedCornerShape(18.dp), spotColor = Espresso.copy(alpha = 0.03f))
+                                        .shadow(elevation = 2.dp, shape = RoundedCornerShape(18.dp), spotColor = Espresso.copy(alpha = 0.04f))
                                         .clip(RoundedCornerShape(18.dp))
                                         .background(Surface)
-                                        .border(0.5.dp, BorderSubtle, RoundedCornerShape(18.dp))
-                                        .clickable { selectedCategory = catName }
+                                        .border(1.dp, Border, RoundedCornerShape(18.dp))
+                                        .clickable { selectedCategory = item.name }
                                         .padding(14.dp)
                                 ) {
                                     Column {
+                                        Box(
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(8.dp))
+                                                .background(item.badgeBg)
+                                                .padding(horizontal = 7.dp, vertical = 3.dp)
+                                        ) {
+                                            Text(
+                                                text = item.name.uppercase(),
+                                                fontFamily = BodyFontFamily,
+                                                fontWeight = FontWeight.SemiBold,
+                                                fontSize = 9.sp,
+                                                letterSpacing = 1.3.sp,
+                                                color = item.accentColor
+                                            )
+                                        }
+                                        Spacer(modifier = Modifier.height(8.dp))
                                         Text(
-                                            text = catName.uppercase(),
-                                            fontFamily = BodyFontFamily,
-                                            fontWeight = FontWeight.Medium,
-                                            fontSize = 10.5.sp,
-                                            letterSpacing = 1.4.sp,
-                                            color = Terracotta
-                                        )
-                                        Spacer(modifier = Modifier.height(6.dp))
-                                        Text(
-                                            text = description,
+                                            text = item.description,
                                             fontFamily = BodyFontFamily,
                                             fontSize = 12.sp,
                                             lineHeight = 17.sp,
                                             color = Stone,
                                             maxLines = 2
                                         )
-                                        Spacer(modifier = Modifier.height(10.dp))
+                                        Spacer(modifier = Modifier.height(8.dp))
                                         Text(
-                                            text = count,
+                                            text = item.count,
                                             fontFamily = BodyFontFamily,
                                             fontSize = 11.sp,
                                             color = StoneMuted
@@ -396,10 +411,10 @@ fun LibraryScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 20.dp)
-                    .shadow(elevation = 2.dp, shape = RoundedCornerShape(18.dp), spotColor = Espresso.copy(alpha = 0.06f))
+                    .shadow(elevation = 2.dp, shape = RoundedCornerShape(18.dp), spotColor = AmberGold.copy(alpha = 0.08f))
                     .clip(RoundedCornerShape(18.dp))
-                    .background(PorcelainWarm)
-                    .border(1.dp, Border, RoundedCornerShape(18.dp))
+                    .background(SunlitGoldLight)
+                    .border(1.dp, AmberGold.copy(alpha = 0.25f), RoundedCornerShape(18.dp))
                     .clickable { onNavigateToCreate("") }
                     .padding(20.dp)
             ) {
@@ -413,12 +428,12 @@ fun LibraryScreen(
                             text = "Need a declaration for your season?",
                             fontFamily = DisplayFontFamily,
                             fontWeight = FontWeight.Medium,
-                            fontSize = 16.sp,
+                            fontSize = 16.5.sp,
                             color = Espresso
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "Write your declaration · Match with scripture",
+                            text = "Write your declaration · Match with Scripture",
                             fontFamily = BodyFontFamily,
                             fontSize = 12.sp,
                             color = Stone
@@ -429,13 +444,14 @@ fun LibraryScreen(
                         modifier = Modifier
                             .size(36.dp)
                             .clip(CircleShape)
-                            .background(Espresso),
+                            .background(Surface)
+                            .border(1.dp, Border, CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.ArrowForward,
                             contentDescription = "Create",
-                            tint = Surface,
+                            tint = Terracotta,
                             modifier = Modifier.size(16.dp)
                         )
                     }

@@ -114,9 +114,9 @@ fun ProfileScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 20.dp)
-                    .shadow(3.dp, RoundedCornerShape(20.dp), spotColor = Espresso.copy(alpha = 0.08f))
+                    .shadow(4.dp, RoundedCornerShape(20.dp), spotColor = AmberGold.copy(alpha = 0.25f))
                     .clip(RoundedCornerShape(20.dp))
-                    .background(AtmosphericGradient)
+                    .background(SunlitAmberGradient)
                     .clickable(onClick = onNavigateToSubscription)
                     .padding(20.dp)
             ) {

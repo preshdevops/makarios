@@ -253,28 +253,29 @@ private fun OnboardingStepWelcome() {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .shadow(6.dp, RoundedCornerShape(22.dp), spotColor = Espresso.copy(alpha = 0.15f))
+                .shadow(2.dp, RoundedCornerShape(22.dp), spotColor = Espresso.copy(alpha = 0.06f))
                 .clip(RoundedCornerShape(22.dp))
-                .background(AtmosphericGradient)
+                .background(Surface)
+                .border(1.dp, Border, RoundedCornerShape(22.dp))
                 .padding(22.dp)
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
                     text = "“I am fearfully and wonderfully made; I walk in purposeful confidence.”",
                     fontFamily = DisplayFontFamily,
-                    fontSize = 17.sp,
-                    lineHeight = 25.sp,
+                    fontSize = 18.sp,
+                    lineHeight = 26.sp,
                     textAlign = TextAlign.Center,
-                    color = Color.White
+                    color = Espresso
                 )
 
                 Spacer(modifier = Modifier.height(14.dp))
 
                 Box(
                     modifier = Modifier
-                        .fillMaxWidth(0.4f)
+                        .fillMaxWidth(0.35f)
                         .height(1.dp)
-                        .background(Color.White.copy(alpha = 0.2f))
+                        .background(Border)
                 )
 
                 Spacer(modifier = Modifier.height(10.dp))
@@ -285,7 +286,7 @@ private fun OnboardingStepWelcome() {
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 10.5.sp,
                     letterSpacing = 1.5.sp,
-                    color = TerracottaLight
+                    color = Terracotta
                 )
             }
         }
@@ -379,10 +380,10 @@ private fun OnboardingStepAesthetic(
     onSelectStyle: (Int) -> Unit
 ) {
     val styles = listOf(
-        Triple("Espresso Charcoal", "Sacred stillness & deep warm earth", Brush.verticalGradient(listOf(Color(0xFF342E2B), Color(0xFF24201D), Color(0xFF171513)))),
-        Triple("Warm Porcelain", "Sunlit almond ground, crisp editorial type", Brush.verticalGradient(listOf(Color(0xFFFBF9F5), Color(0xFFF3EFE8)))),
-        Triple("Terracotta Earth", "Radiant earth warmth, grounded declaration", Brush.verticalGradient(listOf(Color(0xFF63382B), Color(0xFF3A241E), Color(0xFF1F1614)))),
-        Triple("Eucalyptus Sage", "Restful green, peaceful contemplation", Brush.verticalGradient(listOf(Color(0xFF314238), Color(0xFF222F28), Color(0xFF17201B))))
+        Triple("Alabaster Dawn", "Sunlit almond ground, crisp editorial type", AlabasterDawnGradient),
+        Triple("Sunlit Gold", "Radiant morning amber, sacred stillness", SunlitGoldGradient),
+        Triple("Morning Sage", "Dewy eucalyptus green, peaceful contemplation", MorningSageGradient),
+        Triple("Rose Dawn", "Radiant dawn terracotta blush", LuminousDawnGradient)
     )
 
     Column(
@@ -422,7 +423,7 @@ private fun OnboardingStepAesthetic(
                         .shadow(if (isSelected) 3.dp else 1.dp, RoundedCornerShape(18.dp), spotColor = Espresso.copy(0.08f))
                         .clip(RoundedCornerShape(18.dp))
                         .background(brush)
-                        .border(1.5.dp, if (isSelected) Terracotta else Color.Transparent, RoundedCornerShape(18.dp))
+                        .border(1.5.dp, if (isSelected) Terracotta else Border, RoundedCornerShape(18.dp))
                         .clickable { onSelectStyle(index) }
                         .padding(16.dp)
                 ) {
@@ -437,14 +438,14 @@ private fun OnboardingStepAesthetic(
                                 fontFamily = DisplayFontFamily,
                                 fontWeight = FontWeight.SemiBold,
                                 fontSize = 15.sp,
-                                color = if (index == 1) Espresso else Color.White
+                                color = if (index == 3) Color.White else Espresso
                             )
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
                                 text = desc,
                                 fontFamily = BodyFontFamily,
                                 fontSize = 11.5.sp,
-                                color = if (index == 1) Stone else Color.White.copy(alpha = 0.8f)
+                                color = if (index == 3) Color.White.copy(alpha = 0.85f) else Stone
                             )
                         }
 

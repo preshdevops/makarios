@@ -59,16 +59,16 @@ fun AffirmationCard(
             modifier = Modifier.matchParentSize()
         )
 
-        // ── 2. Deep Atmospheric Scrim ───────────────────────────────
+        // ── 2. Radiant Breathable Scrim ─────────────────────────────
         Box(
             modifier = Modifier
                 .matchParentSize()
                 .background(
                     Brush.verticalGradient(
                         colors = listOf(
-                            Color.Black.copy(alpha = 0.35f),
-                            Color.Black.copy(alpha = 0.55f),
-                            Color(0xFA161311)
+                            Color.Black.copy(alpha = 0.08f), // Crystal clear top letting sunlight & sky shine through
+                            Color.Black.copy(alpha = 0.30f), // Gentle transition
+                            Color(0xD91E1916)               // Warm espresso base for rock-solid contrast
                         )
                     )
                 )
@@ -80,20 +80,27 @@ fun AffirmationCard(
                 .fillMaxWidth()
                 .padding(24.dp)
         ) {
-            // Header: Category label & action buttons
+            // Header: Category badge & action buttons
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = affirmation.category.uppercase(),
-                    color = Color.White.copy(alpha = 0.85f),
-                    fontFamily = BodyFontFamily,
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 10.sp,
-                    letterSpacing = 2.sp
-                )
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color.White.copy(alpha = 0.22f))
+                        .padding(horizontal = 10.dp, vertical = 4.dp)
+                ) {
+                    Text(
+                        text = affirmation.category.uppercase(),
+                        color = Color.White,
+                        fontFamily = BodyFontFamily,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 9.sp,
+                        letterSpacing = 1.6.sp
+                    )
+                }
 
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),

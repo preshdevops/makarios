@@ -10,12 +10,12 @@
 Makarios is a sacred, typographic-led Christian affirmation app. Its signature feel is **liturgical restraint meeting modern editorial craft**. It is not a sterile wellness tracker, nor is it a noisy social app with vanity metrics or gamified streaks.
 
 ### Core Design Rules
-- **Photo-Forward Sacred Sanctuary**: Every affirmation is paired with breathtaking, emotionally resonant sacred photography (cinematic dawn light, mountain ridges, still waters, sunbeams). Rich dark scrims let Cormorant Garamond typography float with high contrast and sacred emotional weight, avoiding sterile text-only card lists.
-- **Visual Mood Exploration**: Categorical discovery is driven by photographic mood tiles (`MoodTile`) that invite the soul to pause and select their spiritual season (*Peace*, *Strength*, *Stillness*, *Courage*, *Joy*).
+- **Luminous Sacred Sanctuary**: Every affirmation is paired with breathtaking, emotionally resonant sacred photography (cinematic dawn light, mountain ridges, still waters, sunbeams). Luminous, breathable scrims allow morning sunlight, skies, and scenery to shine through vibrantly, while providing a warm espresso base for crystal-clear WCAG AA contrast for Cormorant Garamond typography.
+- **Visual Mood Exploration**: Categorical discovery is driven by photographic mood tiles (`MoodTile`) that invite the soul to pause and select their spiritual season (*Peace*, *Strength*, *Stillness*, *Courage*, *Joy*), accented with radiant amber borders when active.
 - **Mandatory Scripture Grounding**: Every affirmation — whether user-authored or curated — **must** display its grounding Bible verse text and reference beneath it. No affirmation exists in isolation from scripture.
 - **No AI Slop Patterns**: No purple/indigo gradient accents, no arbitrary dark-mode glows, no emoji used as icons or bullet points, no kicker eyebrows stacked over titles, no colored top/left borders on cards.
 - **Native Android Integration**: True system share sheet (`ACTION_SEND`) and one-tap Glance Home Screen widget pinning (`requestPinAppWidget`).
-- **Creation First**: The primary action is authoring personal declarations and matching them to God's word, then formatting them into beautiful typographic artifacts for social sharing, widgets, and wallpapers.
+- **Creation First**: The primary action is authoring personal declarations and matching them to God's word, then formatting them into beautiful typographic artifacts for social sharing, widgets, and wallpapers with radiant styles (Alabaster Dawn, Sunlit Gold, Morning Sage, Rose Dawn).
 
 ---
 
@@ -36,9 +36,17 @@ Makarios is a sacred, typographic-led Christian affirmation app. Its signature f
 | `Sage` | `#607768` | Secondary accent — muted eucalyptus sage |
 | `SageLight` | `#F0F4F1` | Soft sage mist wash |
 | `AmberGold` | `#C49B45` | Sacred warm amber/ochre accent |
+| `SunlitGold` | `#D4A038` | Radiant sunlit sacred gold |
+| `SunlitGoldLight` | `#FDF8EE` | Soft morning sunlight wash |
+| `DawnBlush` | `#FAF1ED` | Warm dawn terracotta blush |
 | `Border` | `#ECE7DF` | Delicate warm hairline border |
 | `BorderSubtle` | `Color(0x0A2C2622)` | 4% alpha translucent border (~0.5dp) replacing harsh 1dp borders |
-| `AtmosphericGradient` | `#342E2B` → `#24201D` → `#171513` | Candlelit twilight sanctuary gradient |
+| `SunlitAmberGradient` | `#DEAC46` → `#C7922E` → `#A6761E` | Radiant sunlit sacred amber gold |
+| `AlabasterDawnGradient` | `#FAF7F2` → `#F3EDE4` | Crisp, warm alabaster linen |
+| `SunlitGoldGradient` | `#FDF7EA` → `#F6E8CA` | Radiant morning gold mist |
+| `MorningSageGradient` | `#F2F6F3` → `#E2EBE5` | Fresh morning dew eucalyptus |
+| `LuminousDawnGradient` | `#E88A6E` → `#D47355` → `#B85A3E` | Warm morning blush terracotta |
+| `AtmosphericGradient` | `#382F2A` → `#28211D` → `#1B1613` | Candlelit twilight sanctuary gradient |
 
 ---
 

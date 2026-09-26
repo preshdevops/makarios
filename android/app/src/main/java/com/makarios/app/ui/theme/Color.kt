@@ -22,31 +22,74 @@ val Sage = Color(0xFF607768)               // Secondary accent — muted eucalyp
 val SageLight = Color(0xFFF0F4F1)           // Soft sage mist wash
 val AmberGold = Color(0xFFC49B45)           // Warm sacred amber/ochre
 
+// ── Luminous Accents & Sunlit Tokens ──────────────────────────
+val SunlitGold = Color(0xFFD4A038)          // Radiant sunlit sacred gold
+val SunlitGoldLight = Color(0xFFFDF8EE)     // Soft morning sunlight wash
+val DawnBlush = Color(0xFFFAF1ED)           // Warm dawn terracotta blush
+val LuminousAlabaster = Color(0xFFFCFAF7)   // Bright ethereal linen
+
 // ── Borders & Hairlines ───────────────────────────────────────
 val Border = Color(0xFFECE7DF)             // Ultra-delicate warm hairline border
 val BorderSubtle = Color(0x0A2C2622)       // Delicate translucent border (~4% alpha)
 
-// ── Atmospheric Gradients (Serene Twilight Sanctuary) ─────────
+// ── Radiant & Atmospheric Gradients ───────────────────────────
+val SunlitAmberGradient = Brush.verticalGradient(
+    colors = listOf(
+        Color(0xFFDEAC46), // Glowing sunlit amber dawn top
+        Color(0xFFC7922E), // Rich sacred gold core
+        Color(0xFFA6761E)  // Warm honey ochre base
+    )
+)
+
+val LuminousDawnGradient = Brush.verticalGradient(
+    colors = listOf(
+        Color(0xFFE88A6E), // Warm morning blush
+        Color(0xFFD47355),
+        Color(0xFFB85A3E)
+    )
+)
+
+val AlabasterDawnGradient = Brush.verticalGradient(
+    colors = listOf(
+        Color(0xFFFAF7F2), // Crisp warm ivory
+        Color(0xFFF3EDE4)  // Soft sunlit linen
+    )
+)
+
+val SunlitGoldGradient = Brush.verticalGradient(
+    colors = listOf(
+        Color(0xFFFDF7EA), // Radiant morning gold mist
+        Color(0xFFF6E8CA)  // Soft honey glow
+    )
+)
+
+val MorningSageGradient = Brush.verticalGradient(
+    colors = listOf(
+        Color(0xFFF2F6F3), // Fresh morning dew
+        Color(0xFFE2EBE5)  // Soft eucalyptus mist
+    )
+)
+
 val AtmosphericGradient = Brush.verticalGradient(
     colors = listOf(
-        Color(0xFF342E2B), // Deep candlelit umber top
-        Color(0xFF24201D), // Rich serene twilight core
-        Color(0xFF171513)  // Deepest obsidian bottom
+        Color(0xFF382F2A), // Candlelit warm umber top
+        Color(0xFF28211D), // Serene evening core
+        Color(0xFF1B1613)  // Deep espresso base
     )
 )
 
 val AtmosphericCardGradient = Brush.horizontalGradient(
     colors = listOf(
-        Color(0xFF322C29),
-        Color(0xFF221E1C)
+        Color(0xFF382F2A),
+        Color(0xFF241D1A)
     )
 )
 
 val AmberAtmosphericGradient = Brush.verticalGradient(
     colors = listOf(
-        Color(0xFF63382B), // Muted warm terracotta glow
-        Color(0xFF3A241E),
-        Color(0xFF1F1614)
+        Color(0xFF6E3E30), // Muted warm terracotta glow
+        Color(0xFF452A22),
+        Color(0xFF241916)
     )
 )
 
