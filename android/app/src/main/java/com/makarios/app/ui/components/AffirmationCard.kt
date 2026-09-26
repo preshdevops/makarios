@@ -26,9 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.makarios.app.data.Affirmation
-import com.makarios.app.ui.theme.BodyFontFamily
-import com.makarios.app.ui.theme.DisplayFontFamily
-import com.makarios.app.ui.theme.Espresso
+import com.makarios.app.ui.theme.*
 
 @Composable
 fun AffirmationCard(
