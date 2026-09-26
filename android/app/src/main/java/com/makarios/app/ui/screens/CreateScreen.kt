@@ -179,9 +179,9 @@ fun CreateScreen(
                 WallpaperRenderer.saveToGallery(context, bitmap, "Makarios")
             }
             if (uri != null) {
-                Toast.makeText(context, "Saved high-resolution image to Photos / Makarios", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Saved to your Photos ✓", Toast.LENGTH_SHORT).show()
             } else {
-                Toast.makeText(context, "Failed to save image to gallery", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Couldn't save — try again", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -869,7 +869,7 @@ private fun MatchStage(
                     )
                     Spacer(modifier = Modifier.height(3.dp))
                     Text(
-                        text = "Makarios links your affirmation to scripture — not as the verse itself, but as a declaration rooted in its truth.",
+                        text = "Your words, rooted in God's Word. Not the verse itself — a declaration built on its truth.",
                         fontFamily = BodyFontFamily,
                         fontSize = 12.sp,
                         lineHeight = 17.sp,
@@ -1028,7 +1028,7 @@ private fun DesignStage(
     ) {
         Column(modifier = Modifier.padding(horizontal = 20.dp)) {
             Text(
-                text = "Design Studio",
+                text = "Make it beautiful",
                 fontFamily = DisplayFontFamily,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 24.sp,
@@ -1037,7 +1037,7 @@ private fun DesignStage(
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "Craft YouVersion-style photographic or sacred minimalist art.",
+                text = "Pick a background, choose your layout, then share it.",
                 fontFamily = BodyFontFamily,
                 fontSize = 13.sp,
                 color = Stone
@@ -1285,7 +1285,7 @@ private fun DesignStage(
                             modifier = Modifier.size(14.dp)
                         )
                         Text(
-                            text = "Sacred Photos (28)",
+                            text = "Photo Backgrounds",
                             fontFamily = BodyFontFamily,
                             fontWeight = if (selectedBackgroundTab == 0) FontWeight.SemiBold else FontWeight.Medium,
                             fontSize = 12.sp,
@@ -1321,7 +1321,7 @@ private fun DesignStage(
                             modifier = Modifier.size(14.dp)
                         )
                         Text(
-                            text = "Sacred Minimal (6)",
+                            text = "Color Themes",
                             fontFamily = BodyFontFamily,
                             fontWeight = if (selectedBackgroundTab == 1) FontWeight.SemiBold else FontWeight.Medium,
                             fontSize = 12.sp,
@@ -1534,7 +1534,7 @@ private fun DesignStage(
                 ) {
                     Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(17.dp))
                     Text(
-                        text = "Share YouVersion Artwork",
+                        text = "Share your declaration",
                         fontFamily = BodyFontFamily,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 14.sp

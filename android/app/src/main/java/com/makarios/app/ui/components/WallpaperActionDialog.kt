@@ -72,7 +72,7 @@ fun WallpaperActionDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Sacred Wallpaper",
+                        text = "Set as Wallpaper",
                         fontFamily = DisplayFontFamily,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 20.sp,
@@ -119,7 +119,7 @@ fun WallpaperActionDialog(
                         )
                         Spacer(modifier = Modifier.height(14.dp))
                         Text(
-                            text = statusMessage ?: "Preparing sacred wallpaper…",
+                            text = statusMessage ?: "Setting your wallpaper…",
                             fontFamily = BodyFontFamily,
                             fontWeight = FontWeight.Medium,
                             fontSize = 13.sp,
@@ -134,7 +134,7 @@ fun WallpaperActionDialog(
                         subtitle = "Optimal positioning below the clock",
                         onClick = {
                             isProcessing = true
-                            statusMessage = "Setting Lock Screen wallpaper…"
+                            statusMessage = "Setting your lock screen…"
                             coroutineScope.launch {
                                 val success = withContext(Dispatchers.IO) {
                                     val photoBmp = if (!photoUrl.isNullOrBlank()) {
@@ -176,7 +176,7 @@ fun WallpaperActionDialog(
                         subtitle = "Gentle backdrop behind your apps",
                         onClick = {
                             isProcessing = true
-                            statusMessage = "Setting Home Screen wallpaper…"
+                            statusMessage = "Setting your home screen…"
                             coroutineScope.launch {
                                 val success = withContext(Dispatchers.IO) {
                                     val photoBmp = if (!photoUrl.isNullOrBlank()) {
@@ -215,10 +215,10 @@ fun WallpaperActionDialog(
                     WallpaperOptionItem(
                         icon = Icons.Default.Wallpaper,
                         title = "Set on Both Screens",
-                        subtitle = "Unified sacred sanctuary display",
+                        subtitle = "Your declaration everywhere you look",
                         onClick = {
                             isProcessing = true
-                            statusMessage = "Applying to Lock & Home screens…"
+                            statusMessage = "Updating both screens…"
                             coroutineScope.launch {
                                 val success = withContext(Dispatchers.IO) {
                                     val photoBmp = if (!photoUrl.isNullOrBlank()) {
@@ -256,12 +256,12 @@ fun WallpaperActionDialog(
                     // Option 4: Save to Photos (Gallery download)
                     WallpaperOptionItem(
                         icon = Icons.Default.Download,
-                        title = "Save to Photos (Download)",
-                        subtitle = "High-resolution PNG saved to Pictures/Makarios",
+                        title = "Save to Photos",
+                        subtitle = "Download to your camera roll",
                         accentColor = Terracotta,
                         onClick = {
                             isProcessing = true
-                            statusMessage = "Saving high-res wallpaper…"
+                            statusMessage = "Saving to your Photos…"
                             coroutineScope.launch {
                                 val uri = withContext(Dispatchers.IO) {
                                     val photoBmp = if (!photoUrl.isNullOrBlank()) {

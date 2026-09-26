@@ -175,9 +175,9 @@ fun SavedScreen(
                 WallpaperRenderer.saveToGallery(context, bitmap, "Makarios Wallpaper")
             }
             if (uri != null) {
-                Toast.makeText(context, "Saved wallpaper to Photos in Makarios album", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Saved to your Photos ✓", Toast.LENGTH_SHORT).show()
             } else {
-                Toast.makeText(context, "Failed to save wallpaper", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Couldn't save — try again", Toast.LENGTH_SHORT).show()
             }
         }
     }

@@ -259,7 +259,7 @@ fun ProfileScreen(
                                         )
                                     }
                                     Text(
-                                        text = "Active · Synchronized",
+                                        text = "On · Up to date",
                                         fontFamily = BodyFontFamily,
                                         fontSize = 11.5.sp,
                                         color = StoneMuted
@@ -288,7 +288,7 @@ fun ProfileScreen(
                         // Widget Source Selector
                         Column {
                             Text(
-                                text = "WIDGET FEED SOURCE",
+                                text = "WIDGET SHOWS",
                                 fontFamily = BodyFontFamily,
                                 fontWeight = FontWeight.SemiBold,
                                 fontSize = 10.sp,
@@ -363,45 +363,45 @@ fun ProfileScreen(
                     Column {
                         ReminderSwitchRow(
                             title = "Dawn Revelation",
-                            subtitle = "06:30 AM · Morning awakening declaration",
+                            subtitle = "06:30 AM · Morning declaration",
                             checked = dawnNotification,
                             onCheckedChange = {
                                 dawnNotification = it
                                 ReminderManager.setDawnEnabled(context, it)
-                                if (it) Toast.makeText(context, "Dawn reminder scheduled for 06:30 AM", Toast.LENGTH_SHORT).show()
+                                if (it) Toast.makeText(context, "Dawn reminder set for 6:30 AM", Toast.LENGTH_SHORT).show()
                             }
                         )
                         Divider(color = BorderSubtle, thickness = 0.5.dp)
                         ReminderSwitchRow(
                             title = "Midday Stillness",
-                            subtitle = "12:30 PM · Peace amidst the workday",
+                            subtitle = "12:30 PM · Peace in the afternoon",
                             checked = middayNotification,
                             onCheckedChange = {
                                 middayNotification = it
                                 ReminderManager.setMiddayEnabled(context, it)
-                                if (it) Toast.makeText(context, "Midday reminder scheduled for 12:30 PM", Toast.LENGTH_SHORT).show()
+                                if (it) Toast.makeText(context, "Midday reminder set for 12:30 PM", Toast.LENGTH_SHORT).show()
                             }
                         )
                         Divider(color = BorderSubtle, thickness = 0.5.dp)
                         ReminderSwitchRow(
                             title = "Evening Examen",
-                            subtitle = "08:30 PM · Restful wind-down and scripture",
+                            subtitle = "08:30 PM · Wind down with scripture",
                             checked = eveningNotification,
                             onCheckedChange = {
                                 eveningNotification = it
                                 ReminderManager.setEveningEnabled(context, it)
-                                if (it) Toast.makeText(context, "Evening reminder scheduled for 08:30 PM", Toast.LENGTH_SHORT).show()
+                                if (it) Toast.makeText(context, "Evening reminder set for 8:30 PM", Toast.LENGTH_SHORT).show()
                             }
                         )
                         Divider(color = BorderSubtle, thickness = 0.5.dp)
                         ReminderSwitchRow(
                             title = "Hourly Truth & Peace",
-                            subtitle = "Every hour on the hour · Gentle scripture declarations",
+                            subtitle = "Every hour · A gentle scripture reminder",
                             checked = hourlyNotification,
                             onCheckedChange = {
                                 hourlyNotification = it
                                 ReminderManager.setHourlyEnabled(context, it)
-                                if (it) Toast.makeText(context, "Hourly notifications enabled", Toast.LENGTH_SHORT).show()
+                                if (it) Toast.makeText(context, "Hourly reminders turned on", Toast.LENGTH_SHORT).show()
                             }
                         )
                     }
@@ -417,7 +417,7 @@ fun ProfileScreen(
                     OutlinedButton(
                         onClick = {
                             ReminderManager.sendTestNotification(context, isHourly = false)
-                            Toast.makeText(context, "Daily notification sent! Check notification shade.", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "Sent! Check your notifications.", Toast.LENGTH_SHORT).show()
                         },
                         border = BorderStroke(1.dp, Border),
                         shape = RoundedCornerShape(12.dp),
@@ -437,7 +437,7 @@ fun ProfileScreen(
                     OutlinedButton(
                         onClick = {
                             ReminderManager.sendTestNotification(context, isHourly = true)
-                            Toast.makeText(context, "Hourly notification sent! Check notification shade.", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "Sent! Check your notifications.", Toast.LENGTH_SHORT).show()
                         },
                         border = BorderStroke(1.dp, Border),
                         shape = RoundedCornerShape(12.dp),

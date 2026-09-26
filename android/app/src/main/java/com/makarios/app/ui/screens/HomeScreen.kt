@@ -148,7 +148,7 @@ fun HomeScreen(
                             .border(0.5.dp, BorderSubtle, CircleShape)
                             .clickable {
                                 ReminderManager.sendTestNotification(context, isHourly = false)
-                                Toast.makeText(context, "Sacred declaration sent to your notifications", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, "Check your notifications ✓", Toast.LENGTH_SHORT).show()
                             },
                         contentAlignment = Alignment.Center
                     ) {
