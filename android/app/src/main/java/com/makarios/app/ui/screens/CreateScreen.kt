@@ -18,10 +18,12 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Wallpaper
 import androidx.compose.material3.*
+import com.makarios.app.ui.components.ScripturePickerSheet
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -40,8 +42,11 @@ import com.makarios.app.data.Affirmation
 import com.makarios.app.data.AffirmationRepository
 import com.makarios.app.data.AffirmationTone
 import com.makarios.app.data.ScriptureMatcher
+import com.makarios.app.data.VectorSearchEngine
+import com.makarios.app.data.VerseMatch
 import com.makarios.app.ui.theme.*
 import com.makarios.app.util.ShareHelper
+import kotlinx.coroutines.launch
 
 // ── Create Screen Stages ─────────────────────────────────────────
 enum class CreateStage {
@@ -117,9 +122,53 @@ fun CreateScreen(
     var matchedScripture by remember { mutableStateOf("") }
     var selectedTone by remember { mutableStateOf<AffirmationTone?>(null) }
     var matchResults by remember { mutableStateOf<List<ScriptureMatcher.MatchResult>>(emptyList()) }
+    var vectorMatches by remember { mutableStateOf<List<VerseMatch>>(emptyList()) }
     var matchIndex by remember { mutableIntStateOf(0) }
+    var isMatching by remember { mutableStateOf(false) }
+    var showPickerSheet by remember { mutableStateOf(false) }
     var selectedFormatIndex by remember { mutableIntStateOf(0) }
     var selectedStyleIndex by remember { mutableIntStateOf(0) }
+    val coroutineScope = rememberCoroutineScope()
+
+    val runMatch: () -> Unit = {
+        if (declarationText.trim().length >= 10 && !isMatching) {
+            isMatching = true
+            coroutineScope.launch {
+                try {
+                    val vectorResults = VectorSearchEngine.getInstance(context).search(declarationText, topK = 8)
+                    if (vectorResults.isNotEmpty()) {
+                        vectorMatches = vectorResults
+                        matchIndex = 0
+                        matchedReference = vectorResults[0].reference
+                        matchedScripture = vectorResults[0].text
+                        stage = CreateStage.MATCH
+                    } else {
+                        val fallback = ScriptureMatcher.match(declarationText, selectedTone)
+                        matchResults = fallback
+                        matchIndex = 0
+                        if (fallback.isNotEmpty()) {
+                            matchedReference = fallback[0].verse.reference
+                            matchedScripture = fallback[0].verse.text
+                        }
+                        stage = CreateStage.MATCH
+                    }
+                } catch (e: Exception) {
+                    val fallback = ScriptureMatcher.match(declarationText, selectedTone)
+                    matchResults = fallback
+                    matchIndex = 0
+                    if (fallback.isNotEmpty()) {
+                        matchedReference = fallback[0].verse.reference
+                        matchedScripture = fallback[0].verse.text
+                    }
+                    stage = CreateStage.MATCH
+                } finally {
+                    isMatching = false
+                }
+            }
+        } else if (declarationText.trim().length < 10) {
+            Toast.makeText(context, "Write a few words first", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -191,20 +240,8 @@ fun CreateScreen(
                 when (stage) {
                     CreateStage.WRITE -> {
                         Button(
-                            onClick = {
-                                if (declarationText.trim().length >= 10) {
-                                    val results = ScriptureMatcher.match(declarationText, selectedTone)
-                                    matchResults = results
-                                    matchIndex = 0
-                                    if (results.isNotEmpty()) {
-                                        matchedReference = results[0].verse.reference
-                                        matchedScripture = results[0].verse.text
-                                    }
-                                    stage = CreateStage.MATCH
-                                } else {
-                                    Toast.makeText(context, "Write a few words first", Toast.LENGTH_SHORT).show()
-                                }
-                            },
+                            onClick = runMatch,
+                            enabled = !isMatching,
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = Terracotta, contentColor = Color.White
                             ),
@@ -212,7 +249,12 @@ fun CreateScreen(
                             contentPadding = PaddingValues(horizontal = 18.dp, vertical = 6.dp),
                             modifier = Modifier.height(36.dp)
                         ) {
-                            Text("Match", fontFamily = BodyFontFamily, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                            Text(
+                                text = if (isMatching) "Matching…" else "Match",
+                                fontFamily = BodyFontFamily,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 13.sp
+                            )
                         }
                     }
                     CreateStage.MATCH -> {
@@ -275,20 +317,8 @@ fun CreateScreen(
                     seedAffirmation = seedAffirmation,
                     selectedTone = selectedTone,
                     onToneSelect = { selectedTone = it },
-                    onMatch = {
-                        if (declarationText.trim().length >= 10) {
-                            val results = ScriptureMatcher.match(declarationText, selectedTone)
-                            matchResults = results
-                            matchIndex = 0
-                            if (results.isNotEmpty()) {
-                                matchedReference = results[0].verse.reference
-                                matchedScripture = results[0].verse.text
-                            }
-                            stage = CreateStage.MATCH
-                        } else {
-                            Toast.makeText(context, "Write a few words first", Toast.LENGTH_SHORT).show()
-                        }
-                    }
+                    isMatching = isMatching,
+                    onMatch = runMatch
                 )
 
                 // ── STAGE 2: MATCH ────────────────────────────────
@@ -297,17 +327,23 @@ fun CreateScreen(
                     reference = matchedReference,
                     scripture = matchedScripture,
                     matchIndex = matchIndex,
-                    matchCount = matchResults.size,
+                    matchCount = if (vectorMatches.isNotEmpty()) vectorMatches.size else matchResults.size,
                     onBack = { stage = CreateStage.WRITE },
                     onAccept = { stage = CreateStage.DESIGN },
                     onTryDifferent = {
-                        if (matchResults.size > 1) {
+                        if (vectorMatches.isNotEmpty()) {
+                            matchIndex = (matchIndex + 1) % vectorMatches.size
+                            val next = vectorMatches[matchIndex]
+                            matchedReference = next.reference
+                            matchedScripture = next.text
+                        } else if (matchResults.size > 1) {
                             matchIndex = (matchIndex + 1) % matchResults.size
                             val next = matchResults[matchIndex]
                             matchedReference = next.verse.reference
                             matchedScripture = next.verse.text
                         }
-                    }
+                    },
+                    onBrowseLibrary = { showPickerSheet = true }
                 )
 
                 // ── STAGE 3: DESIGN ───────────────────────────────
@@ -370,6 +406,17 @@ fun CreateScreen(
                 )
             }
         }
+
+        if (showPickerSheet) {
+            ScripturePickerSheet(
+                onDismiss = { showPickerSheet = false },
+                onVerseSelected = { ref, text ->
+                    matchedReference = ref
+                    matchedScripture = text
+                    showPickerSheet = false
+                }
+            )
+        }
     }
 }
 
@@ -381,6 +428,7 @@ private fun WriteStage(
     seedAffirmation: Affirmation?,
     selectedTone: AffirmationTone?,
     onToneSelect: (AffirmationTone?) -> Unit,
+    isMatching: Boolean = false,
     onMatch: () -> Unit
 ) {
     val scrollState = rememberScrollState()
@@ -595,6 +643,7 @@ private fun WriteStage(
         // Main CTA
         Button(
             onClick = onMatch,
+            enabled = !isMatching,
             colors = ButtonDefaults.buttonColors(
                 containerColor = Espresso, contentColor = Color.White
             ),
@@ -607,9 +656,17 @@ private fun WriteStage(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Icon(Icons.Default.AutoAwesome, contentDescription = null, modifier = Modifier.size(17.dp))
+                if (isMatching) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(17.dp),
+                        color = Color.White,
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Icon(Icons.Default.AutoAwesome, contentDescription = null, modifier = Modifier.size(17.dp))
+                }
                 Text(
-                    text = "Find Matching Scripture",
+                    text = if (isMatching) "Searching Scriptures…" else "Find Matching Scripture",
                     fontFamily = BodyFontFamily,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 14.sp
@@ -629,7 +686,8 @@ private fun MatchStage(
     matchCount: Int = 1,
     onBack: () -> Unit,
     onAccept: () -> Unit,
-    onTryDifferent: () -> Unit
+    onTryDifferent: () -> Unit,
+    onBrowseLibrary: () -> Unit = {}
 ) {
     Column(
         modifier = Modifier
@@ -817,6 +875,37 @@ private fun MatchStage(
                         fontSize = 13.sp
                     )
                 }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        // Browse / Search Scripture Library
+        OutlinedButton(
+            onClick = onBrowseLibrary,
+            border = BorderStroke(1.dp, Border),
+            shape = RoundedCornerShape(14.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.MenuBook,
+                    contentDescription = null,
+                    tint = Terracotta,
+                    modifier = Modifier.size(16.dp)
+                )
+                Text(
+                    text = "Browse or search full Scripture Library",
+                    fontFamily = BodyFontFamily,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 12.5.sp,
+                    color = Espresso
+                )
             }
         }
 

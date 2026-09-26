@@ -37,6 +37,9 @@ android {
     buildFeatures {
         compose = true
     }
+    androidResources {
+        noCompress += listOf("bin", "onnx")
+    }
 }
 
 dependencies {
@@ -57,4 +60,7 @@ dependencies {
 
     // Coil for modern async image loading
     implementation(libs.coil.compose)
+
+    // ONNX Runtime Mobile for on-device local vector search
+    implementation("com.microsoft.onnxruntime:onnxruntime-android:1.20.0")
 }
