@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.sp
 import com.makarios.app.data.Affirmation
 import com.makarios.app.data.AffirmationRepository
 import com.makarios.app.data.AffirmationTone
+import com.makarios.app.data.ScriptureMatcher
 import com.makarios.app.ui.theme.*
 import com.makarios.app.util.ShareHelper
 
@@ -95,34 +96,7 @@ val designStyles = listOf(
     )
 )
 
-// ── Scripture Matching (simulated — will wire to AI in future) ───
-fun matchScripture(declaration: String): Pair<String, String> {
-    val lower = declaration.lowercase()
-    return when {
-        lower.contains("fear") || lower.contains("afraid") || lower.contains("anxious") ->
-            Pair("Isaiah 41:10", "Do not fear, for I am with you; do not be dismayed, for I am your God. I will strengthen you and help you; I will uphold you with my righteous right hand.")
-        lower.contains("strong") || lower.contains("strength") || lower.contains("weak") ->
-            Pair("2 Corinthians 12:9", "My grace is sufficient for you, for my power is made perfect in weakness.")
-        lower.contains("purpose") || lower.contains("plan") || lower.contains("future") ->
-            Pair("Jeremiah 29:11", "For I know the plans I have for you, declares the Lord, plans to prosper you and not to harm you, plans to give you hope and a future.")
-        lower.contains("peace") || lower.contains("still") || lower.contains("rest") ->
-            Pair("Philippians 4:7", "And the peace of God, which transcends all understanding, will guard your hearts and your minds in Christ Jesus.")
-        lower.contains("love") || lower.contains("loved") || lower.contains("worth") ->
-            Pair("Romans 8:38–39", "For I am convinced that neither death nor life, neither angels nor demons, neither the present nor the future, nor any powers, neither height nor depth, nor anything else in all creation, will be able to separate us from the love of God.")
-        lower.contains("identity") || lower.contains("who i am") || lower.contains("child") ->
-            Pair("1 John 3:1", "See what great love the Father has lavished on us, that we should be called children of God! And that is what we are!")
-        lower.contains("heal") || lower.contains("broken") || lower.contains("restore") ->
-            Pair("Psalm 147:3", "He heals the brokenhearted and binds up their wounds.")
-        lower.contains("provision") || lower.contains("need") || lower.contains("provide") ->
-            Pair("Philippians 4:19", "And my God will meet all your needs according to the riches of his glory in Christ Jesus.")
-        lower.contains("joy") || lower.contains("happy") || lower.contains("delight") ->
-            Pair("Nehemiah 8:10", "Do not grieve, for the joy of the Lord is your strength.")
-        lower.contains("courage") || lower.contains("bold") || lower.contains("brave") ->
-            Pair("Joshua 1:9", "Have I not commanded you? Be strong and courageous. Do not be afraid; do not be discouraged, for the Lord your God will be with you wherever you go.")
-        else ->
-            Pair("Psalm 139:14", "I praise you because I am fearfully and wonderfully made; your works are wonderful, I know that full well.")
-    }
-}
+// Scripture matching is now handled by ScriptureMatcher.kt
 
 @Composable
 fun CreateScreen(
@@ -141,6 +115,9 @@ fun CreateScreen(
     var declarationText by remember { mutableStateOf(seedAffirmation?.declaration ?: "") }
     var matchedReference by remember { mutableStateOf("") }
     var matchedScripture by remember { mutableStateOf("") }
+    var selectedTone by remember { mutableStateOf<AffirmationTone?>(null) }
+    var matchResults by remember { mutableStateOf<List<ScriptureMatcher.MatchResult>>(emptyList()) }
+    var matchIndex by remember { mutableIntStateOf(0) }
     var selectedFormatIndex by remember { mutableIntStateOf(0) }
     var selectedStyleIndex by remember { mutableIntStateOf(0) }
 
@@ -216,9 +193,13 @@ fun CreateScreen(
                         Button(
                             onClick = {
                                 if (declarationText.trim().length >= 10) {
-                                    val (ref, scr) = matchScripture(declarationText)
-                                    matchedReference = ref
-                                    matchedScripture = scr
+                                    val results = ScriptureMatcher.match(declarationText, selectedTone)
+                                    matchResults = results
+                                    matchIndex = 0
+                                    if (results.isNotEmpty()) {
+                                        matchedReference = results[0].verse.reference
+                                        matchedScripture = results[0].verse.text
+                                    }
                                     stage = CreateStage.MATCH
                                 } else {
                                     Toast.makeText(context, "Write a few words first", Toast.LENGTH_SHORT).show()
@@ -257,7 +238,7 @@ fun CreateScreen(
                                     reference = matchedReference.ifBlank { "PSALM 139:14" },
                                     context = "Personal declaration created in Makarios Studio.",
                                     category = "Personal",
-                                    tone = AffirmationTone.RESOLUTE,
+                                    tone = selectedTone ?: AffirmationTone.RESOLUTE,
                                     imageUrl = "https://images.unsplash.com/photo-1507652313519-d4e9174996dd?auto=format&fit=crop&w=1000&q=85",
                                     isFavorite = true,
                                     personalDeclaration = declarationText
@@ -292,11 +273,17 @@ fun CreateScreen(
                     declarationText = declarationText,
                     onDeclarationChange = { declarationText = it },
                     seedAffirmation = seedAffirmation,
+                    selectedTone = selectedTone,
+                    onToneSelect = { selectedTone = it },
                     onMatch = {
                         if (declarationText.trim().length >= 10) {
-                            val (ref, scr) = matchScripture(declarationText)
-                            matchedReference = ref
-                            matchedScripture = scr
+                            val results = ScriptureMatcher.match(declarationText, selectedTone)
+                            matchResults = results
+                            matchIndex = 0
+                            if (results.isNotEmpty()) {
+                                matchedReference = results[0].verse.reference
+                                matchedScripture = results[0].verse.text
+                            }
                             stage = CreateStage.MATCH
                         } else {
                             Toast.makeText(context, "Write a few words first", Toast.LENGTH_SHORT).show()
@@ -309,19 +296,17 @@ fun CreateScreen(
                     declaration = declarationText,
                     reference = matchedReference,
                     scripture = matchedScripture,
+                    matchIndex = matchIndex,
+                    matchCount = matchResults.size,
                     onBack = { stage = CreateStage.WRITE },
                     onAccept = { stage = CreateStage.DESIGN },
                     onTryDifferent = {
-                        // Rotate through alternatives — simplified for now
-                        val alts = listOf(
-                            Pair("Psalm 23:1", "The Lord is my shepherd; I shall not want."),
-                            Pair("Romans 8:28", "And we know that in all things God works for the good of those who love him, who have been called according to his purpose."),
-                            Pair("Isaiah 40:31", "But those who hope in the Lord will renew their strength. They will soar on wings like eagles; they will run and not grow weary, they will walk and not be faint.")
-                        )
-                        val current = alts.indexOfFirst { it.first == matchedReference }
-                        val next = alts[(current + 1) % alts.size]
-                        matchedReference = next.first
-                        matchedScripture = next.second
+                        if (matchResults.size > 1) {
+                            matchIndex = (matchIndex + 1) % matchResults.size
+                            val next = matchResults[matchIndex]
+                            matchedReference = next.verse.reference
+                            matchedScripture = next.verse.text
+                        }
                     }
                 )
 
@@ -342,7 +327,7 @@ fun CreateScreen(
                             reference = matchedReference.ifBlank { "PSALM 139:14" },
                             context = "Personal declaration created in Makarios Studio.",
                             category = "Personal",
-                            tone = AffirmationTone.RESOLUTE,
+                            tone = selectedTone ?: AffirmationTone.RESOLUTE,
                             imageUrl = "https://images.unsplash.com/photo-1507652313519-d4e9174996dd?auto=format&fit=crop&w=1000&q=85",
                             isFavorite = true,
                             personalDeclaration = declarationText
@@ -358,13 +343,29 @@ fun CreateScreen(
                             reference = matchedReference.ifBlank { "PSALM 139:14" },
                             context = "Personal declaration created in Makarios Studio.",
                             category = "Personal",
-                            tone = AffirmationTone.RESOLUTE,
+                            tone = selectedTone ?: AffirmationTone.RESOLUTE,
                             imageUrl = "https://images.unsplash.com/photo-1507652313519-d4e9174996dd?auto=format&fit=crop&w=1000&q=85",
                             isFavorite = true,
                             personalDeclaration = declarationText
                         )
                         AffirmationRepository.addPersonalAffirmation(newAffirmation)
                         Toast.makeText(context, "Wallpaper saved and added to Personal", Toast.LENGTH_SHORT).show()
+                    },
+                    onShare = {
+                        val newAffirmation = Affirmation(
+                            id = "personal-${System.currentTimeMillis()}",
+                            declaration = declarationText,
+                            scriptureText = matchedScripture.ifBlank { "I praise you because I am fearfully and wonderfully made; your works are wonderful, I know that full well." },
+                            reference = matchedReference.ifBlank { "PSALM 139:14" },
+                            context = "Personal declaration created in Makarios Studio.",
+                            category = "Personal",
+                            tone = selectedTone ?: AffirmationTone.RESOLUTE,
+                            imageUrl = "https://images.unsplash.com/photo-1507652313519-d4e9174996dd?auto=format&fit=crop&w=1000&q=85",
+                            isFavorite = true,
+                            personalDeclaration = declarationText
+                        )
+                        AffirmationRepository.addPersonalAffirmation(newAffirmation)
+                        ShareHelper.shareAffirmation(context, newAffirmation)
                     }
                 )
             }
@@ -378,6 +379,8 @@ private fun WriteStage(
     declarationText: String,
     onDeclarationChange: (String) -> Unit,
     seedAffirmation: Affirmation?,
+    selectedTone: AffirmationTone?,
+    onToneSelect: (AffirmationTone?) -> Unit,
     onMatch: () -> Unit
 ) {
     val scrollState = rememberScrollState()
@@ -493,19 +496,26 @@ private fun WriteStage(
                 "Still & Restful" to AffirmationTone.STILL,
                 "Bold & Resolute" to AffirmationTone.RESOLUTE,
                 "Gentle & Tender" to AffirmationTone.GENTLE
-            ).forEach { (label, _) ->
+            ).forEach { (label, tone) ->
+                val isSelected = selectedTone == tone
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(20.dp))
-                        .background(Surface)
-                        .border(1.dp, Border, RoundedCornerShape(20.dp))
+                        .background(if (isSelected) Espresso else Surface)
+                        .border(
+                            width = if (isSelected) 0.dp else 1.dp,
+                            color = if (isSelected) Color.Transparent else Border,
+                            shape = RoundedCornerShape(20.dp)
+                        )
+                        .clickable { onToneSelect(if (isSelected) null else tone) }
                         .padding(horizontal = 14.dp, vertical = 8.dp)
                 ) {
                     Text(
                         text = label,
                         fontFamily = BodyFontFamily,
+                        fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
                         fontSize = 12.sp,
-                        color = Espresso
+                        color = if (isSelected) Color.White else Espresso
                     )
                 }
             }
@@ -615,6 +625,8 @@ private fun MatchStage(
     declaration: String,
     reference: String,
     scripture: String,
+    matchIndex: Int = 0,
+    matchCount: Int = 1,
     onBack: () -> Unit,
     onAccept: () -> Unit,
     onTryDifferent: () -> Unit
@@ -748,6 +760,19 @@ private fun MatchStage(
 
         Spacer(modifier = Modifier.height(20.dp))
 
+        if (matchCount > 1) {
+            Text(
+                text = "MATCH ${matchIndex + 1} OF $matchCount",
+                fontFamily = BodyFontFamily,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 11.sp,
+                letterSpacing = 1.4.sp,
+                color = StoneMuted,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)
+            )
+        }
+
         // Action row
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -827,7 +852,8 @@ private fun DesignStage(
     selectedStyleIndex: Int,
     onStyleSelect: (Int) -> Unit,
     onSaveToGallery: () -> Unit,
-    onSaveAsWallpaper: () -> Unit
+    onSaveAsWallpaper: () -> Unit,
+    onShare: () -> Unit
 ) {
     val currentFormat = shareFormats[selectedFormatIndex]
     val currentStyle = designStyles[selectedStyleIndex]
@@ -1093,7 +1119,7 @@ private fun DesignStage(
         ) {
             // Primary: Share
             Button(
-                onClick = { /* Share intent */ },
+                onClick = onShare,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Terracotta, contentColor = Color.White
                 ),

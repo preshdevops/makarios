@@ -255,14 +255,14 @@ object AffirmationRepository {
         }
     }
 
-    fun getSaved(): List<Affirmation> = allAffirmations.filter { savedAffirmationIds.contains(it.id) }
+    fun getSaved(): List<Affirmation> = (personalAffirmations + allAffirmations).filter { savedAffirmationIds.contains(it.id) }
 
-    fun getFavorites(): List<Affirmation> = allAffirmations.filter { it.isFavorite || savedAffirmationIds.contains(it.id) }
+    fun getFavorites(): List<Affirmation> = (personalAffirmations + allAffirmations).filter { it.isFavorite || savedAffirmationIds.contains(it.id) }
 
     fun getById(id: String): Affirmation =
         personalAffirmations.find { it.id == id }
             ?: allAffirmations.find { it.id == id }
             ?: fullscreenAffirmation
 
-    fun getAll(): List<Affirmation> = allAffirmations
+    fun getAll(): List<Affirmation> = personalAffirmations + allAffirmations
 }
