@@ -265,4 +265,7 @@ object AffirmationRepository {
             ?: fullscreenAffirmation
 
     fun getAll(): List<Affirmation> = personalAffirmations + allAffirmations
+
+    val featuredAffirmation: Affirmation get() = affirmationOfTheDay
+    val curatedAffirmations: List<Affirmation> get() = getAll()
 }

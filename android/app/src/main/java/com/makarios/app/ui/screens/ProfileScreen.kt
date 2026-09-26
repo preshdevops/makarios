@@ -454,6 +454,7 @@ fun ProfileScreen(
                         }
                     }
                 }
+            }
 
             Spacer(modifier = Modifier.height(24.dp))
 
