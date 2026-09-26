@@ -433,6 +433,7 @@ fun CreateScreen(
                     selectedFormatIndex = selectedFormatIndex,
                     onFormatSelect = { selectedFormatIndex = it },
                     selectedStyleIndex = selectedStyleIndex,
+                    onStyleSelect = { selectedStyleIndex = it },
                     onSaveToGallery = saveCurrentDesignToGallery,
                     onSaveAsWallpaper = openWallpaperDialog,
                     onShare = shareCurrentDesign
