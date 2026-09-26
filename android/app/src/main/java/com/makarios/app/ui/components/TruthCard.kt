@@ -83,13 +83,13 @@ fun TruthCard(
 
         Spacer(modifier = Modifier.height(22.dp))
 
-        // Center Declaration in high-contrast Fraunces Serif
+        // Center Declaration in high-contrast Cormorant Garamond Serif
         Text(
             text = "“${affirmation.declaration}”",
             fontFamily = DisplayFontFamily,
-            fontWeight = FontWeight.Normal,
-            fontSize = 22.sp,
-            lineHeight = 31.sp,
+            fontWeight = FontWeight.Medium,
+            fontSize = 23.sp,
+            lineHeight = 32.sp,
             letterSpacing = (-0.2).sp,
             textAlign = TextAlign.Center,
             color = Espresso,

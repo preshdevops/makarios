@@ -9,15 +9,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.makarios.app.R
 
-// ── Fraunces — Display serif ─────────────────────────────────
-val FrauncesFontFamily = FontFamily(
-    Font(R.font.fraunces_regular, FontWeight.Normal),
-    Font(R.font.fraunces_regular, FontWeight.Medium),
-    Font(R.font.fraunces_regular, FontWeight.SemiBold),
-    Font(R.font.fraunces_regular, FontWeight.Bold),
-    Font(R.font.fraunces_italic, FontWeight.Normal, FontStyle.Italic),
-    Font(R.font.fraunces_italic, FontWeight.Medium, FontStyle.Italic)
+// ── Cormorant Garamond — Classical, sacred display serif ─────
+val CormorantGaramondFontFamily = FontFamily(
+    Font(R.font.cormorant_garamond_regular, FontWeight.Normal),
+    Font(R.font.cormorant_garamond_regular, FontWeight.Medium),
+    Font(R.font.cormorant_garamond_regular, FontWeight.SemiBold),
+    Font(R.font.cormorant_garamond_regular, FontWeight.Bold),
+    Font(R.font.cormorant_garamond_italic, FontWeight.Normal, FontStyle.Italic),
+    Font(R.font.cormorant_garamond_italic, FontWeight.Medium, FontStyle.Italic)
 )
+
+// Legacy alias to prevent any build breakage
+val FrauncesFontFamily = CormorantGaramondFontFamily
 
 // ── Work Sans — UI humanist sans ─────────────────────────────
 val WorkSansFontFamily = FontFamily(
@@ -28,33 +31,33 @@ val WorkSansFontFamily = FontFamily(
 )
 
 // Semantic aliases
-val DisplayFontFamily = FrauncesFontFamily
+val DisplayFontFamily = CormorantGaramondFontFamily
 val BodyFontFamily = WorkSansFontFamily
 
 val MakariosTypography = Typography(
     // Hero question: "What are you carrying today?"
     displayLarge = TextStyle(
-        fontFamily = FrauncesFontFamily,
+        fontFamily = CormorantGaramondFontFamily,
         fontWeight = FontWeight.SemiBold,
-        fontSize = 25.sp,
-        lineHeight = 33.sp,
-        letterSpacing = (-0.4).sp
+        fontSize = 27.sp,
+        lineHeight = 35.sp,
+        letterSpacing = (-0.3).sp
     ),
     // Declaration text on truth card
     headlineMedium = TextStyle(
-        fontFamily = FrauncesFontFamily,
-        fontWeight = FontWeight.Normal,
-        fontSize = 22.sp,
-        lineHeight = 31.sp,
+        fontFamily = CormorantGaramondFontFamily,
+        fontWeight = FontWeight.Medium,
+        fontSize = 23.sp,
+        lineHeight = 32.sp,
         letterSpacing = (-0.2).sp
     ),
     // Makarios wordmark / section titles
     titleLarge = TextStyle(
-        fontFamily = FrauncesFontFamily,
+        fontFamily = CormorantGaramondFontFamily,
         fontWeight = FontWeight.Medium,
-        fontSize = 19.sp,
-        lineHeight = 25.sp,
-        letterSpacing = (-0.2).sp
+        fontSize = 20.sp,
+        lineHeight = 26.sp,
+        letterSpacing = (-0.1).sp
     ),
     // Section headers, tab labels
     titleMedium = TextStyle(
@@ -74,11 +77,11 @@ val MakariosTypography = Typography(
     ),
     // Scripture text in italic serif
     bodyMedium = TextStyle(
-        fontFamily = FrauncesFontFamily,
+        fontFamily = CormorantGaramondFontFamily,
         fontStyle = FontStyle.Italic,
         fontWeight = FontWeight.Normal,
-        fontSize = 14.5.sp,
-        lineHeight = 22.sp,
+        fontSize = 15.5.sp,
+        lineHeight = 23.sp,
         letterSpacing = 0.1.sp
     ),
     // Button labels, category pills

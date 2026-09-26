@@ -180,13 +180,13 @@ fun AffirmationDetailScreen(
 
                 Spacer(modifier = Modifier.height(22.dp))
 
-                // The Main Declaration in Fraunces Display
+                // The Main Declaration in Cormorant Garamond Display
                 Text(
                     text = "“${affirmation.declaration}”",
                     fontFamily = DisplayFontFamily,
-                    fontWeight = FontWeight.Normal,
-                    fontSize = 25.sp,
-                    lineHeight = 35.sp,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 26.sp,
+                    lineHeight = 36.sp,
                     letterSpacing = (-0.3).sp,
                     textAlign = TextAlign.Center,
                     color = Color.White,
@@ -209,20 +209,20 @@ fun AffirmationDetailScreen(
                             text = "Living Scripture",
                             fontFamily = DisplayFontFamily,
                             fontStyle = FontStyle.Italic,
-                            fontSize = 12.5.sp,
+                            fontSize = 13.sp,
                             color = Color.White.copy(alpha = 0.70f)
                         )
 
                         Spacer(modifier = Modifier.height(10.dp))
 
-                        // Full scripture verse text in italic Fraunces
+                        // Full scripture verse text in italic Cormorant Garamond
                         Text(
                             text = "“${affirmation.scriptureText}”",
                             fontFamily = DisplayFontFamily,
                             fontStyle = FontStyle.Italic,
                             fontWeight = FontWeight.Normal,
-                            fontSize = 14.5.sp,
-                            lineHeight = 22.sp,
+                            fontSize = 15.sp,
+                            lineHeight = 23.sp,
                             textAlign = TextAlign.Center,
                             color = Color.White.copy(alpha = 0.95f)
                         )

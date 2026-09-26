@@ -249,13 +249,13 @@ fun HomeScreen(
 
                     Spacer(modifier = Modifier.height(28.dp))
 
-                    // Main Quote in Fraunces Serif
+                    // Main Quote in Cormorant Garamond Serif
                     Text(
                         text = "“${aotd.declaration}”",
                         fontFamily = DisplayFontFamily,
-                        fontWeight = FontWeight.Normal,
-                        fontSize = 23.sp,
-                        lineHeight = 32.sp,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 24.sp,
+                        lineHeight = 33.sp,
                         letterSpacing = (-0.2).sp,
                         color = Color.White
                     )
@@ -268,8 +268,8 @@ fun HomeScreen(
                         fontFamily = DisplayFontFamily,
                         fontStyle = FontStyle.Italic,
                         fontWeight = FontWeight.Normal,
-                        fontSize = 14.sp,
-                        lineHeight = 21.sp,
+                        fontSize = 15.sp,
+                        lineHeight = 22.sp,
                         color = Color.White.copy(alpha = 0.88f)
                     )
 

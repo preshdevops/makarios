@@ -137,13 +137,13 @@ fun AffirmationCard(
 
             Spacer(modifier = Modifier.height(28.dp))
 
-            // Main Declaration in Fraunces Serif
+            // Main Declaration in Cormorant Garamond Display Serif
             Text(
                 text = "“${affirmation.declaration}”",
                 fontFamily = DisplayFontFamily,
-                fontWeight = FontWeight.Normal,
-                fontSize = 21.sp,
-                lineHeight = 30.sp,
+                fontWeight = FontWeight.Medium,
+                fontSize = 22.sp,
+                lineHeight = 31.sp,
                 letterSpacing = (-0.2).sp,
                 color = Color.White
             )
@@ -166,8 +166,8 @@ fun AffirmationCard(
                 fontFamily = DisplayFontFamily,
                 fontStyle = FontStyle.Italic,
                 fontWeight = FontWeight.Normal,
-                fontSize = 13.5.sp,
-                lineHeight = 20.sp,
+                fontSize = 14.5.sp,
+                lineHeight = 21.sp,
                 color = Color.White.copy(alpha = 0.88f)
             )
 

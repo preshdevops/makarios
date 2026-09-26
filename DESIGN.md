@@ -10,7 +10,7 @@
 Makarios is a sacred, typographic-led Christian affirmation app. Its signature feel is **liturgical restraint meeting modern editorial craft**. It is not a sterile wellness tracker, nor is it a noisy social app with vanity metrics or gamified streaks.
 
 ### Core Design Rules
-- **Photo-Forward Sacred Sanctuary**: Every affirmation is paired with breathtaking, emotionally resonant sacred photography (cinematic dawn light, mountain ridges, still waters, sunbeams). Rich dark scrims let Fraunces typography float with high contrast and sacred emotional weight, avoiding sterile text-only card lists.
+- **Photo-Forward Sacred Sanctuary**: Every affirmation is paired with breathtaking, emotionally resonant sacred photography (cinematic dawn light, mountain ridges, still waters, sunbeams). Rich dark scrims let Cormorant Garamond typography float with high contrast and sacred emotional weight, avoiding sterile text-only card lists.
 - **Visual Mood Exploration**: Categorical discovery is driven by photographic mood tiles (`MoodTile`) that invite the soul to pause and select their spiritual season (*Peace*, *Strength*, *Stillness*, *Courage*, *Joy*).
 - **Mandatory Scripture Grounding**: Every affirmation — whether user-authored or curated — **must** display its grounding Bible verse text and reference beneath it. No affirmation exists in isolation from scripture.
 - **No AI Slop Patterns**: No purple/indigo gradient accents, no arbitrary dark-mode glows, no emoji used as icons or bullet points, no kicker eyebrows stacked over titles, no colored top/left borders on cards.
@@ -46,12 +46,12 @@ Makarios is a sacred, typographic-led Christian affirmation app. Its signature f
 
 | Style | Font Family | Weight | Size / Line Height | Role |
 |---|---|---|---|---|
-| `displayLarge` | Fraunces | SemiBold | 25sp / 33sp | Screen titles, hero prompt |
-| `headlineMedium` | Fraunces | Normal | 22sp / 31sp | Affirmation declarations |
-| `titleLarge` | Fraunces | Medium | 19sp / 25sp | Wordmark, section headers |
+| `displayLarge` | Cormorant Garamond | SemiBold | 27sp / 35sp | Screen titles, hero prompt |
+| `headlineMedium` | Cormorant Garamond | Medium | 23sp / 32sp | Affirmation declarations |
+| `titleLarge` | Cormorant Garamond | Medium | 20sp / 26sp | Wordmark, section headers |
 | `titleMedium` | Work Sans | SemiBold | 15sp / 22sp | Card titles, tab labels |
 | `bodyLarge` | Work Sans | Normal | 14.5sp / 23sp | Body descriptions |
-| `bodyMedium` | Fraunces | Italic Normal | 14.5sp / 22sp | Scripture verses |
+| `bodyMedium` | Cormorant Garamond | Italic Normal | 15.5sp / 23sp | Scripture verses |
 | `labelLarge` | Work Sans | SemiBold | 14sp / 18sp | Button text, action pills |
 | `labelSmall` | Work Sans | SemiBold | 10.5sp / 14sp (track 1.6sp) | Scripture references, category tags |
 
@@ -98,7 +98,7 @@ App Shell (MainActivity)
  │    ├── Refresh schedule: Every Dawn (06:30 AM), Twice Daily, Every 4 Hours
  │    └── "Add Widget to Home Screen" action and instructional guidance
  ├── Overlay: Welcome Journey (OnboardingScreen)
- │    ├── Step 1: The Invitation ("Speak truth over your life", Fraunces typography, hero mockup)
+ │    ├── Step 1: The Invitation ("Speak truth over your life", Cormorant Garamond typography, hero mockup)
  │    ├── Step 2: Encouragement Areas (multi-select chip grid: Peace, Identity, Calling, etc.)
  │    ├── Step 3: Aesthetic Choice (Espresso Plum, Warm Porcelain, Terracotta Sunset, Eucalyptus Sage)
  │    └── Step 4: First Declaration (Inaugural declaration card grounded in Philippians 4:6–7)
@@ -110,8 +110,8 @@ App Shell (MainActivity)
  └── Fullscreen Overlay (AffirmationDetailScreen)
       ├── Atmospheric plum-espresso gradient
       ├── Category badge
-      ├── Large Fraunces declaration
-      ├── Mandatory Scripture Container (Italic Fraunces verse + tracked reference)
+      ├── Large Cormorant Garamond declaration
+      ├── Mandatory Scripture Container (Italic Cormorant Garamond verse + tracked reference)
       ├── Personal confession card
       └── Design Studio & Wallpaper CTA + Widget & Reminder shortcuts
 ```
