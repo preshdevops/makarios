@@ -18,6 +18,7 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Share
@@ -31,6 +32,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontStyle
@@ -38,9 +40,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.makarios.app.data.Affirmation
 import com.makarios.app.data.AffirmationRepository
 import com.makarios.app.data.AffirmationTone
+import com.makarios.app.data.SacredBackgrounds
+import com.makarios.app.data.SacredPhotoBackground
 import com.makarios.app.data.ScriptureMatcher
 import com.makarios.app.data.VectorSearchEngine
 import com.makarios.app.data.VerseMatch
@@ -139,7 +144,10 @@ fun CreateScreen(
     var showWallpaperDialog by remember { mutableStateOf(false) }
     var selectedFormatIndex by remember { mutableIntStateOf(0) }
     var selectedStyleIndex by remember { mutableIntStateOf(0) }
+    var selectedPhotoId by remember { mutableStateOf<String?>("dawn_01") }
     val coroutineScope = rememberCoroutineScope()
+
+    val currentPhotoUrl = selectedPhotoId?.let { SacredBackgrounds.getById(it)?.photoUrl }
 
     val saveCurrentDesignToGallery: () -> Unit = {
         coroutineScope.launch {
@@ -151,12 +159,13 @@ fun CreateScreen(
                 context = "Personal declaration created in Makarios Studio.",
                 category = "Personal",
                 tone = selectedTone ?: AffirmationTone.RESOLUTE,
-                imageUrl = "https://images.unsplash.com/photo-1507652313519-d4e9174996dd?auto=format&fit=crop&w=1000&q=85",
+                imageUrl = currentPhotoUrl ?: "https://images.unsplash.com/photo-1507652313519-d4e9174996dd?auto=format&fit=crop&w=1000&q=85",
                 isFavorite = true,
                 personalDeclaration = declarationText
             )
             AffirmationRepository.addPersonalAffirmation(newAffirmation)
             val uri = withContext(Dispatchers.IO) {
+                val photoBmp = currentPhotoUrl?.let { WallpaperRenderer.fetchBitmapFromUrl(context, it) }
                 val bitmap = WallpaperRenderer.renderBitmap(
                     context = context,
                     declaration = declarationText,
@@ -164,7 +173,8 @@ fun CreateScreen(
                     reference = newAffirmation.reference,
                     category = "Personal",
                     style = WallpaperRenderer.getStyle(selectedStyleIndex),
-                    format = WallpaperRenderer.OutputFormat.fromIndex(selectedFormatIndex)
+                    format = WallpaperRenderer.OutputFormat.fromIndex(selectedFormatIndex),
+                    photoBitmap = photoBmp
                 )
                 WallpaperRenderer.saveToGallery(context, bitmap, "Makarios")
             }
@@ -186,12 +196,13 @@ fun CreateScreen(
                 context = "Personal declaration created in Makarios Studio.",
                 category = "Personal",
                 tone = selectedTone ?: AffirmationTone.RESOLUTE,
-                imageUrl = "https://images.unsplash.com/photo-1507652313519-d4e9174996dd?auto=format&fit=crop&w=1000&q=85",
+                imageUrl = currentPhotoUrl ?: "https://images.unsplash.com/photo-1507652313519-d4e9174996dd?auto=format&fit=crop&w=1000&q=85",
                 isFavorite = true,
                 personalDeclaration = declarationText
             )
             AffirmationRepository.addPersonalAffirmation(newAffirmation)
             withContext(Dispatchers.IO) {
+                val photoBmp = currentPhotoUrl?.let { WallpaperRenderer.fetchBitmapFromUrl(context, it) }
                 val bitmap = WallpaperRenderer.renderBitmap(
                     context = context,
                     declaration = declarationText,
@@ -199,7 +210,8 @@ fun CreateScreen(
                     reference = newAffirmation.reference,
                     category = "Personal",
                     style = WallpaperRenderer.getStyle(selectedStyleIndex),
-                    format = WallpaperRenderer.OutputFormat.fromIndex(selectedFormatIndex)
+                    format = WallpaperRenderer.OutputFormat.fromIndex(selectedFormatIndex),
+                    photoBitmap = photoBmp
                 )
                 val caption = "“${newAffirmation.declaration}”\n— ${newAffirmation.reference}\n\nShared via Makarios"
                 ShareHelper.shareAffirmationImage(context, bitmap, "Makarios Declaration", caption)
@@ -216,7 +228,7 @@ fun CreateScreen(
             context = "Personal declaration created in Makarios Studio.",
             category = "Personal",
             tone = selectedTone ?: AffirmationTone.RESOLUTE,
-            imageUrl = "https://images.unsplash.com/photo-1507652313519-d4e9174996dd?auto=format&fit=crop&w=1000&q=85",
+            imageUrl = currentPhotoUrl ?: "https://images.unsplash.com/photo-1507652313519-d4e9174996dd?auto=format&fit=crop&w=1000&q=85",
             isFavorite = true,
             personalDeclaration = declarationText
         )
@@ -225,11 +237,12 @@ fun CreateScreen(
     }
 
     val runMatch: () -> Unit = {
-        if (declarationText.trim().length >= 10 && !isMatching) {
+        val query = declarationText.trim()
+        if (query.isNotBlank() && !isMatching) {
             isMatching = true
             coroutineScope.launch {
                 try {
-                    val vectorResults = VectorSearchEngine.getInstance(context).search(declarationText, topK = 8)
+                    val vectorResults = VectorSearchEngine.getInstance(context).search(query, topK = 10)
                     if (vectorResults.isNotEmpty()) {
                         vectorMatches = vectorResults
                         matchIndex = 0
@@ -237,7 +250,7 @@ fun CreateScreen(
                         matchedScripture = vectorResults[0].text
                         stage = CreateStage.MATCH
                     } else {
-                        val fallback = ScriptureMatcher.match(declarationText, selectedTone)
+                        val fallback = ScriptureMatcher.match(query, selectedTone)
                         matchResults = fallback
                         matchIndex = 0
                         if (fallback.isNotEmpty()) {
@@ -247,7 +260,7 @@ fun CreateScreen(
                         stage = CreateStage.MATCH
                     }
                 } catch (e: Exception) {
-                    val fallback = ScriptureMatcher.match(declarationText, selectedTone)
+                    val fallback = ScriptureMatcher.match(query, selectedTone)
                     matchResults = fallback
                     matchIndex = 0
                     if (fallback.isNotEmpty()) {
@@ -259,8 +272,8 @@ fun CreateScreen(
                     isMatching = false
                 }
             }
-        } else if (declarationText.trim().length < 10) {
-            Toast.makeText(context, "Write a few words first", Toast.LENGTH_SHORT).show()
+        } else if (query.isBlank()) {
+            Toast.makeText(context, "Write your declaration first", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -434,6 +447,8 @@ fun CreateScreen(
                     onFormatSelect = { selectedFormatIndex = it },
                     selectedStyleIndex = selectedStyleIndex,
                     onStyleSelect = { selectedStyleIndex = it },
+                    selectedPhotoId = selectedPhotoId,
+                    onSelectPhoto = { selectedPhotoId = it },
                     onSaveToGallery = saveCurrentDesignToGallery,
                     onSaveAsWallpaper = openWallpaperDialog,
                     onShare = shareCurrentDesign
@@ -459,6 +474,7 @@ fun CreateScreen(
                 reference = matchedReference.ifBlank { "PSALM 139:14" },
                 category = "Personal",
                 styleIndex = selectedStyleIndex,
+                photoUrl = currentPhotoUrl,
                 onDismiss = { showWallpaperDialog = false }
             )
         }
@@ -987,12 +1003,22 @@ private fun DesignStage(
     onFormatSelect: (Int) -> Unit,
     selectedStyleIndex: Int,
     onStyleSelect: (Int) -> Unit,
+    selectedPhotoId: String?,
+    onSelectPhoto: (String?) -> Unit,
     onSaveToGallery: () -> Unit,
     onSaveAsWallpaper: () -> Unit,
     onShare: () -> Unit
 ) {
     val currentFormat = shareFormats[selectedFormatIndex]
     val currentStyle = designStyles[selectedStyleIndex]
+    val selectedPhoto = selectedPhotoId?.let { SacredBackgrounds.getById(it) }
+
+    var selectedBackgroundTab by remember { mutableIntStateOf(0) } // 0 = Sacred Photos (28), 1 = Sacred Minimal (6)
+    var selectedCategory by remember { mutableStateOf("All") }
+
+    val photosForCategory = remember(selectedCategory) {
+        SacredBackgrounds.getByCategory(selectedCategory)
+    }
 
     Column(
         modifier = Modifier
@@ -1011,14 +1037,14 @@ private fun DesignStage(
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "Choose a format and style. Share anywhere.",
+                text = "Craft YouVersion-style photographic or sacred minimalist art.",
                 fontFamily = BodyFontFamily,
                 fontSize = 13.sp,
                 color = Stone
             )
         }
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(18.dp))
 
         // ── Format selector (horizontal scroll) ──────────────────
         Column(modifier = Modifier.padding(horizontal = 20.dp)) {
@@ -1080,41 +1106,79 @@ private fun DesignStage(
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        // ── Live canvas preview ────────────────────────────────────
+        // ── Live Canvas Preview (YouVersion Photographic / Sacred Minimal) ──
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 20.dp),
             contentAlignment = Alignment.Center
         ) {
-            // Dynamic aspect ratio based on format
-            val previewHeight = (280f / currentFormat.ratio).coerceIn(160f, 380f)
+            val previewHeight = (280f / currentFormat.ratio).coerceIn(180f, 380f)
 
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(previewHeight.dp)
                     .shadow(
-                        elevation = 8.dp,
-                        shape = RoundedCornerShape(20.dp),
-                        spotColor = Espresso.copy(alpha = 0.25f)
+                        elevation = 12.dp,
+                        shape = RoundedCornerShape(22.dp),
+                        spotColor = Espresso.copy(alpha = 0.28f)
                     )
-                    .clip(RoundedCornerShape(20.dp))
-                    .background(currentStyle.background),
+                    .clip(RoundedCornerShape(22.dp))
+                    .then(
+                        if (selectedPhoto != null) {
+                            Modifier.background(Color.Black)
+                        } else {
+                            Modifier.background(currentStyle.background)
+                        }
+                    ),
                 contentAlignment = Alignment.Center
             ) {
+                if (selectedPhoto != null) {
+                    // Photographic background with protective scrim
+                    AsyncImage(
+                        model = selectedPhoto.photoUrl,
+                        contentDescription = selectedPhoto.title,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                    // Multi-stop protective gradient scrim for maximum readability
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(
+                                Brush.verticalGradient(
+                                    colors = listOf(
+                                        Color(0x55000000),
+                                        Color(0x88000000),
+                                        Color(0xD90A0806)
+                                    )
+                                )
+                            )
+                    )
+                }
+
+                // Typography layer
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(22.dp),
+                        .padding(horizontal = 22.dp, vertical = 20.dp),
                     verticalArrangement = Arrangement.Center
                 ) {
-                    // Category label
+                    // Category pill
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(12.dp))
-                            .background(currentStyle.accentColor.copy(alpha = 0.18f))
+                            .background(
+                                if (selectedPhoto != null) Color(0x33D4AF37)
+                                else currentStyle.accentColor.copy(alpha = 0.18f)
+                            )
+                            .border(
+                                width = 1.dp,
+                                color = if (selectedPhoto != null) Color(0x66D4AF37) else Color.Transparent,
+                                shape = RoundedCornerShape(12.dp)
+                            )
                             .padding(horizontal = 12.dp, vertical = 4.dp)
                     ) {
                         Text(
@@ -1123,7 +1187,7 @@ private fun DesignStage(
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 9.sp,
                             letterSpacing = 1.6.sp,
-                            color = currentStyle.accentColor
+                            color = if (selectedPhoto != null) Color(0xFFFFDF7A) else currentStyle.accentColor
                         )
                     }
 
@@ -1138,7 +1202,7 @@ private fun DesignStage(
                         lineHeight = 24.sp,
                         letterSpacing = (-0.2).sp,
                         textAlign = TextAlign.Center,
-                        color = currentStyle.textColor,
+                        color = if (selectedPhoto != null) Color.White else currentStyle.textColor,
                         maxLines = 5
                     )
 
@@ -1146,9 +1210,12 @@ private fun DesignStage(
 
                     Box(
                         modifier = Modifier
-                            .fillMaxWidth(0.5f)
+                            .fillMaxWidth(0.45f)
                             .height(1.dp)
-                            .background(currentStyle.textColor.copy(alpha = 0.18f))
+                            .background(
+                                if (selectedPhoto != null) Color(0x66D4AF37)
+                                else currentStyle.textColor.copy(alpha = 0.18f)
+                            )
                     )
 
                     Spacer(modifier = Modifier.height(10.dp))
@@ -1160,7 +1227,7 @@ private fun DesignStage(
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 10.sp,
                         letterSpacing = 1.2.sp,
-                        color = currentStyle.accentColor
+                        color = if (selectedPhoto != null) Color(0xFFFFE8A3) else currentStyle.accentColor
                     )
                 }
 
@@ -1170,81 +1237,278 @@ private fun DesignStage(
                     fontFamily = DisplayFontFamily,
                     fontStyle = FontStyle.Italic,
                     fontSize = 9.sp,
-                    color = currentStyle.textColor.copy(alpha = 0.3f),
+                    color = if (selectedPhoto != null) Color.White.copy(alpha = 0.45f) else currentStyle.textColor.copy(alpha = 0.3f),
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
-                        .padding(10.dp)
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-        // ── Style selector ────────────────────────────────────────
-        Column(modifier = Modifier.padding(horizontal = 20.dp)) {
-            Text(
-                text = "STYLE",
-                fontFamily = BodyFontFamily,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 10.sp,
-                letterSpacing = 1.4.sp,
-                color = StoneMuted
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-        }
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .horizontalScroll(rememberScrollState())
-                .padding(horizontal = 20.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            designStyles.forEachIndexed { index, style ->
-                val isSelected = selectedStyleIndex == index
-                Box(
-                    modifier = Modifier
-                        .size(52.dp)
-                        .shadow(
-                            if (isSelected) 4.dp else 1.dp,
-                            RoundedCornerShape(14.dp),
-                            spotColor = Espresso.copy(alpha = 0.15f)
-                        )
-                        .clip(RoundedCornerShape(14.dp))
-                        .background(style.background)
-                        .border(
-                            if (isSelected) 2.dp else 1.dp,
-                            if (isSelected) Terracotta else Border,
-                            RoundedCornerShape(14.dp)
-                        )
-                        .clickable { onStyleSelect(index) },
-                    contentAlignment = Alignment.Center
-                ) {
-                    if (isSelected) {
-                        Icon(
-                            imageVector = Icons.Default.Check,
-                            contentDescription = "Selected style",
-                            tint = Color.White,
-                            modifier = Modifier.size(16.dp)
-                        )
-                    }
-                }
-            }
-
-            // Style labels
-            Spacer(modifier = Modifier.width(4.dp))
-            Column(verticalArrangement = Arrangement.Center) {
-                Text(
-                    text = designStyles[selectedStyleIndex].name,
-                    fontFamily = BodyFontFamily,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 13.sp,
-                    color = Espresso
+                        .padding(12.dp)
                 )
             }
         }
 
         Spacer(modifier = Modifier.height(24.dp))
+
+        // ── Background Style Selector (Tabs: Photos vs Minimal) ────────
+        Column(modifier = Modifier.padding(horizontal = 20.dp)) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Surface)
+                    .border(1.dp, Border, RoundedCornerShape(12.dp))
+                    .padding(4.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                // Tab 0: Photos
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(9.dp))
+                        .then(
+                            if (selectedBackgroundTab == 0) {
+                                Modifier
+                                    .background(Espresso)
+                                    .shadow(2.dp, RoundedCornerShape(9.dp), spotColor = Espresso.copy(0.2f))
+                            } else Modifier
+                        )
+                        .clickable { selectedBackgroundTab = 0 }
+                        .padding(vertical = 8.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.Image,
+                            contentDescription = null,
+                            tint = if (selectedBackgroundTab == 0) Color.White else Stone,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Text(
+                            text = "Sacred Photos (28)",
+                            fontFamily = BodyFontFamily,
+                            fontWeight = if (selectedBackgroundTab == 0) FontWeight.SemiBold else FontWeight.Medium,
+                            fontSize = 12.sp,
+                            color = if (selectedBackgroundTab == 0) Color.White else Stone
+                        )
+                    }
+                }
+
+                // Tab 1: Minimal Presets
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(9.dp))
+                        .then(
+                            if (selectedBackgroundTab == 1) {
+                                Modifier
+                                    .background(Espresso)
+                                    .shadow(2.dp, RoundedCornerShape(9.dp), spotColor = Espresso.copy(0.2f))
+                            } else Modifier
+                        )
+                        .clickable { selectedBackgroundTab = 1 }
+                        .padding(vertical = 8.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.Palette,
+                            contentDescription = null,
+                            tint = if (selectedBackgroundTab == 1) Color.White else Stone,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Text(
+                            text = "Sacred Minimal (6)",
+                            fontFamily = BodyFontFamily,
+                            fontWeight = if (selectedBackgroundTab == 1) FontWeight.SemiBold else FontWeight.Medium,
+                            fontSize = 12.sp,
+                            color = if (selectedBackgroundTab == 1) Color.White else Stone
+                        )
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(14.dp))
+
+        if (selectedBackgroundTab == 0) {
+            // ── Photographic Library ─────────────────────────────────
+            // Category Filter Chips
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState())
+                    .padding(horizontal = 20.dp),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                SacredBackgrounds.CATEGORIES.forEach { category ->
+                    val isCatSelected = selectedCategory == category
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(20.dp))
+                            .then(
+                                if (isCatSelected) {
+                                    Modifier.background(Terracotta)
+                                } else {
+                                    Modifier
+                                        .background(Surface)
+                                        .border(1.dp, Border, RoundedCornerShape(20.dp))
+                                }
+                            )
+                            .clickable { selectedCategory = category }
+                            .padding(horizontal = 12.dp, vertical = 6.dp)
+                    ) {
+                        Text(
+                            text = category,
+                            fontFamily = BodyFontFamily,
+                            fontWeight = if (isCatSelected) FontWeight.SemiBold else FontWeight.Normal,
+                            fontSize = 11.sp,
+                            color = if (isCatSelected) Color.White else Espresso
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Horizontal Photo Thumbnails
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState())
+                    .padding(horizontal = 20.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                photosForCategory.forEach { photo ->
+                    val isSelected = selectedPhotoId == photo.id
+                    Box(
+                        modifier = Modifier
+                            .width(82.dp)
+                            .height(118.dp)
+                            .shadow(
+                                elevation = if (isSelected) 6.dp else 2.dp,
+                                shape = RoundedCornerShape(14.dp),
+                                spotColor = Espresso.copy(alpha = 0.2f)
+                            )
+                            .clip(RoundedCornerShape(14.dp))
+                            .border(
+                                width = if (isSelected) 2.5.dp else 1.dp,
+                                color = if (isSelected) Terracotta else Border,
+                                shape = RoundedCornerShape(14.dp)
+                            )
+                            .clickable { onSelectPhoto(photo.id) }
+                    ) {
+                        AsyncImage(
+                            model = photo.thumbnailUrl,
+                            contentDescription = photo.title,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
+                        )
+
+                        // Subtle bottom vignette with title
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(38.dp)
+                                .align(Alignment.BottomCenter)
+                                .background(
+                                    Brush.verticalGradient(
+                                        colors = listOf(Color.Transparent, Color(0xD90A0806))
+                                    )
+                                )
+                                .padding(horizontal = 4.dp, vertical = 3.dp),
+                            contentAlignment = Alignment.BottomCenter
+                        ) {
+                            Text(
+                                text = photo.title,
+                                fontFamily = BodyFontFamily,
+                                fontSize = 8.sp,
+                                maxLines = 1,
+                                color = Color.White.copy(alpha = 0.9f),
+                                textAlign = TextAlign.Center
+                            )
+                        }
+
+                        if (isSelected) {
+                            Box(
+                                modifier = Modifier
+                                    .padding(6.dp)
+                                    .size(20.dp)
+                                    .align(Alignment.TopEnd)
+                                    .background(Terracotta, CircleShape),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    Icons.Default.Check,
+                                    contentDescription = "Selected",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(12.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        } else {
+            // ── Minimalist Solid Presets ─────────────────────────────
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState())
+                    .padding(horizontal = 20.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                designStyles.forEachIndexed { index, style ->
+                    val isSelected = selectedStyleIndex == index && selectedPhotoId == null
+                    Box(
+                        modifier = Modifier
+                            .size(54.dp)
+                            .shadow(
+                                if (isSelected) 4.dp else 1.dp,
+                                RoundedCornerShape(14.dp),
+                                spotColor = Espresso.copy(alpha = 0.15f)
+                            )
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(style.background)
+                            .border(
+                                if (isSelected) 2.5.dp else 1.dp,
+                                if (isSelected) Terracotta else Border,
+                                RoundedCornerShape(14.dp)
+                            )
+                            .clickable {
+                                onSelectPhoto(null)
+                                onStyleSelect(index)
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (isSelected) {
+                            Icon(
+                                imageVector = Icons.Default.Check,
+                                contentDescription = "Selected style",
+                                tint = Color.White,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.width(4.dp))
+                Column(verticalArrangement = Arrangement.Center) {
+                    Text(
+                        text = designStyles[selectedStyleIndex].name,
+                        fontFamily = BodyFontFamily,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 13.sp,
+                        color = Espresso
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(28.dp))
 
         // ── Share & Export actions ────────────────────────────────
         Column(
@@ -1270,7 +1534,7 @@ private fun DesignStage(
                 ) {
                     Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(17.dp))
                     Text(
-                        text = "Share to Social",
+                        text = "Share YouVersion Artwork",
                         fontFamily = BodyFontFamily,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 14.sp
@@ -1278,7 +1542,7 @@ private fun DesignStage(
                 }
             }
 
-            // Secondary: Save to gallery
+            // Secondary: Save to gallery & Wallpaper
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 OutlinedButton(
                     onClick = onSaveToGallery,

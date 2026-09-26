@@ -25,14 +25,17 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.makarios.app.data.Affirmation
 import com.makarios.app.data.AffirmationRepository
+import com.makarios.app.data.SacredBackgrounds
 import com.makarios.app.ui.components.AffirmationCard
 import com.makarios.app.ui.components.WallpaperActionDialog
 import com.makarios.app.ui.theme.*
@@ -58,7 +61,8 @@ data class WallpaperItem(
     val textColor: Color,
     val accentColor: Color,
     val affirmationId: String,
-    val styleIndex: Int = 0
+    val styleIndex: Int = 0,
+    val photoUrl: String? = null
 )
 
 val curatedWallpapers = listOf(
@@ -72,7 +76,8 @@ val curatedWallpapers = listOf(
         textColor = Espresso,
         accentColor = Terracotta,
         affirmationId = "ident-1",
-        styleIndex = 0
+        styleIndex = 0,
+        photoUrl = "https://images.unsplash.com/photo-1507652313519-d4e9174996dd?auto=format&fit=crop&w=1600&q=85"
     ),
     WallpaperItem(
         id = "wp-2",
@@ -84,7 +89,8 @@ val curatedWallpapers = listOf(
         textColor = Espresso,
         accentColor = SunlitGold,
         affirmationId = "aotd-1",
-        styleIndex = 1
+        styleIndex = 1,
+        photoUrl = "https://images.unsplash.com/photo-1505765050516-f72dcac9c60e?auto=format&fit=crop&w=1600&q=85"
     ),
     WallpaperItem(
         id = "wp-3",
@@ -96,7 +102,8 @@ val curatedWallpapers = listOf(
         textColor = Color(0xFF243329),
         accentColor = Sage,
         affirmationId = "peace-still",
-        styleIndex = 2
+        styleIndex = 2,
+        photoUrl = "https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=1600&q=85"
     ),
     WallpaperItem(
         id = "wp-4",
@@ -108,7 +115,8 @@ val curatedWallpapers = listOf(
         textColor = Color.White,
         accentColor = Color(0xFFFFF0EC),
         affirmationId = "conf-1",
-        styleIndex = 3
+        styleIndex = 3,
+        photoUrl = "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1600&q=85"
     ),
     WallpaperItem(
         id = "wp-5",
@@ -120,7 +128,8 @@ val curatedWallpapers = listOf(
         textColor = Espresso,
         accentColor = AmberGold,
         affirmationId = "str-1",
-        styleIndex = 1
+        styleIndex = 1,
+        photoUrl = "https://images.unsplash.com/photo-1486870591958-9b9d0d1dda99?auto=format&fit=crop&w=1600&q=85"
     ),
     WallpaperItem(
         id = "wp-6",
@@ -132,7 +141,8 @@ val curatedWallpapers = listOf(
         textColor = Color.White,
         accentColor = Color(0xFFDEAC46),
         affirmationId = "str-2",
-        styleIndex = 4
+        styleIndex = 4,
+        photoUrl = "https://images.unsplash.com/photo-1506703719100-a0f3a48c0f86?auto=format&fit=crop&w=1600&q=85"
     )
 )
 
@@ -151,6 +161,7 @@ fun SavedScreen(
     val handleDownload: (WallpaperItem) -> Unit = { item ->
         coroutineScope.launch {
             val uri = withContext(Dispatchers.IO) {
+                val photoBmp = item.photoUrl?.let { WallpaperRenderer.fetchBitmapFromUrl(context, it) }
                 val bitmap = WallpaperRenderer.renderBitmap(
                     context = context,
                     declaration = item.title,
@@ -158,7 +169,8 @@ fun SavedScreen(
                     reference = item.reference,
                     category = item.category,
                     style = WallpaperRenderer.getStyle(item.styleIndex),
-                    format = WallpaperRenderer.OutputFormat.WALLPAPER
+                    format = WallpaperRenderer.OutputFormat.WALLPAPER,
+                    photoBitmap = photoBmp
                 )
                 WallpaperRenderer.saveToGallery(context, bitmap, "Makarios Wallpaper")
             }
@@ -173,6 +185,7 @@ fun SavedScreen(
     val handleShare: (WallpaperItem) -> Unit = { item ->
         coroutineScope.launch {
             withContext(Dispatchers.IO) {
+                val photoBmp = item.photoUrl?.let { WallpaperRenderer.fetchBitmapFromUrl(context, it) }
                 val bitmap = WallpaperRenderer.renderBitmap(
                     context = context,
                     declaration = item.title,
@@ -180,7 +193,8 @@ fun SavedScreen(
                     reference = item.reference,
                     category = item.category,
                     style = WallpaperRenderer.getStyle(item.styleIndex),
-                    format = WallpaperRenderer.OutputFormat.WALLPAPER
+                    format = WallpaperRenderer.OutputFormat.WALLPAPER,
+                    photoBitmap = photoBmp
                 )
                 val caption = "“${item.title}”\n— ${item.reference}\n\nShared via Makarios"
                 ShareHelper.shareAffirmationImage(context, bitmap, "Makarios Wallpaper", caption)
@@ -521,6 +535,7 @@ fun SavedScreen(
                 reference = item.reference,
                 category = item.category,
                 styleIndex = item.styleIndex,
+                photoUrl = item.photoUrl,
                 onDismiss = { activeWallpaperItem = null }
             )
         }
@@ -537,14 +552,45 @@ private fun WallpaperCard(
     onShare: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val actionBg = if (wallpaper.photoUrl != null) Color.White.copy(alpha = 0.22f) else wallpaper.textColor.copy(alpha = 0.14f)
+    val actionTint = if (wallpaper.photoUrl != null) Color.White else wallpaper.textColor
+
     Box(
         modifier = modifier
             .height(260.dp)
-            .shadow(4.dp, RoundedCornerShape(18.dp), spotColor = Espresso.copy(alpha = 0.15f))
+            .shadow(6.dp, RoundedCornerShape(18.dp), spotColor = Espresso.copy(alpha = 0.2f))
             .clip(RoundedCornerShape(18.dp))
-            .background(wallpaper.background)
+            .then(
+                if (wallpaper.photoUrl != null) {
+                    Modifier.background(Color.Black)
+                } else {
+                    Modifier.background(wallpaper.background)
+                }
+            )
             .clickable(onClick = onSetWallpaper)
     ) {
+        if (wallpaper.photoUrl != null) {
+            AsyncImage(
+                model = wallpaper.photoUrl,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
+            )
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            listOf(
+                                Color(0x66000000),
+                                Color(0x99000000),
+                                Color(0xEB0A0806)
+                            )
+                        )
+                    )
+            )
+        }
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -559,7 +605,7 @@ private fun WallpaperCard(
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 8.sp,
                 letterSpacing = 2.sp,
-                color = wallpaper.accentColor.copy(alpha = 0.7f)
+                color = if (wallpaper.photoUrl != null) Color(0xFFFFDF7A) else wallpaper.accentColor.copy(alpha = 0.7f)
             )
 
             // Center quote
@@ -570,7 +616,7 @@ private fun WallpaperCard(
                     fontSize = 14.sp,
                     lineHeight = 20.sp,
                     textAlign = TextAlign.Center,
-                    color = wallpaper.textColor,
+                    color = if (wallpaper.photoUrl != null) Color.White else wallpaper.textColor,
                     maxLines = 4
                 )
                 Spacer(modifier = Modifier.height(8.dp))
@@ -578,7 +624,9 @@ private fun WallpaperCard(
                     modifier = Modifier
                         .width(28.dp)
                         .height(1.dp)
-                        .background(wallpaper.accentColor.copy(alpha = 0.4f))
+                        .background(
+                            if (wallpaper.photoUrl != null) Color(0x66D4AF37) else wallpaper.accentColor.copy(alpha = 0.4f)
+                        )
                 )
                 Spacer(modifier = Modifier.height(6.dp))
                 Text(
@@ -587,7 +635,7 @@ private fun WallpaperCard(
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 9.sp,
                     letterSpacing = 1.2.sp,
-                    color = wallpaper.accentColor
+                    color = if (wallpaper.photoUrl != null) Color(0xFFFFE8A3) else wallpaper.accentColor
                 )
             }
 
@@ -602,14 +650,14 @@ private fun WallpaperCard(
                     modifier = Modifier
                         .size(28.dp)
                         .clip(CircleShape)
-                        .background(wallpaper.textColor.copy(alpha = 0.14f))
+                        .background(actionBg)
                         .clickable(onClick = onOpenStudio),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Default.Edit,
                         contentDescription = "Edit in Studio",
-                        tint = wallpaper.textColor,
+                        tint = actionTint,
                         modifier = Modifier.size(13.dp)
                     )
                 }
@@ -620,14 +668,14 @@ private fun WallpaperCard(
                         modifier = Modifier
                             .size(28.dp)
                             .clip(CircleShape)
-                            .background(wallpaper.textColor.copy(alpha = 0.14f))
+                            .background(actionBg)
                             .clickable(onClick = onShare),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.Share,
                             contentDescription = "Share Wallpaper",
-                            tint = wallpaper.textColor,
+                            tint = actionTint,
                             modifier = Modifier.size(13.dp)
                         )
                     }
@@ -636,14 +684,14 @@ private fun WallpaperCard(
                         modifier = Modifier
                             .size(28.dp)
                             .clip(CircleShape)
-                            .background(wallpaper.textColor.copy(alpha = 0.14f))
+                            .background(actionBg)
                             .clickable(onClick = onSetWallpaper),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.Wallpaper,
                             contentDescription = "Set Wallpaper",
-                            tint = wallpaper.textColor,
+                            tint = actionTint,
                             modifier = Modifier.size(13.dp)
                         )
                     }
@@ -652,14 +700,14 @@ private fun WallpaperCard(
                         modifier = Modifier
                             .size(28.dp)
                             .clip(CircleShape)
-                            .background(wallpaper.textColor.copy(alpha = 0.14f))
+                            .background(actionBg)
                             .clickable(onClick = onDownload),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.Download,
-                            contentDescription = "Download Wallpaper",
-                            tint = wallpaper.textColor,
+                            contentDescription = "Download to Gallery",
+                            tint = actionTint,
                             modifier = Modifier.size(13.dp)
                         )
                     }

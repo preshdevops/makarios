@@ -11,6 +11,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Widgets
@@ -26,6 +28,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.makarios.app.ui.theme.*
+import com.makarios.app.util.ReminderManager
 import com.makarios.app.util.WidgetHelper
 
 @Composable
@@ -37,10 +40,11 @@ fun ProfileScreen(
 ) {
     val context = LocalContext.current
 
-    // Notification states
-    var dawnNotification by remember { mutableStateOf(true) }
-    var middayNotification by remember { mutableStateOf(false) }
-    var eveningNotification by remember { mutableStateOf(true) }
+    // Notification states backed by ReminderManager
+    var dawnNotification by remember { mutableStateOf(ReminderManager.isDawnEnabled(context)) }
+    var middayNotification by remember { mutableStateOf(ReminderManager.isMiddayEnabled(context)) }
+    var eveningNotification by remember { mutableStateOf(ReminderManager.isEveningEnabled(context)) }
+    var hourlyNotification by remember { mutableStateOf(ReminderManager.isHourlyEnabled(context)) }
 
     // Widget states
     var selectedWidgetSource by remember { mutableStateOf("Declaration of the Day") }
@@ -361,25 +365,95 @@ fun ProfileScreen(
                             title = "Dawn Revelation",
                             subtitle = "06:30 AM · Morning awakening declaration",
                             checked = dawnNotification,
-                            onCheckedChange = { dawnNotification = it }
+                            onCheckedChange = {
+                                dawnNotification = it
+                                ReminderManager.setDawnEnabled(context, it)
+                                if (it) Toast.makeText(context, "Dawn reminder scheduled for 06:30 AM", Toast.LENGTH_SHORT).show()
+                            }
                         )
                         Divider(color = BorderSubtle, thickness = 0.5.dp)
                         ReminderSwitchRow(
                             title = "Midday Stillness",
                             subtitle = "12:30 PM · Peace amidst the workday",
                             checked = middayNotification,
-                            onCheckedChange = { middayNotification = it }
+                            onCheckedChange = {
+                                middayNotification = it
+                                ReminderManager.setMiddayEnabled(context, it)
+                                if (it) Toast.makeText(context, "Midday reminder scheduled for 12:30 PM", Toast.LENGTH_SHORT).show()
+                            }
                         )
                         Divider(color = BorderSubtle, thickness = 0.5.dp)
                         ReminderSwitchRow(
                             title = "Evening Examen",
                             subtitle = "08:30 PM · Restful wind-down and scripture",
                             checked = eveningNotification,
-                            onCheckedChange = { eveningNotification = it }
+                            onCheckedChange = {
+                                eveningNotification = it
+                                ReminderManager.setEveningEnabled(context, it)
+                                if (it) Toast.makeText(context, "Evening reminder scheduled for 08:30 PM", Toast.LENGTH_SHORT).show()
+                            }
+                        )
+                        Divider(color = BorderSubtle, thickness = 0.5.dp)
+                        ReminderSwitchRow(
+                            title = "Hourly Truth & Peace",
+                            subtitle = "Every hour on the hour · Gentle scripture declarations",
+                            checked = hourlyNotification,
+                            onCheckedChange = {
+                                hourlyNotification = it
+                                ReminderManager.setHourlyEnabled(context, it)
+                                if (it) Toast.makeText(context, "Hourly notifications enabled", Toast.LENGTH_SHORT).show()
+                            }
                         )
                     }
                 }
-            }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // Instant Test Actions
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    OutlinedButton(
+                        onClick = {
+                            ReminderManager.sendTestNotification(context, isHourly = false)
+                            Toast.makeText(context, "Daily notification sent! Check notification shade.", Toast.LENGTH_SHORT).show()
+                        },
+                        border = BorderStroke(1.dp, Border),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(44.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Icon(Icons.Default.Notifications, contentDescription = null, tint = Terracotta, modifier = Modifier.size(15.dp))
+                            Text("Test Daily", fontFamily = BodyFontFamily, fontWeight = FontWeight.Medium, fontSize = 12.sp, color = Espresso)
+                        }
+                    }
+
+                    OutlinedButton(
+                        onClick = {
+                            ReminderManager.sendTestNotification(context, isHourly = true)
+                            Toast.makeText(context, "Hourly notification sent! Check notification shade.", Toast.LENGTH_SHORT).show()
+                        },
+                        border = BorderStroke(1.dp, Border),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(44.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Icon(Icons.Default.Schedule, contentDescription = null, tint = AmberGold, modifier = Modifier.size(15.dp))
+                            Text("Test Hourly", fontFamily = BodyFontFamily, fontWeight = FontWeight.Medium, fontSize = 12.sp, color = Espresso)
+                        }
+                    }
+                }
 
             Spacer(modifier = Modifier.height(24.dp))
 

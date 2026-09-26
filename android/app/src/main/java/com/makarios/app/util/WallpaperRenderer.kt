@@ -11,8 +11,12 @@ import android.text.Layout
 import android.text.StaticLayout
 import android.text.TextPaint
 import androidx.core.content.res.ResourcesCompat
+import androidx.core.graphics.drawable.toBitmap
 import com.makarios.app.R
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.io.IOException
+import kotlin.math.max
 import kotlin.math.min
 
 /**
@@ -156,6 +160,11 @@ object WallpaperRenderer {
     /**
      * Render an affirmation into an exquisite, production-grade Bitmap.
      */
+    /**
+     * Render an affirmation into an exquisite, production-grade Bitmap.
+     * Supports both YouVersion-style photographic backgrounds with cinematic protective scrims
+     * and sacred radiant color gradient themes.
+     */
     fun renderBitmap(
         context: Context,
         declaration: String,
@@ -163,40 +172,76 @@ object WallpaperRenderer {
         reference: String,
         category: String = "DECLARATION",
         style: RenderStyle = STYLES[0],
-        format: OutputFormat = OutputFormat.WALLPAPER
+        format: OutputFormat = OutputFormat.WALLPAPER,
+        photoBitmap: Bitmap? = null
     ): Bitmap {
         val width = format.width
         val height = format.height
         val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
 
-        // 1. Background Gradient
-        val bgShader = LinearGradient(
-            0f, 0f, 0f, height.toFloat(),
-            style.backgroundColors,
-            null,
-            Shader.TileMode.CLAMP
-        )
-        val bgPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            isDither = true
-            shader = bgShader
-        }
-        canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), bgPaint)
+        val isPhotoActive = photoBitmap != null
 
-        // 2. Soft Ambient Radial Glow
-        val glowPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            isDither = true
-            val glowColor = if (style.isDark) 0x18FFFFFF else 0x12FFFFFF
-            shader = RadialGradient(
-                width / 2f,
-                height * 0.48f,
-                width * 0.65f,
-                intArrayOf(glowColor, 0x00000000),
+        if (photoBitmap != null) {
+            // 1. Draw Photographic Background with CenterCrop Scaling
+            val matrix = Matrix()
+            val scale = max(width.toFloat() / photoBitmap.width, height.toFloat() / photoBitmap.height)
+            val dx = (width - photoBitmap.width * scale) * 0.5f
+            val dy = (height - photoBitmap.height * scale) * 0.5f
+            matrix.setScale(scale, scale)
+            matrix.postTranslate(dx, dy)
+            val photoPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { isFilterBitmap = true }
+            canvas.drawBitmap(photoBitmap, matrix, photoPaint)
+
+            // 2. Cinematic Protective Scrim for Pristine Readability (YouVersion style)
+            val scrimShader = LinearGradient(
+                0f, 0f, 0f, height.toFloat(),
+                intArrayOf(
+                    0x4D000000.toInt(), // 30% dark at top
+                    0x660E0B08.toInt(), // 40% dark upper mid
+                    0x990E0B08.toInt(), // 60% dark lower mid
+                    0xE60A0806.toInt()  // 90% dark espresso base for scripture & reference
+                ),
+                floatArrayOf(0f, 0.30f, 0.65f, 1f),
+                Shader.TileMode.CLAMP
+            )
+            val scrimPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { shader = scrimShader }
+            canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), scrimPaint)
+        } else {
+            // 1. Background Gradient
+            val bgShader = LinearGradient(
+                0f, 0f, 0f, height.toFloat(),
+                style.backgroundColors,
                 null,
                 Shader.TileMode.CLAMP
             )
+            val bgPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                isDither = true
+                shader = bgShader
+            }
+            canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), bgPaint)
+
+            // 2. Soft Ambient Radial Glow
+            val glowPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                isDither = true
+                val glowColor = if (style.isDark) 0x18FFFFFF else 0x12FFFFFF
+                shader = RadialGradient(
+                    width / 2f,
+                    height * 0.48f,
+                    width * 0.65f,
+                    intArrayOf(glowColor, 0x00000000),
+                    null,
+                    Shader.TileMode.CLAMP
+                )
+            }
+            canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), glowPaint)
         }
-        canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), glowPaint)
+
+        // Active Theme Colors
+        val activePrimaryColor = if (isPhotoActive) 0xFFFFFFFF.toInt() else style.primaryTextColor
+        val activeSecondaryColor = if (isPhotoActive) 0xEEFFFFFF.toInt() else style.secondaryTextColor
+        val activeAccentColor = if (isPhotoActive) 0xFFFBBF24.toInt() else style.accentColor
+        val activeFrameColor = if (isPhotoActive) 0x4DFFFFFF.toInt() else style.frameColor
 
         // 3. Hairline Inset Sacred Border
         val frameInset = min(width, height) * 0.042f
@@ -204,7 +249,7 @@ object WallpaperRenderer {
         val framePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             this.style = Paint.Style.STROKE
             strokeWidth = min(width, height) * 0.0016f
-            color = style.frameColor
+            color = activeFrameColor
         }
         val frameRect = RectF(
             frameInset,
@@ -215,7 +260,7 @@ object WallpaperRenderer {
         canvas.drawRoundRect(frameRect, frameRadius, frameRadius, framePaint)
 
         // Draw delicate corner ornaments
-        drawCornerOrnaments(canvas, frameRect, frameRadius, style.accentColor)
+        drawCornerOrnaments(canvas, frameRect, frameRadius, activeAccentColor)
 
         // Load sacred typography
         val cormorantRegular = ResourcesCompat.getFont(context, R.font.cormorant_garamond_regular)
@@ -233,9 +278,12 @@ object WallpaperRenderer {
         val headerPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
             typeface = workSansRegular
             textSize = min(width, height) * 0.016f
-            color = style.accentColor
-            alpha = if (style.isDark) 220 else 240
+            color = activeAccentColor
+            alpha = if (isPhotoActive || style.isDark) 240 else 220
             textAlign = Paint.Align.CENTER
+            if (isPhotoActive) {
+                setShadowLayer(4f, 0f, 1f, 0x99000000.toInt())
+            }
         }
         val headerHeight = headerPaint.textSize
 
@@ -247,8 +295,12 @@ object WallpaperRenderer {
         val declPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
             typeface = cormorantRegular
             textSize = declFontSize
-            color = style.primaryTextColor
-            textAlign = Paint.Align.CENTER
+            color = activePrimaryColor
+            if (isPhotoActive) {
+                setShadowLayer(8f, 0f, 2f, 0xCC000000.toInt())
+            }
+            // Note: Paint.Align.CENTER is intentionally omitted here because StaticLayout
+            // handles centered alignment across [0, contentMaxWidth] internally via ALIGN_CENTER.
         }
         val declLayout = createCenteredStaticLayout(fullDeclaration, declPaint, contentMaxWidth)
 
@@ -265,8 +317,11 @@ object WallpaperRenderer {
         val scriptPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
             typeface = cormorantItalic
             textSize = scriptFontSize
-            color = style.secondaryTextColor
-            textAlign = Paint.Align.CENTER
+            color = activeSecondaryColor
+            if (isPhotoActive) {
+                setShadowLayer(6f, 0f, 2f, 0xBB000000.toInt())
+            }
+            // Note: Paint.Align.CENTER is intentionally omitted here for StaticLayout compatibility.
         }
         val scriptLayout = if (fullScripture.isNotBlank()) {
             createCenteredStaticLayout(fullScripture, scriptPaint, (contentMaxWidth * 0.92f).toInt())
@@ -277,9 +332,12 @@ object WallpaperRenderer {
         val refPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
             typeface = workSansRegular
             textSize = min(width, height) * 0.018f
-            color = style.accentColor
+            color = activeAccentColor
             isFakeBoldText = true
             textAlign = Paint.Align.CENTER
+            if (isPhotoActive) {
+                setShadowLayer(4f, 0f, 1f, 0x99000000.toInt())
+            }
         }
         val refHeight = refPaint.textSize
 
@@ -319,7 +377,7 @@ object WallpaperRenderer {
         currentY += declLayout.height + spaceAfterDecl
 
         // Draw Ornamental Divider with diamond center
-        drawSacredDivider(canvas, width / 2f, currentY, dividerWidth, dividerHeight, style.accentColor)
+        drawSacredDivider(canvas, width / 2f, currentY, dividerWidth, dividerHeight, activeAccentColor)
         currentY += dividerHeight + spaceAfterDiv
 
         // Draw Grounding Scripture
@@ -341,14 +399,36 @@ object WallpaperRenderer {
         val footerPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
             typeface = cormorantItalic
             textSize = min(width, height) * 0.018f
-            color = style.primaryTextColor
-            alpha = if (style.isDark) 90 else 80
+            color = activePrimaryColor
+            alpha = if (isPhotoActive) 140 else if (style.isDark) 90 else 80
             textAlign = Paint.Align.CENTER
+            if (isPhotoActive) {
+                setShadowLayer(3f, 0f, 1f, 0x88000000.toInt())
+            }
         }
         val footerY = height - (frameInset * 1.6f)
         canvas.drawText("makarios  ·  speak truth  ·  walk blessed", width / 2f, footerY, footerPaint)
 
         return bitmap
+    }
+
+    /**
+     * Loads a Bitmap from a network or cache URL using Coil with hardware bitmaps disabled.
+     */
+    suspend fun fetchBitmapFromUrl(context: Context, url: String): Bitmap? = withContext(Dispatchers.IO) {
+        try {
+            val request = coil.request.ImageRequest.Builder(context)
+                .data(url)
+                .allowHardware(false)
+                .build()
+            val result = coil.Coil.imageLoader(context).execute(request)
+            if (result is coil.request.SuccessResult) {
+                result.drawable.toBitmap()
+            } else null
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
     }
 
     private fun calculateDeclarationSize(baseDimension: Int, length: Int): Float {

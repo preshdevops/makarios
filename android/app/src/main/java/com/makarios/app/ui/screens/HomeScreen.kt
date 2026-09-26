@@ -39,6 +39,7 @@ import com.makarios.app.ui.components.CreatorPromptCard
 import com.makarios.app.ui.components.MoodTile
 import com.makarios.app.ui.components.WidgetPreviewCard
 import com.makarios.app.ui.theme.*
+import com.makarios.app.util.ReminderManager
 import com.makarios.app.util.ShareHelper
 import com.makarios.app.util.WidgetHelper
 
@@ -146,7 +147,8 @@ fun HomeScreen(
                             .background(Surface)
                             .border(0.5.dp, BorderSubtle, CircleShape)
                             .clickable {
-                                Toast.makeText(context, "Daily declarations active", Toast.LENGTH_SHORT).show()
+                                ReminderManager.sendTestNotification(context, isHourly = false)
+                                Toast.makeText(context, "Sacred declaration sent to your notifications", Toast.LENGTH_SHORT).show()
                             },
                         contentAlignment = Alignment.Center
                     ) {

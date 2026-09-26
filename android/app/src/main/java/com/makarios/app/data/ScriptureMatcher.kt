@@ -16,14 +16,13 @@ object ScriptureMatcher {
 
     // Common English stop words filtered from tokenization
     private val stopWords = setOf(
-        "i", "am", "a", "the", "is", "in", "my", "me", "and",
+        "a", "the", "is", "in", "and",
         "to", "of", "that", "not", "for", "with", "by", "on",
         "it", "this", "but", "have", "do", "will", "be", "are",
-        "was", "has", "an", "or", "so", "no", "if", "at", "from",
-        "can", "all", "over", "into", "because", "been", "than",
+        "was", "has", "an", "or", "so", "if", "at", "from",
+        "can", "all", "into", "because", "been", "than",
         "its", "who", "what", "when", "how", "just", "also",
-        "every", "each", "through", "about", "more", "any",
-        "walk", "today", "know", "life", "day", "things"
+        "about", "more", "any"
     )
 
     /**
@@ -62,13 +61,13 @@ object ScriptureMatcher {
 
     /**
      * Tokenizes declaration text into a set of meaningful lowercase words.
-     * Strips punctuation, filters stop words and words <= 2 characters.
+     * Strips punctuation, filters stop words and words < 2 characters.
      */
     private fun tokenize(text: String): Set<String> {
         return text.lowercase()
             .replace(Regex("[^a-z\\s]"), "")
             .split("\\s+".toRegex())
-            .filter { it.length > 2 && it !in stopWords }
+            .filter { it.length >= 2 && it !in stopWords }
             .toSet()
     }
 

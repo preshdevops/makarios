@@ -44,6 +44,7 @@ fun WallpaperActionDialog(
     reference: String,
     category: String = "DECLARATION",
     styleIndex: Int = 0,
+    photoUrl: String? = null,
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
@@ -136,6 +137,9 @@ fun WallpaperActionDialog(
                             statusMessage = "Setting Lock Screen wallpaper…"
                             coroutineScope.launch {
                                 val success = withContext(Dispatchers.IO) {
+                                    val photoBmp = if (!photoUrl.isNullOrBlank()) {
+                                        WallpaperRenderer.fetchBitmapFromUrl(context, photoUrl)
+                                    } else null
                                     val bitmap = WallpaperRenderer.renderBitmap(
                                         context = context,
                                         declaration = declaration,
@@ -143,7 +147,8 @@ fun WallpaperActionDialog(
                                         reference = reference,
                                         category = category,
                                         style = WallpaperRenderer.getStyle(styleIndex),
-                                        format = WallpaperRenderer.OutputFormat.WALLPAPER
+                                        format = WallpaperRenderer.OutputFormat.WALLPAPER,
+                                        photoBitmap = photoBmp
                                     )
                                     WallpaperRenderer.setAsSystemWallpaper(
                                         context = context,
@@ -174,6 +179,9 @@ fun WallpaperActionDialog(
                             statusMessage = "Setting Home Screen wallpaper…"
                             coroutineScope.launch {
                                 val success = withContext(Dispatchers.IO) {
+                                    val photoBmp = if (!photoUrl.isNullOrBlank()) {
+                                        WallpaperRenderer.fetchBitmapFromUrl(context, photoUrl)
+                                    } else null
                                     val bitmap = WallpaperRenderer.renderBitmap(
                                         context = context,
                                         declaration = declaration,
@@ -181,7 +189,8 @@ fun WallpaperActionDialog(
                                         reference = reference,
                                         category = category,
                                         style = WallpaperRenderer.getStyle(styleIndex),
-                                        format = WallpaperRenderer.OutputFormat.WALLPAPER
+                                        format = WallpaperRenderer.OutputFormat.WALLPAPER,
+                                        photoBitmap = photoBmp
                                     )
                                     WallpaperRenderer.setAsSystemWallpaper(
                                         context = context,
@@ -212,6 +221,9 @@ fun WallpaperActionDialog(
                             statusMessage = "Applying to Lock & Home screens…"
                             coroutineScope.launch {
                                 val success = withContext(Dispatchers.IO) {
+                                    val photoBmp = if (!photoUrl.isNullOrBlank()) {
+                                        WallpaperRenderer.fetchBitmapFromUrl(context, photoUrl)
+                                    } else null
                                     val bitmap = WallpaperRenderer.renderBitmap(
                                         context = context,
                                         declaration = declaration,
@@ -219,7 +231,8 @@ fun WallpaperActionDialog(
                                         reference = reference,
                                         category = category,
                                         style = WallpaperRenderer.getStyle(styleIndex),
-                                        format = WallpaperRenderer.OutputFormat.WALLPAPER
+                                        format = WallpaperRenderer.OutputFormat.WALLPAPER,
+                                        photoBitmap = photoBmp
                                     )
                                     WallpaperRenderer.setAsSystemWallpaper(
                                         context = context,
@@ -251,6 +264,9 @@ fun WallpaperActionDialog(
                             statusMessage = "Saving high-res wallpaper…"
                             coroutineScope.launch {
                                 val uri = withContext(Dispatchers.IO) {
+                                    val photoBmp = if (!photoUrl.isNullOrBlank()) {
+                                        WallpaperRenderer.fetchBitmapFromUrl(context, photoUrl)
+                                    } else null
                                     val bitmap = WallpaperRenderer.renderBitmap(
                                         context = context,
                                         declaration = declaration,
@@ -258,7 +274,8 @@ fun WallpaperActionDialog(
                                         reference = reference,
                                         category = category,
                                         style = WallpaperRenderer.getStyle(styleIndex),
-                                        format = WallpaperRenderer.OutputFormat.WALLPAPER
+                                        format = WallpaperRenderer.OutputFormat.WALLPAPER,
+                                        photoBitmap = photoBmp
                                     )
                                     WallpaperRenderer.saveToGallery(
                                         context = context,

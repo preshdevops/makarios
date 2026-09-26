@@ -98,8 +98,8 @@ class VectorSearchEngine private constructor(private val context: Context) {
                 val mapped = channel.map(FileChannel.MapMode.READ_ONLY, assetFd.startOffset, assetFd.length)
                 mapped.order(ByteOrder.LITTLE_ENDIAN)
 
-                numVerses = mapped.int
-                vectorDim = mapped.int
+                numVerses = mapped.getInt(0)
+                vectorDim = mapped.getInt(4)
                 embeddingsBuffer = mapped
             }
 
@@ -111,7 +111,7 @@ class VectorSearchEngine private constructor(private val context: Context) {
 
     /**
      * Searches the entire 31,000+ Bible verse corpus for the closest semantic matches.
-     * Returns topK ranked verses with devotional weighting.
+     * Returns topK ranked verses with devotional weighting and keyword boosting.
      */
     suspend fun search(query: String, topK: Int = 8): List<VerseMatch> = withContext(Dispatchers.Default) {
         if (!isInitialized) {
@@ -123,12 +123,23 @@ class VectorSearchEngine private constructor(private val context: Context) {
 
         val minHeap = PriorityQueue<VerseMatch>(topK + 1, compareBy { it.score })
 
-        val floatBuffer = buffer.asFloatBuffer()
-        val floatsHeaderOffset = 2 // numVerses (int) + vectorDim (int) = 2 floats
+        // Extract key terms for topical keyword boosting
+        val stopWords = setOf("the", "and", "that", "this", "with", "for", "from", "have", "you", "your", "they", "will", "are", "was", "were")
+        val queryKeywords = query.lowercase()
+            .replace(Regex("[^a-z\\s]"), "")
+            .split("\\s+".toRegex())
+            .filter { it.length >= 3 && it !in stopWords }
+            .toSet()
+
+        // Duplicate buffer to be thread-safe; header is 8 bytes (2 ints)
+        val dup = buffer.duplicate()
+        dup.order(ByteOrder.LITTLE_ENDIAN)
+        dup.position(8)
+        val floatBuffer = dup.asFloatBuffer()
         val tempVerseVector = FloatArray(vectorDim)
 
         for (i in 0 until numVerses) {
-            floatBuffer.position(floatsHeaderOffset + (i * vectorDim))
+            floatBuffer.position(i * vectorDim)
             floatBuffer.get(tempVerseVector)
 
             // Both vectors are L2-normalized, so cosine similarity is the dot product
@@ -139,8 +150,20 @@ class VectorSearchEngine private constructor(private val context: Context) {
 
             val verse = verses.getOrNull(i) ?: continue
 
+            // Hybrid Keyword Boost: if the verse text contains core query keywords,
+            // reward direct promises so queries like "healed", "peace", "fear" strongly elevate matching verses
+            var keywordBonus = 0f
+            if (queryKeywords.isNotEmpty()) {
+                val verseLower = verse.text.lowercase()
+                val hits = queryKeywords.count { kw -> verseLower.contains(kw) }
+                if (hits > 0) {
+                    keywordBonus = (hits * 0.12f).coerceAtMost(0.36f)
+                }
+            }
+
             // Devotional Weighting: 1.15x multiplier if verse is in the devotional canon
-            val finalScore = if (verse.isDevotional) dot * 1.15f else dot
+            val devotionalMultiplier = if (verse.isDevotional) 1.15f else 1.0f
+            val finalScore = (dot + keywordBonus) * devotionalMultiplier
 
             val match = VerseMatch(
                 reference = verse.reference,
