@@ -25,7 +25,11 @@ import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Wallpaper
 import androidx.compose.material3.*
+import com.makarios.app.R
+import com.makarios.app.ui.components.SacredTimePickerDialog
 import com.makarios.app.ui.components.ScripturePickerSheet
+import com.makarios.app.ui.components.SocialShareSheet
+import com.makarios.app.ui.components.WallpaperActionDialog
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,6 +39,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -51,9 +56,9 @@ import com.makarios.app.data.ScriptureMatcher
 import com.makarios.app.data.VectorSearchEngine
 import com.makarios.app.data.VerseMatch
 import com.makarios.app.ui.theme.*
+import com.makarios.app.util.ReminderManager
 import com.makarios.app.util.ShareHelper
 import com.makarios.app.util.WallpaperRenderer
-import com.makarios.app.ui.components.WallpaperActionDialog
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -71,8 +76,9 @@ data class ShareFormat(val label: String, val ratio: Float, val size: String)
 val shareFormats = listOf(
     ShareFormat("Story", 9f / 16f, "9:16"),
     ShareFormat("Square", 1f, "1:1"),
-    ShareFormat("Status", 4f / 5f, "4:5"),
+    ShareFormat("Snapchat", 9f / 16f, "Snap"),
     ShareFormat("X Card", 16f / 9f, "16:9"),
+    ShareFormat("Status", 4f / 5f, "4:5"),
     ShareFormat("Wallpaper", 9f / 20f, "Phone")
 )
 
@@ -143,6 +149,8 @@ fun CreateScreen(
     var isMatching by remember { mutableStateOf(false) }
     var showPickerSheet by remember { mutableStateOf(false) }
     var showWallpaperDialog by remember { mutableStateOf(false) }
+    var showShareSheet by remember { mutableStateOf(false) }
+    var showTimePickerDialog by remember { mutableStateOf(false) }
     var selectedFormatIndex by remember { mutableIntStateOf(0) }
     var selectedStyleIndex by remember { mutableIntStateOf(0) }
     var selectedPhotoId by remember { mutableStateOf<String?>("dawn_01") }
@@ -204,24 +212,13 @@ fun CreateScreen(
     }
 
     val shareCurrentDesign: () -> Unit = {
-        coroutineScope.launch {
-            val newAffirmation = getOrCreateAffirmation()
-            withContext(Dispatchers.IO) {
-                val photoBmp = currentPhotoUrl?.let { WallpaperRenderer.fetchBitmapFromUrl(context, it) }
-                val bitmap = WallpaperRenderer.renderBitmap(
-                    context = context,
-                    declaration = declarationText,
-                    scripture = newAffirmation.scriptureText,
-                    reference = newAffirmation.reference,
-                    category = "Personal",
-                    style = WallpaperRenderer.getStyle(selectedStyleIndex),
-                    format = WallpaperRenderer.OutputFormat.fromIndex(selectedFormatIndex),
-                    photoBitmap = photoBmp
-                )
-                val caption = "“${newAffirmation.declaration}”\n— ${newAffirmation.reference}\n\nShared via Makarios"
-                ShareHelper.shareAffirmationImage(context, bitmap, "Makarios Declaration", caption)
-            }
-        }
+        getOrCreateAffirmation()
+        showShareSheet = true
+    }
+
+    val openTimePicker: () -> Unit = {
+        getOrCreateAffirmation()
+        showTimePickerDialog = true
     }
 
     val openWallpaperDialog: () -> Unit = {
@@ -458,7 +455,8 @@ fun CreateScreen(
                     onSelectPhoto = { selectedPhotoId = it },
                     onSaveToGallery = saveCurrentDesignToGallery,
                     onSaveAsWallpaper = openWallpaperDialog,
-                    onShare = shareCurrentDesign
+                    onShare = shareCurrentDesign,
+                    onSetNotificationTime = openTimePicker
                 )
             }
         }
@@ -483,6 +481,35 @@ fun CreateScreen(
                 styleIndex = selectedStyleIndex,
                 photoUrl = currentPhotoUrl,
                 onDismiss = { showWallpaperDialog = false }
+            )
+        }
+
+        if (showShareSheet) {
+            val aff = getOrCreateAffirmation()
+            SocialShareSheet(
+                affirmation = aff,
+                initialStyleIndex = selectedStyleIndex,
+                photoUrl = currentPhotoUrl,
+                onDismiss = { showShareSheet = false }
+            )
+        }
+
+        if (showTimePickerDialog) {
+            val currentHour = ReminderManager.getReminderHour(context)
+            val currentMinute = ReminderManager.getReminderMinute(context)
+            SacredTimePickerDialog(
+                initialHour = currentHour,
+                initialMinute = currentMinute,
+                onDismiss = { showTimePickerDialog = false },
+                onConfirm = { hour, minute ->
+                    showTimePickerDialog = false
+                    val aff = getOrCreateAffirmation()
+                    ReminderManager.setReminderTime(context, hour, minute)
+                    ReminderManager.setPinnedAffirmation(context, aff)
+                    ReminderManager.scheduleDaily(context, hour, minute)
+                    val timeStr = ReminderManager.getFormattedReminderTime(context)
+                    Toast.makeText(context, "Daily notification scheduled for $timeStr with this declaration ✓", Toast.LENGTH_LONG).show()
+                }
             )
         }
     }
@@ -1014,7 +1041,8 @@ private fun DesignStage(
     onSelectPhoto: (String?) -> Unit,
     onSaveToGallery: () -> Unit,
     onSaveAsWallpaper: () -> Unit,
-    onShare: () -> Unit
+    onShare: () -> Unit,
+    onSetNotificationTime: () -> Unit
 ) {
     val currentFormat = shareFormats[selectedFormatIndex]
     val currentStyle = designStyles[selectedStyleIndex]
@@ -1590,6 +1618,36 @@ private fun DesignStage(
                             color = Espresso
                         )
                     }
+                }
+            }
+
+            // Schedule Daily Notification Time
+            OutlinedButton(
+                onClick = onSetNotificationTime,
+                border = BorderStroke(1.dp, Border),
+                shape = RoundedCornerShape(14.dp),
+                colors = ButtonDefaults.outlinedButtonColors(containerColor = Surface),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_schedule_time),
+                        contentDescription = null,
+                        tint = Terracotta,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Text(
+                        text = "Schedule Daily Notification Time",
+                        fontFamily = BodyFontFamily,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 13.sp,
+                        color = Espresso
+                    )
                 }
             }
         }

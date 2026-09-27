@@ -46,10 +46,10 @@ object ReminderManager {
     }
 
     enum class ReminderSource(val id: String, val title: String, val subtitle: String) {
-        PINNED("pinned", "Pinned Affirmation", "Delivers your individually chosen declaration"),
-        CUSTOM("custom", "Personal Declarations", "Delivers affirmations you authored"),
-        SAVED("saved", "Saved Declarations", "Delivers your bookmarked promises"),
-        ALL("all", "Any Scripture & Truth", "Delivers declarations from the full library")
+        CUSTOM("custom", "My Created Declarations", "Affirmations you personally authored in Create Studio"),
+        SAVED("saved", "My Saved Favorites", "Your bookmarked collection of biblical promises"),
+        ALL("all", "Daily Scripture Discovery", "A fresh biblical declaration rotated from the full library each day"),
+        PINNED("pinned", "Specific Pinned Declaration", "Keep meditating on a single declaration of your choice")
     }
 
     fun init(context: Context) {
@@ -93,6 +93,41 @@ object ReminderManager {
         }
     }
 
+    fun getReminderHour(context: Context): Int =
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .getInt("reminder_hour", 8)
+
+    fun getReminderMinute(context: Context): Int =
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .getInt("reminder_minute", 30)
+
+    fun setReminderTime(context: Context, hour: Int, minute: Int) {
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit()
+            .putInt("reminder_hour", hour)
+            .putInt("reminder_minute", minute)
+            .apply()
+        if (isDailyReminderEnabled(context)) {
+            scheduleDaily(context, ReminderType.DAWN, customHour = hour, customMinute = minute)
+        }
+    }
+
+    fun getFormattedReminderTime(context: Context): String {
+        val hour = getReminderHour(context)
+        val minute = getReminderMinute(context)
+        return formatTime(hour, minute)
+    }
+
+    fun formatTime(hour: Int, minute: Int): String {
+        val amPm = if (hour >= 12) "PM" else "AM"
+        val displayHour = when {
+            hour == 0 -> 12
+            hour > 12 -> hour - 12
+            else -> hour
+        }
+        val displayMinute = if (minute < 10) "0$minute" else "$minute"
+        return "$displayHour:$displayMinute $amPm"
+    }
+
     fun isDawnEnabled(context: Context): Boolean = isDailyReminderEnabled(context)
     fun isMiddayEnabled(context: Context): Boolean = false
     fun isEveningEnabled(context: Context): Boolean = false
@@ -117,6 +152,40 @@ object ReminderManager {
             context = context,
             notificationId = 1001,
             title = "Your declaration · Makarios",
+            declaration = affirmation.declaration,
+            scripture = affirmation.scriptureText,
+            reference = affirmation.reference
+        )
+    }
+
+    /**
+     * Schedules a custom reminder specifically for an affirmation (e.g. newly created declaration).
+     * Saves the affirmation, configures the requested time, enables daily reminders, and schedules the alarm.
+     */
+    fun scheduleAffirmationReminder(
+        context: Context,
+        affirmation: Affirmation,
+        hour: Int? = null,
+        minute: Int? = null
+    ) {
+        if (hour != null && minute != null) {
+            context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit()
+                .putInt("reminder_hour", hour)
+                .putInt("reminder_minute", minute)
+                .putString("pinned_affirmation_id", affirmation.id)
+                .putString("reminder_source", ReminderSource.PINNED.id)
+                .putBoolean("daily_reminder_enabled", true)
+                .apply()
+            scheduleDaily(context, ReminderType.DAWN, customHour = hour, customMinute = minute)
+        } else {
+            setPinnedAffirmation(context, affirmation)
+        }
+
+        val formattedTime = if (hour != null && minute != null) formatTime(hour, minute) else getFormattedReminderTime(context)
+        showSacredNotification(
+            context = context,
+            notificationId = 1001,
+            title = "Daily declaration set for $formattedTime",
             declaration = affirmation.declaration,
             scripture = affirmation.scriptureText,
             reference = affirmation.reference
@@ -191,13 +260,21 @@ object ReminderManager {
 
     // ── Scheduling Engine ─────────────────────────────────────────
 
-    fun scheduleDaily(context: Context, type: ReminderType = ReminderType.DAWN) {
+    fun scheduleDaily(
+        context: Context,
+        type: ReminderType = ReminderType.DAWN,
+        customHour: Int? = null,
+        customMinute: Int? = null
+    ) {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager ?: return
+
+        val hour = customHour ?: if (type == ReminderType.DAWN) getReminderHour(context) else type.hour
+        val minute = customMinute ?: if (type == ReminderType.DAWN) getReminderMinute(context) else type.minute
 
         val now = Calendar.getInstance()
         val target = Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, type.hour)
-            set(Calendar.MINUTE, type.minute)
+            set(Calendar.HOUR_OF_DAY, hour)
+            set(Calendar.MINUTE, minute)
             set(Calendar.SECOND, 0)
             set(Calendar.MILLISECOND, 0)
             if (before(now)) {

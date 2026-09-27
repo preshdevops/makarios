@@ -14,6 +14,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.NotificationsActive
@@ -32,6 +33,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.makarios.app.data.AffirmationRepository
+import com.makarios.app.ui.components.SacredTimePickerDialog
 import com.makarios.app.ui.theme.*
 import com.makarios.app.util.ReminderManager
 import com.makarios.app.util.ReminderManager.ReminderSource
@@ -51,6 +53,10 @@ fun ProfileScreen(
 
     // Clean daily reminder toggle (replaces rigid multi-time switches)
     var isReminderEnabled by remember { mutableStateOf(ReminderManager.isDailyReminderEnabled(context)) }
+
+    // Delivery time state
+    var showTimePickerDialog by remember { mutableStateOf(false) }
+    var reminderTimeText by remember { mutableStateOf(ReminderManager.getFormattedReminderTime(context)) }
 
     // Reminder source (Pinned, Custom, Saved, All)
     var selectedReminderSource by remember { mutableStateOf(ReminderManager.getReminderSource(context)) }
@@ -279,40 +285,119 @@ fun ProfileScreen(
                                 HorizontalDivider(color = BorderSubtle, thickness = 0.5.dp)
                                 Spacer(modifier = Modifier.height(14.dp))
 
-                                Text(
-                                    text = "DELIVERY SOURCE",
-                                    fontFamily = BodyFontFamily,
-                                    fontWeight = FontWeight.SemiBold,
-                                    fontSize = 10.sp,
-                                    letterSpacing = 1.4.sp,
-                                    color = StoneMuted
-                                )
+                                // Delivery Time Selector Row
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(14.dp))
+                                        .background(PorcelainWarm.copy(alpha = 0.6f))
+                                        .border(0.5.dp, BorderSubtle, RoundedCornerShape(14.dp))
+                                        .clickable { showTimePickerDialog = true }
+                                        .padding(horizontal = 14.dp, vertical = 12.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(32.dp)
+                                                .clip(CircleShape)
+                                                .background(TerracottaLight),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.AccessTime,
+                                                contentDescription = null,
+                                                tint = Terracotta,
+                                                modifier = Modifier.size(16.dp)
+                                            )
+                                        }
+                                        Column {
+                                            Text(
+                                                text = "Notification Time",
+                                                fontFamily = BodyFontFamily,
+                                                fontWeight = FontWeight.SemiBold,
+                                                fontSize = 13.5.sp,
+                                                color = Espresso
+                                            )
+                                            Text(
+                                                text = "Delivered daily at this time",
+                                                fontFamily = BodyFontFamily,
+                                                fontSize = 11.5.sp,
+                                                color = Stone
+                                            )
+                                        }
+                                    }
+
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(8.dp))
+                                                .background(Terracotta)
+                                                .padding(horizontal = 10.dp, vertical = 5.dp)
+                                        ) {
+                                            Text(
+                                                text = reminderTimeText,
+                                                fontFamily = BodyFontFamily,
+                                                fontWeight = FontWeight.SemiBold,
+                                                fontSize = 12.sp,
+                                                color = Color.White
+                                            )
+                                        }
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.height(18.dp))
+
+                                Column {
+                                    Text(
+                                        text = "WHICH DECLARATIONS TO RECEIVE",
+                                        fontFamily = BodyFontFamily,
+                                        fontWeight = FontWeight.SemiBold,
+                                        fontSize = 10.sp,
+                                        letterSpacing = 1.4.sp,
+                                        color = StoneMuted
+                                    )
+                                    Spacer(modifier = Modifier.height(2.dp))
+                                    Text(
+                                        text = "Select what kind of affirmations appear in your notifications.",
+                                        fontFamily = BodyFontFamily,
+                                        fontSize = 11.5.sp,
+                                        color = Stone
+                                    )
+                                }
                                 Spacer(modifier = Modifier.height(10.dp))
 
                                 val sources = listOf(
                                     ReminderSourceOption(
-                                        source = ReminderSource.PINNED,
-                                        title = "Pinned Affirmation",
-                                        subtitle = "The exact affirmation you selected on any card",
-                                        pill = if (ReminderManager.getPinnedAffirmation(context) != null) "Selected" else "Default"
-                                    ),
-                                    ReminderSourceOption(
                                         source = ReminderSource.CUSTOM,
-                                        title = "Personal Declarations",
-                                        subtitle = "Affirmations you authored in Create",
+                                        title = "My Created Affirmations",
+                                        subtitle = "Words you personally authored in Create Studio",
                                         pill = if (personalCount > 0) "$personalCount authored" else "None yet"
                                     ),
                                     ReminderSourceOption(
                                         source = ReminderSource.SAVED,
-                                        title = "Saved Declarations",
-                                        subtitle = "Your bookmarked favorite promises",
+                                        title = "My Saved Favorites",
+                                        subtitle = "Your bookmarked collection of biblical declarations",
                                         pill = "$savedCount saved"
                                     ),
                                     ReminderSourceOption(
                                         source = ReminderSource.ALL,
-                                        title = "Any Scripture & Truth",
-                                        subtitle = "Rotates across all biblical themes & promises",
+                                        title = "Daily Scripture Discovery",
+                                        subtitle = "A fresh biblical truth rotated from the full library each day",
                                         pill = "$totalCount total"
+                                    ),
+                                    ReminderSourceOption(
+                                        source = ReminderSource.PINNED,
+                                        title = "Specific Pinned Declaration",
+                                        subtitle = "Keep meditating continuously on a single chosen verse",
+                                        pill = if (ReminderManager.getPinnedAffirmation(context) != null) "Selected" else "Default"
                                     )
                                 )
 
@@ -415,7 +500,7 @@ fun ProfileScreen(
                                             verticalAlignment = Alignment.CenterVertically
                                         ) {
                                             Text(
-                                                text = "NEXT DELIVERY PREVIEW",
+                                                text = "TOMORROW'S MESSAGE PREVIEW",
                                                 fontFamily = BodyFontFamily,
                                                 fontWeight = FontWeight.SemiBold,
                                                 fontSize = 9.sp,
@@ -590,17 +675,29 @@ fun ProfileScreen(
                                     }
                                 }
 
-                                Button(
-                                    onClick = { WidgetHelper.pinWidgetToHomeScreen(context) },
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = Espresso,
-                                        contentColor = Surface
-                                    ),
-                                    shape = RoundedCornerShape(12.dp),
-                                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
-                                    modifier = Modifier.height(34.dp)
-                                ) {
-                                    Text("Add to Screen", fontFamily = BodyFontFamily, fontWeight = FontWeight.Medium, fontSize = 12.sp)
+                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    OutlinedButton(
+                                        onClick = onNavigateToWidgets,
+                                        shape = RoundedCornerShape(12.dp),
+                                        border = androidx.compose.foundation.BorderStroke(1.dp, Border),
+                                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
+                                        modifier = Modifier.height(34.dp)
+                                    ) {
+                                        Text("Studio", fontFamily = BodyFontFamily, fontWeight = FontWeight.Medium, fontSize = 12.sp, color = Espresso)
+                                    }
+
+                                    Button(
+                                        onClick = { WidgetHelper.pinWidgetToHomeScreen(context) },
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = Espresso,
+                                            contentColor = Surface
+                                        ),
+                                        shape = RoundedCornerShape(12.dp),
+                                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                                        modifier = Modifier.height(34.dp)
+                                    ) {
+                                        Text("Add to Screen", fontFamily = BodyFontFamily, fontWeight = FontWeight.Medium, fontSize = 12.sp)
+                                    }
                                 }
                             }
 
@@ -778,6 +875,23 @@ fun ProfileScreen(
             },
             containerColor = Surface,
             shape = RoundedCornerShape(20.dp)
+        )
+    }
+
+    // ── Delivery Time Picker Dialog ──────────────────────────────────
+    if (showTimePickerDialog) {
+        SacredTimePickerDialog(
+            initialHour = ReminderManager.getReminderHour(context),
+            initialMinute = ReminderManager.getReminderMinute(context),
+            title = "Notification Time",
+            subtitle = "Choose when you'd like your daily declaration to appear on your screen.",
+            onConfirm = { hour, minute ->
+                ReminderManager.setReminderTime(context, hour, minute)
+                reminderTimeText = ReminderManager.getFormattedReminderTime(context)
+                showTimePickerDialog = false
+                Toast.makeText(context, "Reminders updated for $reminderTimeText ✓", Toast.LENGTH_SHORT).show()
+            },
+            onDismiss = { showTimePickerDialog = false }
         )
     }
 }

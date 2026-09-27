@@ -38,6 +38,8 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.makarios.app.data.Affirmation
 import com.makarios.app.data.AffirmationRepository
+import com.makarios.app.ui.components.SacredTimePickerDialog
+import com.makarios.app.ui.components.SocialShareSheet
 import com.makarios.app.ui.components.WallpaperActionDialog
 import com.makarios.app.ui.theme.*
 import com.makarios.app.util.ReminderManager
@@ -55,6 +57,8 @@ fun AffirmationDetailScreen(
     val context = LocalContext.current
     var isSaved by remember { mutableStateOf(AffirmationRepository.isSaved(affirmation.id)) }
     var showWallpaperDialog by remember { mutableStateOf(false) }
+    var showShareSheet by remember { mutableStateOf(false) }
+    var showTimePickerDialog by remember { mutableStateOf(false) }
 
     Box(
         modifier = modifier.fillMaxSize()
@@ -126,12 +130,7 @@ fun AffirmationDetailScreen(
                             .clip(CircleShape)
                             .background(Color.White.copy(alpha = 0.18f))
                             .clickable {
-                                ShareHelper.shareAffirmationGraphic(
-                                    context = context,
-                                    affirmation = affirmation,
-                                    styleIndex = 4,
-                                    format = WallpaperRenderer.OutputFormat.STORY
-                                )
+                                showShareSheet = true
                             },
                         contentAlignment = Alignment.Center
                     ) {
@@ -370,8 +369,7 @@ fun AffirmationDetailScreen(
                             .background(Color.White.copy(alpha = 0.14f))
                             .border(0.5.dp, Color.White.copy(alpha = 0.20f), RoundedCornerShape(16.dp))
                             .clickable {
-                                ReminderManager.setPinnedAffirmation(context, affirmation)
-                                Toast.makeText(context, "Set as daily notification ✓", Toast.LENGTH_SHORT).show()
+                                showTimePickerDialog = true
                             },
                         contentAlignment = Alignment.Center
                     ) {
@@ -438,7 +436,35 @@ fun AffirmationDetailScreen(
                 reference = affirmation.reference,
                 category = affirmation.category,
                 styleIndex = 4,
+                photoUrl = affirmation.imageUrl.takeIf { it.isNotBlank() && !it.startsWith("drawable:") },
                 onDismiss = { showWallpaperDialog = false }
+            )
+        }
+
+        if (showShareSheet) {
+            SocialShareSheet(
+                affirmation = affirmation,
+                initialStyleIndex = 4,
+                photoUrl = affirmation.imageUrl.takeIf { it.isNotBlank() && !it.startsWith("drawable:") },
+                onDismiss = { showShareSheet = false }
+            )
+        }
+
+        if (showTimePickerDialog) {
+            val currentHour = ReminderManager.getReminderHour(context)
+            val currentMinute = ReminderManager.getReminderMinute(context)
+            SacredTimePickerDialog(
+                initialHour = currentHour,
+                initialMinute = currentMinute,
+                onDismiss = { showTimePickerDialog = false },
+                onConfirm = { hour, minute ->
+                    showTimePickerDialog = false
+                    ReminderManager.setReminderTime(context, hour, minute)
+                    ReminderManager.setPinnedAffirmation(context, affirmation)
+                    ReminderManager.scheduleDaily(context, hour, minute)
+                    val timeStr = ReminderManager.getFormattedReminderTime(context)
+                    Toast.makeText(context, "Daily notification scheduled for $timeStr with this declaration ✓", Toast.LENGTH_LONG).show()
+                }
             )
         }
     }

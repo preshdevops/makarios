@@ -42,6 +42,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.makarios.app.data.Affirmation
 import com.makarios.app.data.AffirmationRepository
+import com.makarios.app.ui.components.SocialShareSheet
 import com.makarios.app.ui.theme.*
 import com.makarios.app.util.ReminderManager
 import com.makarios.app.util.ShareHelper
@@ -58,6 +59,7 @@ fun HomeScreen(
     val context = LocalContext.current
     val aotd = remember { AffirmationRepository.affirmationOfTheDay ?: AffirmationRepository.getAll().first() }
     var isAotdSaved by remember(aotd.id) { mutableStateOf(AffirmationRepository.isSaved(aotd.id)) }
+    var shareAffirmationTarget by remember { mutableStateOf<Affirmation?>(null) }
 
     // Time-aware greeting — only the greeting word, kept brief
     val currentHour = remember { java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY) }
@@ -133,7 +135,7 @@ fun HomeScreen(
                         AffirmationRepository.toggleSave(aotd.id)
                         isAotdSaved = !isAotdSaved
                     },
-                    onShare = { ShareHelper.shareAffirmationGraphic(context, aotd) },
+                    onShare = { shareAffirmationTarget = aotd },
                     onTap = { onNavigateToDetail(aotd) }
                 )
             }
@@ -175,6 +177,15 @@ fun HomeScreen(
                 }
             }
         }
+    }
+
+    shareAffirmationTarget?.let { aff ->
+        SocialShareSheet(
+            affirmation = aff,
+            initialStyleIndex = 0,
+            photoUrl = aff.imageUrl.takeIf { it.isNotBlank() && !it.startsWith("drawable:") },
+            onDismiss = { shareAffirmationTarget = null }
+        )
     }
 }
 

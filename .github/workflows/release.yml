@@ -1,0 +1,77 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Tag name for release (e.g. v1.0.0)'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  release:
+    name: Build & Publish Release APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Grant Execute Permission for Gradlew
+        run: chmod +x gradlew
+        working-directory: android
+
+      - name: Build APK
+        run: |
+          ./gradlew assembleDebug --stacktrace
+        working-directory: android
+
+      - name: Determine Release Tag
+        id: tag
+        run: |
+          if [ -n "${{ github.event.inputs.tag_name }}" ]; then
+            echo "TAG_NAME=${{ github.event.inputs.tag_name }}" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            echo "TAG_NAME=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          else
+            echo "TAG_NAME=v1.0.0-$(date +'%Y%m%d%H%M')" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create GitHub Release & Upload APK
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.TAG_NAME }}
+          name: "Makarios ${{ steps.tag.outputs.TAG_NAME }}"
+          body: |
+            ### Makarios — Sacred Declarations & Scripture
+            
+            #### Highlights in this release:
+            - **Custom Notification Times**: Set your exact preferred reminder time with presets (Dawn, Morning, Midday, Evening, Night) and 12-hour/AM-PM selectors.
+            - **Aesthetic Lock Screen & Home Screen Widgets**: Redesigned Glance widgets with Cormorant Garamond typography, gold-tracked banners, and dual-mode Lock Screen support (Keyguard complication & 28% clock-cleared wallpaper).
+            - **Intuitive Delivery Sources**: Plain-English choices in profile settings for personal declarations, saved favorites, or daily discoveries.
+            - **Bespoke Social Sharing**: Custom-tailored graphic layouts and official brand icons for Instagram Story (9:16), Instagram Post (1:1), Snapchat (9:16), X Card (16:9), and WhatsApp (4:5).
+          files: |
+            android/app/build/outputs/apk/debug/*.apk
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

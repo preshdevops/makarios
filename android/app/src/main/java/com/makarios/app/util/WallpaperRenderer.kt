@@ -36,24 +36,28 @@ object WallpaperRenderer {
 
     enum class OutputFormat(
         val displayName: String,
+        val platformName: String,
         val width: Int,
         val height: Int,
-        val isWallpaper: Boolean
+        val isWallpaper: Boolean,
+        val aspectDescription: String
     ) {
-        STORY("Story (9:16)", 1080, 1920, false),
-        SQUARE("Square (1:1)", 1080, 1080, false),
-        STATUS("Status (4:5)", 1080, 1350, false),
-        X_CARD("Landscape (16:9)", 1200, 675, false),
-        WALLPAPER("Phone Wallpaper", 1080, 2400, true);
+        STORY("Instagram Story", "Instagram", 1080, 1920, false, "9:16 Story"),
+        SQUARE("Instagram Post", "Instagram", 1080, 1080, false, "1:1 Archival Card"),
+        SNAPCHAT("Snapchat Story", "Snapchat", 1080, 1920, false, "9:16 Frosted Lens"),
+        X_CARD("X / Twitter Card", "X", 1200, 675, false, "16:9 Pull-Quote"),
+        STATUS("WhatsApp Status", "WhatsApp", 1080, 1350, false, "4:5 Blessing Card"),
+        WALLPAPER("Phone Wallpaper", "Lock Screen", 1080, 2400, true, "9:20 Wallpaper");
 
         companion object {
             fun fromIndex(index: Int): OutputFormat {
                 return when (index) {
                     0 -> STORY
                     1 -> SQUARE
-                    2 -> STATUS
+                    2 -> SNAPCHAT
                     3 -> X_CARD
-                    4 -> WALLPAPER
+                    4 -> STATUS
+                    5 -> WALLPAPER
                     else -> STORY
                 }
             }
@@ -165,6 +169,10 @@ object WallpaperRenderer {
      * Supports both YouVersion-style photographic backgrounds with cinematic protective scrims
      * and sacred radiant color gradient themes.
      */
+    /**
+     * Render an affirmation into an exquisite, production-grade Bitmap tailored specifically
+     * to the chosen social media or device platform format.
+     */
     fun renderBitmap(
         context: Context,
         declaration: String,
@@ -175,15 +183,983 @@ object WallpaperRenderer {
         format: OutputFormat = OutputFormat.WALLPAPER,
         photoBitmap: Bitmap? = null
     ): Bitmap {
-        val width = format.width
-        val height = format.height
+        return when (format) {
+            OutputFormat.STORY -> renderInstagramStory(context, declaration, scripture, reference, category, style, photoBitmap)
+            OutputFormat.SQUARE -> renderInstagramPost(context, declaration, scripture, reference, category, style, photoBitmap)
+            OutputFormat.SNAPCHAT -> renderSnapchatStory(context, declaration, scripture, reference, category, style, photoBitmap)
+            OutputFormat.X_CARD -> renderXCard(context, declaration, scripture, reference, category, style, photoBitmap)
+            OutputFormat.STATUS -> renderWhatsAppCard(context, declaration, scripture, reference, category, style, photoBitmap)
+            OutputFormat.WALLPAPER -> renderLockscreenWallpaper(context, declaration, scripture, reference, category, style, photoBitmap)
+        }
+    }
+
+    /**
+     * 1. INSTAGRAM STORY (9:16 — 1080 x 1920)
+     * Tailored safe zones: top 240px for story header, bottom 260px for reply bar.
+     * Features illuminated translucent scripture plaque and radiant vertical balance.
+     */
+    private fun renderInstagramStory(
+        context: Context,
+        declaration: String,
+        scripture: String,
+        reference: String,
+        category: String,
+        style: RenderStyle,
+        photoBitmap: Bitmap?
+    ): Bitmap {
+        val width = 1080
+        val height = 1920
         val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
-
         val isPhotoActive = photoBitmap != null
 
+        // 1. Background & Scrim
+        drawBackgroundAndScrim(canvas, width, height, style, photoBitmap)
+
+        // Palette
+        val activePrimaryColor = if (isPhotoActive) 0xFFFFFFFF.toInt() else style.primaryTextColor
+        val activeSecondaryColor = if (isPhotoActive) 0xEEFFFFFF.toInt() else style.secondaryTextColor
+        val activeAccentColor = if (isPhotoActive) 0xFFFBBF24.toInt() else style.accentColor
+        val activeFrameColor = if (isPhotoActive) 0x4DFFFFFF.toInt() else style.frameColor
+
+        // 2. Delicate hairline frame
+        val frameInset = 46f
+        val frameRadius = 26f
+        val frameRect = RectF(frameInset, frameInset, width - frameInset, height - frameInset)
+        val framePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            this.style = Paint.Style.STROKE
+            strokeWidth = 1.6f
+            color = activeFrameColor
+        }
+        canvas.drawRoundRect(frameRect, frameRadius, frameRadius, framePaint)
+        drawCornerOrnaments(canvas, frameRect, frameRadius, activeAccentColor)
+
+        // Fonts
+        val cormorantRegular = ResourcesCompat.getFont(context, R.font.cormorant_garamond_regular) ?: Typeface.SERIF
+        val cormorantItalic = ResourcesCompat.getFont(context, R.font.cormorant_garamond_italic) ?: Typeface.create(Typeface.SERIF, Typeface.ITALIC)
+        val workSansRegular = ResourcesCompat.getFont(context, R.font.worksans_regular) ?: Typeface.SANS_SERIF
+
+        // 3. Top Header Seal (safe zone: y = 290)
+        val headerY = 290f
+        val headerText = "M A K A R I O S   ·   ${category.uppercase().replace(" ", "   ")}"
+        val headerPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
+            typeface = workSansRegular
+            textSize = 17f
+            color = activeAccentColor
+            textAlign = Paint.Align.CENTER
+            if (isPhotoActive) setShadowLayer(4f, 0f, 1f, 0x99000000.toInt())
+        }
+        canvas.drawText(headerText, width / 2f, headerY, headerPaint)
+
+        // Pill border around header text
+        val headerWidth = headerPaint.measureText(headerText) + 48f
+        val headerPillRect = RectF(
+            (width - headerWidth) / 2f,
+            headerY - 26f,
+            (width + headerWidth) / 2f,
+            headerY + 14f
+        )
+        val pillStrokePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            this.style = Paint.Style.STROKE
+            strokeWidth = 1.2f
+            color = activeAccentColor
+            alpha = 130
+        }
+        canvas.drawRoundRect(headerPillRect, 20f, 20f, pillStrokePaint)
+
+        // 4. Hero Declaration (y = 480 to 980)
+        val cleanDeclaration = declaration.trim().removePrefix("“").removeSuffix("”")
+        val fullDeclaration = "“$cleanDeclaration”"
+        val maxContentWidth = 880
+        val declFontSize = calculateDeclarationSize(width, cleanDeclaration.length) * 1.08f
+        val declPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
+            typeface = cormorantRegular
+            textSize = declFontSize
+            color = activePrimaryColor
+            if (isPhotoActive) setShadowLayer(8f, 0f, 2f, 0xCC000000.toInt())
+        }
+        val declLayout = createCenteredStaticLayout(fullDeclaration, declPaint, maxContentWidth)
+
+        // 5. Grounding Scripture Plaque
+        val cleanScripture = scripture.trim().removePrefix("“").removeSuffix("”")
+        val fullScripture = if (cleanScripture.isNotBlank()) "“$cleanScripture”" else ""
+        val scriptPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
+            typeface = cormorantItalic
+            textSize = 30f
+            color = activeSecondaryColor
+            if (isPhotoActive) setShadowLayer(6f, 0f, 2f, 0xBB000000.toInt())
+        }
+        val scriptLayout = if (fullScripture.isNotBlank()) {
+            createCenteredStaticLayout(fullScripture, scriptPaint, 760)
+        } else null
+
+        // 6. Scripture Reference
+        val cleanReference = reference.trim().uppercase()
+        val refPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
+            typeface = workSansRegular
+            textSize = 19f
+            color = activeAccentColor
+            isFakeBoldText = true
+            textAlign = Paint.Align.CENTER
+            if (isPhotoActive) setShadowLayer(4f, 0f, 1f, 0x99000000.toInt())
+        }
+
+        // Layout vertical distribution inside [360, 1560]
+        val declStartY = 460f
+        canvas.save()
+        canvas.translate((width - maxContentWidth) / 2f, declStartY)
+        declLayout.draw(canvas)
+        canvas.restore()
+
+        val dividerY = declStartY + declLayout.height + 40f
+        drawSacredDivider(canvas, width / 2f, dividerY, 220f, 1.8f, activeAccentColor)
+
+        // Draw Scripture in illuminated plaque
+        if (scriptLayout != null) {
+            val plaqueTop = dividerY + 44f
+            val plaqueHeight = scriptLayout.height + 110f
+            val plaqueRect = RectF(110f, plaqueTop, width - 110f, plaqueTop + plaqueHeight)
+
+            // Plaque background & border
+            val plaqueBgPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = if (isPhotoActive || style.isDark) 0x2E000000.toInt() else 0x14000000.toInt()
+                this.style = Paint.Style.FILL
+            }
+            val plaqueStrokePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                this.style = Paint.Style.STROKE
+                strokeWidth = 1.4f
+                color = activeAccentColor
+                alpha = 90
+            }
+            canvas.drawRoundRect(plaqueRect, 22f, 22f, plaqueBgPaint)
+            canvas.drawRoundRect(plaqueRect, 22f, 22f, plaqueStrokePaint)
+
+            // Scripture text
+            canvas.save()
+            canvas.translate((width - 760) / 2f, plaqueTop + 30f)
+            scriptLayout.draw(canvas)
+            canvas.restore()
+
+            // Reference inside plaque
+            val trackedRef = cleanReference.map { "$it " }.joinToString("").trim()
+            canvas.drawText("— $trackedRef —", width / 2f, plaqueTop + 40f + scriptLayout.height + 24f, refPaint)
+        }
+
+        // 7. Sacred Story Footnote (safe above Instagram reply bar)
+        val footerPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
+            typeface = workSansRegular
+            textSize = 14f
+            color = activeAccentColor
+            alpha = 200
+            textAlign = Paint.Align.CENTER
+        }
+        val wordmarkPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
+            typeface = cormorantItalic
+            textSize = 17f
+            color = activePrimaryColor
+            alpha = if (isPhotoActive) 150 else 100
+            textAlign = Paint.Align.CENTER
+        }
+        canvas.drawText("✦  WALK IN VICTORY TODAY  ✦", width / 2f, 1600f, footerPaint)
+        canvas.drawText("makarios.app", width / 2f, 1632f, wordmarkPaint)
+
+        return bitmap
+    }
+
+    /**
+     * 2. INSTAGRAM POST (1:1 Archival Card — 1080 x 1080)
+     * Museum-grade double hairline architectural frame with gold corner diamond nodes,
+     * monumental quotation mark, and left-accented scripture plate.
+     */
+    private fun renderInstagramPost(
+        context: Context,
+        declaration: String,
+        scripture: String,
+        reference: String,
+        category: String,
+        style: RenderStyle,
+        photoBitmap: Bitmap?
+    ): Bitmap {
+        val width = 1080
+        val height = 1080
+        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+        val isPhotoActive = photoBitmap != null
+
+        // 1. Background & Scrim
+        drawBackgroundAndScrim(canvas, width, height, style, photoBitmap)
+
+        val activePrimaryColor = if (isPhotoActive) 0xFFFFFFFF.toInt() else style.primaryTextColor
+        val activeSecondaryColor = if (isPhotoActive) 0xEEFFFFFF.toInt() else style.secondaryTextColor
+        val activeAccentColor = if (isPhotoActive) 0xFFFBBF24.toInt() else style.accentColor
+
+        // 2. Archival Double Hairline Frame
+        val outerInset = 42f
+        val innerInset = 54f
+        val outerRect = RectF(outerInset, outerInset, width - outerInset, height - outerInset)
+        val innerRect = RectF(innerInset, innerInset, width - innerInset, height - innerInset)
+
+        val outerPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            this.style = Paint.Style.STROKE
+            strokeWidth = 2.0f
+            color = activeAccentColor
+            alpha = 160
+        }
+        val innerPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            this.style = Paint.Style.STROKE
+            strokeWidth = 1.0f
+            color = activeAccentColor
+            alpha = 90
+        }
+        canvas.drawRoundRect(outerRect, 22f, 22f, outerPaint)
+        canvas.drawRoundRect(innerRect, 16f, 16f, innerPaint)
+
+        // Corner diamond nodes
+        drawCornerDiamonds(canvas, innerRect, 14f, activeAccentColor)
+
+        // Fonts
+        val cormorantRegular = ResourcesCompat.getFont(context, R.font.cormorant_garamond_regular) ?: Typeface.SERIF
+        val cormorantItalic = ResourcesCompat.getFont(context, R.font.cormorant_garamond_italic) ?: Typeface.create(Typeface.SERIF, Typeface.ITALIC)
+        val workSansRegular = ResourcesCompat.getFont(context, R.font.worksans_regular) ?: Typeface.SANS_SERIF
+
+        // 3. Category Header
+        val headerText = "ARCHIVE OF BLESSING   ·   ${category.uppercase()}"
+        val headerPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
+            typeface = workSansRegular
+            textSize = 14f
+            color = activeAccentColor
+            letterSpacing = 0.12f
+            textAlign = Paint.Align.CENTER
+            if (isPhotoActive) setShadowLayer(4f, 0f, 1f, 0x99000000.toInt())
+        }
+        canvas.drawText(headerText, width / 2f, 114f, headerPaint)
+
+        // 4. Hero Declaration with Monumental Floating Quote Mark
+        val quoteMarkPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
+            typeface = cormorantRegular
+            textSize = 80f
+            color = activeAccentColor
+            alpha = 180
+            textAlign = Paint.Align.CENTER
+        }
+        canvas.drawText("“", width / 2f, 190f, quoteMarkPaint)
+
+        val cleanDeclaration = declaration.trim().removePrefix("“").removeSuffix("”")
+        val declFontSize = calculateDeclarationSize(width, cleanDeclaration.length) * 1.05f
+        val declPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
+            typeface = cormorantRegular
+            textSize = declFontSize
+            color = activePrimaryColor
+            if (isPhotoActive) setShadowLayer(8f, 0f, 2f, 0xCC000000.toInt())
+        }
+        val declMaxWidth = 880
+        val declLayout = createCenteredStaticLayout(cleanDeclaration, declPaint, declMaxWidth)
+
+        val declY = 220f
+        canvas.save()
+        canvas.translate((width - declMaxWidth) / 2f, declY)
+        declLayout.draw(canvas)
+        canvas.restore()
+
+        // 5. Three-Diamond Ornamental Divider
+        val dividerY = declY + declLayout.height + 34f
+        drawThreeDiamondDivider(canvas, width / 2f, dividerY, 9f, 20f, activeAccentColor)
+
+        // 6. Grounding Scripture Plaque with Gold Left Border
+        val cleanScripture = scripture.trim().removePrefix("“").removeSuffix("”")
+        if (cleanScripture.isNotBlank()) {
+            val scriptPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
+                typeface = cormorantItalic
+                textSize = 27f
+                color = activeSecondaryColor
+                if (isPhotoActive) setShadowLayer(6f, 0f, 2f, 0xBB000000.toInt())
+            }
+            val scriptMaxWidth = 780
+            val scriptLayout = createCenteredStaticLayout("“$cleanScripture”", scriptPaint, scriptMaxWidth)
+
+            val plaqueTop = dividerY + 36f
+            val plaqueHeight = scriptLayout.height + 70f
+            val plaqueRect = RectF(110f, plaqueTop, width - 110f, plaqueTop + plaqueHeight)
+
+            val plaqueBg = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = if (isPhotoActive || style.isDark) 0x33000000.toInt() else 0x16000000.toInt()
+                this.style = Paint.Style.FILL
+            }
+            canvas.drawRoundRect(plaqueRect, 16f, 16f, plaqueBg)
+
+            // Accent bar on left edge
+            val leftBar = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = activeAccentColor
+                strokeWidth = 4.5f
+                this.style = Paint.Style.STROKE
+            }
+            canvas.drawLine(plaqueRect.left, plaqueRect.top + 16f, plaqueRect.left, plaqueRect.bottom - 16f, leftBar)
+
+            // Scripture text
+            canvas.save()
+            canvas.translate((width - scriptMaxWidth) / 2f, plaqueTop + 20f)
+            scriptLayout.draw(canvas)
+            canvas.restore()
+
+            // Reference below scripture
+            val refPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
+                typeface = workSansRegular
+                textSize = 17f
+                color = activeAccentColor
+                isFakeBoldText = true
+                textAlign = Paint.Align.CENTER
+            }
+            val cleanReference = reference.trim().uppercase()
+            canvas.drawText("◆  $cleanReference  ◆", width / 2f, plaqueTop + scriptLayout.height + 50f, refPaint)
+        }
+
+        // 7. Archival Footer
+        val footerPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
+            typeface = workSansRegular
+            textSize = 12f
+            color = activeAccentColor
+            alpha = 150
+            letterSpacing = 0.15f
+            textAlign = Paint.Align.CENTER
+        }
+        canvas.drawText("MAKARIOS DEVOTIONAL ARCHIVE · VOL. I", width / 2f, 1022f, footerPaint)
+
+        return bitmap
+    }
+
+    /**
+     * 3. SNAPCHAT STORY (9:16 — 1080 x 1920)
+     * Modern Sacred Frosted Lens with rounded floating container card,
+     * vibrant contrast, and amber gold badge tag.
+     */
+    private fun renderSnapchatStory(
+        context: Context,
+        declaration: String,
+        scripture: String,
+        reference: String,
+        category: String,
+        style: RenderStyle,
+        photoBitmap: Bitmap?
+    ): Bitmap {
+        val width = 1080
+        val height = 1920
+        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+        val isPhotoActive = photoBitmap != null
+
+        // 1. Background & Atmosphere
+        drawBackgroundAndScrim(canvas, width, height, style, photoBitmap)
+
+        val activePrimaryColor = if (isPhotoActive) 0xFFFFFFFF.toInt() else style.primaryTextColor
+        val activeSecondaryColor = if (isPhotoActive) 0xEEFFFFFF.toInt() else style.secondaryTextColor
+        val activeAccentColor = if (isPhotoActive) 0xFFFBBF24.toInt() else style.accentColor
+
+        // 2. Floating Frosted Container Card
+        val cardLeft = 70f
+        val cardRight = width - 70f
+        val cardTop = 300f
+        val cardBottom = 1580f
+        val cardRect = RectF(cardLeft, cardTop, cardRight, cardBottom)
+
+        // Drop shadow for container
+        val shadowPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = 0x66000000.toInt()
+            maskFilter = BlurMaskFilter(24f, BlurMaskFilter.Blur.NORMAL)
+        }
+        canvas.drawRoundRect(cardRect, 36f, 36f, shadowPaint)
+
+        // Card fill (translucent frosted tone)
+        val cardFill = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = if (isPhotoActive || style.isDark) 0xD01C1714.toInt() else 0xE8FBF8F4.toInt()
+            this.style = Paint.Style.FILL
+        }
+        canvas.drawRoundRect(cardRect, 36f, 36f, cardFill)
+
+        // Card luminous border
+        val cardStroke = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            this.style = Paint.Style.STROKE
+            strokeWidth = 2.4f
+            color = activeAccentColor
+            alpha = 140
+        }
+        canvas.drawRoundRect(cardRect, 36f, 36f, cardStroke)
+
+        // Fonts
+        val cormorantRegular = ResourcesCompat.getFont(context, R.font.cormorant_garamond_regular) ?: Typeface.SERIF
+        val cormorantItalic = ResourcesCompat.getFont(context, R.font.cormorant_garamond_italic) ?: Typeface.create(Typeface.SERIF, Typeface.ITALIC)
+        val workSansRegular = ResourcesCompat.getFont(context, R.font.worksans_regular) ?: Typeface.SANS_SERIF
+
+        // 3. Card Tag Pill: "✦ DAILY TRUTH ✦"
+        val tagY = cardTop + 74f
+        val tagPillPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = activeAccentColor
+            this.style = Paint.Style.FILL
+        }
+        val tagTextPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
+            typeface = workSansRegular
+            textSize = 14f
+            isFakeBoldText = true
+            color = 0xFF1B1613.toInt()
+            textAlign = Paint.Align.CENTER
+        }
+        val tagText = "✦ DAILY TRUTH ✦"
+        val tagWidth = tagTextPaint.measureText(tagText) + 36f
+        val tagRect = RectF(
+            (width - tagWidth) / 2f,
+            tagY - 26f,
+            (width + tagWidth) / 2f,
+            tagY + 12f
+        )
+        canvas.drawRoundRect(tagRect, 18f, 18f, tagPillPaint)
+        canvas.drawText(tagText, width / 2f, tagY, tagTextPaint)
+
+        // Category subtitle
+        val catPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
+            typeface = workSansRegular
+            textSize = 15f
+            color = if (style.isDark || isPhotoActive) 0xDDFFFFFF.toInt() else 0xFF655C54.toInt()
+            textAlign = Paint.Align.CENTER
+        }
+        canvas.drawText("CATEGORY: ${category.uppercase()}", width / 2f, tagY + 44f, catPaint)
+
+        // 4. Declaration inside card
+        val cleanDeclaration = declaration.trim().removePrefix("“").removeSuffix("”")
+        val declFontSize = calculateDeclarationSize(width, cleanDeclaration.length) * 1.10f
+        val declPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
+            typeface = cormorantRegular
+            textSize = declFontSize
+            color = if (style.isDark || isPhotoActive) 0xFFFFFFFF.toInt() else 0xFF2C2622.toInt()
+        }
+        val declLayout = createCenteredStaticLayout("“$cleanDeclaration”", declPaint, 800)
+        val declY = tagY + 90f
+        canvas.save()
+        canvas.translate((width - 800) / 2f, declY)
+        declLayout.draw(canvas)
+        canvas.restore()
+
+        // 5. Sacred Divider
+        val divY = declY + declLayout.height + 40f
+        drawSacredDivider(canvas, width / 2f, divY, 200f, 1.8f, activeAccentColor)
+
+        // 6. Scripture Inset Card inside container
+        val cleanScripture = scripture.trim().removePrefix("“").removeSuffix("”")
+        if (cleanScripture.isNotBlank()) {
+            val scriptPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
+                typeface = cormorantItalic
+                textSize = 29f
+                color = if (style.isDark || isPhotoActive) 0xEEFFFFFF.toInt() else 0xFF4D443D.toInt()
+            }
+            val scriptLayout = createCenteredStaticLayout("“$cleanScripture”", scriptPaint, 720)
+
+            val insetTop = divY + 40f
+            val insetHeight = scriptLayout.height + 95f
+            val insetRect = RectF(120f, insetTop, width - 120f, insetTop + insetHeight)
+
+            val insetBg = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = if (style.isDark || isPhotoActive) 0x33000000.toInt() else 0x18000000.toInt()
+                this.style = Paint.Style.FILL
+            }
+            val insetBorder = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                this.style = Paint.Style.STROKE
+                strokeWidth = 1.4f
+                color = activeAccentColor
+                alpha = 90
+            }
+            canvas.drawRoundRect(insetRect, 22f, 22f, insetBg)
+            canvas.drawRoundRect(insetRect, 22f, 22f, insetBorder)
+
+            canvas.save()
+            canvas.translate((width - 720) / 2f, insetTop + 24f)
+            scriptLayout.draw(canvas)
+            canvas.restore()
+
+            // Reference Pill
+            val cleanReference = reference.trim().uppercase()
+            val refPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
+                typeface = workSansRegular
+                textSize = 18f
+                color = activeAccentColor
+                isFakeBoldText = true
+                textAlign = Paint.Align.CENTER
+            }
+            canvas.drawText("— $cleanReference —", width / 2f, insetTop + scriptLayout.height + 62f, refPaint)
+        }
+
+        // 7. Outside Card hint at bottom
+        val hintPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
+            typeface = workSansRegular
+            textSize = 14f
+            color = activeAccentColor
+            alpha = 220
+            textAlign = Paint.Align.CENTER
+            if (isPhotoActive) setShadowLayer(4f, 0f, 1f, 0x99000000.toInt())
+        }
+        canvas.drawText("SNAP & SHARE  ·  MAKARIOS", width / 2f, 1690f, hintPaint)
+
+        return bitmap
+    }
+
+    /**
+     * 4. X / TWITTER CARD (16:9 Landscape — 1200 x 675)
+     * Editorial Broadsheet Pull-Quote Layout:
+     * Left vertical accent bar, monumental quote mark, left-aligned broad declaration,
+     * fine horizontal separator, and right-aligned Makarios signature.
+     */
+    private fun renderXCard(
+        context: Context,
+        declaration: String,
+        scripture: String,
+        reference: String,
+        category: String,
+        style: RenderStyle,
+        photoBitmap: Bitmap?
+    ): Bitmap {
+        val width = 1200
+        val height = 675
+        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+        val isPhotoActive = photoBitmap != null
+
+        // 1. Background & Scrim
+        drawBackgroundAndScrim(canvas, width, height, style, photoBitmap)
+
+        val activePrimaryColor = if (isPhotoActive) 0xFFFFFFFF.toInt() else style.primaryTextColor
+        val activeSecondaryColor = if (isPhotoActive) 0xEEFFFFFF.toInt() else style.secondaryTextColor
+        val activeAccentColor = if (isPhotoActive) 0xFFFBBF24.toInt() else style.accentColor
+
+        // 2. Fine Outer Border
+        val frameInset = 28f
+        val frameRect = RectF(frameInset, frameInset, width - frameInset, height - frameInset)
+        val framePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            this.style = Paint.Style.STROKE
+            strokeWidth = 1.4f
+            color = activeAccentColor
+            alpha = 100
+        }
+        canvas.drawRoundRect(frameRect, 18f, 18f, framePaint)
+
+        // Fonts
+        val cormorantRegular = ResourcesCompat.getFont(context, R.font.cormorant_garamond_regular) ?: Typeface.SERIF
+        val cormorantItalic = ResourcesCompat.getFont(context, R.font.cormorant_garamond_italic) ?: Typeface.create(Typeface.SERIF, Typeface.ITALIC)
+        val workSansRegular = ResourcesCompat.getFont(context, R.font.worksans_regular) ?: Typeface.SANS_SERIF
+
+        // 3. Left Vertical Accent Bar (Editorial pull-quote signature)
+        val barLeft = 68f
+        val barRight = 75f
+        val barTop = 90f
+        val barBottom = height - 90f
+        val barPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = activeAccentColor
+            this.style = Paint.Style.FILL
+        }
+        canvas.drawRoundRect(RectF(barLeft, barTop, barRight, barBottom), 3f, 3f, barPaint)
+
+        // 4. Header Bar (Top Right)
+        val headerPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
+            typeface = workSansRegular
+            textSize = 13f
+            letterSpacing = 0.12f
+            color = activeAccentColor
+            textAlign = Paint.Align.RIGHT
+        }
+        canvas.drawText("MAKARIOS  //  ${category.uppercase()}", width - 68f, 74f, headerPaint)
+
+        // 5. Massive Quote Mark Glyph
+        val quoteMarkPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
+            typeface = cormorantRegular
+            textSize = 72f
+            color = activeAccentColor
+            alpha = 190
+        }
+        canvas.drawText("“", 98f, 150f, quoteMarkPaint)
+
+        // 6. Left-Aligned Declaration Text
+        val cleanDeclaration = declaration.trim().removePrefix("“").removeSuffix("”")
+        val contentWidth = 1010
+        val declFontSize = calculateDeclarationSize(height, cleanDeclaration.length) * 0.95f
+        val declPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
+            typeface = cormorantRegular
+            textSize = declFontSize
+            color = activePrimaryColor
+            if (isPhotoActive) setShadowLayer(6f, 0f, 2f, 0xCC000000.toInt())
+        }
+        val declLayout = createLeftStaticLayout(cleanDeclaration, declPaint, contentWidth)
+
+        val declY = 135f
+        canvas.save()
+        canvas.translate(98f, declY)
+        declLayout.draw(canvas)
+        canvas.restore()
+
+        // 7. Horizontal Separator Line
+        val ruleY = declY + declLayout.height + 24f
+        val rulePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = activeAccentColor
+            strokeWidth = 1.2f
+            alpha = 110
+        }
+        canvas.drawLine(98f, ruleY, 98f + 260f, ruleY, rulePaint)
+
+        // 8. Grounding Scripture below rule
+        val cleanScripture = scripture.trim().removePrefix("“").removeSuffix("”")
+        val scriptPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
+            typeface = cormorantItalic
+            textSize = 23f
+            color = activeSecondaryColor
+            if (isPhotoActive) setShadowLayer(4f, 0f, 1f, 0xBB000000.toInt())
+        }
+        val scriptLayout = if (cleanScripture.isNotBlank()) {
+            createLeftStaticLayout("“$cleanScripture”", scriptPaint, contentWidth)
+        } else null
+
+        if (scriptLayout != null) {
+            canvas.save()
+            canvas.translate(98f, ruleY + 16f)
+            scriptLayout.draw(canvas)
+            canvas.restore()
+        }
+
+        // 9. Bottom Row: Scripture Reference Pill & Brand Wordmark
+        val bottomY = height - 56f
+        val cleanReference = reference.trim().uppercase()
+        val refPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
+            typeface = workSansRegular
+            textSize = 15f
+            isFakeBoldText = true
+            color = activeAccentColor
+        }
+        canvas.drawText("— $cleanReference", 98f, bottomY, refPaint)
+
+        val signaturePaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
+            typeface = cormorantItalic
+            textSize = 16f
+            color = activePrimaryColor
+            alpha = if (isPhotoActive) 160 else 110
+            textAlign = Paint.Align.RIGHT
+        }
+        canvas.drawText("truth in declaration · makarios.app", width - 68f, bottomY, signaturePaint)
+
+        return bitmap
+    }
+
+    /**
+     * 5. WHATSAPP STATUS / CHAT CARD (4:5 — 1080 x 1350)
+     * Sacred Devotional Letter / Blessing Card with high-contrast compression-proof clarity,
+     * cross divider, and devotional sharing footer.
+     */
+    private fun renderWhatsAppCard(
+        context: Context,
+        declaration: String,
+        scripture: String,
+        reference: String,
+        category: String,
+        style: RenderStyle,
+        photoBitmap: Bitmap?
+    ): Bitmap {
+        val width = 1080
+        val height = 1350
+        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+        val isPhotoActive = photoBitmap != null
+
+        // 1. Background & Scrim
+        drawBackgroundAndScrim(canvas, width, height, style, photoBitmap)
+
+        val activePrimaryColor = if (isPhotoActive) 0xFFFFFFFF.toInt() else style.primaryTextColor
+        val activeSecondaryColor = if (isPhotoActive) 0xEEFFFFFF.toInt() else style.secondaryTextColor
+        val activeAccentColor = if (isPhotoActive) 0xFFFBBF24.toInt() else style.accentColor
+
+        // 2. Inset Devotional Border with Sacred Cross Top Emblem
+        val frameInset = 40f
+        val frameRect = RectF(frameInset, frameInset, width - frameInset, height - frameInset)
+        val framePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            this.style = Paint.Style.STROKE
+            strokeWidth = 1.8f
+            color = activeAccentColor
+            alpha = 150
+        }
+        canvas.drawRoundRect(frameRect, 24f, 24f, framePaint)
+        drawCornerOrnaments(canvas, frameRect, 24f, activeAccentColor)
+
+        // Fonts
+        val cormorantRegular = ResourcesCompat.getFont(context, R.font.cormorant_garamond_regular) ?: Typeface.SERIF
+        val cormorantItalic = ResourcesCompat.getFont(context, R.font.cormorant_garamond_italic) ?: Typeface.create(Typeface.SERIF, Typeface.ITALIC)
+        val workSansRegular = ResourcesCompat.getFont(context, R.font.worksans_regular) ?: Typeface.SANS_SERIF
+
+        // 3. Category Header
+        val headerText = "DAILY BLESSING   ·   ${category.uppercase()}"
+        val headerPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
+            typeface = workSansRegular
+            textSize = 15f
+            letterSpacing = 0.14f
+            color = activeAccentColor
+            textAlign = Paint.Align.CENTER
+            if (isPhotoActive) setShadowLayer(4f, 0f, 1f, 0x99000000.toInt())
+        }
+        canvas.drawText(headerText, width / 2f, 110f, headerPaint)
+
+        // 4. Hero Declaration
+        val cleanDeclaration = declaration.trim().removePrefix("“").removeSuffix("”")
+        val declMaxWidth = 860
+        val declFontSize = calculateDeclarationSize(width, cleanDeclaration.length) * 1.06f
+        val declPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
+            typeface = cormorantRegular
+            textSize = declFontSize
+            color = activePrimaryColor
+            if (isPhotoActive) setShadowLayer(8f, 0f, 2f, 0xCC000000.toInt())
+        }
+        val declLayout = createCenteredStaticLayout("“$cleanDeclaration”", declPaint, declMaxWidth)
+
+        val declY = 170f
+        canvas.save()
+        canvas.translate((width - declMaxWidth) / 2f, declY)
+        declLayout.draw(canvas)
+        canvas.restore()
+
+        // 5. Sacred Divider
+        val divY = declY + declLayout.height + 40f
+        drawSacredDivider(canvas, width / 2f, divY, 220f, 1.8f, activeAccentColor)
+
+        // 6. Grounding Scripture Parchment Inset
+        val cleanScripture = scripture.trim().removePrefix("“").removeSuffix("”")
+        if (cleanScripture.isNotBlank()) {
+            val scriptPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
+                typeface = cormorantItalic
+                textSize = 28f
+                color = activeSecondaryColor
+                if (isPhotoActive) setShadowLayer(6f, 0f, 2f, 0xBB000000.toInt())
+            }
+            val scriptMaxWidth = 760
+            val scriptLayout = createCenteredStaticLayout("“$cleanScripture”", scriptPaint, scriptMaxWidth)
+
+            val plaqueTop = divY + 40f
+            val plaqueHeight = scriptLayout.height + 95f
+            val plaqueRect = RectF(100f, plaqueTop, width - 100f, plaqueTop + plaqueHeight)
+
+            val plaqueBg = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = if (isPhotoActive || style.isDark) 0x2AFFFFFF.toInt() else 0x16000000.toInt()
+                this.style = Paint.Style.FILL
+            }
+            val plaqueStroke = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                this.style = Paint.Style.STROKE
+                strokeWidth = 1.4f
+                color = activeAccentColor
+                alpha = 90
+            }
+            canvas.drawRoundRect(plaqueRect, 20f, 20f, plaqueBg)
+            canvas.drawRoundRect(plaqueRect, 20f, 20f, plaqueStroke)
+
+            canvas.save()
+            canvas.translate((width - scriptMaxWidth) / 2f, plaqueTop + 24f)
+            scriptLayout.draw(canvas)
+            canvas.restore()
+
+            // Reference inside plaque
+            val cleanReference = reference.trim().uppercase()
+            val refPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
+                typeface = workSansRegular
+                textSize = 18f
+                color = activeAccentColor
+                isFakeBoldText = true
+                textAlign = Paint.Align.CENTER
+            }
+            val trackedRef = cleanReference.map { "$it " }.joinToString("").trim()
+            canvas.drawText("— $trackedRef —", width / 2f, plaqueTop + scriptLayout.height + 62f, refPaint)
+        }
+
+        // 7. Footer: Sharing encouragement
+        val footerPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
+            typeface = workSansRegular
+            textSize = 13.5f
+            color = activeAccentColor
+            alpha = 180
+            textAlign = Paint.Align.CENTER
+        }
+        val wordmarkPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
+            typeface = cormorantItalic
+            textSize = 16f
+            color = activePrimaryColor
+            alpha = if (isPhotoActive) 150 else 100
+            textAlign = Paint.Align.CENTER
+        }
+        canvas.drawText("Forward this blessing to someone today", width / 2f, 1260f, footerPaint)
+        canvas.drawText("makarios  ·  speak truth  ·  walk blessed", width / 2f, 1290f, wordmarkPaint)
+
+        return bitmap
+    }
+
+    /**
+     * 6. LOCKSCREEN / HOME PHONE WALLPAPER (9:20 — 1080 x 2400)
+     * Preserves top 28% (670px) completely cleared for system clock, date, notification icons,
+     * and lockscreen complication widgets.
+     */
+    private fun renderLockscreenWallpaper(
+        context: Context,
+        declaration: String,
+        scripture: String,
+        reference: String,
+        category: String,
+        style: RenderStyle,
+        photoBitmap: Bitmap?
+    ): Bitmap {
+        val width = 1080
+        val height = 2400
+        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+        val isPhotoActive = photoBitmap != null
+
+        // 1. Background & Scrim
+        drawBackgroundAndScrim(canvas, width, height, style, photoBitmap)
+
+        val activePrimaryColor = if (isPhotoActive) 0xFFFFFFFF.toInt() else style.primaryTextColor
+        val activeSecondaryColor = if (isPhotoActive) 0xEEFFFFFF.toInt() else style.secondaryTextColor
+        val activeAccentColor = if (isPhotoActive) 0xFFFBBF24.toInt() else style.accentColor
+        val activeFrameColor = if (isPhotoActive) 0x4DFFFFFF.toInt() else style.frameColor
+
+        // 2. Hairline Inset Sacred Border
+        val frameInset = 44f
+        val frameRadius = 32f
+        val framePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            this.style = Paint.Style.STROKE
+            strokeWidth = 1.6f
+            color = activeFrameColor
+        }
+        val frameRect = RectF(frameInset, frameInset, width - frameInset, height - frameInset)
+        canvas.drawRoundRect(frameRect, frameRadius, frameRadius, framePaint)
+        drawCornerOrnaments(canvas, frameRect, frameRadius, activeAccentColor)
+
+        // Fonts
+        val cormorantRegular = ResourcesCompat.getFont(context, R.font.cormorant_garamond_regular) ?: Typeface.SERIF
+        val cormorantItalic = ResourcesCompat.getFont(context, R.font.cormorant_garamond_italic) ?: Typeface.create(Typeface.SERIF, Typeface.ITALIC)
+        val workSansRegular = ResourcesCompat.getFont(context, R.font.worksans_regular) ?: Typeface.SANS_SERIF
+
+        val contentMaxWidth = 860
+
+        // 3. Category Header
+        val headerText = "M A K A R I O S   ·   ${category.uppercase().replace(" ", "   ")}"
+        val headerPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
+            typeface = workSansRegular
+            textSize = 17f
+            color = activeAccentColor
+            textAlign = Paint.Align.CENTER
+            if (isPhotoActive) setShadowLayer(4f, 0f, 1f, 0x99000000.toInt())
+        }
+        val headerHeight = headerPaint.textSize
+
+        // 4. Hero Declaration
+        val cleanDeclaration = declaration.trim().removePrefix("“").removeSuffix("”")
+        val declFontSize = calculateDeclarationSize(width, cleanDeclaration.length)
+        val declPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
+            typeface = cormorantRegular
+            textSize = declFontSize
+            color = activePrimaryColor
+            if (isPhotoActive) setShadowLayer(8f, 0f, 2f, 0xCC000000.toInt())
+        }
+        val declLayout = createCenteredStaticLayout("“$cleanDeclaration”", declPaint, contentMaxWidth)
+
+        // 5. Divider
+        val dividerWidth = 180f
+        val dividerHeight = 1.8f
+
+        // 6. Grounding Scripture
+        val cleanScripture = scripture.trim().removePrefix("“").removeSuffix("”")
+        val scriptPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
+            typeface = cormorantItalic
+            textSize = 29f
+            color = activeSecondaryColor
+            if (isPhotoActive) setShadowLayer(6f, 0f, 2f, 0xBB000000.toInt())
+        }
+        val scriptLayout = if (cleanScripture.isNotBlank()) {
+            createCenteredStaticLayout("“$cleanScripture”", scriptPaint, (contentMaxWidth * 0.92f).toInt())
+        } else null
+
+        // 7. Reference
+        val cleanReference = reference.trim().uppercase()
+        val refPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
+            typeface = workSansRegular
+            textSize = 19f
+            color = activeAccentColor
+            isFakeBoldText = true
+            textAlign = Paint.Align.CENTER
+            if (isPhotoActive) setShadowLayer(4f, 0f, 1f, 0x99000000.toInt())
+        }
+        val refHeight = refPaint.textSize
+
+        // Vertical balancing with top 28% lockscreen clock clearance
+        val spaceAfterHeader = 34f
+        val spaceAfterDecl = 32f
+        val spaceAfterDiv = 32f
+        val spaceAfterScript = 24f
+
+        val totalContentHeight = headerHeight + spaceAfterHeader +
+                declLayout.height + spaceAfterDecl +
+                dividerHeight + spaceAfterDiv +
+                (scriptLayout?.height?.toFloat() ?: 0f) + spaceAfterScript +
+                refHeight
+
+        // Optical center shifted to 54% height with clock clearance
+        val opticalCenter = height * 0.54f
+        val startY = (opticalCenter - (totalContentHeight / 2f)).coerceAtLeast(height * 0.28f)
+
+        var currentY = startY
+
+        // Header
+        currentY += headerHeight
+        canvas.drawText(headerText, width / 2f, currentY, headerPaint)
+        currentY += spaceAfterHeader
+
+        // Declaration
+        canvas.save()
+        canvas.translate((width - contentMaxWidth) / 2f, currentY)
+        declLayout.draw(canvas)
+        canvas.restore()
+        currentY += declLayout.height + spaceAfterDecl
+
+        // Divider
+        drawSacredDivider(canvas, width / 2f, currentY, dividerWidth, dividerHeight, activeAccentColor)
+        currentY += dividerHeight + spaceAfterDiv
+
+        // Scripture
+        if (scriptLayout != null) {
+            val scriptMaxWidth = (contentMaxWidth * 0.92f).toInt()
+            canvas.save()
+            canvas.translate((width - scriptMaxWidth) / 2f, currentY)
+            scriptLayout.draw(canvas)
+            canvas.restore()
+            currentY += scriptLayout.height + spaceAfterScript
+        }
+
+        // Reference
+        currentY += refHeight
+        val trackedRef = cleanReference.map { "$it " }.joinToString("").trim()
+        canvas.drawText("— $trackedRef —", width / 2f, currentY, refPaint)
+
+        // Footer Wordmark
+        val footerPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
+            typeface = cormorantItalic
+            textSize = 19f
+            color = activePrimaryColor
+            alpha = if (isPhotoActive) 140 else if (style.isDark) 90 else 80
+            textAlign = Paint.Align.CENTER
+            if (isPhotoActive) setShadowLayer(3f, 0f, 1f, 0x88000000.toInt())
+        }
+        val footerY = height - (frameInset * 1.8f)
+        canvas.drawText("makarios  ·  speak truth  ·  walk blessed", width / 2f, footerY, footerPaint)
+
+        return bitmap
+    }
+
+    /**
+     * Common drawing helper for background gradient or photo center-crop + scrim.
+     */
+    private fun drawBackgroundAndScrim(
+        canvas: Canvas,
+        width: Int,
+        height: Int,
+        style: RenderStyle,
+        photoBitmap: Bitmap?
+    ) {
         if (photoBitmap != null) {
-            // 1. Draw Photographic Background with CenterCrop Scaling
             val matrix = Matrix()
             val scale = max(width.toFloat() / photoBitmap.width, height.toFloat() / photoBitmap.height)
             val dx = (width - photoBitmap.width * scale) * 0.5f
@@ -193,14 +1169,14 @@ object WallpaperRenderer {
             val photoPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { isFilterBitmap = true }
             canvas.drawBitmap(photoBitmap, matrix, photoPaint)
 
-            // 2. Cinematic Protective Scrim for Pristine Readability (YouVersion style)
+            // Multi-stop protective scrim
             val scrimShader = LinearGradient(
                 0f, 0f, 0f, height.toFloat(),
                 intArrayOf(
-                    0x4D000000.toInt(), // 30% dark at top
-                    0x660E0B08.toInt(), // 40% dark upper mid
-                    0x990E0B08.toInt(), // 60% dark lower mid
-                    0xE60A0806.toInt()  // 90% dark espresso base for scripture & reference
+                    0x4D000000.toInt(),
+                    0x660E0B08.toInt(),
+                    0x990E0B08.toInt(),
+                    0xE60A0806.toInt()
                 ),
                 floatArrayOf(0f, 0.30f, 0.65f, 1f),
                 Shader.TileMode.CLAMP
@@ -208,7 +1184,7 @@ object WallpaperRenderer {
             val scrimPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { shader = scrimShader }
             canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), scrimPaint)
         } else {
-            // 1. Background Gradient
+            // Background Gradient
             val bgShader = LinearGradient(
                 0f, 0f, 0f, height.toFloat(),
                 style.backgroundColors,
@@ -221,7 +1197,7 @@ object WallpaperRenderer {
             }
             canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), bgPaint)
 
-            // 2. Soft Ambient Radial Glow
+            // Soft Ambient Radial Glow
             val glowPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
                 isDither = true
                 val glowColor = if (style.isDark) 0x18FFFFFF else 0x12FFFFFF
@@ -236,180 +1212,6 @@ object WallpaperRenderer {
             }
             canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), glowPaint)
         }
-
-        // Active Theme Colors
-        val activePrimaryColor = if (isPhotoActive) 0xFFFFFFFF.toInt() else style.primaryTextColor
-        val activeSecondaryColor = if (isPhotoActive) 0xEEFFFFFF.toInt() else style.secondaryTextColor
-        val activeAccentColor = if (isPhotoActive) 0xFFFBBF24.toInt() else style.accentColor
-        val activeFrameColor = if (isPhotoActive) 0x4DFFFFFF.toInt() else style.frameColor
-
-        // 3. Hairline Inset Sacred Border
-        val frameInset = min(width, height) * 0.042f
-        val frameRadius = min(width, height) * 0.035f
-        val framePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            this.style = Paint.Style.STROKE
-            strokeWidth = min(width, height) * 0.0016f
-            color = activeFrameColor
-        }
-        val frameRect = RectF(
-            frameInset,
-            frameInset,
-            width - frameInset,
-            height - frameInset
-        )
-        canvas.drawRoundRect(frameRect, frameRadius, frameRadius, framePaint)
-
-        // Draw delicate corner ornaments
-        drawCornerOrnaments(canvas, frameRect, frameRadius, activeAccentColor)
-
-        // Load sacred typography
-        val cormorantRegular = ResourcesCompat.getFont(context, R.font.cormorant_garamond_regular)
-            ?: Typeface.SERIF
-        val cormorantItalic = ResourcesCompat.getFont(context, R.font.cormorant_garamond_italic)
-            ?: Typeface.create(Typeface.SERIF, Typeface.ITALIC)
-        val workSansRegular = ResourcesCompat.getFont(context, R.font.worksans_regular)
-            ?: Typeface.SANS_SERIF
-
-        // Dynamic text widths & max boundaries
-        val contentMaxWidth = (width - (frameInset * 2.8f)).toInt().coerceAtLeast(400)
-
-        // 4. Header Category Badge
-        val headerText = "M A K A R I O S   ·   ${category.uppercase().replace(" ", "   ")}"
-        val headerPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
-            typeface = workSansRegular
-            textSize = min(width, height) * 0.016f
-            color = activeAccentColor
-            alpha = if (isPhotoActive || style.isDark) 240 else 220
-            textAlign = Paint.Align.CENTER
-            if (isPhotoActive) {
-                setShadowLayer(4f, 0f, 1f, 0x99000000.toInt())
-            }
-        }
-        val headerHeight = headerPaint.textSize
-
-        // 5. Declaration Text
-        val cleanDeclaration = declaration.trim().removePrefix("“").removeSuffix("”")
-        val fullDeclaration = "“$cleanDeclaration”"
-
-        val declFontSize = calculateDeclarationSize(min(width, height), cleanDeclaration.length)
-        val declPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
-            typeface = cormorantRegular
-            textSize = declFontSize
-            color = activePrimaryColor
-            if (isPhotoActive) {
-                setShadowLayer(8f, 0f, 2f, 0xCC000000.toInt())
-            }
-            // Note: Paint.Align.CENTER is intentionally omitted here because StaticLayout
-            // handles centered alignment across [0, contentMaxWidth] internally via ALIGN_CENTER.
-        }
-        val declLayout = createCenteredStaticLayout(fullDeclaration, declPaint, contentMaxWidth)
-
-        // 6. Ornamental Center Divider
-        val dividerWidth = min(width, height) * 0.16f
-        val dividerHeight = min(width, height) * 0.0016f
-        val dividerSpacing = min(width, height) * 0.024f
-
-        // 7. Grounding Scripture Text
-        val cleanScripture = scripture.trim().removePrefix("“").removeSuffix("”")
-        val fullScripture = if (cleanScripture.isNotBlank()) "“$cleanScripture”" else ""
-
-        val scriptFontSize = min(width, height) * 0.027f
-        val scriptPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
-            typeface = cormorantItalic
-            textSize = scriptFontSize
-            color = activeSecondaryColor
-            if (isPhotoActive) {
-                setShadowLayer(6f, 0f, 2f, 0xBB000000.toInt())
-            }
-            // Note: Paint.Align.CENTER is intentionally omitted here for StaticLayout compatibility.
-        }
-        val scriptLayout = if (fullScripture.isNotBlank()) {
-            createCenteredStaticLayout(fullScripture, scriptPaint, (contentMaxWidth * 0.92f).toInt())
-        } else null
-
-        // 8. Scripture Reference
-        val cleanReference = reference.trim().uppercase()
-        val refPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
-            typeface = workSansRegular
-            textSize = min(width, height) * 0.018f
-            color = activeAccentColor
-            isFakeBoldText = true
-            textAlign = Paint.Align.CENTER
-            if (isPhotoActive) {
-                setShadowLayer(4f, 0f, 1f, 0x99000000.toInt())
-            }
-        }
-        val refHeight = refPaint.textSize
-
-        // 9. Vertical Balancing & Safe Zones
-        val spaceAfterHeader = min(width, height) * 0.030f
-        val spaceAfterDecl = min(width, height) * 0.024f
-        val spaceAfterDiv = min(width, height) * 0.024f
-        val spaceAfterScript = min(width, height) * 0.016f
-
-        val totalContentHeight = headerHeight + spaceAfterHeader +
-                declLayout.height + spaceAfterDecl +
-                dividerHeight + spaceAfterDiv +
-                (scriptLayout?.height?.toFloat() ?: 0f) + spaceAfterScript +
-                refHeight
-
-        // On wallpaper format, shift optical center downward slightly (35% to 75%)
-        // so the phone lock-screen clock & date (top 25%) don't collide with the declaration.
-        val startY = if (format.isWallpaper) {
-            val opticalCenter = height * 0.54f
-            (opticalCenter - (totalContentHeight / 2f)).coerceAtLeast(height * 0.28f)
-        } else {
-            ((height - totalContentHeight) / 2f).coerceAtLeast(frameInset * 1.5f)
-        }
-
-        var currentY = startY
-
-        // Draw Header
-        currentY += headerHeight
-        canvas.drawText(headerText, width / 2f, currentY, headerPaint)
-        currentY += spaceAfterHeader
-
-        // Draw Declaration
-        canvas.save()
-        canvas.translate((width - contentMaxWidth) / 2f, currentY)
-        declLayout.draw(canvas)
-        canvas.restore()
-        currentY += declLayout.height + spaceAfterDecl
-
-        // Draw Ornamental Divider with diamond center
-        drawSacredDivider(canvas, width / 2f, currentY, dividerWidth, dividerHeight, activeAccentColor)
-        currentY += dividerHeight + spaceAfterDiv
-
-        // Draw Grounding Scripture
-        if (scriptLayout != null) {
-            val scriptMaxWidth = (contentMaxWidth * 0.92f).toInt()
-            canvas.save()
-            canvas.translate((width - scriptMaxWidth) / 2f, currentY)
-            scriptLayout.draw(canvas)
-            canvas.restore()
-            currentY += scriptLayout.height + spaceAfterScript
-        }
-
-        // Draw Scripture Reference
-        currentY += refHeight
-        val trackedRef = cleanReference.map { "$it " }.joinToString("").trim()
-        canvas.drawText("— $trackedRef —", width / 2f, currentY, refPaint)
-
-        // 10. Subtle Footer Wordmark
-        val footerPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
-            typeface = cormorantItalic
-            textSize = min(width, height) * 0.018f
-            color = activePrimaryColor
-            alpha = if (isPhotoActive) 140 else if (style.isDark) 90 else 80
-            textAlign = Paint.Align.CENTER
-            if (isPhotoActive) {
-                setShadowLayer(3f, 0f, 1f, 0x88000000.toInt())
-            }
-        }
-        val footerY = height - (frameInset * 1.6f)
-        canvas.drawText("makarios  ·  speak truth  ·  walk blessed", width / 2f, footerY, footerPaint)
-
-        return bitmap
     }
 
     /**
@@ -462,6 +1264,90 @@ object WallpaperRenderer {
                 0f,
                 false
             )
+        }
+    }
+
+    private fun createLeftStaticLayout(
+        text: CharSequence,
+        paint: TextPaint,
+        maxWidth: Int
+    ): StaticLayout {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            StaticLayout.Builder.obtain(text, 0, text.length, paint, maxWidth)
+                .setAlignment(Layout.Alignment.ALIGN_NORMAL)
+                .setLineSpacing(0f, 1.26f)
+                .setIncludePad(false)
+                .build()
+        } else {
+            @Suppress("DEPRECATION")
+            StaticLayout(
+                text,
+                paint,
+                maxWidth,
+                Layout.Alignment.ALIGN_NORMAL,
+                1.26f,
+                0f,
+                false
+            )
+        }
+    }
+
+    private fun drawCornerDiamonds(
+        canvas: Canvas,
+        rect: RectF,
+        size: Float,
+        accentColor: Int
+    ) {
+        val diamondPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = accentColor
+            style = Paint.Style.FILL
+            alpha = 190
+        }
+        val half = size / 2f
+        val points = listOf(
+            Pair(rect.left, rect.top),
+            Pair(rect.right, rect.top),
+            Pair(rect.left, rect.bottom),
+            Pair(rect.right, rect.bottom)
+        )
+        for ((cx, cy) in points) {
+            val path = Path().apply {
+                moveTo(cx, cy - half)
+                lineTo(cx + half, cy)
+                lineTo(cx, cy + half)
+                lineTo(cx - half, cy)
+                close()
+            }
+            canvas.drawPath(path, diamondPaint)
+        }
+    }
+
+    private fun drawThreeDiamondDivider(
+        canvas: Canvas,
+        centerX: Float,
+        centerY: Float,
+        size: Float,
+        spacing: Float,
+        accentColor: Int
+    ) {
+        val diamondPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = accentColor
+            style = Paint.Style.FILL
+            alpha = 180
+        }
+        val offsets = listOf(-spacing, 0f, spacing)
+        for (off in offsets) {
+            val cx = centerX + off
+            val s = if (off == 0f) size * 1.25f else size
+            val half = s / 2f
+            val path = Path().apply {
+                moveTo(cx, centerY - half)
+                lineTo(cx + half, centerY)
+                lineTo(cx, centerY + half)
+                lineTo(cx - half, centerY)
+                close()
+            }
+            canvas.drawPath(path, diamondPaint)
         }
     }
 
