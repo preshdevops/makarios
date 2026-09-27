@@ -1,6 +1,7 @@
 package com.makarios.app.widget
 
 import android.content.Context
+import android.content.Intent
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -30,6 +31,7 @@ class MakariosGlanceWidget : GlanceAppWidget() {
 
         provideContent {
             GlanceWidgetContent(
+                context = context,
                 declaration = truth.declaration,
                 reference = truth.reference,
                 scripture = truth.scriptureText,
@@ -41,12 +43,17 @@ class MakariosGlanceWidget : GlanceAppWidget() {
 
     @Composable
     private fun GlanceWidgetContent(
+        context: Context,
         declaration: String,
         reference: String,
         scripture: String,
         category: String,
         isDark: Boolean
     ) {
+        val launchIntent = Intent(context, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        }
+
         // Aesthetic sacred color tokens
         val bgColor = if (isDark) Color(0xFF221C18) else Color(0xFFFAF7F2)
         val cardBg = if (isDark) Color(0xFF2D2520) else Color(0xFFFFFFFF)
@@ -60,7 +67,7 @@ class MakariosGlanceWidget : GlanceAppWidget() {
                 .fillMaxSize()
                 .cornerRadius(22.dp)
                 .background(bgColor)
-                .clickable(actionStartActivity(MainActivity::class.java))
+                .clickable(actionStartActivity(launchIntent))
                 .padding(14.dp)
         ) {
             Column(
