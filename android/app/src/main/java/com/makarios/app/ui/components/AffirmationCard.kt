@@ -1,5 +1,6 @@
 package com.makarios.app.ui.components
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -8,7 +9,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Widgets
 import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -20,6 +23,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -27,6 +31,8 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.makarios.app.data.Affirmation
 import com.makarios.app.ui.theme.*
+import com.makarios.app.util.ReminderManager
+import com.makarios.app.util.WidgetHelper
 
 @Composable
 fun AffirmationCard(
@@ -37,6 +43,8 @@ fun AffirmationCard(
     onCardClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
+
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -64,9 +72,9 @@ fun AffirmationCard(
                 .background(
                     Brush.verticalGradient(
                         colors = listOf(
-                            Color.Black.copy(alpha = 0.08f), // Crystal clear top letting sunlight & sky shine through
-                            Color.Black.copy(alpha = 0.30f), // Gentle transition
-                            Color(0xD91E1916)               // Warm espresso base for rock-solid contrast
+                            Color.Black.copy(alpha = 0.08f),
+                            Color.Black.copy(alpha = 0.30f),
+                            Color(0xD91E1916)
                         )
                     )
                 )
@@ -78,7 +86,7 @@ fun AffirmationCard(
                 .fillMaxWidth()
                 .padding(24.dp)
         ) {
-            // Header: Category badge & action buttons
+            // Header: Category badge & action buttons (Widget, Notification, Share, Bookmark)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -101,13 +109,52 @@ fun AffirmationCard(
                 }
 
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(7.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    // Set as Widget Button
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clip(CircleShape)
+                            .background(Color.White.copy(alpha = 0.18f))
+                            .clickable {
+                                WidgetHelper.setWidgetAffirmation(context, affirmation)
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Widgets,
+                            contentDescription = "Set as Widget",
+                            tint = Color.White,
+                            modifier = Modifier.size(15.dp)
+                        )
+                    }
+
+                    // Set as Notification Button
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clip(CircleShape)
+                            .background(Color.White.copy(alpha = 0.18f))
+                            .clickable {
+                                ReminderManager.setPinnedAffirmation(context, affirmation)
+                                Toast.makeText(context, "Set as daily notification ✓", Toast.LENGTH_SHORT).show()
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Notifications,
+                            contentDescription = "Set as Notification",
+                            tint = Color.White,
+                            modifier = Modifier.size(15.dp)
+                        )
+                    }
+
                     // Glass Share Button
                     Box(
                         modifier = Modifier
-                            .size(34.dp)
+                            .size(32.dp)
                             .clip(CircleShape)
                             .background(Color.White.copy(alpha = 0.18f))
                             .clickable(onClick = onShare),
@@ -117,16 +164,16 @@ fun AffirmationCard(
                             imageVector = Icons.Default.Share,
                             contentDescription = "Share",
                             tint = Color.White,
-                            modifier = Modifier.size(15.dp)
+                            modifier = Modifier.size(14.dp)
                         )
                     }
 
                     // Glass Bookmark Button
                     Box(
                         modifier = Modifier
-                            .size(34.dp)
+                            .size(32.dp)
                             .clip(CircleShape)
-                            .background(if (isSaved) Color.White.copy(alpha = 0.30f) else Color.White.copy(alpha = 0.18f))
+                            .background(if (isSaved) Color.White.copy(alpha = 0.32f) else Color.White.copy(alpha = 0.18f))
                             .clickable(onClick = onToggleSave),
                         contentAlignment = Alignment.Center
                     ) {
@@ -134,13 +181,13 @@ fun AffirmationCard(
                             imageVector = if (isSaved) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
                             contentDescription = "Save declaration",
                             tint = Color.White,
-                            modifier = Modifier.size(16.dp)
+                            modifier = Modifier.size(15.dp)
                         )
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(28.dp))
+            Spacer(modifier = Modifier.height(26.dp))
 
             // Main Declaration in Cormorant Garamond Display Serif
             Text(

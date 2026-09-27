@@ -18,9 +18,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Widgets
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -41,7 +42,9 @@ import coil.compose.AsyncImage
 import com.makarios.app.data.Affirmation
 import com.makarios.app.data.AffirmationRepository
 import com.makarios.app.ui.theme.*
+import com.makarios.app.util.ReminderManager
 import com.makarios.app.util.ShareHelper
+import com.makarios.app.util.WidgetHelper
 
 @Composable
 fun HomeScreen(
@@ -185,6 +188,7 @@ private fun SanctuaryHero(
     onShare: () -> Unit,
     onTap: () -> Unit
 ) {
+    val context = LocalContext.current
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -300,7 +304,34 @@ private fun SanctuaryHero(
                         color = Color.White.copy(alpha = 0.70f)
                     )
 
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+                        SpringIconButton(
+                            onClick = { WidgetHelper.setWidgetAffirmation(context, affirmation) },
+                            contentDescription = "Set as Widget"
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Widgets,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(15.dp)
+                            )
+                        }
+
+                        SpringIconButton(
+                            onClick = {
+                                ReminderManager.setPinnedAffirmation(context, affirmation)
+                                Toast.makeText(context, "Set as daily notification ✓", Toast.LENGTH_SHORT).show()
+                            },
+                            contentDescription = "Set as Notification"
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Notifications,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(15.dp)
+                            )
+                        }
+
                         SpringIconButton(
                             onClick = onShare,
                             contentDescription = "Share"
@@ -309,7 +340,7 @@ private fun SanctuaryHero(
                                 imageVector = Icons.Default.Share,
                                 contentDescription = null,
                                 tint = Color.White,
-                                modifier = Modifier.size(16.dp)
+                                modifier = Modifier.size(15.dp)
                             )
                         }
 
@@ -322,7 +353,7 @@ private fun SanctuaryHero(
                                 imageVector = if (isSaved) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
                                 contentDescription = null,
                                 tint = Color.White,
-                                modifier = Modifier.size(16.dp)
+                                modifier = Modifier.size(15.dp)
                             )
                         }
                     }

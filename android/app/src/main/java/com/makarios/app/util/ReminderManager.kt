@@ -19,8 +19,8 @@ import java.util.Calendar
  * ReminderManager
  *
  * Full-fidelity scheduler and notification manager for Makarios.
- * Powers daily sacred reminders (Dawn, Midday, Evening) and hourly declarations,
- * supporting targeted delivery from Custom authored, Saved, Spiritual Focus, or Complete Library.
+ * Powers daily sacred reminders and allows users to set any specific affirmation
+ * as their active notification or choose a delivery pool (Pinned, Custom, Saved, All).
  */
 object ReminderManager {
 
@@ -39,22 +39,19 @@ object ReminderManager {
     const val REQ_HOURLY = 1004
 
     enum class ReminderType(val action: String, val requestCode: Int, val hour: Int, val minute: Int) {
-        DAWN(ACTION_DAWN, REQ_DAWN, 6, 30),
+        DAWN(ACTION_DAWN, REQ_DAWN, 8, 30),
         MIDDAY(ACTION_MIDDAY, REQ_MIDDAY, 12, 30),
         EVENING(ACTION_EVENING, REQ_EVENING, 20, 30),
         HOURLY(ACTION_HOURLY, REQ_HOURLY, -1, -1)
     }
 
     enum class ReminderSource(val id: String, val title: String, val subtitle: String) {
+        PINNED("pinned", "Pinned Affirmation", "Delivers your individually chosen declaration"),
         CUSTOM("custom", "Personal Declarations", "Delivers affirmations you authored"),
         SAVED("saved", "Saved Declarations", "Delivers your bookmarked promises"),
-        FOCUS("focus", "Spiritual Focus", "Anchored to your active season"),
-        ALL("all", "Complete Library", "Any biblical declaration across themes")
+        ALL("all", "Any Scripture & Truth", "Delivers declarations from the full library")
     }
 
-    /**
-     * Initializes notification channels and reschedules active reminders.
-     */
     fun init(context: Context) {
         createNotificationChannel(context)
         rescheduleAll(context)
@@ -79,48 +76,65 @@ object ReminderManager {
 
     // ── Preference Accessors ──────────────────────────────────────
 
-    fun isDawnEnabled(context: Context): Boolean =
-        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).getBoolean("dawn_enabled", true)
+    fun isDailyReminderEnabled(context: Context): Boolean =
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .getBoolean("daily_reminder_enabled", true)
 
-    fun isMiddayEnabled(context: Context): Boolean =
-        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).getBoolean("midday_enabled", false)
+    fun setDailyReminderEnabled(context: Context, enabled: Boolean) {
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit()
+            .putBoolean("daily_reminder_enabled", enabled).apply()
+        if (enabled) {
+            scheduleDaily(context, ReminderType.DAWN)
+        } else {
+            cancelReminder(context, ReminderType.DAWN)
+            cancelReminder(context, ReminderType.MIDDAY)
+            cancelReminder(context, ReminderType.EVENING)
+            cancelReminder(context, ReminderType.HOURLY)
+        }
+    }
 
-    fun isEveningEnabled(context: Context): Boolean =
-        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).getBoolean("evening_enabled", true)
-
-    fun isHourlyEnabled(context: Context): Boolean =
-        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).getBoolean("hourly_enabled", false)
+    fun isDawnEnabled(context: Context): Boolean = isDailyReminderEnabled(context)
+    fun isMiddayEnabled(context: Context): Boolean = false
+    fun isEveningEnabled(context: Context): Boolean = false
+    fun isHourlyEnabled(context: Context): Boolean = false
 
     fun setDawnEnabled(context: Context, enabled: Boolean) {
-        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit()
-            .putBoolean("dawn_enabled", enabled).apply()
-        if (enabled) scheduleDaily(context, ReminderType.DAWN) else cancelReminder(context, ReminderType.DAWN)
+        setDailyReminderEnabled(context, enabled)
     }
 
-    fun setMiddayEnabled(context: Context, enabled: Boolean) {
+    // ── Specific / Pinned Affirmation Delivery ────────────────────
+
+    fun setPinnedAffirmation(context: Context, affirmation: Affirmation) {
         context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit()
-            .putBoolean("midday_enabled", enabled).apply()
-        if (enabled) scheduleDaily(context, ReminderType.MIDDAY) else cancelReminder(context, ReminderType.MIDDAY)
+            .putString("pinned_affirmation_id", affirmation.id)
+            .putString("reminder_source", ReminderSource.PINNED.id)
+            .putBoolean("daily_reminder_enabled", true)
+            .apply()
+
+        scheduleDaily(context, ReminderType.DAWN)
+
+        showSacredNotification(
+            context = context,
+            notificationId = 1001,
+            title = "Notification Set · Makarios",
+            declaration = affirmation.declaration,
+            scripture = affirmation.scriptureText,
+            reference = affirmation.reference
+        )
     }
 
-    fun setEveningEnabled(context: Context, enabled: Boolean) {
-        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit()
-            .putBoolean("evening_enabled", enabled).apply()
-        if (enabled) scheduleDaily(context, ReminderType.EVENING) else cancelReminder(context, ReminderType.EVENING)
-    }
-
-    fun setHourlyEnabled(context: Context, enabled: Boolean) {
-        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit()
-            .putBoolean("hourly_enabled", enabled).apply()
-        if (enabled) scheduleHourly(context) else cancelReminder(context, ReminderType.HOURLY)
+    fun getPinnedAffirmation(context: Context): Affirmation? {
+        val id = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .getString("pinned_affirmation_id", null) ?: return null
+        return AffirmationRepository.getById(id)
     }
 
     // ── Reminder Content Source ───────────────────────────────────
 
     fun getReminderSource(context: Context): ReminderSource {
         val key = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            .getString("reminder_source", ReminderSource.FOCUS.id) ?: ReminderSource.FOCUS.id
-        return ReminderSource.values().find { it.id == key } ?: ReminderSource.FOCUS
+            .getString("reminder_source", ReminderSource.ALL.id) ?: ReminderSource.ALL.id
+        return ReminderSource.values().find { it.id == key } ?: ReminderSource.ALL
     }
 
     fun setReminderSource(context: Context, source: ReminderSource) {
@@ -128,38 +142,30 @@ object ReminderManager {
             .putString("reminder_source", source.id).apply()
     }
 
-    fun getActiveSeason(context: Context): String {
-        return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            .getString("active_season", "Peace over Anxiety") ?: "Peace over Anxiety"
-    }
-
-    fun setActiveSeason(context: Context, season: String) {
-        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit()
-            .putString("active_season", season).apply()
-    }
-
     fun getUserName(context: Context): String {
         return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            .getString("user_name", "Precious") ?: "Precious"
+            .getString("user_name", "Friend") ?: "Friend"
     }
 
     fun setUserName(context: Context, name: String) {
         context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit()
-            .putString("user_name", name.trim().ifEmpty { "Precious" }).apply()
+            .putString("user_name", name.trim().ifEmpty { "Friend" }).apply()
     }
 
     /**
      * Resolves the exact affirmation to deliver based on user preference:
-     * - CUSTOM: User-authored personal declarations (falls back to saved/featured if none yet)
-     * - SAVED: User-bookmarked declarations (falls back to featured if none)
-     * - FOCUS: Matched to user's active spiritual focus theme
+     * - PINNED: Specific declaration chosen by user
+     * - CUSTOM: User-authored personal declarations
+     * - SAVED: User-bookmarked declarations
      * - ALL: Any biblical declaration from the complete library
      */
     fun resolveAffirmationForReminder(context: Context): Affirmation {
         val source = getReminderSource(context)
-        val season = getActiveSeason(context)
 
         return when (source) {
+            ReminderSource.PINNED -> {
+                getPinnedAffirmation(context) ?: AffirmationRepository.affirmationOfTheDay
+            }
             ReminderSource.CUSTOM -> {
                 val personal = AffirmationRepository.personalAffirmations
                 if (personal.isNotEmpty()) {
@@ -177,26 +183,6 @@ object ReminderManager {
                     AffirmationRepository.affirmationOfTheDay
                 }
             }
-            ReminderSource.FOCUS -> {
-                val categoryKeyword = when {
-                    season.contains("Peace", ignoreCase = true) -> "Peace"
-                    season.contains("Confidence", ignoreCase = true) || season.contains("Calling", ignoreCase = true) -> "Confidence"
-                    season.contains("Rest", ignoreCase = true) || season.contains("Renewal", ignoreCase = true) -> "Peace"
-                    season.contains("Provision", ignoreCase = true) -> "Provision"
-                    season.contains("Strength", ignoreCase = true) -> "Strength"
-                    season.contains("Joy", ignoreCase = true) -> "Joy"
-                    season.contains("Identity", ignoreCase = true) -> "Identity"
-                    else -> "Peace"
-                }
-                val matches = AffirmationRepository.getAll().filter {
-                    it.category.equals(categoryKeyword, ignoreCase = true)
-                }
-                if (matches.isNotEmpty()) {
-                    matches.random()
-                } else {
-                    AffirmationRepository.affirmationOfTheDay
-                }
-            }
             ReminderSource.ALL -> {
                 AffirmationRepository.getAll().randomOrNull() ?: AffirmationRepository.affirmationOfTheDay
             }
@@ -205,7 +191,7 @@ object ReminderManager {
 
     // ── Scheduling Engine ─────────────────────────────────────────
 
-    fun scheduleDaily(context: Context, type: ReminderType) {
+    fun scheduleDaily(context: Context, type: ReminderType = ReminderType.DAWN) {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager ?: return
 
         val now = Calendar.getInstance()
@@ -245,39 +231,7 @@ object ReminderManager {
     }
 
     fun scheduleHourly(context: Context) {
-        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager ?: return
-
-        val now = Calendar.getInstance()
-        val target = Calendar.getInstance().apply {
-            add(Calendar.HOUR_OF_DAY, 1)
-            set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
-        }
-
-        val intent = Intent(context, ReminderReceiver::class.java).apply {
-            action = ACTION_HOURLY
-        }
-        val flags = PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        val pendingIntent = PendingIntent.getBroadcast(context, REQ_HOURLY, intent, flags)
-
-        try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                alarmManager.setExactAndAllowWhileIdle(
-                    AlarmManager.RTC_WAKEUP,
-                    target.timeInMillis,
-                    pendingIntent
-                )
-            } else {
-                alarmManager.setExact(
-                    AlarmManager.RTC_WAKEUP,
-                    target.timeInMillis,
-                    pendingIntent
-                )
-            }
-        } catch (e: SecurityException) {
-            alarmManager.set(AlarmManager.RTC_WAKEUP, target.timeInMillis, pendingIntent)
-        }
+        scheduleDaily(context, ReminderType.DAWN)
     }
 
     fun cancelReminder(context: Context, type: ReminderType) {
@@ -291,31 +245,29 @@ object ReminderManager {
     }
 
     fun rescheduleAll(context: Context) {
-        if (isDawnEnabled(context)) scheduleDaily(context, ReminderType.DAWN)
-        if (isMiddayEnabled(context)) scheduleDaily(context, ReminderType.MIDDAY)
-        if (isEveningEnabled(context)) scheduleDaily(context, ReminderType.EVENING)
-        if (isHourlyEnabled(context)) scheduleHourly(context)
+        if (isDailyReminderEnabled(context)) {
+            scheduleDaily(context, ReminderType.DAWN)
+        }
     }
 
     /**
-     * Instantly triggers a live notification according to the user's chosen reminder pool.
+     * Instantly triggers a notification preview according to user's selected source or pinned affirmation.
      */
     fun sendTestNotification(context: Context, isHourly: Boolean = false) {
         createNotificationChannel(context)
 
         val affirmation = resolveAffirmationForReminder(context)
         val source = getReminderSource(context)
-        val title = when {
-            isHourly -> "Hourly Stillness · Makarios"
-            source == ReminderSource.CUSTOM -> "Personal Declaration · Makarios"
-            source == ReminderSource.SAVED -> "Saved Promise · Makarios"
-            source == ReminderSource.FOCUS -> "Spiritual Focus · Makarios"
-            else -> "Sacred Revelation · Makarios"
+        val title = when (source) {
+            ReminderSource.PINNED -> "Your Pinned Declaration · Makarios"
+            ReminderSource.CUSTOM -> "Personal Declaration · Makarios"
+            ReminderSource.SAVED -> "Saved Promise · Makarios"
+            else -> "Daily Revelation · Makarios"
         }
 
         showSacredNotification(
             context = context,
-            notificationId = if (isHourly) 2002 else 1001,
+            notificationId = 1001,
             title = title,
             declaration = affirmation.declaration,
             scripture = affirmation.scriptureText,

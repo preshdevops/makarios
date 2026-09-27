@@ -40,6 +40,7 @@ import com.makarios.app.data.Affirmation
 import com.makarios.app.data.AffirmationRepository
 import com.makarios.app.ui.components.WallpaperActionDialog
 import com.makarios.app.ui.theme.*
+import com.makarios.app.util.ReminderManager
 import com.makarios.app.util.ShareHelper
 import com.makarios.app.util.WallpaperRenderer
 import com.makarios.app.util.WidgetHelper
@@ -324,7 +325,7 @@ fun AffirmationDetailScreen(
                     }
                 }
 
-                // Secondary row: Add to Widget + Set Reminder
+                // Secondary actions: Add to Widget + Set as Notification
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -352,10 +353,10 @@ fun AffirmationDetailScreen(
                                 modifier = Modifier.size(16.dp)
                             )
                             Text(
-                                text = "Add to Widget",
+                                text = "Set as Widget",
                                 fontFamily = BodyFontFamily,
                                 fontWeight = FontWeight.Medium,
-                                fontSize = 13.sp,
+                                fontSize = 12.5.sp,
                                 color = Color.White
                             )
                         }
@@ -369,7 +370,8 @@ fun AffirmationDetailScreen(
                             .background(Color.White.copy(alpha = 0.14f))
                             .border(0.5.dp, Color.White.copy(alpha = 0.20f), RoundedCornerShape(16.dp))
                             .clickable {
-                                showWallpaperDialog = true
+                                ReminderManager.setPinnedAffirmation(context, affirmation)
+                                Toast.makeText(context, "Set as daily notification ✓", Toast.LENGTH_SHORT).show()
                             },
                         contentAlignment = Alignment.Center
                     ) {
@@ -378,19 +380,52 @@ fun AffirmationDetailScreen(
                             horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             Icon(
-                                imageVector = Icons.Default.Wallpaper,
+                                imageVector = Icons.Default.Notifications,
                                 contentDescription = null,
                                 tint = Color.White,
                                 modifier = Modifier.size(16.dp)
                             )
                             Text(
-                                text = "Set Wallpaper",
+                                text = "Set Notification",
                                 fontFamily = BodyFontFamily,
                                 fontWeight = FontWeight.Medium,
-                                fontSize = 13.sp,
+                                fontSize = 12.5.sp,
                                 color = Color.White
                             )
                         }
+                    }
+                }
+
+                // Tertiary: Set Wallpaper
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(44.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(Color.White.copy(alpha = 0.10f))
+                        .border(0.5.dp, Color.White.copy(alpha = 0.15f), RoundedCornerShape(16.dp))
+                        .clickable {
+                            showWallpaperDialog = true
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Wallpaper,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(15.dp)
+                        )
+                        Text(
+                            text = "Set as Lock Screen / Wallpaper",
+                            fontFamily = BodyFontFamily,
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 12.5.sp,
+                            color = Color.White
+                        )
                     }
                 }
             }

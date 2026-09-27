@@ -44,7 +44,6 @@ import com.makarios.app.ui.screens.LibraryScreen
 import com.makarios.app.ui.screens.OnboardingScreen
 import com.makarios.app.ui.screens.ProfileScreen
 import com.makarios.app.ui.screens.SavedScreen
-import com.makarios.app.ui.screens.SubscriptionScreen
 import com.makarios.app.ui.screens.WidgetStudioScreen
 import com.makarios.app.ui.theme.*
 import com.makarios.app.util.ReminderManager
@@ -94,7 +93,6 @@ fun MainAppScaffold() {
     var viewingAffirmation by remember { mutableStateOf<Affirmation?>(null) }
     var viewingWidgets by remember { mutableStateOf(false) }
     var showOnboarding by remember { mutableStateOf(false) }
-    var viewingSubscription by remember { mutableStateOf(false) }
 
     // If an affirmation is selected for fullscreen contemplation (Page 1 in PDF)
     if (viewingAffirmation != null) {
@@ -129,14 +127,6 @@ fun MainAppScaffold() {
         return
     }
 
-    // If Subscription / Makarios+ is opened
-    if (viewingSubscription) {
-        BackHandler { viewingSubscription = false }
-        SubscriptionScreen(
-            onClose = { viewingSubscription = false }
-        )
-        return
-    }
 
     // 5 Bottom Navigation Tabs directly from PDF: Home | Library | Create | Saved | Profile
     val tabs = listOf(
@@ -247,7 +237,6 @@ fun MainAppScaffold() {
             4 -> ProfileScreen(
                 onNavigateToWidgets = { viewingWidgets = true },
                 onRevisitOnboarding = { showOnboarding = true },
-                onNavigateToSubscription = { viewingSubscription = true },
                 modifier = Modifier.padding(innerPadding)
             )
         }
