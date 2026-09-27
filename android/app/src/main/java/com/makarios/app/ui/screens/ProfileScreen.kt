@@ -5,6 +5,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -16,8 +17,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Cloud
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.NotificationsActive
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Widgets
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -33,6 +36,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.makarios.app.data.AffirmationRepository
+import com.makarios.app.data.AuthManager
+import com.makarios.app.ui.components.AuthDialog
 import com.makarios.app.ui.components.SacredTimePickerDialog
 import com.makarios.app.ui.theme.*
 import com.makarios.app.util.ReminderManager
@@ -46,6 +51,11 @@ fun ProfileScreen(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+
+    // Auth state
+    var showAuthDialog by remember { mutableStateOf(false) }
+    var authDialogIsSignUp by remember { mutableStateOf(true) }
+    var showSignOutConfirm by remember { mutableStateOf(false) }
 
     // User name
     var userName by remember { mutableStateOf(ReminderManager.getUserName(context)) }
@@ -176,6 +186,27 @@ fun ProfileScreen(
                                             fontSize = 12.5.sp,
                                             color = Stone
                                         )
+
+                                        Spacer(modifier = Modifier.height(3.dp))
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                        ) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(6.dp)
+                                                    .clip(CircleShape)
+                                                    .background(if (AuthManager.isLoggedIn && !AuthManager.isAnonymous) Sage else StoneMuted)
+                                            )
+                                            Text(
+                                                text = if (AuthManager.isLoggedIn && !AuthManager.isAnonymous)
+                                                    "${AuthManager.userEmail} · Cloud Active"
+                                                else "Guest Mode · Local Device",
+                                                fontFamily = BodyFontFamily,
+                                                fontSize = 11.sp,
+                                                color = if (AuthManager.isLoggedIn && !AuthManager.isAnonymous) Sage else StoneMuted
+                                            )
+                                        }
                                     }
                                 }
                             }
@@ -197,6 +228,162 @@ fun ProfileScreen(
                                 StatCadenceItem(count = "$personalCount", label = "Authored")
                                 Box(modifier = Modifier.width(1.dp).height(24.dp).background(Border))
                                 StatCadenceItem(count = "${AffirmationRepository.getAll().size}", label = "Declarations")
+                            }
+                        }
+                    }
+
+                    // ── Cloud Sync & Account Action Card ──
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .shadow(1.dp, RoundedCornerShape(20.dp), spotColor = Espresso.copy(alpha = 0.03f))
+                            .clip(RoundedCornerShape(20.dp))
+                            .background(Surface)
+                            .border(0.5.dp, BorderSubtle, RoundedCornerShape(20.dp))
+                            .padding(16.dp)
+                    ) {
+                        if (AuthManager.isLoggedIn && !AuthManager.isAnonymous) {
+                            // Signed in view
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(36.dp)
+                                            .clip(CircleShape)
+                                            .background(SageLight),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Cloud,
+                                            contentDescription = null,
+                                            tint = Sage,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                    }
+                                    Column {
+                                        Text(
+                                            text = "Cloud Sync Active",
+                                            fontFamily = BodyFontFamily,
+                                            fontWeight = FontWeight.SemiBold,
+                                            fontSize = 13.5.sp,
+                                            color = Espresso
+                                        )
+                                        Text(
+                                            text = "Declarations backed up with Firebase",
+                                            fontFamily = BodyFontFamily,
+                                            fontSize = 11.5.sp,
+                                            color = Stone
+                                        )
+                                    }
+                                }
+
+                                TextButton(
+                                    onClick = { showSignOutConfirm = true }
+                                ) {
+                                    Text(
+                                        text = "Sign Out",
+                                        fontFamily = BodyFontFamily,
+                                        fontWeight = FontWeight.Medium,
+                                        fontSize = 12.sp,
+                                        color = Terracotta
+                                    )
+                                }
+                            }
+                        } else {
+                            // Guest mode view
+                            Column {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(36.dp)
+                                            .clip(CircleShape)
+                                            .background(TerracottaLight),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Cloud,
+                                            contentDescription = null,
+                                            tint = Terracotta,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                    }
+                                    Column {
+                                        Text(
+                                            text = "Save Declarations Across Devices",
+                                            fontFamily = BodyFontFamily,
+                                            fontWeight = FontWeight.SemiBold,
+                                            fontSize = 13.5.sp,
+                                            color = Espresso
+                                        )
+                                        Text(
+                                            text = "Create an account to preserve your sacred truths",
+                                            fontFamily = BodyFontFamily,
+                                            fontSize = 11.5.sp,
+                                            color = Stone
+                                        )
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.height(14.dp))
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Button(
+                                        onClick = {
+                                            authDialogIsSignUp = true
+                                            showAuthDialog = true
+                                        },
+                                        shape = RoundedCornerShape(12.dp),
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = Terracotta,
+                                            contentColor = Color.White
+                                        ),
+                                        modifier = Modifier
+                                            .weight(1.2f)
+                                            .height(40.dp)
+                                    ) {
+                                        Text(
+                                            text = "Create Account",
+                                            fontFamily = BodyFontFamily,
+                                            fontWeight = FontWeight.SemiBold,
+                                            fontSize = 12.sp
+                                        )
+                                    }
+
+                                    OutlinedButton(
+                                        onClick = {
+                                            authDialogIsSignUp = false
+                                            showAuthDialog = true
+                                        },
+                                        shape = RoundedCornerShape(12.dp),
+                                        border = BorderStroke(1.dp, Border),
+                                        colors = ButtonDefaults.outlinedButtonColors(containerColor = Surface),
+                                        modifier = Modifier
+                                            .weight(0.8f)
+                                            .height(40.dp)
+                                    ) {
+                                        Text(
+                                            text = "Sign In",
+                                            fontFamily = BodyFontFamily,
+                                            fontWeight = FontWeight.Medium,
+                                            fontSize = 12.sp,
+                                            color = Espresso
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
@@ -892,6 +1079,67 @@ fun ProfileScreen(
                 Toast.makeText(context, "Reminders updated for $reminderTimeText ✓", Toast.LENGTH_SHORT).show()
             },
             onDismiss = { showTimePickerDialog = false }
+        )
+    }
+
+    // ── Auth Dialog (Sign Up / Sign In / Guest) ───────────────────────
+    if (showAuthDialog) {
+        AuthDialog(
+            initialIsSignUp = authDialogIsSignUp,
+            onDismiss = { showAuthDialog = false },
+            onSuccess = { showAuthDialog = false }
+        )
+    }
+
+    // ── Sign Out Confirmation Dialog ──────────────────────────────────
+    if (showSignOutConfirm) {
+        AlertDialog(
+            onDismissRequest = { showSignOutConfirm = false },
+            title = {
+                Text(
+                    text = "Sign Out?",
+                    fontFamily = DisplayFontFamily,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 20.sp,
+                    color = Espresso
+                )
+            },
+            text = {
+                Text(
+                    text = "Your local declarations will remain safe on this device. You can sign back in anytime to sync across devices.",
+                    fontFamily = BodyFontFamily,
+                    fontSize = 13.sp,
+                    lineHeight = 18.sp,
+                    color = Stone
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showSignOutConfirm = false
+                        AuthManager.signOut()
+                        Toast.makeText(context, "Signed out ✓", Toast.LENGTH_SHORT).show()
+                    }
+                ) {
+                    Text(
+                        text = "Sign Out",
+                        fontFamily = BodyFontFamily,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Terracotta
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showSignOutConfirm = false }) {
+                    Text(
+                        text = "Cancel",
+                        fontFamily = BodyFontFamily,
+                        color = Stone
+                    )
+                }
+            },
+            containerColor = Surface,
+            shape = RoundedCornerShape(20.dp)
         )
     }
 }

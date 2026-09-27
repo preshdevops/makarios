@@ -37,16 +37,25 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
 
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
+import android.widget.Toast
+import com.makarios.app.data.AuthManager
+import com.makarios.app.ui.components.AuthDialog
+
 // ─────────────────────────────────────────────────────────────────────────────
-// Onboarding — research-backed, 3-step flow
+// Onboarding — research-backed, 4-step flow
 //
 // Principles applied:
 //   • Value-first: step 0 shows the actual experience (declaration + verse card)
 //     before asking anything of the user — "aha moment" within 5 seconds
-//   • Minimal steps: 3 pages (Welcome → Season → Ready), down from 4
+//   • Progressive discovery: Welcome → Season → Ready Preview → Sacred Account / Guest
+//   • 1-tap Guest Mode: Zero friction if user wants to dive in immediately
 //   • Progressive disclosure: notification / permissions deferred to app
-//   • No instructional walls: copy leads with benefit, not feature description
-//   • Safe animations & weights: no zero-weight exceptions, butter-smooth layout
 //   • HorizontalPager with parallax photography for visual richness
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -55,7 +64,7 @@ fun OnboardingScreen(
     onComplete: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val pagerState = rememberPagerState(pageCount = { 3 })
+    val pagerState = rememberPagerState(pageCount = { 4 })
     val scope = rememberCoroutineScope()
     var selectedArea by remember { mutableStateOf("Peace over Anxiety") }
 
@@ -96,7 +105,7 @@ fun OnboardingScreen(
                 // Page indicators — strictly safe positive weights
                 StepIndicators(
                     currentPage = pagerState.currentPage,
-                    total = 3
+                    total = 4
                 )
             }
 
@@ -123,15 +132,16 @@ fun OnboardingScreen(
                             onSelect = { selectedArea = it }
                         )
                         2 -> PageReady(chosenArea = selectedArea)
+                        3 -> PageAuth(onComplete = onComplete)
                     }
                 }
             }
 
-            // ── CTA Button + skip ──────────────────────────────────────────
-            OnboardingCTA(
-                page = pagerState.currentPage,
-                onContinue = {
-                    if (pagerState.currentPage < 2) {
+            // ── CTA Button + skip (for pages 0-2; page 3 has in-page actions) ──
+            if (pagerState.currentPage < 3) {
+                OnboardingCTA(
+                    page = pagerState.currentPage,
+                    onContinue = {
                         scope.launch {
                             pagerState.animateScrollToPage(
                                 page = pagerState.currentPage + 1,
@@ -141,12 +151,15 @@ fun OnboardingScreen(
                                 )
                             )
                         }
-                    } else {
-                        onComplete()
+                    },
+                    onSkip = {
+                        AuthManager.signInAnonymously(
+                            onSuccess = onComplete,
+                            onError = { onComplete() }
+                        )
                     }
-                },
-                onSkip = onComplete
-            )
+                )
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
         }
@@ -161,7 +174,8 @@ private fun OnboardingBackgroundLayer(pagerState: PagerState) {
     val photos = listOf(
         "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=900&q=80", // mountain dawn
         "https://images.unsplash.com/photo-1501854140801-50d01698950b?auto=format&fit=crop&w=900&q=80", // valley mist
-        "https://images.unsplash.com/photo-1491466424936-e304919aada7?auto=format&fit=crop&w=900&q=80"  // golden horizon
+        "https://images.unsplash.com/photo-1491466424936-e304919aada7?auto=format&fit=crop&w=900&q=80", // golden horizon
+        "https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=900&q=80"  // starry sanctuary
     )
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -679,6 +693,307 @@ private fun PageReady(chosenArea: String) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// PAGE 3 — Sacred Account & Guest Access
+// ─────────────────────────────────────────────────────────────────────────────
+@Composable
+private fun PageAuth(onComplete: () -> Unit) {
+    val context = LocalContext.current
+    var isSignUp by remember { mutableStateOf(true) }
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var passwordVisible by remember { mutableStateOf(false) }
+    var isLoading by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+
+    fun submit() {
+        if (isLoading) return
+        errorMessage = null
+
+        if (email.isBlank()) {
+            errorMessage = "Please enter an email address"
+            return
+        }
+        if (password.length < 6) {
+            errorMessage = "Password must be at least 6 characters"
+            return
+        }
+
+        isLoading = true
+        if (isSignUp) {
+            AuthManager.signUpWithEmail(
+                email = email,
+                password = password,
+                onSuccess = {
+                    isLoading = false
+                    Toast.makeText(context, "Welcome to Makarios ✓", Toast.LENGTH_SHORT).show()
+                    onComplete()
+                },
+                onError = { error ->
+                    isLoading = false
+                    errorMessage = error
+                }
+            )
+        } else {
+            AuthManager.signInWithEmail(
+                email = email,
+                password = password,
+                onSuccess = {
+                    isLoading = false
+                    Toast.makeText(context, "Welcome back ✓", Toast.LENGTH_SHORT).show()
+                    onComplete()
+                },
+                onError = { error ->
+                    isLoading = false
+                    errorMessage = error
+                }
+            )
+        }
+    }
+
+    fun continueAsGuest() {
+        if (isLoading) return
+        isLoading = true
+        AuthManager.signInAnonymously(
+            onSuccess = {
+                isLoading = false
+                onComplete()
+            },
+            onError = {
+                isLoading = false
+                onComplete()
+            }
+        )
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 28.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = if (isSignUp) "Preserve Your\nSacred Truths." else "Welcome Back\nto Makarios.",
+            fontFamily = DisplayFontFamily,
+            fontWeight = FontWeight.Medium,
+            fontSize = 32.sp,
+            lineHeight = 40.sp,
+            letterSpacing = (-0.5).sp,
+            color = Color.White,
+            textAlign = TextAlign.Center
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Text(
+            text = "Back up authored declarations across all your devices, or enter freely as a guest.",
+            fontFamily = BodyFontFamily,
+            fontSize = 13.5.sp,
+            lineHeight = 20.sp,
+            color = Color.White.copy(alpha = 0.75f),
+            textAlign = TextAlign.Center
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Sacred card containing the auth inputs
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(24.dp))
+                .background(Color(0xFFFAF7F2))
+                .padding(20.dp)
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                // Tab switch: Create vs Sign In
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(PorcelainWarm)
+                        .padding(3.dp),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(if (isSignUp) Espresso else Color.Transparent)
+                            .clickable {
+                                isSignUp = true
+                                errorMessage = null
+                            }
+                            .padding(vertical = 8.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Create Account",
+                            fontFamily = BodyFontFamily,
+                            fontWeight = if (isSignUp) FontWeight.SemiBold else FontWeight.Normal,
+                            fontSize = 12.5.sp,
+                            color = if (isSignUp) Color.White else Espresso
+                        )
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(if (!isSignUp) Espresso else Color.Transparent)
+                            .clickable {
+                                isSignUp = false
+                                errorMessage = null
+                            }
+                            .padding(vertical = 8.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Sign In",
+                            fontFamily = BodyFontFamily,
+                            fontWeight = if (!isSignUp) FontWeight.SemiBold else FontWeight.Normal,
+                            fontSize = 12.5.sp,
+                            color = if (!isSignUp) Color.White else Espresso
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                if (errorMessage != null) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(Color(0xFFFDE8E4))
+                            .padding(horizontal = 10.dp, vertical = 6.dp)
+                    ) {
+                        Text(
+                            text = errorMessage!!,
+                            fontFamily = BodyFontFamily,
+                            fontSize = 11.5.sp,
+                            lineHeight = 15.sp,
+                            color = Color(0xFF922B21)
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(10.dp))
+                }
+
+                OutlinedTextField(
+                    value = email,
+                    onValueChange = {
+                        email = it
+                        errorMessage = null
+                    },
+                    label = { Text("Email", fontFamily = BodyFontFamily, fontSize = 12.5.sp) },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = Surface,
+                        unfocusedContainerColor = Surface,
+                        focusedBorderColor = Terracotta,
+                        unfocusedBorderColor = Border,
+                        focusedLabelColor = Terracotta,
+                        cursorColor = Terracotta
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                OutlinedTextField(
+                    value = password,
+                    onValueChange = {
+                        password = it
+                        errorMessage = null
+                    },
+                    label = { Text("Password (6+ chars)", fontFamily = BodyFontFamily, fontSize = 12.5.sp) },
+                    singleLine = true,
+                    visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    trailingIcon = {
+                        IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                            Icon(
+                                imageVector = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                                contentDescription = null,
+                                tint = StoneMuted,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                    },
+                    shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = Surface,
+                        unfocusedContainerColor = Surface,
+                        focusedBorderColor = Terracotta,
+                        unfocusedBorderColor = Border,
+                        focusedLabelColor = Terracotta,
+                        cursorColor = Terracotta
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Button(
+                    onClick = { submit() },
+                    enabled = !isLoading,
+                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Terracotta,
+                        contentColor = Color.White
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp)
+                ) {
+                    if (isLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(16.dp),
+                            color = Color.White,
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text(
+                            text = if (isSignUp) "Create Free Account" else "Sign In to Makarios",
+                            fontFamily = BodyFontFamily,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 13.5.sp
+                        )
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Dignified Guest Skip Button
+        Row(
+            modifier = Modifier
+                .clickable { continueAsGuest() }
+                .padding(vertical = 8.dp, horizontal = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            Text(
+                text = "Skip for now · Continue as Guest",
+                fontFamily = BodyFontFamily,
+                fontWeight = FontWeight.Medium,
+                fontSize = 13.5.sp,
+                color = Color.White.copy(alpha = 0.85f)
+            )
+            Text(
+                text = "→",
+                fontFamily = BodyFontFamily,
+                fontSize = 14.sp,
+                color = Color.White.copy(alpha = 0.85f)
+            )
+        }
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // CTA + Skip
 // ─────────────────────────────────────────────────────────────────────────────
 @Composable
@@ -692,7 +1007,7 @@ private fun OnboardingCTA(
     val ctaLabel = when (page) {
         0    -> "Continue"
         1    -> "Continue"
-        else -> "Enter Makarios"
+        else -> "Next: Save Your Sanctuary →"
     }
 
     val ctaBg by animateColorAsState(
