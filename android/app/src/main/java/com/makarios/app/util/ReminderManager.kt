@@ -11,6 +11,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.makarios.app.MainActivity
 import com.makarios.app.R
+import com.makarios.app.data.Affirmation
 import com.makarios.app.data.AffirmationRepository
 import java.util.Calendar
 
@@ -18,7 +19,8 @@ import java.util.Calendar
  * ReminderManager
  *
  * Full-fidelity scheduler and notification manager for Makarios.
- * Powers daily sacred reminders (Dawn, Midday, Evening) and hourly declarations.
+ * Powers daily sacred reminders (Dawn, Midday, Evening) and hourly declarations,
+ * supporting targeted delivery from Custom authored, Saved, Spiritual Focus, or Complete Library.
  */
 object ReminderManager {
 
@@ -41,6 +43,13 @@ object ReminderManager {
         MIDDAY(ACTION_MIDDAY, REQ_MIDDAY, 12, 30),
         EVENING(ACTION_EVENING, REQ_EVENING, 20, 30),
         HOURLY(ACTION_HOURLY, REQ_HOURLY, -1, -1)
+    }
+
+    enum class ReminderSource(val id: String, val title: String, val subtitle: String) {
+        CUSTOM("custom", "Personal Declarations", "Delivers affirmations you authored"),
+        SAVED("saved", "Saved Declarations", "Delivers your bookmarked promises"),
+        FOCUS("focus", "Spiritual Focus", "Anchored to your active season"),
+        ALL("all", "Complete Library", "Any biblical declaration across themes")
     }
 
     /**
@@ -104,6 +113,94 @@ object ReminderManager {
         context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit()
             .putBoolean("hourly_enabled", enabled).apply()
         if (enabled) scheduleHourly(context) else cancelReminder(context, ReminderType.HOURLY)
+    }
+
+    // ── Reminder Content Source ───────────────────────────────────
+
+    fun getReminderSource(context: Context): ReminderSource {
+        val key = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .getString("reminder_source", ReminderSource.FOCUS.id) ?: ReminderSource.FOCUS.id
+        return ReminderSource.values().find { it.id == key } ?: ReminderSource.FOCUS
+    }
+
+    fun setReminderSource(context: Context, source: ReminderSource) {
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit()
+            .putString("reminder_source", source.id).apply()
+    }
+
+    fun getActiveSeason(context: Context): String {
+        return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .getString("active_season", "Peace over Anxiety") ?: "Peace over Anxiety"
+    }
+
+    fun setActiveSeason(context: Context, season: String) {
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit()
+            .putString("active_season", season).apply()
+    }
+
+    fun getUserName(context: Context): String {
+        return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            .getString("user_name", "Precious") ?: "Precious"
+    }
+
+    fun setUserName(context: Context, name: String) {
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit()
+            .putString("user_name", name.trim().ifEmpty { "Precious" }).apply()
+    }
+
+    /**
+     * Resolves the exact affirmation to deliver based on user preference:
+     * - CUSTOM: User-authored personal declarations (falls back to saved/featured if none yet)
+     * - SAVED: User-bookmarked declarations (falls back to featured if none)
+     * - FOCUS: Matched to user's active spiritual focus theme
+     * - ALL: Any biblical declaration from the complete library
+     */
+    fun resolveAffirmationForReminder(context: Context): Affirmation {
+        val source = getReminderSource(context)
+        val season = getActiveSeason(context)
+
+        return when (source) {
+            ReminderSource.CUSTOM -> {
+                val personal = AffirmationRepository.personalAffirmations
+                if (personal.isNotEmpty()) {
+                    personal.random()
+                } else {
+                    val saved = AffirmationRepository.getSaved()
+                    if (saved.isNotEmpty()) saved.random() else AffirmationRepository.affirmationOfTheDay
+                }
+            }
+            ReminderSource.SAVED -> {
+                val saved = AffirmationRepository.getSaved()
+                if (saved.isNotEmpty()) {
+                    saved.random()
+                } else {
+                    AffirmationRepository.affirmationOfTheDay
+                }
+            }
+            ReminderSource.FOCUS -> {
+                val categoryKeyword = when {
+                    season.contains("Peace", ignoreCase = true) -> "Peace"
+                    season.contains("Confidence", ignoreCase = true) || season.contains("Calling", ignoreCase = true) -> "Confidence"
+                    season.contains("Rest", ignoreCase = true) || season.contains("Renewal", ignoreCase = true) -> "Peace"
+                    season.contains("Provision", ignoreCase = true) -> "Provision"
+                    season.contains("Strength", ignoreCase = true) -> "Strength"
+                    season.contains("Joy", ignoreCase = true) -> "Joy"
+                    season.contains("Identity", ignoreCase = true) -> "Identity"
+                    else -> "Peace"
+                }
+                val matches = AffirmationRepository.getAll().filter {
+                    it.category.equals(categoryKeyword, ignoreCase = true)
+                }
+                if (matches.isNotEmpty()) {
+                    matches.random()
+                } else {
+                    AffirmationRepository.affirmationOfTheDay
+                }
+            }
+            ReminderSource.ALL -> {
+                AffirmationRepository.getAll().randomOrNull() ?: AffirmationRepository.affirmationOfTheDay
+            }
+        }
     }
 
     // ── Scheduling Engine ─────────────────────────────────────────
@@ -201,13 +298,20 @@ object ReminderManager {
     }
 
     /**
-     * Instantly triggers a live notification so the user can verify notifications working on their phone.
+     * Instantly triggers a live notification according to the user's chosen reminder pool.
      */
     fun sendTestNotification(context: Context, isHourly: Boolean = false) {
         createNotificationChannel(context)
 
-        val affirmation = AffirmationRepository.featuredAffirmation
-        val title = if (isHourly) "Hourly Truth · Makarios" else "Sacred Revelation · Makarios"
+        val affirmation = resolveAffirmationForReminder(context)
+        val source = getReminderSource(context)
+        val title = when {
+            isHourly -> "Hourly Stillness · Makarios"
+            source == ReminderSource.CUSTOM -> "Personal Declaration · Makarios"
+            source == ReminderSource.SAVED -> "Saved Promise · Makarios"
+            source == ReminderSource.FOCUS -> "Spiritual Focus · Makarios"
+            else -> "Sacred Revelation · Makarios"
+        }
 
         showSacredNotification(
             context = context,

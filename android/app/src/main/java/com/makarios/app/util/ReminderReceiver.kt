@@ -3,13 +3,14 @@ package com.makarios.app.util
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import com.makarios.app.data.AffirmationRepository
 
 /**
  * ReminderReceiver
  *
  * Broadcast receiver triggered by AlarmManager for Daily and Hourly declarations,
  * as well as upon device boot to reschedule active timers.
+ * Now dynamically resolves declarations from the user's chosen reminder pool
+ * (Custom authored, Saved, Spiritual Focus, or Complete Library).
  */
 class ReminderReceiver : BroadcastReceiver() {
 
@@ -24,9 +25,7 @@ class ReminderReceiver : BroadcastReceiver() {
             }
 
             ReminderManager.ACTION_DAWN -> {
-                val affirmation = AffirmationRepository.curatedAffirmations
-                    .find { it.category.equals("Peace", ignoreCase = true) || it.category.equals("Identity", ignoreCase = true) }
-                    ?: AffirmationRepository.featuredAffirmation
+                val affirmation = ReminderManager.resolveAffirmationForReminder(context)
 
                 ReminderManager.showSacredNotification(
                     context = context,
@@ -41,9 +40,7 @@ class ReminderReceiver : BroadcastReceiver() {
             }
 
             ReminderManager.ACTION_MIDDAY -> {
-                val affirmation = AffirmationRepository.curatedAffirmations
-                    .find { it.category.equals("Strength", ignoreCase = true) || it.category.equals("Courage", ignoreCase = true) }
-                    ?: AffirmationRepository.featuredAffirmation
+                val affirmation = ReminderManager.resolveAffirmationForReminder(context)
 
                 ReminderManager.showSacredNotification(
                     context = context,
@@ -58,9 +55,7 @@ class ReminderReceiver : BroadcastReceiver() {
             }
 
             ReminderManager.ACTION_EVENING -> {
-                val affirmation = AffirmationRepository.curatedAffirmations
-                    .find { it.category.equals("Peace", ignoreCase = true) || it.category.equals("Joy", ignoreCase = true) }
-                    ?: AffirmationRepository.featuredAffirmation
+                val affirmation = ReminderManager.resolveAffirmationForReminder(context)
 
                 ReminderManager.showSacredNotification(
                     context = context,
@@ -76,15 +71,12 @@ class ReminderReceiver : BroadcastReceiver() {
 
             ReminderManager.ACTION_HOURLY -> {
                 if (ReminderManager.isHourlyEnabled(context)) {
-                    // Pick rotating affirmation
-                    val all = AffirmationRepository.curatedAffirmations
-                    val index = (System.currentTimeMillis() / (1000 * 60 * 60) % all.size).toInt().coerceIn(0, all.size - 1)
-                    val affirmation = all.getOrElse(index) { AffirmationRepository.featuredAffirmation }
+                    val affirmation = ReminderManager.resolveAffirmationForReminder(context)
 
                     ReminderManager.showSacredNotification(
                         context = context,
                         notificationId = ReminderManager.REQ_HOURLY,
-                        title = "Hourly Truth · Makarios",
+                        title = "Hourly Stillness · Makarios",
                         declaration = affirmation.declaration,
                         scripture = affirmation.scriptureText,
                         reference = affirmation.reference

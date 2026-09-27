@@ -3,15 +3,16 @@ package com.makarios.app.ui.screens
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.*
@@ -45,9 +46,8 @@ import kotlin.math.absoluteValue
 //   • Minimal steps: 3 pages (Welcome → Season → Ready), down from 4
 //   • Progressive disclosure: notification / permissions deferred to app
 //   • No instructional walls: copy leads with benefit, not feature description
-//   • Spring micro-animations on all interactive elements (no layout shifts)
+//   • Safe animations & weights: no zero-weight exceptions, butter-smooth layout
 //   • HorizontalPager with parallax photography for visual richness
-//   • prefers-reduced-motion: all animations use spring with gentle params
 // ─────────────────────────────────────────────────────────────────────────────
 
 @Composable
@@ -57,38 +57,48 @@ fun OnboardingScreen(
 ) {
     val pagerState = rememberPagerState(pageCount = { 3 })
     val scope = rememberCoroutineScope()
-    val selectedArea = remember { mutableStateOf("Peace over Anxiety") }
+    var selectedArea by remember { mutableStateOf("Peace over Anxiety") }
 
-    Box(modifier = modifier.fillMaxSize().background(Espresso)) {
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(Espresso)
+    ) {
 
         // ── Full-bleed background imagery (parallax per page) ──────────────
         OnboardingBackgroundLayer(pagerState)
 
-        // ── Content layer ──────────────────────────────────────────────────
-        Column(modifier = Modifier.fillMaxSize()) {
+        // ── Content layer with safe insets ─────────────────────────────────
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .statusBarsPadding()
+                .navigationBarsPadding()
+        ) {
 
-            // Brand wordmark — minimal, top-left
-            Spacer(modifier = Modifier.height(56.dp))
-            Text(
-                text = "MAKARIOS",
-                fontFamily = DisplayFontFamily,
-                fontWeight = FontWeight.Medium,
-                fontSize = 13.sp,
-                letterSpacing = 4.sp,
-                color = Color.White.copy(alpha = 0.80f),
-                modifier = Modifier.padding(horizontal = 28.dp)
-            )
+            // Top Bar: Brand wordmark & step indicators
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 28.dp, vertical = 16.dp)
+            ) {
+                Text(
+                    text = "MAKARIOS",
+                    fontFamily = DisplayFontFamily,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 13.5.sp,
+                    letterSpacing = 4.sp,
+                    color = Color.White.copy(alpha = 0.85f)
+                )
 
-            Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(18.dp))
 
-            // Page indicators — thin lines, not dots
-            StepIndicators(
-                currentPage = pagerState.currentPage,
-                total = 3,
-                modifier = Modifier.padding(horizontal = 28.dp)
-            )
-
-            Spacer(modifier = Modifier.height(32.dp))
+                // Page indicators — strictly safe positive weights
+                StepIndicators(
+                    currentPage = pagerState.currentPage,
+                    total = 3
+                )
+            }
 
             // ── Pager content ──────────────────────────────────────────────
             HorizontalPager(
@@ -96,28 +106,26 @@ fun OnboardingScreen(
                 modifier = Modifier.weight(1f),
                 userScrollEnabled = true
             ) { page ->
-                val pageOffset = (pagerState.currentPage - page) +
-                        pagerState.currentPageOffsetFraction
+                val pageOffset = ((pagerState.currentPage - page) +
+                        pagerState.currentPageOffsetFraction).coerceIn(-1f, 1f)
 
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
                         .graphicsLayer {
-                            alpha = 1f - pageOffset.absoluteValue.coerceIn(0f, 0.4f)
+                            alpha = (1f - pageOffset.absoluteValue * 0.6f).coerceIn(0f, 1f)
                         }
                 ) {
                     when (page) {
                         0 -> PageWelcome()
                         1 -> PageSeasonPicker(
-                            selected = selectedArea.value,
-                            onSelect = { selectedArea.value = it }
+                            selected = selectedArea,
+                            onSelect = { selectedArea = it }
                         )
-                        2 -> PageReady(chosenArea = selectedArea.value)
+                        2 -> PageReady(chosenArea = selectedArea)
                     }
                 }
             }
-
-            Spacer(modifier = Modifier.height(20.dp))
 
             // ── CTA Button + skip ──────────────────────────────────────────
             OnboardingCTA(
@@ -128,8 +136,8 @@ fun OnboardingScreen(
                             pagerState.animateScrollToPage(
                                 page = pagerState.currentPage + 1,
                                 animationSpec = spring(
-                                    dampingRatio = Spring.DampingRatioMediumBouncy,
-                                    stiffness = Spring.StiffnessLow
+                                    dampingRatio = Spring.DampingRatioNoBouncy,
+                                    stiffness = Spring.StiffnessMediumLow
                                 )
                             )
                         }
@@ -140,7 +148,7 @@ fun OnboardingScreen(
                 onSkip = onComplete
             )
 
-            Spacer(modifier = Modifier.height(40.dp))
+            Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }
@@ -172,8 +180,8 @@ private fun OnboardingBackgroundLayer(pagerState: PagerState) {
                         .fillMaxSize()
                         .alpha(alpha)
                         .graphicsLayer {
-                            // Subtle parallax: image shifts at 40% of scroll speed
-                            translationX = -pageOffset * size.width * 0.40f
+                            // Subtle parallax: image shifts at 35% of scroll speed
+                            translationX = -pageOffset.coerceIn(-1.5f, 1.5f) * size.width * 0.35f
                         }
                 )
             }
@@ -196,7 +204,7 @@ private fun OnboardingBackgroundLayer(pagerState: PagerState) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Step indicators — animated width, not dots
+// Step indicators — guaranteed safe, positive weight scaling
 // ─────────────────────────────────────────────────────────────────────────────
 @Composable
 private fun StepIndicators(
@@ -206,57 +214,48 @@ private fun StepIndicators(
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(6.dp)
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
         repeat(total) { index ->
             val isActive = index == currentPage
             val isDone = index < currentPage
 
-            val widthFraction by animateFloatAsState(
-                targetValue = if (isActive) 0.30f else 0.11f,
+            val weight by animateFloatAsState(
+                targetValue = if (isActive) 2.2f else 1.0f,
                 animationSpec = spring(
                     stiffness = Spring.StiffnessMedium,
-                    dampingRatio = Spring.DampingRatioMediumBouncy
+                    dampingRatio = Spring.DampingRatioNoBouncy
                 ),
-                label = "indicator-width"
+                label = "indicator-weight"
             )
             val alphaVal by animateFloatAsState(
-                targetValue = if (isActive || isDone) 1f else 0.38f,
-                animationSpec = tween(220),
+                targetValue = if (isActive) 1f else if (isDone) 0.65f else 0.30f,
+                animationSpec = tween(200),
                 label = "indicator-alpha"
             )
 
             Box(
                 modifier = Modifier
-                    .weight(widthFraction)
-                    .height(2.dp)
+                    .weight(weight)
+                    .height(3.dp)
                     .alpha(alphaVal)
                     .clip(CircleShape)
                     .background(Color.White)
             )
-
-            if (index < total - 1) {
-                // Remaining fill always visible for spatial orientation
-                Box(
-                    modifier = Modifier
-                        .weight(if (isActive) 0f else 0.11f)
-                        .height(2.dp)
-                )
-            }
         }
     }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PAGE 0 — Welcome / Value-first
-//   Shows the actual product output immediately (a real declaration card)
-//   before any sign-up or preference-gathering
 // ─────────────────────────────────────────────────────────────────────────────
 @Composable
 private fun PageWelcome() {
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .verticalScroll(rememberScrollState())
             .padding(horizontal = 28.dp),
         verticalArrangement = Arrangement.Bottom
     ) {
@@ -264,38 +263,37 @@ private fun PageWelcome() {
             text = "Speak truth\nover your life.",
             fontFamily = DisplayFontFamily,
             fontWeight = FontWeight.Medium,
-            fontSize = 38.sp,
-            lineHeight = 48.sp,
+            fontSize = 36.sp,
+            lineHeight = 46.sp,
             letterSpacing = (-0.5).sp,
             color = Color.White
         )
 
-        Spacer(modifier = Modifier.height(14.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
         Text(
             text = "Write personal declarations rooted in God's living word — then carry them as widgets, wallpapers, and shareable graphics.",
             fontFamily = BodyFontFamily,
             fontSize = 14.sp,
             lineHeight = 22.sp,
-            color = Color.White.copy(alpha = 0.78f)
+            color = Color.White.copy(alpha = 0.80f)
         )
 
-        Spacer(modifier = Modifier.height(28.dp))
+        Spacer(modifier = Modifier.height(24.dp))
 
-        // The actual product — a real declaration card as the hero
+        // Product sample card
         DeclarationPreviewCard()
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(12.dp))
     }
 }
 
 @Composable
 private fun DeclarationPreviewCard() {
-    // Gentle float animation — subtle vertical bob
     val infiniteTransition = rememberInfiniteTransition(label = "float")
     val offsetY by infiniteTransition.animateFloat(
         initialValue = 0f,
-        targetValue = -5f,
+        targetValue = -4f,
         animationSpec = infiniteRepeatable(
             animation = tween(2600, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse
@@ -316,7 +314,7 @@ private fun DeclarationPreviewCard() {
                     )
                 )
             )
-            .padding(24.dp)
+            .padding(22.dp)
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Box(
@@ -338,15 +336,15 @@ private fun DeclarationPreviewCard() {
             Spacer(modifier = Modifier.height(14.dp))
 
             Text(
-                text = "\u201cI am fearfully and wonderfully made. I walk in purposeful confidence.\u201d",
+                text = "“I am fearfully and wonderfully made. I walk in purposeful confidence.”",
                 fontFamily = DisplayFontFamily,
-                fontSize = 18.sp,
-                lineHeight = 26.sp,
+                fontSize = 17.5.sp,
+                lineHeight = 25.sp,
                 textAlign = TextAlign.Center,
                 color = Espresso
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
             Box(
                 modifier = Modifier
@@ -355,10 +353,10 @@ private fun DeclarationPreviewCard() {
                     .background(Border)
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
             Text(
-                text = "\u201cI praise you because I am fearfully and wonderfully made; your works are wonderful, I know that full well.\u201d",
+                text = "“I praise you because I am fearfully and wonderfully made; your works are wonderful, I know that full well.”",
                 fontFamily = DisplayFontFamily,
                 fontStyle = FontStyle.Italic,
                 fontSize = 12.5.sp,
@@ -383,7 +381,6 @@ private fun DeclarationPreviewCard() {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PAGE 1 — Season picker
-//   One focused question, not a feature list
 // ─────────────────────────────────────────────────────────────────────────────
 @Composable
 private fun PageSeasonPicker(
@@ -404,6 +401,7 @@ private fun PageSeasonPicker(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .verticalScroll(rememberScrollState())
             .padding(horizontal = 28.dp),
         verticalArrangement = Arrangement.Bottom
     ) {
@@ -424,10 +422,10 @@ private fun PageSeasonPicker(
             fontFamily = BodyFontFamily,
             fontSize = 14.sp,
             lineHeight = 21.sp,
-            color = Color.White.copy(alpha = 0.72f)
+            color = Color.White.copy(alpha = 0.75f)
         )
 
-        Spacer(modifier = Modifier.height(22.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
         // Chip grid
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -451,7 +449,7 @@ private fun PageSeasonPicker(
                             label = "chip-text"
                         )
                         val chipScale by animateFloatAsState(
-                            targetValue = if (isSelected) 1.03f else 1f,
+                            targetValue = if (isSelected) 1.02f else 1f,
                             animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
                             label = "chip-scale"
                         )
@@ -497,68 +495,66 @@ private fun PageSeasonPicker(
             }
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(12.dp))
     }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PAGE 2 — Ready / personalised first declaration
-//   The "aha moment" confirmation: user sees their chosen season reflected
 // ─────────────────────────────────────────────────────────────────────────────
 @Composable
 private fun PageReady(chosenArea: String) {
-    // Gentle entrance — declaration text fades in with a tiny upward drift
     var revealed by remember { mutableStateOf(false) }
-    LaunchedEffect(Unit) {
-        delay(200)
+    LaunchedEffect(chosenArea) {
+        revealed = false
+        delay(150)
         revealed = true
     }
 
     val textAlpha by animateFloatAsState(
         targetValue = if (revealed) 1f else 0f,
-        animationSpec = tween(600, easing = FastOutSlowInEasing),
+        animationSpec = tween(500, easing = FastOutSlowInEasing),
         label = "text-reveal"
     )
     val textOffset by animateFloatAsState(
-        targetValue = if (revealed) 0f else 18f,
-        animationSpec = tween(600, easing = FastOutSlowInEasing),
+        targetValue = if (revealed) 0f else 14f,
+        animationSpec = tween(500, easing = FastOutSlowInEasing),
         label = "text-offset"
     )
 
-    // Map chosen area to a tailored declaration + scripture
     val (declaration, verse, reference) = remember(chosenArea) {
-        when (chosenArea) {
-            "Peace over Anxiety" -> Triple(
+        when {
+            chosenArea.contains("Peace", ignoreCase = true) -> Triple(
                 "I do not walk in fear or anxiety. God's peace guards my heart.",
                 "Do not be anxious about anything, but in every situation, by prayer and petition, present your requests to God.",
                 "PHILIPPIANS 4:6"
             )
-            "Identity in Christ" -> Triple(
+            chosenArea.contains("Identity", ignoreCase = true) -> Triple(
                 "I am chosen, holy, and dearly loved. My identity is anchored in Christ.",
                 "Therefore, if anyone is in Christ, the new creation has come: the old has gone, the new is here.",
                 "2 CORINTHIANS 5:17"
             )
-            "Confidence & Calling" -> Triple(
+            chosenArea.contains("Confidence", ignoreCase = true) || chosenArea.contains("Calling", ignoreCase = true) -> Triple(
                 "I am called with a holy purpose. I walk boldly in the path God has set.",
                 "For we are God's handiwork, created in Christ Jesus to do good works.",
                 "EPHESIANS 2:10"
             )
-            "Strength & Endurance" -> Triple(
+            chosenArea.contains("Strength", ignoreCase = true) -> Triple(
                 "When my strength is spent, His power is made perfect. I will not give up.",
                 "I can do all things through Christ who gives me strength.",
                 "PHILIPPIANS 4:13"
             )
-            "Divine Provision" -> Triple(
+            chosenArea.contains("Provision", ignoreCase = true) -> Triple(
                 "My God supplies every need. I rest in His faithful, generous provision.",
                 "And my God will meet all your needs according to the riches of his glory in Christ Jesus.",
                 "PHILIPPIANS 4:19"
             )
-            "Rest & Renewal" -> Triple(
+            chosenArea.contains("Rest", ignoreCase = true) || chosenArea.contains("Renewal", ignoreCase = true) -> Triple(
                 "I come to Christ and find true rest. My soul is renewed in His presence.",
                 "Come to me, all you who are weary and burdened, and I will give you rest.",
                 "MATTHEW 11:28"
             )
-            "Joy & Freedom" -> Triple(
+            chosenArea.contains("Joy", ignoreCase = true) -> Triple(
                 "I am free and full of gladness. His joy is my strength today.",
                 "The LORD is my strength and my shield; my heart trusts in him, and he helps me.",
                 "PSALM 28:7"
@@ -574,6 +570,7 @@ private fun PageReady(chosenArea: String) {
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .verticalScroll(rememberScrollState())
             .padding(horizontal = 28.dp),
         verticalArrangement = Arrangement.Bottom
     ) {
@@ -594,12 +591,12 @@ private fun PageReady(chosenArea: String) {
             fontFamily = BodyFontFamily,
             fontSize = 14.sp,
             lineHeight = 21.sp,
-            color = Color.White.copy(alpha = 0.72f)
+            color = Color.White.copy(alpha = 0.75f)
         )
 
-        Spacer(modifier = Modifier.height(22.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
-        // Personalised first declaration card
+        // Personalised declaration card
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -613,7 +610,7 @@ private fun PageReady(chosenArea: String) {
                         colors = listOf(Color(0xFFFAF7F2), Color(0xFFF3EDE4))
                     )
                 )
-                .padding(24.dp)
+                .padding(22.dp)
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Box(
@@ -635,7 +632,7 @@ private fun PageReady(chosenArea: String) {
                 Spacer(modifier = Modifier.height(14.dp))
 
                 Text(
-                    text = "\u201c$declaration\u201d",
+                    text = "“$declaration”",
                     fontFamily = DisplayFontFamily,
                     fontSize = 17.sp,
                     lineHeight = 25.sp,
@@ -643,7 +640,7 @@ private fun PageReady(chosenArea: String) {
                     color = Espresso
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(14.dp))
 
                 Box(
                     modifier = Modifier
@@ -652,10 +649,10 @@ private fun PageReady(chosenArea: String) {
                         .background(Border)
                 )
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
                 Text(
-                    text = "\u201c$verse\u201d",
+                    text = "“$verse”",
                     fontFamily = DisplayFontFamily,
                     fontStyle = FontStyle.Italic,
                     fontSize = 12.5.sp,
@@ -677,7 +674,7 @@ private fun PageReady(chosenArea: String) {
             }
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(12.dp))
     }
 }
 
@@ -700,12 +697,12 @@ private fun OnboardingCTA(
 
     val ctaBg by animateColorAsState(
         targetValue = if (isLast) Terracotta else Color.White,
-        animationSpec = tween(300),
+        animationSpec = tween(250),
         label = "cta-bg"
     )
     val ctaText by animateColorAsState(
         targetValue = if (isLast) Color.White else Espresso,
-        animationSpec = tween(300),
+        animationSpec = tween(250),
         label = "cta-text"
     )
 
@@ -724,18 +721,18 @@ private fun OnboardingCTA(
             shape = RoundedCornerShape(18.dp),
             modifier = Modifier
                 .fillMaxWidth()
-                .height(54.dp)
+                .height(52.dp)
         ) {
             Text(
                 text = ctaLabel,
                 fontFamily = BodyFontFamily,
                 fontWeight = FontWeight.SemiBold,
-                fontSize = 15.sp
+                fontSize = 14.5.sp
             )
         }
 
         if (page < 2) {
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(10.dp))
             Text(
                 text = "Skip for now",
                 fontFamily = BodyFontFamily,
