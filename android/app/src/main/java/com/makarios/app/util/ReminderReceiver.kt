@@ -7,10 +7,10 @@ import android.content.Intent
 /**
  * ReminderReceiver
  *
- * Broadcast receiver triggered by AlarmManager for Daily and Hourly declarations,
+ * Broadcast receiver triggered by AlarmManager for daily declaration reminders,
  * as well as upon device boot to reschedule active timers.
- * Now dynamically resolves declarations from the user's chosen reminder pool
- * (Custom authored, Saved, Spiritual Focus, or Complete Library).
+ * Dynamically resolves declarations from the user's chosen reminder pool
+ * (Pinned, Custom authored, Saved, or Complete Library).
  */
 class ReminderReceiver : BroadcastReceiver() {
 
@@ -30,7 +30,7 @@ class ReminderReceiver : BroadcastReceiver() {
                 ReminderManager.showSacredNotification(
                     context = context,
                     notificationId = ReminderManager.REQ_DAWN,
-                    title = "Dawn Revelation · Makarios",
+                    title = "Good morning · Makarios",
                     declaration = affirmation.declaration,
                     scripture = affirmation.scriptureText,
                     reference = affirmation.reference
@@ -45,7 +45,7 @@ class ReminderReceiver : BroadcastReceiver() {
                 ReminderManager.showSacredNotification(
                     context = context,
                     notificationId = ReminderManager.REQ_MIDDAY,
-                    title = "Midday Stillness · Makarios",
+                    title = "Your midday declaration · Makarios",
                     declaration = affirmation.declaration,
                     scripture = affirmation.scriptureText,
                     reference = affirmation.reference
@@ -60,7 +60,7 @@ class ReminderReceiver : BroadcastReceiver() {
                 ReminderManager.showSacredNotification(
                     context = context,
                     notificationId = ReminderManager.REQ_EVENING,
-                    title = "Evening Examen · Makarios",
+                    title = "Your evening declaration · Makarios",
                     declaration = affirmation.declaration,
                     scripture = affirmation.scriptureText,
                     reference = affirmation.reference
@@ -76,7 +76,7 @@ class ReminderReceiver : BroadcastReceiver() {
                     ReminderManager.showSacredNotification(
                         context = context,
                         notificationId = ReminderManager.REQ_HOURLY,
-                        title = "Hourly Stillness · Makarios",
+                        title = "Declaration reminder · Makarios",
                         declaration = affirmation.declaration,
                         scripture = affirmation.scriptureText,
                         reference = affirmation.reference

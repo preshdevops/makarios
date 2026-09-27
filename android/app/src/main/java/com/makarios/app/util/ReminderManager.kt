@@ -18,14 +18,14 @@ import java.util.Calendar
 /**
  * ReminderManager
  *
- * Full-fidelity scheduler and notification manager for Makarios.
- * Powers daily sacred reminders and allows users to set any specific affirmation
- * as their active notification or choose a delivery pool (Pinned, Custom, Saved, All).
+ * Scheduler and notification manager for Makarios.
+ * Handles daily declaration reminders and lets users set any specific affirmation
+ * as their active notification, or choose a delivery pool (Pinned, Custom, Saved, All).
  */
 object ReminderManager {
 
-    const val CHANNEL_ID = "makarios_sacred_reminders"
-    const val CHANNEL_NAME = "Sacred Declarations & Truth"
+    const val CHANNEL_ID = "makarios_reminders"
+    const val CHANNEL_NAME = "Daily Declarations"
     private const val PREFS_NAME = "makarios_reminders_prefs"
 
     const val ACTION_DAWN = "com.makarios.app.ACTION_DAWN_REMINDER"
@@ -64,7 +64,7 @@ object ReminderManager {
                 CHANNEL_NAME,
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
-                description = "Quiet reminders to anchor your spirit in God's promises"
+                description = "Daily declaration reminders from Makarios"
                 enableLights(true)
                 lightColor = 0xFFD97706.toInt()
                 enableVibration(true)
@@ -116,7 +116,7 @@ object ReminderManager {
         showSacredNotification(
             context = context,
             notificationId = 1001,
-            title = "Notification Set · Makarios",
+            title = "Your declaration · Makarios",
             declaration = affirmation.declaration,
             scripture = affirmation.scriptureText,
             reference = affirmation.reference
@@ -259,10 +259,10 @@ object ReminderManager {
         val affirmation = resolveAffirmationForReminder(context)
         val source = getReminderSource(context)
         val title = when (source) {
-            ReminderSource.PINNED -> "Your Pinned Declaration · Makarios"
-            ReminderSource.CUSTOM -> "Personal Declaration · Makarios"
-            ReminderSource.SAVED -> "Saved Promise · Makarios"
-            else -> "Daily Revelation · Makarios"
+            ReminderSource.PINNED -> "Your declaration · Makarios"
+            ReminderSource.CUSTOM -> "Your declaration · Makarios"
+            ReminderSource.SAVED -> "Your declaration · Makarios"
+            else -> "Makarios"
         }
 
         showSacredNotification(

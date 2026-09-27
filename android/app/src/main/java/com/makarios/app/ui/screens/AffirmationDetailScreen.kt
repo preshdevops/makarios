@@ -216,7 +216,7 @@ fun AffirmationDetailScreen(
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
-                            text = "Living Scripture",
+                            text = "Scripture",
                             fontFamily = DisplayFontFamily,
                             fontStyle = FontStyle.Italic,
                             fontSize = 13.sp,
@@ -263,7 +263,7 @@ fun AffirmationDetailScreen(
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(
-                                text = "Personal Confession",
+                                text = "Your Declaration",
                                 fontFamily = DisplayFontFamily,
                                 fontStyle = FontStyle.Italic,
                                 fontSize = 11.5.sp,

@@ -202,8 +202,9 @@ fun SavedScreen(
         }
     }
 
-    val savedList = AffirmationRepository.getSaved()
-    val personalList = AffirmationRepository.personalAffirmations
+    var savedList by remember { mutableStateOf(AffirmationRepository.getSaved()) }
+    var personalList by remember { mutableStateOf(AffirmationRepository.personalAffirmations.toList()) }
+
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -354,12 +355,14 @@ fun SavedScreen(
                             verticalArrangement = Arrangement.spacedBy(14.dp)
                         ) {
                             savedList.forEach { affirmation ->
-                                val isSaved = AffirmationRepository.isSaved(affirmation.id)
+                                var isSaved by remember(affirmation.id) { mutableStateOf(AffirmationRepository.isSaved(affirmation.id)) }
                                 AffirmationCard(
                                     affirmation = affirmation,
                                     isSaved = isSaved,
                                     onToggleSave = {
                                         AffirmationRepository.toggleSave(affirmation.id)
+                                        isSaved = AffirmationRepository.isSaved(affirmation.id)
+                                        savedList = AffirmationRepository.getSaved()
                                     },
                                     onShare = {
                                         ShareHelper.shareAffirmationGraphic(context, affirmation)
@@ -507,12 +510,13 @@ fun SavedScreen(
                         } else {
                             Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
                                 personalList.forEach { affirmation ->
-                                    val isSaved = AffirmationRepository.isSaved(affirmation.id)
+                                    var isSaved by remember(affirmation.id) { mutableStateOf(AffirmationRepository.isSaved(affirmation.id)) }
                                     AffirmationCard(
                                         affirmation = affirmation,
                                         isSaved = isSaved,
                                         onToggleSave = {
                                             AffirmationRepository.toggleSave(affirmation.id)
+                                            isSaved = AffirmationRepository.isSaved(affirmation.id)
                                         },
                                         onShare = {
                                             ShareHelper.shareAffirmationGraphic(context, affirmation)

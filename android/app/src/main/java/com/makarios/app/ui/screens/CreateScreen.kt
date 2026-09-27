@@ -1,6 +1,7 @@
 package com.makarios.app.ui.screens
 
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -149,21 +150,37 @@ fun CreateScreen(
 
     val currentPhotoUrl = selectedPhotoId?.let { SacredBackgrounds.getById(it)?.photoUrl }
 
+    var savedPersonalAffirmationId by remember { mutableStateOf<String?>(null) }
+
+    fun getOrCreateAffirmation(): Affirmation {
+        val existingId = savedPersonalAffirmationId
+        if (existingId != null) {
+            val existing = AffirmationRepository.getById(existingId)
+            if (existing != null) return existing
+        }
+        val targetId = seedAffirmation?.id ?: "personal-${System.currentTimeMillis()}"
+        val affirmation = Affirmation(
+            id = targetId,
+            declaration = declarationText,
+            scriptureText = matchedScripture.ifBlank { "I praise you because I am fearfully and wonderfully made; your works are wonderful, I know that full well." },
+            reference = matchedReference.ifBlank { "PSALM 139:14" },
+            context = "Personal declaration created in Makarios Studio.",
+            category = "Personal",
+            tone = selectedTone ?: AffirmationTone.RESOLUTE,
+            imageUrl = currentPhotoUrl ?: "https://images.unsplash.com/photo-1507652313519-d4e9174996dd?auto=format&fit=crop&w=1000&q=85",
+            isFavorite = true,
+            personalDeclaration = declarationText
+        )
+        if (seedAffirmation == null || !AffirmationRepository.personalAffirmations.any { it.id == targetId }) {
+            AffirmationRepository.addPersonalAffirmation(affirmation)
+        }
+        savedPersonalAffirmationId = targetId
+        return affirmation
+    }
+
     val saveCurrentDesignToGallery: () -> Unit = {
         coroutineScope.launch {
-            val newAffirmation = Affirmation(
-                id = "personal-${System.currentTimeMillis()}",
-                declaration = declarationText,
-                scriptureText = matchedScripture.ifBlank { "I praise you because I am fearfully and wonderfully made; your works are wonderful, I know that full well." },
-                reference = matchedReference.ifBlank { "PSALM 139:14" },
-                context = "Personal declaration created in Makarios Studio.",
-                category = "Personal",
-                tone = selectedTone ?: AffirmationTone.RESOLUTE,
-                imageUrl = currentPhotoUrl ?: "https://images.unsplash.com/photo-1507652313519-d4e9174996dd?auto=format&fit=crop&w=1000&q=85",
-                isFavorite = true,
-                personalDeclaration = declarationText
-            )
-            AffirmationRepository.addPersonalAffirmation(newAffirmation)
+            val newAffirmation = getOrCreateAffirmation()
             val uri = withContext(Dispatchers.IO) {
                 val photoBmp = currentPhotoUrl?.let { WallpaperRenderer.fetchBitmapFromUrl(context, it) }
                 val bitmap = WallpaperRenderer.renderBitmap(
@@ -188,19 +205,7 @@ fun CreateScreen(
 
     val shareCurrentDesign: () -> Unit = {
         coroutineScope.launch {
-            val newAffirmation = Affirmation(
-                id = "personal-${System.currentTimeMillis()}",
-                declaration = declarationText,
-                scriptureText = matchedScripture.ifBlank { "I praise you because I am fearfully and wonderfully made; your works are wonderful, I know that full well." },
-                reference = matchedReference.ifBlank { "PSALM 139:14" },
-                context = "Personal declaration created in Makarios Studio.",
-                category = "Personal",
-                tone = selectedTone ?: AffirmationTone.RESOLUTE,
-                imageUrl = currentPhotoUrl ?: "https://images.unsplash.com/photo-1507652313519-d4e9174996dd?auto=format&fit=crop&w=1000&q=85",
-                isFavorite = true,
-                personalDeclaration = declarationText
-            )
-            AffirmationRepository.addPersonalAffirmation(newAffirmation)
+            val newAffirmation = getOrCreateAffirmation()
             withContext(Dispatchers.IO) {
                 val photoBmp = currentPhotoUrl?.let { WallpaperRenderer.fetchBitmapFromUrl(context, it) }
                 val bitmap = WallpaperRenderer.renderBitmap(
@@ -220,19 +225,7 @@ fun CreateScreen(
     }
 
     val openWallpaperDialog: () -> Unit = {
-        val newAffirmation = Affirmation(
-            id = "personal-${System.currentTimeMillis()}",
-            declaration = declarationText,
-            scriptureText = matchedScripture.ifBlank { "I praise you because I am fearfully and wonderfully made; your works are wonderful, I know that full well." },
-            reference = matchedReference.ifBlank { "PSALM 139:14" },
-            context = "Personal declaration created in Makarios Studio.",
-            category = "Personal",
-            tone = selectedTone ?: AffirmationTone.RESOLUTE,
-            imageUrl = currentPhotoUrl ?: "https://images.unsplash.com/photo-1507652313519-d4e9174996dd?auto=format&fit=crop&w=1000&q=85",
-            isFavorite = true,
-            personalDeclaration = declarationText
-        )
-        AffirmationRepository.addPersonalAffirmation(newAffirmation)
+        getOrCreateAffirmation()
         showWallpaperDialog = true
     }
 
@@ -277,6 +270,16 @@ fun CreateScreen(
         }
     }
 
+    val handleBack: () -> Unit = {
+        when (stage) {
+            CreateStage.DESIGN -> stage = CreateStage.MATCH
+            CreateStage.MATCH -> stage = CreateStage.WRITE
+            CreateStage.WRITE -> onBack()
+        }
+    }
+
+    BackHandler(onBack = handleBack)
+
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = Porcelain
@@ -300,7 +303,7 @@ fun CreateScreen(
                         .clip(CircleShape)
                         .background(Surface)
                         .border(1.dp, Border, CircleShape)
-                        .clickable(onClick = onBack),
+                        .clickable(onClick = handleBack),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
@@ -329,6 +332,10 @@ fun CreateScreen(
                                         isPast -> Terracotta
                                         else -> Border
                                     }
+                                )
+                                .then(
+                                    if (isPast) Modifier.clickable { stage = stageEnum }
+                                    else Modifier
                                 )
                                 .padding(horizontal = 10.dp, vertical = 5.dp)
                         ) {
@@ -578,10 +585,10 @@ private fun WriteStage(
 
                 // Character count
                 Text(
-                    text = "$charCount characters",
+                    text = "$charCount / 280",
                     fontFamily = BodyFontFamily,
                     fontSize = 11.sp,
-                    color = if (charCount >= 10) Terracotta else StoneMuted
+                    color = if (charCount > 250) Terracotta else StoneMuted
                 )
             }
         }

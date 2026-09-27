@@ -48,6 +48,7 @@ fun AffirmationCard(
     Box(
         modifier = modifier
             .fillMaxWidth()
+            .defaultMinSize(minHeight = 220.dp)
             .shadow(
                 elevation = 4.dp,
                 shape = RoundedCornerShape(26.dp),

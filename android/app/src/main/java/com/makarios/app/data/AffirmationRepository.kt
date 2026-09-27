@@ -32,12 +32,12 @@ object AffirmationRepository {
         ),
         MoodCategory(
             name = "Purpose",
-            subtitle = "Calling & divine alignment",
+            subtitle = "Calling & direction",
             imageUrl = "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=85"
         ),
         MoodCategory(
             name = "Courage",
-            subtitle = "Holy boldness over fear",
+            subtitle = "Courage over fear",
             imageUrl = "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=800&q=85"
         ),
         MoodCategory(
@@ -52,7 +52,7 @@ object AffirmationRepository {
         ),
         MoodCategory(
             name = "Confidence",
-            subtitle = "Christ our defense",
+            subtitle = "Confidence & assurance",
             imageUrl = "https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=800&q=85"
         )
     )
@@ -63,7 +63,7 @@ object AffirmationRepository {
         declaration = "I am fully known, deeply loved, and precisely placed for this moment.",
         scriptureText = "You have searched me, Lord, and you know me. You know when I sit and when I rise; you perceive my thoughts from afar.",
         reference = "Inspired by Psalm 139",
-        context = "David meditates on the inescapable love and sovereign knowledge of God. Nothing in your story is an accident.",
+        context = "David meditates on the inescapable love and presence of God. Nothing in your story is an accident.",
         category = "Identity",
         tone = AffirmationTone.RESOLUTE,
         imageUrl = "https://images.unsplash.com/photo-1507652313519-d4e9174996dd?auto=format&fit=crop&w=1200&q=85"
@@ -119,7 +119,7 @@ object AffirmationRepository {
         declaration = "I am more than a conqueror through Him who loved me.",
         scriptureText = "No, in all these things we are more than conquerors through him who loved us.",
         reference = "ROMANS 8:37",
-        context = "Victory is not merely surviving difficulty, but emerging deepened in sovereign love.",
+        context = "Victory is not merely surviving difficulty, but emerging deepened in God's love.",
         category = "Strength",
         tone = AffirmationTone.RESOLUTE,
         imageUrl = "https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=1200&q=85",
@@ -143,7 +143,7 @@ object AffirmationRepository {
         declaration = "Be still. The battle is not yours alone.",
         scriptureText = "You will not have to fight this battle. Take up your positions; stand firm and see the deliverance the Lord will give you.",
         reference = "2 CHRONICLES 20:17",
-        context = "Step out of frantic preservation and breathe deeply into sovereign protection. God takes responsibility for the outcome.",
+        context = "Step out of frantic preservation and rest in God's protection. God takes responsibility for the outcome.",
         category = "Peace",
         tone = AffirmationTone.STILL,
         imageUrl = "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=85"
@@ -160,7 +160,7 @@ object AffirmationRepository {
         declaration = "I am created with intention. My steps are ordered and my days are held in His hands.",
         scriptureText = "For we are God's handiwork, created in Christ Jesus to do good works, which God prepared in advance for us to do.",
         reference = "EPHESIANS 2:10",
-        context = "You are not a cosmic coincidence. Your life was intentionally authored for sovereign purpose.",
+        context = "You are not a cosmic coincidence. Your life was intentionally authored for purpose.",
         category = "Purpose",
         tone = AffirmationTone.RESOLUTE,
         imageUrl = "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=85"

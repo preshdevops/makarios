@@ -1,6 +1,9 @@
 package com.makarios.app.ui.screens
 
 import android.widget.Toast
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -65,7 +68,7 @@ fun WidgetStudioScreen(
     var selectedSize by remember { mutableStateOf(WidgetSize.MEDIUM) }
     var selectedSource by remember { mutableStateOf("Declaration of the Day") }
     var selectedCategory by remember { mutableStateOf("Peace") }
-    var selectedSchedule by remember { mutableStateOf("Every Dawn (06:30 AM)") }
+    var selectedSchedule by remember { mutableStateOf("Every Dawn") }
 
     // Active affirmation powering the widget preview
     val activeAffirmation = remember(selectedSource, selectedCategory) {
@@ -131,7 +134,7 @@ fun WidgetStudioScreen(
                     .padding(horizontal = 20.dp)
             ) {
                 Text(
-                    text = "Everyday Presence",
+                    text = "Home Screen Widget",
                     fontFamily = DisplayFontFamily,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 24.sp,
@@ -141,7 +144,7 @@ fun WidgetStudioScreen(
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "Keep biblical declarations and grounding scripture woven into your daily phone glance.",
+                    text = "Pin declarations to your home screen and lock screen for a daily reminder.",
                     fontFamily = BodyFontFamily,
                     fontSize = 13.5.sp,
                     lineHeight = 19.sp,
@@ -361,7 +364,7 @@ fun WidgetStudioScreen(
                     .padding(horizontal = 20.dp)
             ) {
                 Text(
-                    text = "FEED CONTENT SOURCE",
+                    text = "WIDGET CONTENT",
                     fontFamily = BodyFontFamily,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 10.sp,
@@ -478,7 +481,7 @@ fun WidgetStudioScreen(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     listOf("Every Dawn", "Twice Daily", "Every 4 Hours").forEach { schedule ->
-                        val isSelected = selectedSchedule.startsWith(schedule)
+                        val isSelected = selectedSchedule == schedule
                         Box(
                             modifier = Modifier
                                 .weight(1f)
@@ -759,6 +762,10 @@ private fun LockScreenWidgetPreview(affirmation: Affirmation) {
             .padding(vertical = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        val today = remember {
+            val formatter = DateTimeFormatter.ofPattern("EEEE, MMMM d", Locale.getDefault())
+            LocalDate.now().format(formatter)
+        }
         // Large lock screen clock
         Text(
             text = "09:41",
@@ -769,7 +776,7 @@ private fun LockScreenWidgetPreview(affirmation: Affirmation) {
             color = Color.White
         )
         Text(
-            text = "Sunday, September 20",
+            text = today,
             fontFamily = BodyFontFamily,
             fontSize = 13.sp,
             color = Color.White.copy(alpha = 0.8f)

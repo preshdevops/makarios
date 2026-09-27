@@ -556,8 +556,8 @@ private fun PageReady(chosenArea: String) {
             )
             chosenArea.contains("Joy", ignoreCase = true) -> Triple(
                 "I am free and full of gladness. His joy is my strength today.",
-                "The LORD is my strength and my shield; my heart trusts in him, and he helps me.",
-                "PSALM 28:7"
+                "Do not grieve, for the joy of the LORD is your strength.",
+                "NEHEMIAH 8:10"
             )
             else -> Triple(
                 "I walk in grace and peace. Every relationship I carry is covered by God's love.",

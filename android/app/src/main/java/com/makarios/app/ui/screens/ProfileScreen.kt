@@ -165,7 +165,7 @@ fun ProfileScreen(
                                             }
                                         }
                                         Text(
-                                            text = "Walking in sovereign stillness & grace",
+                                            text = "Speaking life over every season",
                                             fontFamily = BodyFontFamily,
                                             fontSize = 12.5.sp,
                                             color = Stone
@@ -186,11 +186,11 @@ fun ProfileScreen(
                                 horizontalArrangement = Arrangement.SpaceAround,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                StatCadenceItem(count = "$savedCount", label = "Saved Promises")
+                                StatCadenceItem(count = "$savedCount", label = "Saved")
                                 Box(modifier = Modifier.width(1.dp).height(24.dp).background(Border))
                                 StatCadenceItem(count = "$personalCount", label = "Authored")
                                 Box(modifier = Modifier.width(1.dp).height(24.dp).background(Border))
-                                StatCadenceItem(count = "100% Free", label = "No Subscription")
+                                StatCadenceItem(count = "${AffirmationRepository.getAll().size}", label = "Declarations")
                             }
                         }
                     }
@@ -446,9 +446,10 @@ fun ProfileScreen(
                         }
                     }
 
+                    if (isReminderEnabled) {
                     Spacer(modifier = Modifier.height(10.dp))
 
-                    // Test notification pill
+                    // Test notification pill — only shown when reminders are active
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -459,8 +460,8 @@ fun ProfileScreen(
                                 ReminderManager.sendTestNotification(context, isHourly = false)
                                 Toast.makeText(
                                     context,
-                                    "Delivered “${currentPreviewAffirmation.reference}” to notifications ✓",
-                                    Toast.LENGTH_LONG
+                                    "Sent a preview notification ✓",
+                                    Toast.LENGTH_SHORT
                                 ).show()
                             }
                             .padding(horizontal = 16.dp, vertical = 12.dp),
@@ -478,7 +479,7 @@ fun ProfileScreen(
                                 modifier = Modifier.size(16.dp)
                             )
                             Text(
-                                text = "Send test notification now",
+                                text = "Send a test notification",
                                 fontFamily = BodyFontFamily,
                                 fontWeight = FontWeight.Medium,
                                 fontSize = 13.sp,
@@ -493,6 +494,7 @@ fun ProfileScreen(
                             fontSize = 12.sp,
                             color = Terracotta
                         )
+                    }
                     }
                 }
             }
@@ -666,7 +668,7 @@ fun ProfileScreen(
                             color = Espresso
                         )
                         Text(
-                            text = "Revisit the 3-step sacred onboarding",
+                            text = "Revisit the 3-step intro",
                             fontFamily = BodyFontFamily,
                             fontSize = 11.5.sp,
                             color = StoneMuted

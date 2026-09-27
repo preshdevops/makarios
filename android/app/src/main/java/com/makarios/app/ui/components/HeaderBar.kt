@@ -66,19 +66,21 @@ fun HeaderBar(
                 )
             }
 
-            // Right: Profile photo (portrait) matching mockup
+            // Right: Monogram avatar
             Box(
                 modifier = Modifier
                     .size(34.dp)
                     .clip(CircleShape)
                     .background(PorcelainWarm)
-                    .border(0.5.dp, BorderSubtle, CircleShape)
+                    .border(0.5.dp, BorderSubtle, CircleShape),
+                contentAlignment = Alignment.Center
             ) {
-                AsyncImage(
-                    model = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=160&q=80",
-                    contentDescription = "Profile",
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
+                Text(
+                    text = "M",
+                    fontFamily = DisplayFontFamily,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 14.sp,
+                    color = Espresso
                 )
             }
         }

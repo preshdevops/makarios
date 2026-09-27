@@ -1,6 +1,7 @@
 package com.makarios.app
 
 import android.Manifest
+import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -12,6 +13,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
@@ -88,11 +90,15 @@ private data class TabItem(
 
 @Composable
 fun MainAppScaffold() {
+    val context = LocalContext.current
+    val prefs = remember { context.getSharedPreferences("makarios_prefs", Context.MODE_PRIVATE) }
     var selectedTab by remember { mutableStateOf(0) }
     var activeAffirmationIdForCreate by remember { mutableStateOf<String?>(null) }
     var viewingAffirmation by remember { mutableStateOf<Affirmation?>(null) }
     var viewingWidgets by remember { mutableStateOf(false) }
-    var showOnboarding by remember { mutableStateOf(false) }
+    var showOnboarding by remember {
+        mutableStateOf(!prefs.getBoolean("onboarding_completed", false))
+    }
 
     // If an affirmation is selected for fullscreen contemplation (Page 1 in PDF)
     if (viewingAffirmation != null) {
@@ -102,8 +108,8 @@ fun MainAppScaffold() {
             onClose = { viewingAffirmation = null },
             onNavigateToCreate = { id ->
                 viewingAffirmation = null
-                activeAffirmationIdForCreate = id
-                selectedTab = 2 // Navigate to Visual Creator
+                activeAffirmationIdForCreate = id.ifBlank { null }
+                selectedTab = 2 // Navigate to Create
             }
         )
         return
@@ -120,9 +126,15 @@ fun MainAppScaffold() {
 
     // If Onboarding is opened
     if (showOnboarding) {
-        BackHandler { showOnboarding = false }
+        BackHandler {
+            prefs.edit().putBoolean("onboarding_completed", true).apply()
+            showOnboarding = false
+        }
         OnboardingScreen(
-            onComplete = { showOnboarding = false }
+            onComplete = {
+                prefs.edit().putBoolean("onboarding_completed", true).apply()
+                showOnboarding = false
+            }
         )
         return
     }
@@ -168,7 +180,12 @@ fun MainAppScaffold() {
                                 modifier = Modifier
                                     .weight(1f)
                                     .fillMaxHeight()
-                                    .clickable(onClick = { selectedTab = index }),
+                                    .clickable(onClick = {
+                                        if (index == 2 && selectedTab != 2) {
+                                            activeAffirmationIdForCreate = null
+                                        }
+                                        selectedTab = index
+                                    }),
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 verticalArrangement = Arrangement.Center
                             ) {
@@ -205,7 +222,7 @@ fun MainAppScaffold() {
             0 -> HomeScreen(
                 onNavigateToDetail = { affirmation -> viewingAffirmation = affirmation },
                 onNavigateToCreate = { id ->
-                    activeAffirmationIdForCreate = id
+                    activeAffirmationIdForCreate = id.ifBlank { null }
                     selectedTab = 2
                 },
                 onNavigateToLibrary = { selectedTab = 1 },
@@ -215,20 +232,23 @@ fun MainAppScaffold() {
             1 -> LibraryScreen(
                 onNavigateToDetail = { affirmation -> viewingAffirmation = affirmation },
                 onNavigateToCreate = { id ->
-                    activeAffirmationIdForCreate = id
+                    activeAffirmationIdForCreate = id.ifBlank { null }
                     selectedTab = 2
                 },
                 modifier = Modifier.padding(innerPadding)
             )
             2 -> CreateScreen(
                 affirmationId = activeAffirmationIdForCreate,
-                onBack = { selectedTab = 0 },
+                onBack = {
+                    selectedTab = 0
+                    activeAffirmationIdForCreate = null
+                },
                 modifier = Modifier.padding(innerPadding)
             )
             3 -> SavedScreen(
                 onNavigateToDetail = { affirmation -> viewingAffirmation = affirmation },
                 onNavigateToCreate = { id ->
-                    activeAffirmationIdForCreate = id
+                    activeAffirmationIdForCreate = id.ifBlank { null }
                     selectedTab = 2
                 },
                 onNavigateToLibrary = { selectedTab = 1 },

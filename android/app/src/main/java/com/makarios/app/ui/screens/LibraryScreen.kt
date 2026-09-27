@@ -34,6 +34,25 @@ import com.makarios.app.ui.components.AffirmationCard
 import com.makarios.app.ui.theme.*
 import com.makarios.app.util.ShareHelper
 
+private data class ThemeItem(
+    val name: String,
+    val description: String,
+    val count: String,
+    val accentColor: androidx.compose.ui.graphics.Color,
+    val badgeBg: androidx.compose.ui.graphics.Color
+)
+
+private val categoryThemes = listOf(
+    ThemeItem("Identity", "Declarations for who you are and your worth", "2 declarations", Terracotta, TerracottaLight),
+    ThemeItem("Peace", "Declarations for anxiety, worry, and overwhelm", "2 declarations", Sage, SageLight),
+    ThemeItem("Strength", "Declarations for endurance and perseverance", "1 declaration", SunlitGold, SunlitGoldLight),
+    ThemeItem("Purpose", "Declarations for calling, direction, and clarity", "1 declaration", Espresso, PorcelainWarm),
+    ThemeItem("Courage", "Declarations for fear, doubt, and stepping out", "1 declaration", Terracotta, DawnBlush),
+    ThemeItem("Joy", "Declarations for gladness and thankfulness", "1 declaration", SunlitGold, SunlitGoldLight),
+    ThemeItem("Provision", "Declarations for needs, trust, and abundance", "1 declaration", Sage, SageLight),
+    ThemeItem("Confidence", "Declarations for self-doubt and insecurity", "1 declaration", Espresso, PorcelainWarm)
+)
+
 @Composable
 fun LibraryScreen(
     onNavigateToDetail: (Affirmation) -> Unit,
@@ -215,25 +234,6 @@ fun LibraryScreen(
                     )
 
                     Spacer(modifier = Modifier.height(12.dp))
-
-                    data class ThemeItem(
-                        val name: String,
-                        val description: String,
-                        val count: String,
-                        val accentColor: Color,
-                        val badgeBg: Color
-                    )
-
-                    val categoryThemes = listOf(
-                        ThemeItem("Identity", "Rooted in who God declares you are", "2 declarations", Terracotta, TerracottaLight),
-                        ThemeItem("Peace", "Stillness and sovereign rest amid turbulence", "2 declarations", Sage, SageLight),
-                        ThemeItem("Strength", "Endurance when your own power is spent", "1 declaration", SunlitGold, SunlitGoldLight),
-                        ThemeItem("Purpose", "Calling, divine clarity, and holy alignment", "1 declaration", Espresso, PorcelainWarm),
-                        ThemeItem("Courage", "Holy boldness over every fear and shadow", "1 declaration", Terracotta, DawnBlush),
-                        ThemeItem("Joy", "Unshakeable gladness that the world cannot take", "1 declaration", SunlitGold, SunlitGoldLight),
-                        ThemeItem("Provision", "Resting in the God who supplies every need", "1 declaration", Sage, SageLight),
-                        ThemeItem("Confidence", "Unwavering assurance in Christ our cornerstone", "1 declaration", Espresso, PorcelainWarm)
-                    )
 
                     categoryThemes.chunked(2).forEach { rowPairs ->
                         Row(

@@ -56,8 +56,8 @@ fun HomeScreen(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    val aotd = AffirmationRepository.affirmationOfTheDay
-    var isAotdSaved by remember { mutableStateOf(AffirmationRepository.isSaved(aotd.id)) }
+    val aotd = remember { AffirmationRepository.affirmationOfTheDay ?: AffirmationRepository.getAll().first() }
+    var isAotdSaved by remember(aotd.id) { mutableStateOf(AffirmationRepository.isSaved(aotd.id)) }
 
     // Time-aware greeting — only the greeting word, kept brief
     val currentHour = remember { java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY) }
@@ -256,7 +256,7 @@ private fun SanctuaryHero(
                 }
 
                 Text(
-                    text = "Today's Truth",
+                    text = "Today's Declaration",
                     fontFamily = DisplayFontFamily,
                     fontStyle = FontStyle.Italic,
                     fontSize = 13.sp,
