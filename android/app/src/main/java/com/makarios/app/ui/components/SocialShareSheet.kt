@@ -1,4 +1,4 @@
-package com.makarios.app.ui.components
+﻿package com.makarios.app.ui.components
 
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -112,7 +112,7 @@ fun SocialShareSheet(
                     )
                 }
 
-                val caption = "“${affirmation.declaration}”\n\n“${affirmation.scriptureText}”\n— ${affirmation.reference}\n\nShared via Makarios"
+                val caption = "“${affirmation.declaration}”\n\n“${affirmation.scriptureText}”\n— ${affirmation.reference}"
                 ShareHelper.shareToSocialPlatform(context, bitmap, selectedPlatform, caption)
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -200,7 +200,7 @@ fun SocialShareSheet(
                         photoBitmap = photoBmp
                     )
                 }
-                val caption = "“${affirmation.declaration}”\n— ${affirmation.reference}\n\nShared via Makarios"
+                val caption = "“${affirmation.declaration}”\n— ${affirmation.reference}"
                 ShareHelper.shareAffirmationImage(context, bitmap, "Makarios — ${affirmation.category}", caption)
             } finally {
                 isGenerating = false
@@ -239,7 +239,7 @@ fun SocialShareSheet(
             ) {
                 Column {
                     Text(
-                        text = "Share Sacred Declaration",
+                        text = "Share this declaration",
                         fontFamily = DisplayFontFamily,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 21.sp,
@@ -248,7 +248,7 @@ fun SocialShareSheet(
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = "Tailored formats for social feeds & stories",
+                        text = "Choose a platform to share to",
                         fontFamily = BodyFontFamily,
                         fontSize = 12.5.sp,
                         color = Stone
@@ -276,7 +276,7 @@ fun SocialShareSheet(
 
             // ── Platform Format Selector (Horizontal Chips) ─────────
             Text(
-                text = "CHOOSE PLATFORM FORMAT",
+                text = "SHARE TO",
                 fontFamily = BodyFontFamily,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 10.sp,
@@ -293,61 +293,32 @@ fun SocialShareSheet(
             ) {
                 platforms.forEach { platform ->
                     val isSelected = selectedPlatform == platform
-                    val brandColor = Color(platform.brandColorHex)
 
                     Box(
                         modifier = Modifier
-                            .clip(RoundedCornerShape(16.dp))
-                            .then(
-                                if (isSelected) {
-                                    Modifier
-                                        .background(Espresso)
-                                        .shadow(3.dp, RoundedCornerShape(16.dp), spotColor = Espresso.copy(alpha = 0.25f))
-                                        .border(1.5.dp, Terracotta, RoundedCornerShape(16.dp))
-                                } else {
-                                    Modifier
-                                        .background(Surface)
-                                        .border(1.dp, Border, RoundedCornerShape(16.dp))
-                                }
-                            )
+                            .clip(RoundedCornerShape(20.dp))
+                            .background(if (isSelected) Espresso else Surface)
+                            .border(1.dp, if (isSelected) Espresso else Border, RoundedCornerShape(20.dp))
                             .clickable { selectedPlatform = platform }
-                            .padding(horizontal = 14.dp, vertical = 10.dp)
+                            .padding(horizontal = 12.dp, vertical = 8.dp)
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(9.dp)
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            // Brand Icon Circle
-                            Box(
-                                modifier = Modifier
-                                    .size(30.dp)
-                                    .clip(CircleShape)
-                                    .background(if (isSelected) Color.White.copy(alpha = 0.18f) else brandColor.copy(alpha = 0.12f)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    painter = painterResource(id = platform.iconResId),
-                                    contentDescription = platform.displayName,
-                                    tint = if (isSelected) Color.White else brandColor,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                            }
-
-                            Column {
-                                Text(
-                                    text = platform.displayName,
-                                    fontFamily = BodyFontFamily,
-                                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
-                                    fontSize = 12.5.sp,
-                                    color = if (isSelected) Color.White else Espresso
-                                )
-                                Text(
-                                    text = platform.defaultFormat.aspectDescription,
-                                    fontFamily = BodyFontFamily,
-                                    fontSize = 10.5.sp,
-                                    color = if (isSelected) Color.White.copy(alpha = 0.70f) else StoneMuted
-                                )
-                            }
+                            Icon(
+                                painter = painterResource(id = platform.iconResId),
+                                contentDescription = platform.displayName,
+                                tint = if (isSelected) Color.White else Color(platform.brandColorHex).copy(alpha = 0.6f),
+                                modifier = Modifier.size(15.dp)
+                            )
+                            Text(
+                                text = platform.displayName,
+                                fontFamily = BodyFontFamily,
+                                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                                fontSize = 13.sp,
+                                color = if (isSelected) Color.White else Espresso
+                            )
                         }
                     }
                 }
@@ -486,10 +457,10 @@ fun SocialShareSheet(
                                 verticalArrangement = Arrangement.Center
                             ) {
                                 Text(
-                                    text = "ARCHIVE  ·  ${affirmation.category.uppercase()}",
+                                    text = affirmation.category.uppercase(),
                                     fontFamily = BodyFontFamily,
                                     fontSize = 9.sp,
-                                    letterSpacing = 1.4.sp,
+                                    letterSpacing = 1.2.sp,
                                     color = Color(currentStyle.accentColor)
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
@@ -540,20 +511,14 @@ fun SocialShareSheet(
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 verticalArrangement = Arrangement.Center
                             ) {
-                                Box(
-                                    modifier = Modifier
-                                        .clip(RoundedCornerShape(12.dp))
-                                        .background(Color(currentStyle.accentColor))
-                                        .padding(horizontal = 10.dp, vertical = 4.dp)
-                                ) {
-                                    Text(
-                                        text = "✦ DAILY TRUTH ✦",
-                                        fontFamily = BodyFontFamily,
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 9.5.sp,
-                                        color = Color(0xFF1B1613)
-                                    )
-                                }
+                                Text(
+                                    text = platform.displayName.uppercase(),
+                                    fontFamily = BodyFontFamily,
+                                    fontWeight = FontWeight.Normal,
+                                    fontSize = 9.sp,
+                                    letterSpacing = 1.2.sp,
+                                    color = Color(currentStyle.accentColor)
+                                )
                                 Spacer(modifier = Modifier.height(10.dp))
                                 Text(
                                     text = "“${affirmation.declaration}”",
@@ -587,20 +552,13 @@ fun SocialShareSheet(
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.Center
                         ) {
-                            Box(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(14.dp))
-                                    .background(Color.White.copy(alpha = 0.16f))
-                                    .padding(horizontal = 12.dp, vertical = 4.dp)
-                            ) {
-                                Text(
-                                    text = "MAKARIOS  ·  ${affirmation.category.uppercase()}",
-                                    fontFamily = BodyFontFamily,
-                                    fontSize = 9.sp,
-                                    letterSpacing = 1.2.sp,
-                                    color = Color(currentStyle.accentColor)
-                                )
-                            }
+                            Text(
+                                text = affirmation.category.uppercase(),
+                                fontFamily = BodyFontFamily,
+                                fontSize = 9.sp,
+                                letterSpacing = 1.2.sp,
+                                color = Color(currentStyle.accentColor)
+                            )
                             Spacer(modifier = Modifier.height(12.dp))
                             Text(
                                 text = "“${affirmation.declaration}”",
@@ -652,7 +610,7 @@ fun SocialShareSheet(
             // ── Style Theme Switcher ────────────────────────────────
             if (activePhotoUrl == null) {
                 Text(
-                    text = "AESTHETIC THEME",
+                    text = "STYLE",
                     fontFamily = BodyFontFamily,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 10.sp,
@@ -709,7 +667,6 @@ fun SocialShareSheet(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(54.dp)
-                    .shadow(4.dp, RoundedCornerShape(16.dp), spotColor = Terracotta.copy(alpha = 0.35f))
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -722,7 +679,7 @@ fun SocialShareSheet(
                             strokeWidth = 2.dp
                         )
                         Text(
-                            text = "Crafting ${selectedPlatform.displayName} Graphic…",
+                            text = "Preparing…",
                             fontFamily = BodyFontFamily,
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 14.sp
@@ -735,7 +692,7 @@ fun SocialShareSheet(
                             modifier = Modifier.size(20.dp)
                         )
                         Text(
-                            text = "Share to ${selectedPlatform.displayName}",
+                            text = "Share · ${selectedPlatform.displayName}",
                             fontFamily = BodyFontFamily,
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 14.5.sp

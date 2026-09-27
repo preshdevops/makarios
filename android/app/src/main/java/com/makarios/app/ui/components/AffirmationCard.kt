@@ -1,6 +1,5 @@
 package com.makarios.app.ui.components
 
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -9,9 +8,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bookmark
-import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.filled.Widgets
 import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -23,7 +20,6 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -31,8 +27,6 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.makarios.app.data.Affirmation
 import com.makarios.app.ui.theme.*
-import com.makarios.app.util.ReminderManager
-import com.makarios.app.util.WidgetHelper
 
 @Composable
 fun AffirmationCard(
@@ -43,8 +37,6 @@ fun AffirmationCard(
     onCardClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
-
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -93,10 +85,11 @@ fun AffirmationCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                // Category badge (left side)
                 Box(
                     modifier = Modifier
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(Color.White.copy(alpha = 0.22f))
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(Color.White.copy(alpha = 0.18f))
                         .padding(horizontal = 10.dp, vertical = 4.dp)
                 ) {
                     Text(
@@ -109,50 +102,12 @@ fun AffirmationCard(
                     )
                 }
 
+                // Two action icons: Share + Bookmark
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(7.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Set as Widget Button
-                    Box(
-                        modifier = Modifier
-                            .size(32.dp)
-                            .clip(CircleShape)
-                            .background(Color.White.copy(alpha = 0.18f))
-                            .clickable {
-                                WidgetHelper.setWidgetAffirmation(context, affirmation)
-                            },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Widgets,
-                            contentDescription = "Set as Widget",
-                            tint = Color.White,
-                            modifier = Modifier.size(15.dp)
-                        )
-                    }
-
-                    // Set as Notification Button
-                    Box(
-                        modifier = Modifier
-                            .size(32.dp)
-                            .clip(CircleShape)
-                            .background(Color.White.copy(alpha = 0.18f))
-                            .clickable {
-                                ReminderManager.setPinnedAffirmation(context, affirmation)
-                                Toast.makeText(context, "Set as daily notification ✓", Toast.LENGTH_SHORT).show()
-                            },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Notifications,
-                            contentDescription = "Set as Notification",
-                            tint = Color.White,
-                            modifier = Modifier.size(15.dp)
-                        )
-                    }
-
-                    // Glass Share Button
+                    // Share
                     Box(
                         modifier = Modifier
                             .size(32.dp)
@@ -169,7 +124,7 @@ fun AffirmationCard(
                         )
                     }
 
-                    // Glass Bookmark Button
+                    // Bookmark
                     Box(
                         modifier = Modifier
                             .size(32.dp)

@@ -241,31 +241,15 @@ object WallpaperRenderer {
 
         // 3. Top Header Seal (safe zone: y = 290)
         val headerY = 290f
-        val headerText = "M A K A R I O S   ·   ${category.uppercase().replace(" ", "   ")}"
+        val headerText = category.uppercase()
         val headerPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
             typeface = workSansRegular
-            textSize = 17f
+            textSize = 13f
             color = activeAccentColor
             textAlign = Paint.Align.CENTER
             if (isPhotoActive) setShadowLayer(4f, 0f, 1f, 0x99000000.toInt())
         }
         canvas.drawText(headerText, width / 2f, headerY, headerPaint)
-
-        // Pill border around header text
-        val headerWidth = headerPaint.measureText(headerText) + 48f
-        val headerPillRect = RectF(
-            (width - headerWidth) / 2f,
-            headerY - 26f,
-            (width + headerWidth) / 2f,
-            headerY + 14f
-        )
-        val pillStrokePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            this.style = Paint.Style.STROKE
-            strokeWidth = 1.2f
-            color = activeAccentColor
-            alpha = 130
-        }
-        canvas.drawRoundRect(headerPillRect, 20f, 20f, pillStrokePaint)
 
         // 4. Hero Declaration (y = 480 to 980)
         val cleanDeclaration = declaration.trim().removePrefix("“").removeSuffix("”")
@@ -345,24 +329,6 @@ object WallpaperRenderer {
             canvas.drawText("— $trackedRef —", width / 2f, plaqueTop + 40f + scriptLayout.height + 24f, refPaint)
         }
 
-        // 7. Sacred Story Footnote (safe above Instagram reply bar)
-        val footerPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
-            typeface = workSansRegular
-            textSize = 14f
-            color = activeAccentColor
-            alpha = 200
-            textAlign = Paint.Align.CENTER
-        }
-        val wordmarkPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
-            typeface = cormorantItalic
-            textSize = 17f
-            color = activePrimaryColor
-            alpha = if (isPhotoActive) 150 else 100
-            textAlign = Paint.Align.CENTER
-        }
-        canvas.drawText("✦  WALK IN VICTORY TODAY  ✦", width / 2f, 1600f, footerPaint)
-        canvas.drawText("makarios.app", width / 2f, 1632f, wordmarkPaint)
-
         return bitmap
     }
 
@@ -423,10 +389,10 @@ object WallpaperRenderer {
         val workSansRegular = ResourcesCompat.getFont(context, R.font.worksans_regular) ?: Typeface.SANS_SERIF
 
         // 3. Category Header
-        val headerText = "ARCHIVE OF BLESSING   ·   ${category.uppercase()}"
+        val headerText = category.uppercase()
         val headerPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
             typeface = workSansRegular
-            textSize = 14f
+            textSize = 13f
             color = activeAccentColor
             letterSpacing = 0.12f
             textAlign = Paint.Align.CENTER
@@ -513,17 +479,6 @@ object WallpaperRenderer {
             canvas.drawText("◆  $cleanReference  ◆", width / 2f, plaqueTop + scriptLayout.height + 50f, refPaint)
         }
 
-        // 7. Archival Footer
-        val footerPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
-            typeface = workSansRegular
-            textSize = 12f
-            color = activeAccentColor
-            alpha = 150
-            letterSpacing = 0.15f
-            textAlign = Paint.Align.CENTER
-        }
-        canvas.drawText("MAKARIOS DEVOTIONAL ARCHIVE · VOL. I", width / 2f, 1022f, footerPaint)
-
         return bitmap
     }
 
@@ -589,38 +544,14 @@ object WallpaperRenderer {
         val cormorantItalic = ResourcesCompat.getFont(context, R.font.cormorant_garamond_italic) ?: Typeface.create(Typeface.SERIF, Typeface.ITALIC)
         val workSansRegular = ResourcesCompat.getFont(context, R.font.worksans_regular) ?: Typeface.SANS_SERIF
 
-        // 3. Card Tag Pill: "✦ DAILY TRUTH ✦"
-        val tagY = cardTop + 74f
-        val tagPillPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = activeAccentColor
-            this.style = Paint.Style.FILL
-        }
-        val tagTextPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
-            typeface = workSansRegular
-            textSize = 14f
-            isFakeBoldText = true
-            color = 0xFF1B1613.toInt()
-            textAlign = Paint.Align.CENTER
-        }
-        val tagText = "✦ DAILY TRUTH ✦"
-        val tagWidth = tagTextPaint.measureText(tagText) + 36f
-        val tagRect = RectF(
-            (width - tagWidth) / 2f,
-            tagY - 26f,
-            (width + tagWidth) / 2f,
-            tagY + 12f
-        )
-        canvas.drawRoundRect(tagRect, 18f, 18f, tagPillPaint)
-        canvas.drawText(tagText, width / 2f, tagY, tagTextPaint)
-
-        // Category subtitle
+        // 3. Category label — simple centered text at top of card
         val catPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
             typeface = workSansRegular
-            textSize = 15f
-            color = if (style.isDark || isPhotoActive) 0xDDFFFFFF.toInt() else 0xFF655C54.toInt()
+            textSize = 13f
+            color = activeAccentColor
             textAlign = Paint.Align.CENTER
         }
-        canvas.drawText("CATEGORY: ${category.uppercase()}", width / 2f, tagY + 44f, catPaint)
+        canvas.drawText(category.uppercase(), width / 2f, cardTop + 60f, catPaint)
 
         // 4. Declaration inside card
         val cleanDeclaration = declaration.trim().removePrefix("“").removeSuffix("”")
@@ -631,7 +562,7 @@ object WallpaperRenderer {
             color = if (style.isDark || isPhotoActive) 0xFFFFFFFF.toInt() else 0xFF2C2622.toInt()
         }
         val declLayout = createCenteredStaticLayout("“$cleanDeclaration”", declPaint, 800)
-        val declY = tagY + 90f
+        val declY = cardTop + 100f
         canvas.save()
         canvas.translate((width - 800) / 2f, declY)
         declLayout.draw(canvas)
@@ -684,17 +615,6 @@ object WallpaperRenderer {
             }
             canvas.drawText("— $cleanReference —", width / 2f, insetTop + scriptLayout.height + 62f, refPaint)
         }
-
-        // 7. Outside Card hint at bottom
-        val hintPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
-            typeface = workSansRegular
-            textSize = 14f
-            color = activeAccentColor
-            alpha = 220
-            textAlign = Paint.Align.CENTER
-            if (isPhotoActive) setShadowLayer(4f, 0f, 1f, 0x99000000.toInt())
-        }
-        canvas.drawText("SNAP & SHARE  ·  MAKARIOS", width / 2f, 1690f, hintPaint)
 
         return bitmap
     }
@@ -762,7 +682,7 @@ object WallpaperRenderer {
             color = activeAccentColor
             textAlign = Paint.Align.RIGHT
         }
-        canvas.drawText("MAKARIOS  //  ${category.uppercase()}", width - 68f, 74f, headerPaint)
+        canvas.drawText(category.uppercase(), width - 68f, 74f, headerPaint)
 
         // 5. Massive Quote Mark Glyph
         val quoteMarkPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -830,15 +750,6 @@ object WallpaperRenderer {
         }
         canvas.drawText("— $cleanReference", 98f, bottomY, refPaint)
 
-        val signaturePaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
-            typeface = cormorantItalic
-            textSize = 16f
-            color = activePrimaryColor
-            alpha = if (isPhotoActive) 160 else 110
-            textAlign = Paint.Align.RIGHT
-        }
-        canvas.drawText("truth in declaration · makarios.app", width - 68f, bottomY, signaturePaint)
-
         return bitmap
     }
 
@@ -887,7 +798,7 @@ object WallpaperRenderer {
         val workSansRegular = ResourcesCompat.getFont(context, R.font.worksans_regular) ?: Typeface.SANS_SERIF
 
         // 3. Category Header
-        val headerText = "DAILY BLESSING   ·   ${category.uppercase()}"
+        val headerText = category.uppercase()
         val headerPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
             typeface = workSansRegular
             textSize = 15f
@@ -967,24 +878,6 @@ object WallpaperRenderer {
             canvas.drawText("— $trackedRef —", width / 2f, plaqueTop + scriptLayout.height + 62f, refPaint)
         }
 
-        // 7. Footer: Sharing encouragement
-        val footerPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
-            typeface = workSansRegular
-            textSize = 13.5f
-            color = activeAccentColor
-            alpha = 180
-            textAlign = Paint.Align.CENTER
-        }
-        val wordmarkPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
-            typeface = cormorantItalic
-            textSize = 16f
-            color = activePrimaryColor
-            alpha = if (isPhotoActive) 150 else 100
-            textAlign = Paint.Align.CENTER
-        }
-        canvas.drawText("Forward this blessing to someone today", width / 2f, 1260f, footerPaint)
-        canvas.drawText("makarios  ·  speak truth  ·  walk blessed", width / 2f, 1290f, wordmarkPaint)
-
         return bitmap
     }
 
@@ -1036,7 +929,7 @@ object WallpaperRenderer {
         val contentMaxWidth = 860
 
         // 3. Category Header
-        val headerText = "M A K A R I O S   ·   ${category.uppercase().replace(" ", "   ")}"
+        val headerText = category.uppercase()
         val headerPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
             typeface = workSansRegular
             textSize = 17f

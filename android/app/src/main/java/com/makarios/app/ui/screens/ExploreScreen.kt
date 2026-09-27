@@ -49,10 +49,10 @@ enum class WidgetSurface {
     LOCK_SCREEN
 }
 
-enum class WidgetSize(val label: String, val dimensions: String) {
-    SMALL("Small", "2×2"),
-    MEDIUM("Medium", "4×2"),
-    LARGE("Large", "4×4")
+enum class WidgetSize(val label: String, val description: String) {
+    SMALL("Compact", "Short peek"),
+    MEDIUM("Standard", "Most popular"),
+    LARGE("Full", "Immersive")
 }
 
 @Composable
@@ -256,7 +256,7 @@ fun WidgetStudioScreen(
                                     color = if (isSelected) Color.White else Espresso
                                 )
                                 Text(
-                                    text = size.dimensions,
+                                    text = size.description,
                                     fontFamily = BodyFontFamily,
                                     fontSize = 10.sp,
                                     color = if (isSelected) Color.White.copy(alpha = 0.8f) else StoneMuted
