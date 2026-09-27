@@ -60,7 +60,7 @@ class MakariosGlanceWidget : GlanceAppWidget() {
                 .fillMaxSize()
                 .cornerRadius(22.dp)
                 .background(bgColor)
-                .clickable(actionStartActivity<MainActivity>())
+                .clickable(actionStartActivity(MainActivity::class.java))
                 .padding(14.dp)
         ) {
             Column(

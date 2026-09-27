@@ -262,6 +262,14 @@ object ReminderManager {
 
     fun scheduleDaily(
         context: Context,
+        hour: Int,
+        minute: Int
+    ) {
+        scheduleDaily(context, ReminderType.DAWN, customHour = hour, customMinute = minute)
+    }
+
+    fun scheduleDaily(
+        context: Context,
         type: ReminderType = ReminderType.DAWN,
         customHour: Int? = null,
         customMinute: Int? = null
