@@ -37,10 +37,10 @@ object AuthManager {
             val user = currentUser
             return when {
                 user == null -> "Guest"
-                user.isAnonymous -> "Guest Pilgrim"
+                user.isAnonymous -> "Guest"
                 !user.displayName.isNullOrBlank() -> user.displayName!!
                 !user.email.isNullOrBlank() -> user.email!!.substringBefore('@').replaceFirstChar { it.uppercase() }
-                else -> "Beloved"
+                else -> "Friend"
             }
         }
 
