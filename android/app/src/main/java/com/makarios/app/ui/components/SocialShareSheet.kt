@@ -1,4 +1,4 @@
-﻿package com.makarios.app.ui.components
+package com.makarios.app.ui.components
 
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -512,7 +512,7 @@ fun SocialShareSheet(
                                 verticalArrangement = Arrangement.Center
                             ) {
                                 Text(
-                                    text = platform.displayName.uppercase(),
+                                    text = affirmation.category.uppercase(),
                                     fontFamily = BodyFontFamily,
                                     fontWeight = FontWeight.Normal,
                                     fontSize = 9.sp,
