@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "10687276915",
+    "project_id": "makarios-b514c",
+    "storage_bucket": "makarios-b514c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:10687276915:android:0beb6f0aab76f0ce41c706",
+        "android_client_info": {
+          "package_name": "com.makarios.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAzsaLygrna5UZ91YIbJ0XWz8UWK04PRfw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

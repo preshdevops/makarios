@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -63,4 +64,10 @@ dependencies {
 
     // ONNX Runtime Mobile for on-device local vector search
     implementation("com.microsoft.onnxruntime:onnxruntime-android:1.20.0")
+
+    // Firebase BoM and SDKs
+    implementation(platform("com.google.firebase:firebase-bom:33.10.0"))
+    implementation("com.google.firebase:firebase-auth")
+    implementation("com.google.firebase:firebase-firestore")
+    implementation("com.google.firebase:firebase-analytics")
 }
