@@ -1,150 +1,92 @@
-# Makarios · Biblical Affirmations & Sacred Declarations
+# Makarios
 
-[![Android CI](https://github.com/preshdevops/makarios/actions/workflows/android-ci.yml/badge.svg)](https://github.com/preshdevops/makarios/actions/workflows/android-ci.yml)
-[![Kotlin](https://img.shields.io/badge/Kotlin-2.1.10-7F52FF.svg?logo=kotlin&logoColor=white)](https://kotlinlang.org)
-[![Compose](https://img.shields.io/badge/Jetpack%20Compose-2025.02-4285F4.svg?logo=jetpackcompose&logoColor=white)](https://developer.android.com/jetpack/compose)
-[![Material 3](https://img.shields.io/badge/Material%203-Expressive-795548.svg)](https://m3.material.io)
-[![ONNX Runtime](https://img.shields.io/badge/ONNX%20Runtime-Mobile%201.20-005CED.svg)](https://onnxruntime.ai)
+Makarios is a native Android application for personal biblical affirmations, widgets, and social sharing, built with Jetpack Compose and Material 3.
 
-> *“Speak truth over your life · Grounded in scripture.”*  
-> **Gospel. Tech. Precious.**
+## Overview
 
-**Makarios** is a bespoke, publication-grade Christian affirmation Android application built with modern Jetpack Compose and Material 3. It bridges timeless liturgical restraint with modern editorial design, empowering believers to write personal biblical affirmations, match them dynamically with God's Word using on-device neural AI, and carry them everywhere—as native home screen widgets, lock screen wallpapers, and tailored social media graphics.
+Makarios allows users to write personal declarations, match them with scripture using an offline on-device neural model, and display them on their home screen, lock screen, or export them to social media.
 
----
+Key capabilities:
+- Affirmation Creator: Write a personal declaration and match it with a relevant Bible verse offline using an embedded ONNX Runtime model.
+- Home Screen Widgets: Native Jetpack Glance widgets in multiple grid sizes (2x2, 4x2, 4x3, and 4x4) with typography tailored for each size.
+- Lock Screen Wallpapers: Full-resolution 9:20 wallpapers formatted to clear clock and notification areas.
+- Social Share Engine: Native image rendering tailored for Instagram Stories (9:16), Instagram Posts (1:1), Snapchat (9:16), X cards (16:9), and WhatsApp Status (4:5).
+- Scheduled Notifications: Customizable daily reminder times using exact system alarms.
+- Cloud Sync & Guest Access: Firebase Authentication supporting optional email sign-up/sign-in with cloud backup, or instant guest access without an account.
 
-## ✨ Key Features
+## Architecture and Tech Stack
 
-### 1. ✍️ Affirmation Creator & Neural Scripture Matching
-- **Personal Declaration Authoring:** Write what your heart needs to declare in your own authentic words.
-- **On-Device Semantic AI:** Powered by an embedded **Microsoft ONNX Runtime** neural model that matches declarations with canonical Bible verses completely offline—with zero cloud latency, zero API costs, and total user privacy.
-- **Mandatory Scripture Grounding:** Every single affirmation—curated or user-authored—is permanently paired with its foundation in God's Word.
+The application uses an offline-first architecture with optional cloud synchronization.
 
-### 2. 🎨 Bespoke Social Media Sharing Engine
-Tailored, pixel-perfect visual layouts rendered natively on-device across 6 distinct aspect ratios:
-- **Instagram Story (`9:16`):** Dedicated safe zones for system headers and reply bars, delicate hairline framing, and illuminated scripture plaque.
-- **Instagram Post (`1:1`):** Archival museum card with double hairline architectural border and corner diamond nodes.
-- **Snapchat Story (`9:16`):** Minimalist frosted lens container with translucent depth and radiant contrast.
-- **X / Twitter Card (`16:9` Landscape):** Broadsheet pull-quote layout with left terracotta accent bar and monumental quotation mark.
-- **WhatsApp Status (`4:5`):** High-contrast, compression-proof devotional blessing layout.
-- **Lock Screen Wallpaper (`9:20`):** Full-bleed wallpaper reserving top 28% clearance for system clock, date, and notifications.
+- Language: Kotlin 2.1.10
+- UI: Jetpack Compose (BOM 2025.02.00) and Material 3
+- Home Screen Widgets: Jetpack Glance 1.1.1
+- Local ML Engine: Microsoft ONNX Runtime Mobile 1.20.0 (offline embedding similarity search)
+- Authentication and Backend: Firebase Auth and Cloud Firestore (BOM 33.10.0)
+- Image Loading: Coil Compose 2.7.0
+- Build System: Gradle 8.11.1 and Android Gradle Plugin 8.8.2
+- Minimum SDK: Android 8.0 (API 26)
+- Target SDK: Android 15 (API 35)
 
-### 3. 📱 Native Jetpack Glance Home & Lock Screen Widgets
-- **Glance Modern App Widgets:** Native Android home screen widgets rendering live scripture, Cormorant Garamond quotes, and category badges directly on the phone screen.
-- **Widget Studio:** Live phone frame simulator in the Explore tab allowing users to toggle between Home Screen and Lock Screen views.
-- **Direct System Pinning:** One-tap widget pinning via `AppWidgetManager.requestPinAppWidget` and direct lock screen wallpaper setting via `WallpaperManager`.
-
-### 4. ⏰ Sacred Time Reminders
-- **Tactile Time Picker:** Custom Material 3 sacred dialog with tactile hour/minute number spinners and AM/PM pill toggle.
-- **Sacred Presets:** Instant scheduling for *Dawn* (6:30 AM), *Morning* (8:30 AM), *Midday* (12:30 PM), *Evening* (8:30 PM), and *Night* (10:00 PM).
-- **Exact Alarms:** Powered by `AlarmManager` and `WorkManager` for guaranteed delivery even in Android Doze mode.
-
-### 5. 📖 Curated Category Library & Saved Vault
-- Categories organized by spiritual seasons: *Identity*, *Peace*, *Strength*, *Purpose*, *Courage*, *Joy*, *Provision*, and *Confidence*.
-- Interactive category filtering, full-text scripture search, and instant bookmarking with reactive UI updates.
-
----
-
-## 🏛️ Architecture & Tech Stack
-
-Makarios is architected as a **100% local-first, zero-friction** native Android application:
+## Project Structure
 
 ```
 android/
- ├── app/src/main/
- │    ├── assets/
- │    │    ├── bible_embeddings.bin   # Quantized semantic scripture embeddings
- │    │    └── model.onnx             # On-device MiniLM transformer model
- │    ├── java/com/makarios/app/
- │    │    ├── data/                  # Repository, models, Affirmation data source
- │    │    ├── ml/                    # ONNX Runtime local vector search engine
- │    │    ├── ui/
- │    │    │    ├── components/       # SocialShareSheet, SacredTimePickerDialog, Cards
- │    │    │    ├── screens/          # Home, Library, Create, Saved, Profile, WidgetStudio
- │    │    │    └── theme/            # Color tokens, Typography, Theme definition
- │    │    ├── util/                  # WallpaperRenderer, ShareHelper, ReminderManager
- │    │    └── widget/                # Jetpack Glance widget implementation
- │    └── res/                        # Vector brand icons, drawables, fonts
- └── gradle/libs.versions.toml        # Version catalog
+  app/src/main/
+    assets/
+      bible_embeddings.bin   # Quantized offline scripture embeddings
+      model.onnx             # MiniLM transformer model for on-device inference
+    java/com/makarios/app/
+      data/                  # Repositories, Affirmation models, AuthManager
+      ml/                    # ONNX Runtime vector search engine
+      ui/
+        components/          # Reusable Compose components
+        screens/             # Home, Library, Create, Saved, Profile, WidgetStudio
+        theme/               # Typography, color tokens, and theme definitions
+      util/                  # WallpaperRenderer, ShareHelper, ReminderManager
+      widget/                # Jetpack Glance widget implementation
+    res/                     # Fonts, drawables, and XML resources
 ```
 
-| Layer | Technology |
-|---|---|
-| **Language** | Kotlin 2.1.10 (JVM Target 17) |
-| **UI Framework** | Jetpack Compose (BOM 2025.02.00) + Material 3 |
-| **Widgets** | Jetpack Glance 1.1.1 (`glance-appwidget`, `glance-material3`) |
-| **Image Loading** | Coil 2.7.0 for Compose |
-| **On-Device AI** | Microsoft ONNX Runtime Android 1.20.0 |
-| **Architecture** | Unidirectional Data Flow (UDF), State-driven Compose |
-| **Build System** | Android Gradle Plugin 8.8.2 + Gradle 8.11.1 |
+## Typography and Design
 
----
+The design focuses on editorial typography and calm visual hierarchy:
+- Display and Declarations: Cormorant Garamond
+- Interface and Body Text: Work Sans
+- Color Tokens: Porcelain background, Espresso text, Terracotta accent, Sunlit Gold, and Morning Sage
 
-## 🎨 Design System & Craft Guidelines
-
-Makarios follows strict editorial craft guidelines adhering to the `/impeccable` design standard:
-
-- **Typography:**
-  - *Display & Quotes:* **Cormorant Garamond** (Editorial serif, medium/regular/italic)
-  - *Interface & Labels:* **Work Sans** (Clean, humanist geometric sans-serif)
-- **Palette:**
-  - `Porcelain` (`#FAF7F2`) — Primary warm linen ground
-  - `Espresso` (`#2C2622`) — Deep charcoal umber ink for high-contrast legibility
-  - `Terracotta` (`#A85842`) — Earthy clay brand accent
-  - `Sunlit Gold` (`#D4A038`) — Radiant morning amber accent
-  - `Morning Sage` (`#607768`) — Quiet eucalyptus secondary accent
-- **No AI-Slop Design:** No purple/indigo gradient accents, no arbitrary glows, no emoji bullet points, no kicker eyebrows over headings, and no colored card borders.
-
----
-
-## 🛠️ Getting Started
+## Getting Started
 
 ### Prerequisites
-- **Android Studio:** Ladybug (2024.2.1) or Meerkat+
-- **JDK:** OpenJDK 17
-- **Android SDK:** Compile SDK 35, Min SDK 26 (Android 8.0 Oreo+)
+- Android Studio Ladybug (2024.2.1) or newer
+- JDK 17
+- Android SDK 35
 
-### Build & Run Locally
+### Building the Project
 
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/preshdevops/makarios.git
-   cd makarios
-   ```
+Clone the repository:
+```bash
+git clone https://github.com/preshdevops/makarios.git
+cd makarios/android
+```
 
-2. **Compile the Debug APK:**
-   ```bash
-   cd android
-   ./gradlew assembleDebug
-   ```
-   *(On Windows PowerShell, run `.\gradlew.bat assembleDebug`)*
+Build the debug APK:
+```bash
+./gradlew assembleDebug
+```
+(On Windows PowerShell: `.\gradlew.bat assembleDebug`)
 
-3. **Install on connected device or emulator:**
-   ```bash
-   ./gradlew installDebug
-   ```
+Install on a connected device or emulator:
+```bash
+./gradlew installDebug
+```
 
----
+## Continuous Integration
 
-## 🚀 CI/CD & Automated Releases
+The repository runs automated builds on GitHub Actions:
+- android-ci.yml: Runs on push and pull requests to main, compiling the debug APK and uploading artifacts.
+- release.yml: Builds release packages upon tag creation.
 
-The repository includes complete GitHub Actions workflows:
+## License
 
-- **Continuous Integration (`.github/workflows/android-ci.yml`):**
-  - Runs on every `push` and `pull_request` to `main`.
-  - Sets up JDK 17, compiles the debug APK, verifies Kotlin compilation, and uploads the built APK artifact (`makarios-debug-apk`).
-- **Release Automation (`.github/workflows/release.yml`):**
-  - Automatically triggers on git version tags (e.g. `git tag v1.0.0 && git push origin v1.0.0`) or via manual dispatch.
-  - Builds the release binary and publishes an official GitHub Release with signed artifacts attached.
-
----
-
-## 📄 License
-
-Makarios is released under the **Apache License 2.0**. See [LICENSE](LICENSE) for details.
-
----
-
-<p align="center">
-  Crafted with intention · <b>Gospel. Tech. Precious.</b>
-</p>
+This project is licensed under the Apache License 2.0. See the LICENSE file for details.

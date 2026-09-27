@@ -17,7 +17,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -43,7 +42,7 @@ fun WidgetPreviewCard(
             .clip(RoundedCornerShape(22.dp))
             .background(Surface)
             .border(0.5.dp, BorderSubtle, RoundedCornerShape(22.dp))
-            .padding(22.dp)
+            .padding(20.dp)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -82,51 +81,29 @@ fun WidgetPreviewCard(
 
         Spacer(modifier = Modifier.height(14.dp))
 
-        // In-app Widget mockup box (Medium 4×2 preview)
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(16.dp))
-                .background(PorcelainWarm.copy(alpha = 0.6f))
-                .border(0.5.dp, BorderSubtle, RoundedCornerShape(16.dp))
-                .padding(16.dp)
-        ) {
-            Column {
-                Text(
-                    text = affirmation.reference.uppercase(),
-                    color = Terracotta,
-                    fontFamily = BodyFontFamily,
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 10.sp,
-                    letterSpacing = 1.2.sp
-                )
+        // Clean typography without nested boxes
+        Text(
+            text = "“${affirmation.declaration}”",
+            fontFamily = DisplayFontFamily,
+            fontWeight = FontWeight.Medium,
+            fontSize = 17.sp,
+            lineHeight = 24.sp,
+            color = Espresso,
+            maxLines = 3
+        )
 
-                Spacer(modifier = Modifier.height(6.dp))
+        Spacer(modifier = Modifier.height(6.dp))
 
-                Text(
-                    text = "“${affirmation.declaration}”",
-                    fontFamily = DisplayFontFamily,
-                    fontWeight = FontWeight.Normal,
-                    fontSize = 15.sp,
-                    lineHeight = 22.sp,
-                    color = Espresso,
-                    maxLines = 3
-                )
+        Text(
+            text = affirmation.reference.uppercase(),
+            color = Terracotta,
+            fontFamily = BodyFontFamily,
+            fontWeight = FontWeight.Medium,
+            fontSize = 10.5.sp,
+            letterSpacing = 1.2.sp
+        )
 
-                Spacer(modifier = Modifier.height(6.dp))
-
-                Text(
-                    text = affirmation.context,
-                    fontFamily = BodyFontFamily,
-                    fontSize = 11.5.sp,
-                    lineHeight = 16.sp,
-                    color = Stone,
-                    maxLines = 2
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(18.dp))
 
         // CTA: Add to Home Screen
         Button(
@@ -135,7 +112,7 @@ fun WidgetPreviewCard(
                 containerColor = Espresso,
                 contentColor = Surface
             ),
-            shape = RoundedCornerShape(16.dp),
+            shape = RoundedCornerShape(14.dp),
             modifier = Modifier
                 .fillMaxWidth()
                 .height(46.dp)

@@ -193,7 +193,7 @@ fun AuthDialog(
                     text = if (isSignUp)
                         "Back up your authored declarations & sync across all your devices."
                     else
-                        "Sign in to restore your sacred collection & settings.",
+                        "Sign in to restore your declarations & settings.",
                     fontFamily = BodyFontFamily,
                     fontSize = 12.5.sp,
                     lineHeight = 18.sp,
@@ -330,7 +330,7 @@ fun AuthDialog(
                         )
                     } else {
                         Text(
-                            text = if (isSignUp) "Create Sacred Account" else "Sign In",
+                            text = if (isSignUp) "Create Account" else "Sign In",
                             fontFamily = BodyFontFamily,
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 14.5.sp

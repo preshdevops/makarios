@@ -49,10 +49,11 @@ enum class WidgetSurface {
     LOCK_SCREEN
 }
 
-enum class WidgetSize(val label: String, val description: String) {
-    SMALL("Compact", "Short peek"),
-    MEDIUM("Standard", "Most popular"),
-    LARGE("Full", "Immersive")
+enum class WidgetSize(val label: String, val gridLabel: String) {
+    SIZE_2X2("Compact", "2×2"),
+    SIZE_4X2("Banner", "4×2"),
+    SIZE_4X3("Feature", "4×3"),
+    SIZE_4X4("Full", "4×4")
 }
 
 @Composable
@@ -70,7 +71,7 @@ fun WidgetStudioScreen(
 ) {
     val context = LocalContext.current
     var selectedSurface by remember { mutableStateOf(WidgetSurface.HOME_SCREEN) }
-    var selectedSize by remember { mutableStateOf(WidgetSize.MEDIUM) }
+    var selectedSize by remember { mutableStateOf(WidgetSize.SIZE_4X2) }
     var selectedTheme by remember { mutableStateOf("Alabaster Dawn") }
     var selectedLockMode by remember { mutableStateOf("Complication Card") } // "Complication Card" vs "Full Wallpaper"
     var selectedSource by remember { mutableStateOf("Declaration of the Day") }
@@ -252,11 +253,11 @@ fun WidgetStudioScreen(
                                     text = size.label,
                                     fontFamily = BodyFontFamily,
                                     fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
-                                    fontSize = 12.5.sp,
+                                    fontSize = 12.sp,
                                     color = if (isSelected) Color.White else Espresso
                                 )
                                 Text(
-                                    text = size.description,
+                                    text = size.gridLabel,
                                     fontFamily = BodyFontFamily,
                                     fontSize = 10.sp,
                                     color = if (isSelected) Color.White.copy(alpha = 0.8f) else StoneMuted
@@ -428,9 +429,10 @@ fun WidgetStudioScreen(
                         when (selectedSurface) {
                             WidgetSurface.HOME_SCREEN -> {
                                 when (selectedSize) {
-                                    WidgetSize.SMALL -> SmallWidgetPreview(affirmation = activeAffirmation, theme = selectedTheme)
-                                    WidgetSize.MEDIUM -> MediumWidgetPreview(affirmation = activeAffirmation, theme = selectedTheme)
-                                    WidgetSize.LARGE -> LargeWidgetPreview(affirmation = activeAffirmation, theme = selectedTheme)
+                                    WidgetSize.SIZE_2X2 -> SmallWidgetPreview(affirmation = activeAffirmation, theme = selectedTheme)
+                                    WidgetSize.SIZE_4X2 -> MediumWidgetPreview(affirmation = activeAffirmation, theme = selectedTheme)
+                                    WidgetSize.SIZE_4X3 -> FeatureWidgetPreview(affirmation = activeAffirmation, theme = selectedTheme)
+                                    WidgetSize.SIZE_4X4 -> LargeWidgetPreview(affirmation = activeAffirmation, theme = selectedTheme)
                                 }
 
                                 Spacer(modifier = Modifier.height(20.dp))
@@ -760,19 +762,20 @@ fun WidgetStudioScreen(
     }
 }
 
-// ── WIDGET MOCKUP: Small (2×2) ────────────────────────────────────
+// ── WIDGET MOCKUP: Compact (2×2) ──────────────────────────────────
 @Composable
 private fun SmallWidgetPreview(affirmation: Affirmation, theme: String = "Alabaster Dawn") {
     val isDark = theme == "Twilight Sanctuary"
-    val bgColor = if (isDark) Color(0xFF2D2520) else Surface
+    val bgColor = if (isDark) Color(0xFF1E1815) else Surface
     val textColor = if (isDark) Color.White else Espresso
     val accentColor = if (isDark) SunlitGold else Terracotta
     val borderColor = if (isDark) Color(0x33FFFFFF) else Border
+    val refColor = if (isDark) Color.White.copy(alpha = 0.7f) else StoneMuted
 
     Box(
         modifier = Modifier
             .size(150.dp)
-            .shadow(4.dp, RoundedCornerShape(22.dp), spotColor = Espresso.copy(alpha = 0.12f))
+            .shadow(2.dp, RoundedCornerShape(22.dp), spotColor = Espresso.copy(alpha = 0.08f))
             .clip(RoundedCornerShape(22.dp))
             .background(bgColor)
             .border(1.dp, borderColor, RoundedCornerShape(22.dp))
@@ -783,7 +786,7 @@ private fun SmallWidgetPreview(affirmation: Affirmation, theme: String = "Alabas
             verticalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                text = "MAKARIOS · ${affirmation.category.uppercase()}",
+                text = affirmation.category.uppercase(),
                 fontFamily = BodyFontFamily,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 8.5.sp,
@@ -794,127 +797,160 @@ private fun SmallWidgetPreview(affirmation: Affirmation, theme: String = "Alabas
             Text(
                 text = "“${affirmation.declaration}”",
                 fontFamily = DisplayFontFamily,
-                fontSize = 13.sp,
+                fontWeight = FontWeight.Medium,
+                fontSize = 13.5.sp,
                 lineHeight = 18.sp,
                 color = textColor,
                 maxLines = 4
             )
 
             Text(
-                text = "— ${affirmation.reference.uppercase()} —",
+                text = affirmation.reference.uppercase(),
                 fontFamily = BodyFontFamily,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 8.5.sp,
+                fontWeight = FontWeight.Medium,
+                fontSize = 9.sp,
                 letterSpacing = 0.8.sp,
-                color = if (isDark) Color.White.copy(alpha = 0.7f) else StoneMuted
+                color = refColor
             )
         }
     }
 }
 
-// ── WIDGET MOCKUP: Medium (4×2) ───────────────────────────────────
+// ── WIDGET MOCKUP: Banner (4×2) ────────────────────────────────────
 @Composable
 private fun MediumWidgetPreview(affirmation: Affirmation, theme: String = "Alabaster Dawn") {
     val isDark = theme == "Twilight Sanctuary"
-    val bgColor = if (isDark) Color(0xFF2D2520) else Surface
+    val bgColor = if (isDark) Color(0xFF1E1815) else Surface
     val textColor = if (isDark) Color.White else Espresso
     val accentColor = if (isDark) SunlitGold else Terracotta
     val borderColor = if (isDark) Color(0x33FFFFFF) else Border
-    val scriptBoxColor = if (isDark) Color(0xFF1E1713) else Porcelain
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .shadow(4.dp, RoundedCornerShape(22.dp), spotColor = Espresso.copy(alpha = 0.12f))
+            .shadow(2.dp, RoundedCornerShape(22.dp), spotColor = Espresso.copy(alpha = 0.08f))
             .clip(RoundedCornerShape(22.dp))
             .background(bgColor)
             .border(1.dp, borderColor, RoundedCornerShape(22.dp))
             .padding(16.dp)
     ) {
         Column {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "M A K A R I O S   ·   ${affirmation.category.uppercase()}",
-                    fontFamily = BodyFontFamily,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 9.sp,
-                    letterSpacing = 1.2.sp,
-                    color = accentColor
-                )
+            Text(
+                text = affirmation.category.uppercase(),
+                fontFamily = BodyFontFamily,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 9.sp,
+                letterSpacing = 1.2.sp,
+                color = accentColor
+            )
 
-                Text(
-                    text = "DAILY DECLARATION",
-                    fontFamily = BodyFontFamily,
-                    fontSize = 9.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = if (isDark) Color.White.copy(alpha = 0.6f) else StoneMuted
-                )
-            }
+            Spacer(modifier = Modifier.height(6.dp))
+
+            Text(
+                text = "“${affirmation.declaration}”",
+                fontFamily = DisplayFontFamily,
+                fontWeight = FontWeight.Medium,
+                fontSize = 16.sp,
+                lineHeight = 22.sp,
+                color = textColor,
+                maxLines = 2
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            Text(
+                text = "— ${affirmation.reference.uppercase()}",
+                fontFamily = BodyFontFamily,
+                fontWeight = FontWeight.Medium,
+                fontSize = 10.sp,
+                letterSpacing = 0.8.sp,
+                color = accentColor
+            )
+        }
+    }
+}
+
+// ── WIDGET MOCKUP: Feature (4×3) ───────────────────────────────────
+@Composable
+private fun FeatureWidgetPreview(affirmation: Affirmation, theme: String = "Alabaster Dawn") {
+    val isDark = theme == "Twilight Sanctuary"
+    val bgColor = if (isDark) Color(0xFF1E1815) else Surface
+    val textColor = if (isDark) Color.White else Espresso
+    val accentColor = if (isDark) SunlitGold else Terracotta
+    val secondaryText = if (isDark) Color(0xFFC7BCB3) else Color(0xFF6B625B)
+    val borderColor = if (isDark) Color(0x33FFFFFF) else Border
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .shadow(3.dp, RoundedCornerShape(22.dp), spotColor = Espresso.copy(alpha = 0.08f))
+            .clip(RoundedCornerShape(22.dp))
+            .background(bgColor)
+            .border(1.dp, borderColor, RoundedCornerShape(22.dp))
+            .padding(18.dp)
+    ) {
+        Column {
+            Text(
+                text = affirmation.category.uppercase(),
+                fontFamily = BodyFontFamily,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 9.5.sp,
+                letterSpacing = 1.2.sp,
+                color = accentColor
+            )
 
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
                 text = "“${affirmation.declaration}”",
                 fontFamily = DisplayFontFamily,
-                fontWeight = FontWeight.Normal,
-                fontSize = 15.5.sp,
-                lineHeight = 22.sp,
+                fontWeight = FontWeight.Medium,
+                fontSize = 17.sp,
+                lineHeight = 23.sp,
                 color = textColor,
                 maxLines = 3
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(scriptBoxColor)
-                    .padding(horizontal = 10.dp, vertical = 6.dp)
-            ) {
-                Column {
-                    Text(
-                        text = "“${affirmation.scriptureText}”",
-                        fontFamily = DisplayFontFamily,
-                        fontStyle = FontStyle.Italic,
-                        fontSize = 11.5.sp,
-                        lineHeight = 16.sp,
-                        color = if (isDark) Color.White.copy(alpha = 0.85f) else Stone,
-                        maxLines = 2
-                    )
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        text = "— ${affirmation.reference.uppercase()} —",
-                        fontFamily = BodyFontFamily,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 9.sp,
-                        letterSpacing = 0.8.sp,
-                        color = accentColor
-                    )
-                }
+            if (affirmation.scriptureText.isNotBlank()) {
+                Text(
+                    text = "“${affirmation.scriptureText}”",
+                    fontFamily = DisplayFontFamily,
+                    fontStyle = FontStyle.Italic,
+                    fontSize = 12.sp,
+                    lineHeight = 17.sp,
+                    color = secondaryText,
+                    maxLines = 2
+                )
+                Spacer(modifier = Modifier.height(6.dp))
             }
+
+            Text(
+                text = "— ${affirmation.reference.uppercase()}",
+                fontFamily = BodyFontFamily,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 10.sp,
+                letterSpacing = 0.8.sp,
+                color = accentColor
+            )
         }
     }
 }
 
-// ── WIDGET MOCKUP: Large (4×4) ────────────────────────────────────
+// ── WIDGET MOCKUP: Full Hero (4×4) ────────────────────────────────
 @Composable
 private fun LargeWidgetPreview(affirmation: Affirmation, theme: String = "Alabaster Dawn") {
     val isDark = theme == "Twilight Sanctuary"
-    val bgColor = if (isDark) Color(0xFF2D2520) else Surface
+    val bgColor = if (isDark) Color(0xFF1E1815) else Surface
     val textColor = if (isDark) Color.White else Espresso
     val accentColor = if (isDark) SunlitGold else Terracotta
+    val secondaryText = if (isDark) Color(0xFFC7BCB3) else Color(0xFF6B625B)
     val borderColor = if (isDark) Color(0x33FFFFFF) else Border
-    val scriptBoxColor = if (isDark) Color(0xFF1E1713) else Porcelain
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(240.dp)
             .shadow(4.dp, RoundedCornerShape(22.dp), spotColor = Espresso.copy(alpha = 0.08f))
             .clip(RoundedCornerShape(22.dp))
             .background(bgColor)
@@ -922,39 +958,19 @@ private fun LargeWidgetPreview(affirmation: Affirmation, theme: String = "Alabas
             .padding(20.dp)
     ) {
         Column(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(if (isDark) Color(0x33DEAC46) else TerracottaLight)
-                        .padding(horizontal = 10.dp, vertical = 4.dp)
-                ) {
-                    Text(
-                        text = affirmation.category.uppercase(),
-                        fontFamily = BodyFontFamily,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 9.sp,
-                        letterSpacing = 1.4.sp,
-                        color = accentColor
-                    )
-                }
+            Text(
+                text = affirmation.category.uppercase(),
+                fontFamily = BodyFontFamily,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 10.sp,
+                letterSpacing = 1.4.sp,
+                color = accentColor
+            )
 
-                Text(
-                    text = "M A K A R I O S",
-                    fontFamily = DisplayFontFamily,
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 10.sp,
-                    letterSpacing = 2.sp,
-                    color = if (isDark) Color.White.copy(alpha = 0.6f) else StoneMuted
-                )
-            }
+            Spacer(modifier = Modifier.height(10.dp))
 
             Text(
                 text = "“${affirmation.declaration}”",
@@ -966,34 +982,29 @@ private fun LargeWidgetPreview(affirmation: Affirmation, theme: String = "Alabas
                 maxLines = 4
             )
 
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(scriptBoxColor)
-                    .padding(10.dp)
-            ) {
-                Column {
-                    Text(
-                        text = "“${affirmation.scriptureText}”",
-                        fontFamily = DisplayFontFamily,
-                        fontStyle = FontStyle.Italic,
-                        fontSize = 12.sp,
-                        lineHeight = 17.sp,
-                        color = if (isDark) Color.White.copy(alpha = 0.85f) else Stone,
-                        maxLines = 2
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "— ${affirmation.reference.uppercase()} —",
-                        fontFamily = BodyFontFamily,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 9.5.sp,
-                        letterSpacing = 1.2.sp,
-                        color = accentColor
-                    )
-                }
+            Spacer(modifier = Modifier.height(10.dp))
+
+            if (affirmation.scriptureText.isNotBlank()) {
+                Text(
+                    text = "“${affirmation.scriptureText}”",
+                    fontFamily = DisplayFontFamily,
+                    fontStyle = FontStyle.Italic,
+                    fontSize = 13.sp,
+                    lineHeight = 18.sp,
+                    color = secondaryText,
+                    maxLines = 3
+                )
+                Spacer(modifier = Modifier.height(8.dp))
             }
+
+            Text(
+                text = "— ${affirmation.reference.uppercase()}",
+                fontFamily = BodyFontFamily,
+                fontWeight = FontWeight.Bold,
+                fontSize = 11.sp,
+                letterSpacing = 1.sp,
+                color = accentColor
+            )
         }
     }
 }

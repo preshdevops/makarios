@@ -212,22 +212,20 @@ fun ProfileScreen(
                             }
 
                             Spacer(modifier = Modifier.height(18.dp))
+                            HorizontalDivider(color = BorderSubtle, thickness = 0.5.dp)
+                            Spacer(modifier = Modifier.height(14.dp))
 
-                            // Spiritual Cadence Summary Bar
+                            // Summary Bar without nested box
                             Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clip(RoundedCornerShape(14.dp))
-                                    .background(PorcelainWarm.copy(alpha = 0.5f))
-                                    .padding(vertical = 12.dp, horizontal = 16.dp),
+                                modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceAround,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 StatCadenceItem(count = "$savedCount", label = "Saved")
-                                Box(modifier = Modifier.width(1.dp).height(24.dp).background(Border))
+                                Box(modifier = Modifier.width(1.dp).height(20.dp).background(Border))
                                 StatCadenceItem(count = "$personalCount", label = "Authored")
-                                Box(modifier = Modifier.width(1.dp).height(24.dp).background(Border))
-                                StatCadenceItem(count = "${AffirmationRepository.getAll().size}", label = "Declarations")
+                                Box(modifier = Modifier.width(1.dp).height(20.dp).background(Border))
+                                StatCadenceItem(count = "${AffirmationRepository.getAll().size}", label = "Total")
                             }
                         }
                     }
@@ -241,7 +239,7 @@ fun ProfileScreen(
                             .clip(RoundedCornerShape(20.dp))
                             .background(Surface)
                             .border(0.5.dp, BorderSubtle, RoundedCornerShape(20.dp))
-                            .padding(16.dp)
+                            .padding(18.dp)
                     ) {
                         if (AuthManager.isLoggedIn && !AuthManager.isAnonymous) {
                             // Signed in view
@@ -254,20 +252,12 @@ fun ProfileScreen(
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                                 ) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(36.dp)
-                                            .clip(CircleShape)
-                                            .background(SageLight),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.Cloud,
-                                            contentDescription = null,
-                                            tint = Sage,
-                                            modifier = Modifier.size(18.dp)
-                                        )
-                                    }
+                                    Icon(
+                                        imageVector = Icons.Default.Cloud,
+                                        contentDescription = null,
+                                        tint = Sage,
+                                        modifier = Modifier.size(20.dp)
+                                    )
                                     Column {
                                         Text(
                                             text = "Cloud Sync Active",
@@ -304,20 +294,12 @@ fun ProfileScreen(
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                                 ) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(36.dp)
-                                            .clip(CircleShape)
-                                            .background(TerracottaLight),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.Cloud,
-                                            contentDescription = null,
-                                            tint = Terracotta,
-                                            modifier = Modifier.size(18.dp)
-                                        )
-                                    }
+                                    Icon(
+                                        imageVector = Icons.Default.Cloud,
+                                        contentDescription = null,
+                                        tint = Terracotta,
+                                        modifier = Modifier.size(20.dp)
+                                    )
                                     Column {
                                         Text(
                                             text = "Save Declarations Across Devices",
@@ -327,7 +309,7 @@ fun ProfileScreen(
                                             color = Espresso
                                         )
                                         Text(
-                                            text = "Create an account to preserve your sacred truths",
+                                            text = "Create an account to back up your declarations",
                                             fontFamily = BodyFontFamily,
                                             fontSize = 11.5.sp,
                                             color = Stone

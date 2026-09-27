@@ -776,11 +776,11 @@ private fun PageAuth(onComplete: () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = if (isSignUp) "Preserve Your\nSacred Truths." else "Welcome Back\nto Makarios.",
+            text = if (isSignUp) "Save your\ndeclarations." else "Welcome back.",
             fontFamily = DisplayFontFamily,
             fontWeight = FontWeight.Medium,
-            fontSize = 32.sp,
-            lineHeight = 40.sp,
+            fontSize = 34.sp,
+            lineHeight = 42.sp,
             letterSpacing = (-0.5).sp,
             color = Color.White,
             textAlign = TextAlign.Center
@@ -789,7 +789,7 @@ private fun PageAuth(onComplete: () -> Unit) {
         Spacer(modifier = Modifier.height(8.dp))
 
         Text(
-            text = "Back up authored declarations across all your devices, or enter freely as a guest.",
+            text = "Sync declarations across devices, or continue as a guest.",
             fontFamily = BodyFontFamily,
             fontSize = 13.5.sp,
             lineHeight = 20.sp,
@@ -797,201 +797,167 @@ private fun PageAuth(onComplete: () -> Unit) {
             textAlign = TextAlign.Center
         )
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(28.dp))
 
-        // Sacred card containing the auth inputs
-        Box(
+        // Mode switch without nested boxes
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(24.dp))
-                .background(Color(0xFFFAF7F2))
-                .padding(20.dp)
+                .padding(bottom = 18.dp),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                // Tab switch: Create vs Sign In
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(14.dp))
-                        .background(PorcelainWarm)
-                        .padding(3.dp),
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(if (isSignUp) Espresso else Color.Transparent)
-                            .clickable {
-                                isSignUp = true
-                                errorMessage = null
-                            }
-                            .padding(vertical = 8.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "Create Account",
-                            fontFamily = BodyFontFamily,
-                            fontWeight = if (isSignUp) FontWeight.SemiBold else FontWeight.Normal,
-                            fontSize = 12.5.sp,
-                            color = if (isSignUp) Color.White else Espresso
-                        )
-                    }
+            Text(
+                text = "Create Account",
+                fontFamily = BodyFontFamily,
+                fontWeight = if (isSignUp) FontWeight.SemiBold else FontWeight.Normal,
+                fontSize = 13.5.sp,
+                color = if (isSignUp) Color.White else Color.White.copy(alpha = 0.5f),
+                modifier = Modifier
+                    .clickable { isSignUp = true; errorMessage = null }
+                    .padding(horizontal = 14.dp, vertical = 6.dp)
+            )
 
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(if (!isSignUp) Espresso else Color.Transparent)
-                            .clickable {
-                                isSignUp = false
-                                errorMessage = null
-                            }
-                            .padding(vertical = 8.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "Sign In",
-                            fontFamily = BodyFontFamily,
-                            fontWeight = if (!isSignUp) FontWeight.SemiBold else FontWeight.Normal,
-                            fontSize = 12.5.sp,
-                            color = if (!isSignUp) Color.White else Espresso
-                        )
-                    }
-                }
+            Text(
+                text = "·",
+                color = Color.White.copy(alpha = 0.4f),
+                fontSize = 14.sp
+            )
 
-                Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "Sign In",
+                fontFamily = BodyFontFamily,
+                fontWeight = if (!isSignUp) FontWeight.SemiBold else FontWeight.Normal,
+                fontSize = 13.5.sp,
+                color = if (!isSignUp) Color.White else Color.White.copy(alpha = 0.5f),
+                modifier = Modifier
+                    .clickable { isSignUp = false; errorMessage = null }
+                    .padding(horizontal = 14.dp, vertical = 6.dp)
+            )
+        }
 
-                if (errorMessage != null) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(Color(0xFFFDE8E4))
-                            .padding(horizontal = 10.dp, vertical = 6.dp)
-                    ) {
-                        Text(
-                            text = errorMessage!!,
-                            fontFamily = BodyFontFamily,
-                            fontSize = 11.5.sp,
-                            lineHeight = 15.sp,
-                            color = Color(0xFF922B21)
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(10.dp))
-                }
-
-                OutlinedTextField(
-                    value = email,
-                    onValueChange = {
-                        email = it
-                        errorMessage = null
-                    },
-                    label = { Text("Email", fontFamily = BodyFontFamily, fontSize = 12.5.sp) },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = Surface,
-                        unfocusedContainerColor = Surface,
-                        focusedBorderColor = Terracotta,
-                        unfocusedBorderColor = Border,
-                        focusedLabelColor = Terracotta,
-                        cursorColor = Terracotta
-                    ),
-                    modifier = Modifier.fillMaxWidth()
+        if (errorMessage != null) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(Color(0xFFFDE8E4))
+                    .padding(horizontal = 12.dp, vertical = 8.dp)
+            ) {
+                Text(
+                    text = errorMessage!!,
+                    fontFamily = BodyFontFamily,
+                    fontSize = 12.sp,
+                    lineHeight = 16.sp,
+                    color = Color(0xFF922B21)
                 )
+            }
+            Spacer(modifier = Modifier.height(14.dp))
+        }
 
-                Spacer(modifier = Modifier.height(10.dp))
+        OutlinedTextField(
+            value = email,
+            onValueChange = {
+                email = it
+                errorMessage = null
+            },
+            label = { Text("Email", fontFamily = BodyFontFamily) },
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+            shape = RoundedCornerShape(14.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedTextColor = Color.White,
+                unfocusedTextColor = Color.White,
+                focusedContainerColor = Color.White.copy(alpha = 0.12f),
+                unfocusedContainerColor = Color.White.copy(alpha = 0.08f),
+                focusedBorderColor = Color.White,
+                unfocusedBorderColor = Color.White.copy(alpha = 0.3f),
+                focusedLabelColor = Color.White,
+                unfocusedLabelColor = Color.White.copy(alpha = 0.7f),
+                cursorColor = Color.White
+            ),
+            modifier = Modifier.fillMaxWidth()
+        )
 
-                OutlinedTextField(
-                    value = password,
-                    onValueChange = {
-                        password = it
-                        errorMessage = null
-                    },
-                    label = { Text("Password (6+ chars)", fontFamily = BodyFontFamily, fontSize = 12.5.sp) },
-                    singleLine = true,
-                    visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                    trailingIcon = {
-                        IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                            Icon(
-                                imageVector = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                                contentDescription = null,
-                                tint = StoneMuted,
-                                modifier = Modifier.size(16.dp)
-                            )
-                        }
-                    },
-                    shape = RoundedCornerShape(12.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = Surface,
-                        unfocusedContainerColor = Surface,
-                        focusedBorderColor = Terracotta,
-                        unfocusedBorderColor = Border,
-                        focusedLabelColor = Terracotta,
-                        cursorColor = Terracotta
-                    ),
-                    modifier = Modifier.fillMaxWidth()
-                )
+        Spacer(modifier = Modifier.height(12.dp))
 
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Button(
-                    onClick = { submit() },
-                    enabled = !isLoading,
-                    shape = RoundedCornerShape(14.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Terracotta,
-                        contentColor = Color.White
-                    ),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp)
-                ) {
-                    if (isLoading) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(16.dp),
-                            color = Color.White,
-                            strokeWidth = 2.dp
-                        )
-                    } else {
-                        Text(
-                            text = if (isSignUp) "Create Free Account" else "Sign In to Makarios",
-                            fontFamily = BodyFontFamily,
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 13.5.sp
-                        )
-                    }
+        OutlinedTextField(
+            value = password,
+            onValueChange = {
+                password = it
+                errorMessage = null
+            },
+            label = { Text("Password (6+ characters)", fontFamily = BodyFontFamily) },
+            singleLine = true,
+            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+            trailingIcon = {
+                IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                    Icon(
+                        imageVector = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                        contentDescription = null,
+                        tint = Color.White.copy(alpha = 0.7f),
+                        modifier = Modifier.size(18.dp)
+                    )
                 }
+            },
+            shape = RoundedCornerShape(14.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedTextColor = Color.White,
+                unfocusedTextColor = Color.White,
+                focusedContainerColor = Color.White.copy(alpha = 0.12f),
+                unfocusedContainerColor = Color.White.copy(alpha = 0.08f),
+                focusedBorderColor = Color.White,
+                unfocusedBorderColor = Color.White.copy(alpha = 0.3f),
+                focusedLabelColor = Color.White,
+                unfocusedLabelColor = Color.White.copy(alpha = 0.7f),
+                cursorColor = Color.White
+            ),
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        Button(
+            onClick = { submit() },
+            enabled = !isLoading,
+            shape = RoundedCornerShape(16.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Terracotta,
+                contentColor = Color.White
+            ),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp)
+        ) {
+            if (isLoading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(18.dp),
+                    color = Color.White,
+                    strokeWidth = 2.dp
+                )
+            } else {
+                Text(
+                    text = if (isSignUp) "Create Account" else "Sign In",
+                    fontFamily = BodyFontFamily,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 14.5.sp
+                )
             }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Dignified Guest Skip Button
-        Row(
+        Text(
+            text = "Continue as guest →",
+            fontFamily = BodyFontFamily,
+            fontWeight = FontWeight.Medium,
+            fontSize = 13.5.sp,
+            color = Color.White.copy(alpha = 0.75f),
             modifier = Modifier
                 .clickable { continueAsGuest() }
-                .padding(vertical = 8.dp, horizontal = 16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(6.dp)
-        ) {
-            Text(
-                text = "Skip for now · Continue as Guest",
-                fontFamily = BodyFontFamily,
-                fontWeight = FontWeight.Medium,
-                fontSize = 13.5.sp,
-                color = Color.White.copy(alpha = 0.85f)
-            )
-            Text(
-                text = "→",
-                fontFamily = BodyFontFamily,
-                fontSize = 14.sp,
-                color = Color.White.copy(alpha = 0.85f)
-            )
-        }
+                .padding(vertical = 8.dp, horizontal = 16.dp)
+        )
     }
 }
 
