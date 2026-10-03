@@ -73,6 +73,12 @@ object WidgetHelper {
         Toast.makeText(context, "Added to Home Screen widget ✓", Toast.LENGTH_SHORT).show()
     }
 
+    fun shuffleWidget(context: Context): Affirmation {
+        val next = AffirmationRepository.shuffleWidgetAffirmation()
+        refreshGlanceWidgets(context)
+        return next
+    }
+
     /**
      * Renders full-resolution lockscreen artwork with safe clearance and sets it as the lock screen wallpaper.
      * Guarantees a breathtaking typographic lock screen experience on all Android devices.

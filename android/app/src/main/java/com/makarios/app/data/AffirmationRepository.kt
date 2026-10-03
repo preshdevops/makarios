@@ -155,6 +155,13 @@ object AffirmationRepository {
         widgetAffirmation = affirmation
     }
 
+    fun shuffleWidgetAffirmation(): Affirmation {
+        val pool = getAll()
+        val next = pool.filter { it.id != widgetAffirmation.id }.randomOrNull() ?: widgetAffirmation
+        widgetAffirmation = next
+        return next
+    }
+
     val purposeAffirmation = Affirmation(
         id = "purp-1",
         declaration = "I am created with intention. My steps are ordered and my days are held in His hands.",

@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Widgets
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -49,58 +48,47 @@ fun WidgetPreviewCard(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Widgets,
-                    contentDescription = null,
-                    tint = Stone,
-                    modifier = Modifier.size(15.dp)
-                )
-                Text(
-                    text = "HOME SCREEN WIDGET",
-                    fontFamily = BodyFontFamily,
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 10.sp,
-                    letterSpacing = 1.6.sp,
-                    color = StoneMuted
-                )
-            }
-
             Text(
-                text = "Preview sizes",
+                text = "DAILY ATTUNEMENT  ·  ${affirmation.category.uppercase()}",
                 fontFamily = BodyFontFamily,
                 fontWeight = FontWeight.Medium,
-                fontSize = 12.sp,
-                color = Stone,
+                fontSize = 10.sp,
+                letterSpacing = 1.2.sp,
+                color = Espresso.copy(alpha = 0.40f)
+            )
+
+            Text(
+                text = "Customize sizes →",
+                fontFamily = BodyFontFamily,
+                fontWeight = FontWeight.Medium,
+                fontSize = 11.5.sp,
+                color = Espresso.copy(alpha = 0.75f),
                 modifier = Modifier.clickable(onClick = onSeeAllWidgets)
             )
         }
 
         Spacer(modifier = Modifier.height(14.dp))
 
-        // Clean typography without nested boxes
+        // Center Main Text: Bold 18pt font
         Text(
             text = "“${affirmation.declaration}”",
             fontFamily = DisplayFontFamily,
-            fontWeight = FontWeight.Medium,
-            fontSize = 17.sp,
+            fontWeight = FontWeight.Bold,
+            fontSize = 18.sp,
             lineHeight = 24.sp,
             color = Espresso,
             maxLines = 3
         )
 
-        Spacer(modifier = Modifier.height(6.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
         Text(
-            text = affirmation.reference.uppercase(),
-            color = Terracotta,
+            text = "— ${affirmation.reference.uppercase()}",
+            color = Espresso.copy(alpha = 0.65f),
             fontFamily = BodyFontFamily,
             fontWeight = FontWeight.Medium,
             fontSize = 10.5.sp,
-            letterSpacing = 1.2.sp
+            letterSpacing = 1.sp
         )
 
         Spacer(modifier = Modifier.height(18.dp))

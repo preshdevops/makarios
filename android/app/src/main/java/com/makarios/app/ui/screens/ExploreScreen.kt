@@ -33,12 +33,14 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.makarios.app.R
 import com.makarios.app.data.Affirmation
 import com.makarios.app.data.AffirmationRepository
 import com.makarios.app.ui.theme.*
@@ -79,13 +81,21 @@ fun WidgetStudioScreen(
     var selectedSchedule by remember { mutableStateOf("Every Dawn") }
 
     // Active affirmation powering the widget preview
-    val activeAffirmation = remember(selectedSource, selectedCategory) {
-        when (selectedSource) {
+    var previewAffirmationOverride by remember { mutableStateOf<Affirmation?>(null) }
+    val activeAffirmation = remember(selectedSource, selectedCategory, previewAffirmationOverride) {
+        previewAffirmationOverride ?: when (selectedSource) {
             "Declaration of the Day" -> AffirmationRepository.affirmationOfTheDay
             "My Saved Declarations" -> AffirmationRepository.getSaved().firstOrNull() ?: AffirmationRepository.affirmationOfTheDay
             else -> AffirmationRepository.getAll().firstOrNull { it.category.equals(selectedCategory, ignoreCase = true) }
                 ?: AffirmationRepository.affirmationOfTheDay
         }
+    }
+
+    val shufflePreview: () -> Unit = {
+        val pool = AffirmationRepository.getAll()
+        val next = pool.filter { it.id != activeAffirmation.id }.randomOrNull() ?: activeAffirmation
+        previewAffirmationOverride = next
+        Toast.makeText(context, "Shuffled declaration ✓", Toast.LENGTH_SHORT).show()
     }
 
     Scaffold(
@@ -429,10 +439,26 @@ fun WidgetStudioScreen(
                         when (selectedSurface) {
                             WidgetSurface.HOME_SCREEN -> {
                                 when (selectedSize) {
-                                    WidgetSize.SIZE_2X2 -> SmallWidgetPreview(affirmation = activeAffirmation, theme = selectedTheme)
-                                    WidgetSize.SIZE_4X2 -> MediumWidgetPreview(affirmation = activeAffirmation, theme = selectedTheme)
-                                    WidgetSize.SIZE_4X3 -> FeatureWidgetPreview(affirmation = activeAffirmation, theme = selectedTheme)
-                                    WidgetSize.SIZE_4X4 -> LargeWidgetPreview(affirmation = activeAffirmation, theme = selectedTheme)
+                                    WidgetSize.SIZE_2X2 -> SmallWidgetPreview(
+                                        affirmation = activeAffirmation,
+                                        theme = selectedTheme,
+                                        onShuffle = shufflePreview
+                                    )
+                                    WidgetSize.SIZE_4X2 -> MediumWidgetPreview(
+                                        affirmation = activeAffirmation,
+                                        theme = selectedTheme,
+                                        onShuffle = shufflePreview
+                                    )
+                                    WidgetSize.SIZE_4X3 -> FeatureWidgetPreview(
+                                        affirmation = activeAffirmation,
+                                        theme = selectedTheme,
+                                        onShuffle = shufflePreview
+                                    )
+                                    WidgetSize.SIZE_4X4 -> LargeWidgetPreview(
+                                        affirmation = activeAffirmation,
+                                        theme = selectedTheme,
+                                        onShuffle = shufflePreview
+                                    )
                                 }
 
                                 Spacer(modifier = Modifier.height(20.dp))
@@ -464,7 +490,8 @@ fun WidgetStudioScreen(
                             WidgetSurface.LOCK_SCREEN -> {
                                 LockScreenWidgetPreview(
                                     affirmation = activeAffirmation,
-                                    isFullWallpaper = selectedLockMode == "Live Wallpaper"
+                                    isFullWallpaper = selectedLockMode == "Live Wallpaper",
+                                    onShuffle = shufflePreview
                                 )
                             }
                         }
@@ -764,17 +791,23 @@ fun WidgetStudioScreen(
 
 // ── WIDGET MOCKUP: Compact (2×2) ──────────────────────────────────
 @Composable
-private fun SmallWidgetPreview(affirmation: Affirmation, theme: String = "Alabaster Dawn") {
+private fun SmallWidgetPreview(
+    affirmation: Affirmation,
+    theme: String = "Alabaster Dawn",
+    onShuffle: () -> Unit = {}
+) {
     val isDark = theme == "Twilight Sanctuary"
-    val bgColor = if (isDark) Color(0xFF1E1815) else Surface
+    val bgColor = if (isDark) Color(0xFF161210) else Surface
     val textColor = if (isDark) Color.White else Espresso
-    val accentColor = if (isDark) SunlitGold else Terracotta
+    val metadataColor = if (isDark) Color.White.copy(alpha = 0.40f) else Espresso.copy(alpha = 0.40f)
+    val refColor = if (isDark) Color.White.copy(alpha = 0.65f) else StoneMuted
     val borderColor = if (isDark) Color(0x33FFFFFF) else Border
-    val refColor = if (isDark) Color.White.copy(alpha = 0.7f) else StoneMuted
+    val buttonBg = if (isDark) Color.White.copy(alpha = 0.10f) else Espresso.copy(alpha = 0.06f)
+    val buttonTint = if (isDark) Color.White.copy(alpha = 0.75f) else Espresso.copy(alpha = 0.70f)
 
     Box(
         modifier = Modifier
-            .size(150.dp)
+            .size(152.dp)
             .shadow(2.dp, RoundedCornerShape(22.dp), spotColor = Espresso.copy(alpha = 0.08f))
             .clip(RoundedCornerShape(22.dp))
             .background(bgColor)
@@ -783,47 +816,82 @@ private fun SmallWidgetPreview(affirmation: Affirmation, theme: String = "Alabas
     ) {
         Column(
             modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.SpaceBetween
+            verticalArrangement = Arrangement.SpaceBetween,
+            horizontalAlignment = Alignment.Start
         ) {
+            // Top Left Metadata: Left-aligned, tiny 10pt all-caps font, 40% opacity
             Text(
-                text = affirmation.category.uppercase(),
-                fontFamily = BodyFontFamily,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 8.5.sp,
-                letterSpacing = 1.2.sp,
-                color = accentColor
-            )
-
-            Text(
-                text = "“${affirmation.declaration}”",
-                fontFamily = DisplayFontFamily,
-                fontWeight = FontWeight.Medium,
-                fontSize = 13.5.sp,
-                lineHeight = 18.sp,
-                color = textColor,
-                maxLines = 4
-            )
-
-            Text(
-                text = affirmation.reference.uppercase(),
+                text = "DAILY ATTUNEMENT",
                 fontFamily = BodyFontFamily,
                 fontWeight = FontWeight.Medium,
                 fontSize = 9.sp,
-                letterSpacing = 0.8.sp,
-                color = refColor
+                letterSpacing = 1.1.sp,
+                color = metadataColor
             )
+
+            // Center Main Text: Bold font
+            Text(
+                text = "“${affirmation.declaration}”",
+                fontFamily = DisplayFontFamily,
+                fontWeight = FontWeight.Bold,
+                fontSize = 14.5.sp,
+                lineHeight = 19.sp,
+                color = textColor,
+                maxLines = 3
+            )
+
+            // Bottom Row: Reference on left, tucked shuffle button on bottom right
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = affirmation.reference.uppercase(),
+                    fontFamily = BodyFontFamily,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 8.5.sp,
+                    letterSpacing = 0.8.sp,
+                    color = refColor,
+                    maxLines = 1,
+                    modifier = Modifier.weight(1f, fill = false)
+                )
+
+                Box(
+                    modifier = Modifier
+                        .size(24.dp)
+                        .clip(CircleShape)
+                        .background(buttonBg)
+                        .clickable(onClick = onShuffle),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_widget_loop),
+                        contentDescription = "Shuffle declaration",
+                        tint = buttonTint,
+                        modifier = Modifier.size(13.dp)
+                    )
+                }
+            }
         }
     }
 }
 
 // ── WIDGET MOCKUP: Banner (4×2) ────────────────────────────────────
 @Composable
-private fun MediumWidgetPreview(affirmation: Affirmation, theme: String = "Alabaster Dawn") {
+private fun MediumWidgetPreview(
+    affirmation: Affirmation,
+    theme: String = "Alabaster Dawn",
+    onShuffle: () -> Unit = {}
+) {
     val isDark = theme == "Twilight Sanctuary"
-    val bgColor = if (isDark) Color(0xFF1E1815) else Surface
+    val bgColor = if (isDark) Color(0xFF161210) else Surface
     val textColor = if (isDark) Color.White else Espresso
-    val accentColor = if (isDark) SunlitGold else Terracotta
+    val metadataColor = if (isDark) Color.White.copy(alpha = 0.40f) else Espresso.copy(alpha = 0.40f)
+    val refColor = if (isDark) Color.White.copy(alpha = 0.65f) else StoneMuted
     val borderColor = if (isDark) Color(0x33FFFFFF) else Border
+    val buttonBg = if (isDark) Color.White.copy(alpha = 0.10f) else Espresso.copy(alpha = 0.06f)
+    val buttonTint = if (isDark) Color.White.copy(alpha = 0.75f) else Espresso.copy(alpha = 0.70f)
 
     Box(
         modifier = Modifier
@@ -834,51 +902,85 @@ private fun MediumWidgetPreview(affirmation: Affirmation, theme: String = "Alaba
             .border(1.dp, borderColor, RoundedCornerShape(22.dp))
             .padding(16.dp)
     ) {
-        Column {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            // Top Left Metadata: Left-aligned, tiny 10pt all-caps font, 40% opacity
             Text(
-                text = affirmation.category.uppercase(),
+                text = "DAILY ATTUNEMENT  ·  ${affirmation.category.uppercase()}",
                 fontFamily = BodyFontFamily,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 9.sp,
+                fontWeight = FontWeight.Medium,
+                fontSize = 10.sp,
                 letterSpacing = 1.2.sp,
-                color = accentColor
+                color = metadataColor
             )
 
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
+            // Center Main Text: Bold 17.5sp/pt font
             Text(
                 text = "“${affirmation.declaration}”",
                 fontFamily = DisplayFontFamily,
-                fontWeight = FontWeight.Medium,
-                fontSize = 16.sp,
-                lineHeight = 22.sp,
+                fontWeight = FontWeight.Bold,
+                fontSize = 17.5.sp,
+                lineHeight = 23.sp,
                 color = textColor,
                 maxLines = 2
             )
 
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
-            Text(
-                text = "— ${affirmation.reference.uppercase()}",
-                fontFamily = BodyFontFamily,
-                fontWeight = FontWeight.Medium,
-                fontSize = 10.sp,
-                letterSpacing = 0.8.sp,
-                color = accentColor
-            )
+            // Bottom Row: Reference on left, tucked shuffle button on bottom right
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "— ${affirmation.reference.uppercase()}",
+                    fontFamily = BodyFontFamily,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 10.sp,
+                    letterSpacing = 0.8.sp,
+                    color = refColor
+                )
+
+                Box(
+                    modifier = Modifier
+                        .size(28.dp)
+                        .clip(CircleShape)
+                        .background(buttonBg)
+                        .clickable(onClick = onShuffle),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_widget_loop),
+                        contentDescription = "Shuffle declaration",
+                        tint = buttonTint,
+                        modifier = Modifier.size(15.dp)
+                    )
+                }
+            }
         }
     }
 }
 
 // ── WIDGET MOCKUP: Feature (4×3) ───────────────────────────────────
 @Composable
-private fun FeatureWidgetPreview(affirmation: Affirmation, theme: String = "Alabaster Dawn") {
+private fun FeatureWidgetPreview(
+    affirmation: Affirmation,
+    theme: String = "Alabaster Dawn",
+    onShuffle: () -> Unit = {}
+) {
     val isDark = theme == "Twilight Sanctuary"
-    val bgColor = if (isDark) Color(0xFF1E1815) else Surface
+    val bgColor = if (isDark) Color(0xFF161210) else Surface
     val textColor = if (isDark) Color.White else Espresso
-    val accentColor = if (isDark) SunlitGold else Terracotta
-    val secondaryText = if (isDark) Color(0xFFC7BCB3) else Color(0xFF6B625B)
+    val metadataColor = if (isDark) Color.White.copy(alpha = 0.40f) else Espresso.copy(alpha = 0.40f)
+    val secondaryText = if (isDark) Color.White.copy(alpha = 0.65f) else Color(0xFF6B625B)
     val borderColor = if (isDark) Color(0x33FFFFFF) else Border
+    val buttonBg = if (isDark) Color.White.copy(alpha = 0.10f) else Espresso.copy(alpha = 0.06f)
+    val buttonTint = if (isDark) Color.White.copy(alpha = 0.75f) else Espresso.copy(alpha = 0.70f)
 
     Box(
         modifier = Modifier
@@ -889,31 +991,34 @@ private fun FeatureWidgetPreview(affirmation: Affirmation, theme: String = "Alab
             .border(1.dp, borderColor, RoundedCornerShape(22.dp))
             .padding(18.dp)
     ) {
-        Column {
+        Column(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            // Top Left Metadata: Left-aligned, tiny 10pt all-caps font, 40% opacity
             Text(
-                text = affirmation.category.uppercase(),
+                text = "DAILY ATTUNEMENT  ·  ${affirmation.category.uppercase()}",
                 fontFamily = BodyFontFamily,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 9.5.sp,
+                fontWeight = FontWeight.Medium,
+                fontSize = 10.sp,
                 letterSpacing = 1.2.sp,
-                color = accentColor
+                color = metadataColor
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
+            // Center Main Text: Bold 18.5sp/pt font
             Text(
                 text = "“${affirmation.declaration}”",
                 fontFamily = DisplayFontFamily,
-                fontWeight = FontWeight.Medium,
-                fontSize = 17.sp,
-                lineHeight = 23.sp,
+                fontWeight = FontWeight.Bold,
+                fontSize = 18.5.sp,
+                lineHeight = 24.sp,
                 color = textColor,
                 maxLines = 3
             )
 
-            Spacer(modifier = Modifier.height(8.dp))
-
             if (affirmation.scriptureText.isNotBlank()) {
+                Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = "“${affirmation.scriptureText}”",
                     fontFamily = DisplayFontFamily,
@@ -923,30 +1028,60 @@ private fun FeatureWidgetPreview(affirmation: Affirmation, theme: String = "Alab
                     color = secondaryText,
                     maxLines = 2
                 )
-                Spacer(modifier = Modifier.height(6.dp))
             }
 
-            Text(
-                text = "— ${affirmation.reference.uppercase()}",
-                fontFamily = BodyFontFamily,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 10.sp,
-                letterSpacing = 0.8.sp,
-                color = accentColor
-            )
+            Spacer(modifier = Modifier.height(14.dp))
+
+            // Bottom Row: Reference on left, tucked shuffle button on bottom right
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "— ${affirmation.reference.uppercase()}",
+                    fontFamily = BodyFontFamily,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 10.sp,
+                    letterSpacing = 0.8.sp,
+                    color = secondaryText
+                )
+
+                Box(
+                    modifier = Modifier
+                        .size(30.dp)
+                        .clip(CircleShape)
+                        .background(buttonBg)
+                        .clickable(onClick = onShuffle),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_widget_loop),
+                        contentDescription = "Shuffle declaration",
+                        tint = buttonTint,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+            }
         }
     }
 }
 
 // ── WIDGET MOCKUP: Full Hero (4×4) ────────────────────────────────
 @Composable
-private fun LargeWidgetPreview(affirmation: Affirmation, theme: String = "Alabaster Dawn") {
+private fun LargeWidgetPreview(
+    affirmation: Affirmation,
+    theme: String = "Alabaster Dawn",
+    onShuffle: () -> Unit = {}
+) {
     val isDark = theme == "Twilight Sanctuary"
-    val bgColor = if (isDark) Color(0xFF1E1815) else Surface
+    val bgColor = if (isDark) Color(0xFF161210) else Surface
     val textColor = if (isDark) Color.White else Espresso
-    val accentColor = if (isDark) SunlitGold else Terracotta
-    val secondaryText = if (isDark) Color(0xFFC7BCB3) else Color(0xFF6B625B)
+    val metadataColor = if (isDark) Color.White.copy(alpha = 0.40f) else Espresso.copy(alpha = 0.40f)
+    val secondaryText = if (isDark) Color.White.copy(alpha = 0.65f) else Color(0xFF6B625B)
     val borderColor = if (isDark) Color(0x33FFFFFF) else Border
+    val buttonBg = if (isDark) Color.White.copy(alpha = 0.10f) else Espresso.copy(alpha = 0.06f)
+    val buttonTint = if (isDark) Color.White.copy(alpha = 0.75f) else Espresso.copy(alpha = 0.70f)
 
     Box(
         modifier = Modifier
@@ -958,33 +1093,33 @@ private fun LargeWidgetPreview(affirmation: Affirmation, theme: String = "Alabas
             .padding(20.dp)
     ) {
         Column(
-            modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.SpaceBetween
+            modifier = Modifier.fillMaxWidth()
         ) {
+            // Top Left Metadata: Left-aligned, tiny 10pt all-caps font, 40% opacity
             Text(
-                text = affirmation.category.uppercase(),
+                text = "DAILY ATTUNEMENT  ·  ${affirmation.category.uppercase()}",
                 fontFamily = BodyFontFamily,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 10.sp,
-                letterSpacing = 1.4.sp,
-                color = accentColor
+                fontWeight = FontWeight.Medium,
+                fontSize = 10.5.sp,
+                letterSpacing = 1.3.sp,
+                color = metadataColor
             )
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
+            // Center Main Text: Bold 21sp font
             Text(
                 text = "“${affirmation.declaration}”",
                 fontFamily = DisplayFontFamily,
-                fontWeight = FontWeight.Medium,
-                fontSize = 18.5.sp,
-                lineHeight = 25.sp,
+                fontWeight = FontWeight.Bold,
+                fontSize = 21.sp,
+                lineHeight = 28.sp,
                 color = textColor,
                 maxLines = 4
             )
 
-            Spacer(modifier = Modifier.height(10.dp))
-
             if (affirmation.scriptureText.isNotBlank()) {
+                Spacer(modifier = Modifier.height(10.dp))
                 Text(
                     text = "“${affirmation.scriptureText}”",
                     fontFamily = DisplayFontFamily,
@@ -994,17 +1129,41 @@ private fun LargeWidgetPreview(affirmation: Affirmation, theme: String = "Alabas
                     color = secondaryText,
                     maxLines = 3
                 )
-                Spacer(modifier = Modifier.height(8.dp))
             }
 
-            Text(
-                text = "— ${affirmation.reference.uppercase()}",
-                fontFamily = BodyFontFamily,
-                fontWeight = FontWeight.Bold,
-                fontSize = 11.sp,
-                letterSpacing = 1.sp,
-                color = accentColor
-            )
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Bottom Row: Reference on left, tucked shuffle button on bottom right
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "— ${affirmation.reference.uppercase()}",
+                    fontFamily = BodyFontFamily,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 11.sp,
+                    letterSpacing = 1.sp,
+                    color = secondaryText
+                )
+
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(CircleShape)
+                        .background(buttonBg)
+                        .clickable(onClick = onShuffle),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_widget_loop),
+                        contentDescription = "Shuffle declaration",
+                        tint = buttonTint,
+                        modifier = Modifier.size(17.dp)
+                    )
+                }
+            }
         }
     }
 }
@@ -1013,7 +1172,8 @@ private fun LargeWidgetPreview(affirmation: Affirmation, theme: String = "Alabas
 @Composable
 private fun LockScreenWidgetPreview(
     affirmation: Affirmation,
-    isFullWallpaper: Boolean = false
+    isFullWallpaper: Boolean = false,
+    onShuffle: () -> Unit = {}
 ) {
     val today = remember {
         val formatter = DateTimeFormatter.ofPattern("EEEE, MMMM d", Locale.getDefault())
@@ -1023,7 +1183,7 @@ private fun LockScreenWidgetPreview(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(380.dp)
+            .height(390.dp)
             .clip(RoundedCornerShape(20.dp))
     ) {
         // Photographic background if available
@@ -1083,66 +1243,134 @@ private fun LockScreenWidgetPreview(
             if (isFullWallpaper) {
                 // Full wallpaper typography centered in the lower optical zone
                 Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.padding(bottom = 24.dp)
+                    horizontalAlignment = Alignment.Start,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 12.dp)
                 ) {
                     Text(
-                        text = "M A K A R I O S   ·   ${affirmation.category.uppercase()}",
+                        text = "DAILY ATTUNEMENT  ·  ${affirmation.category.uppercase()}",
                         fontFamily = BodyFontFamily,
-                        fontSize = 9.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        letterSpacing = 1.4.sp,
-                        color = SunlitGold
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Medium,
+                        letterSpacing = 1.3.sp,
+                        color = Color.White.copy(alpha = 0.40f)
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(6.dp))
                     Text(
                         text = "“${affirmation.declaration}”",
                         fontFamily = DisplayFontFamily,
-                        fontSize = 16.sp,
-                        lineHeight = 22.sp,
-                        textAlign = TextAlign.Center,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        lineHeight = 24.sp,
                         color = Color.White,
                         maxLines = 3
                     )
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "— ${affirmation.reference.uppercase()} —",
-                        fontFamily = BodyFontFamily,
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        letterSpacing = 1.2.sp,
-                        color = Color.White.copy(alpha = 0.85f)
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "— ${affirmation.reference.uppercase()}",
+                            fontFamily = BodyFontFamily,
+                            fontSize = 10.5.sp,
+                            fontWeight = FontWeight.Medium,
+                            letterSpacing = 1.sp,
+                            color = Color.White.copy(alpha = 0.65f)
+                        )
+
+                        Box(
+                            modifier = Modifier
+                                .size(30.dp)
+                                .clip(CircleShape)
+                                .background(Color.White.copy(alpha = 0.15f))
+                                .clickable(onClick = onShuffle),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                painter = painterResource(id = R.drawable.ic_widget_loop),
+                                contentDescription = "Shuffle declaration",
+                                tint = Color.White.copy(alpha = 0.85f),
+                                modifier = Modifier.size(15.dp)
+                            )
+                        }
+                    }
                 }
             } else {
-                // Frosted complication card widget
+                // Keyguard Complication Card Widget: Exact prompt specs
+                // Top Left: DAILY ATTUNEMENT in 40% opacity white
+                // Center Main Text: Bold 18pt font
+                // Bottom Right Button: Tucked clean into the lower corner: simple [+] or thin loop icon for shuffling
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(18.dp))
-                        .background(Color.White.copy(alpha = 0.16f))
-                        .border(1.dp, Color.White.copy(alpha = 0.28f), RoundedCornerShape(18.dp))
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(Color.White.copy(alpha = 0.14f))
+                        .border(1.dp, Color.White.copy(alpha = 0.22f), RoundedCornerShape(20.dp))
                         .padding(14.dp)
                 ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.Start
+                    ) {
+                        // Top Left Metadata: Left-aligned, tiny 10pt all-caps font, 40% opacity white
+                        Text(
+                            text = "DAILY ATTUNEMENT",
+                            fontFamily = BodyFontFamily,
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 10.sp,
+                            letterSpacing = 1.2.sp,
+                            color = Color.White.copy(alpha = 0.40f)
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        // Center Main Text: Bold 18pt font
                         Text(
                             text = "“${affirmation.declaration}”",
                             fontFamily = DisplayFontFamily,
-                            fontSize = 13.5.sp,
-                            lineHeight = 19.sp,
-                            textAlign = TextAlign.Center,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 18.sp,
+                            lineHeight = 24.sp,
                             color = Color.White,
                             maxLines = 3
                         )
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Text(
-                            text = "— ${affirmation.reference.uppercase()} —",
-                            fontFamily = BodyFontFamily,
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 9.5.sp,
-                            letterSpacing = 1.2.sp,
-                            color = SunlitGold
-                        )
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        // Bottom Row: Reference on left, Shuffle button tucked into bottom right
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "— ${affirmation.reference.uppercase()}",
+                                fontFamily = BodyFontFamily,
+                                fontWeight = FontWeight.Medium,
+                                fontSize = 10.sp,
+                                letterSpacing = 0.8.sp,
+                                color = Color.White.copy(alpha = 0.65f)
+                            )
+
+                            Box(
+                                modifier = Modifier
+                                    .size(28.dp)
+                                    .clip(CircleShape)
+                                    .background(Color.White.copy(alpha = 0.16f))
+                                    .clickable(onClick = onShuffle),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.ic_widget_loop),
+                                    contentDescription = "Shuffle declaration",
+                                    tint = Color.White.copy(alpha = 0.85f),
+                                    modifier = Modifier.size(15.dp)
+                                )
+                            }
+                        }
                     }
                 }
             }
