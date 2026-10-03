@@ -30,9 +30,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.makarios.app.data.Affirmation
 import com.makarios.app.data.AffirmationRepository
+import com.makarios.app.data.AuthManager
+import com.makarios.app.data.CommunityRepository
+import com.makarios.app.data.PublicAffirmation
 import com.makarios.app.ui.components.AffirmationCard
+import com.makarios.app.ui.components.CommunityAffirmationCard
 import com.makarios.app.ui.theme.*
 import com.makarios.app.util.ShareHelper
+
+enum class LibraryTab(val title: String) {
+    CURATED("Curated"),
+    COMMUNITY("Community")
+}
 
 private data class ThemeItem(
     val name: String,
@@ -60,6 +69,7 @@ fun LibraryScreen(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    var selectedTab by remember { mutableStateOf(LibraryTab.CURATED) }
     var searchQuery by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf("All") }
 
@@ -69,7 +79,19 @@ fun LibraryScreen(
 
     val allAffirmations = remember { AffirmationRepository.getAll() }
 
-    // Filter by search query and category
+    // Start/stop listening to public declarations when on Community tab
+    DisposableEffect(selectedTab, selectedCategory) {
+        if (selectedTab == LibraryTab.COMMUNITY) {
+            CommunityRepository.startListeningToPublicDeclarations(selectedCategory)
+        }
+        onDispose {
+            if (selectedTab == LibraryTab.COMMUNITY) {
+                CommunityRepository.stopListeningToPublicDeclarations()
+            }
+        }
+    }
+
+    // Filter curated affirmations
     val filteredAffirmations = remember(searchQuery, selectedCategory) {
         allAffirmations.filter { affirmation ->
             val matchesCategory = selectedCategory == "All" || affirmation.category.equals(selectedCategory, ignoreCase = true)
@@ -78,6 +100,26 @@ fun LibraryScreen(
                     affirmation.scriptureText.contains(searchQuery, ignoreCase = true) ||
                     affirmation.reference.contains(searchQuery, ignoreCase = true) ||
                     affirmation.category.contains(searchQuery, ignoreCase = true)
+            matchesCategory && matchesQuery
+        }
+    }
+
+    // Filter community declarations
+    val filteredCommunityDeclarations = remember(
+        CommunityRepository.publicDeclarations.size,
+        CommunityRepository.publicDeclarations.toList(),
+        searchQuery,
+        selectedCategory
+    ) {
+        CommunityRepository.publicDeclarations.filter { pub ->
+            val matchesCategory = selectedCategory == "All" || pub.category.equals(selectedCategory, ignoreCase = true)
+            val matchesQuery = searchQuery.isBlank() ||
+                    pub.declaration.contains(searchQuery, ignoreCase = true) ||
+                    pub.scriptureText.contains(searchQuery, ignoreCase = true) ||
+                    pub.reference.contains(searchQuery, ignoreCase = true) ||
+                    pub.authorName.contains(searchQuery, ignoreCase = true) ||
+                    pub.authorUsername.contains(searchQuery, ignoreCase = true) ||
+                    pub.category.contains(searchQuery, ignoreCase = true)
             matchesCategory && matchesQuery
         }
     }
@@ -93,28 +135,66 @@ fun LibraryScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(bottom = 72.dp)
         ) {
-            // ── 1. Header Bar ─────────────────────────────────────
-            Column(
+            // ── 1. Header Bar with Segmented Tab Switcher ─────────
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 20.dp)
-                    .padding(top = 16.dp, bottom = 12.dp)
+                    .padding(top = 16.dp, bottom = 12.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "Library",
-                    fontFamily = DisplayFontFamily,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 24.sp,
-                    letterSpacing = (-0.3).sp,
-                    color = Espresso
-                )
-                Spacer(modifier = Modifier.height(3.dp))
-                Text(
-                    text = "Biblical declarations rooted in scripture",
-                    fontFamily = BodyFontFamily,
-                    fontSize = 13.sp,
-                    color = Stone
-                )
+                Column(modifier = Modifier.weight(1f).padding(end = 12.dp)) {
+                    Text(
+                        text = "Library",
+                        fontFamily = DisplayFontFamily,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 24.sp,
+                        letterSpacing = (-0.3).sp,
+                        color = Espresso
+                    )
+                    Spacer(modifier = Modifier.height(3.dp))
+                    Text(
+                        text = if (selectedTab == LibraryTab.CURATED)
+                            "Biblical declarations rooted in scripture"
+                        else
+                            "Declarations shared by believers worldwide",
+                        fontFamily = BodyFontFamily,
+                        fontSize = 13.sp,
+                        color = Stone
+                    )
+                }
+
+                // Segmented Tab Selector
+                Row(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(Surface)
+                        .border(0.5.dp, BorderSubtle, RoundedCornerShape(20.dp))
+                        .padding(3.dp),
+                    horizontalArrangement = Arrangement.spacedBy(2.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    LibraryTab.values().forEach { tab ->
+                        val isSelected = selectedTab == tab
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(17.dp))
+                                .background(if (isSelected) Espresso else Color.Transparent)
+                                .clickable { selectedTab = tab }
+                                .padding(horizontal = 12.dp, vertical = 6.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = tab.title,
+                                fontFamily = BodyFontFamily,
+                                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
+                                fontSize = 12.sp,
+                                color = if (isSelected) Color.White else Stone
+                            )
+                        }
+                    }
+                }
             }
 
             // ── 2. Search Bar ─────────────────────────────────────
@@ -142,7 +222,10 @@ fun LibraryScreen(
                     Box(modifier = Modifier.weight(1f)) {
                         if (searchQuery.isEmpty()) {
                             Text(
-                                text = "Search declarations, scriptures, topics...",
+                                text = if (selectedTab == LibraryTab.CURATED)
+                                    "Search declarations, scriptures, topics..."
+                                else
+                                    "Search community declarations, authors...",
                                 fontFamily = BodyFontFamily,
                                 fontSize = 14.sp,
                                 color = StoneMuted
@@ -218,8 +301,8 @@ fun LibraryScreen(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // ── 4. Category Overview Cards (Only shown when "All" is active and search is empty) ──
-            if (selectedCategory == "All" && searchQuery.isBlank()) {
+            // ── 4. Category Overview Cards (Curated Tab Only, when "All" is active and search is empty) ──
+            if (selectedTab == LibraryTab.CURATED && selectedCategory == "All" && searchQuery.isBlank()) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -298,108 +381,235 @@ fun LibraryScreen(
                 }
             }
 
-            // ── 5. Affirmations List ──────────────────────────────
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp),
-                verticalArrangement = Arrangement.spacedBy(14.dp)
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+            // ── 5. Declarations List (Curated vs Community) ────────
+            if (selectedTab == LibraryTab.CURATED) {
+                // ── Curated Affirmations ──
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
-                    Text(
-                        text = when {
-                            searchQuery.isNotBlank() -> "Search Results (${filteredAffirmations.size})"
-                            selectedCategory != "All" -> "$selectedCategory Declarations (${filteredAffirmations.size})"
-                            else -> "All Declarations"
-                        },
-                        fontFamily = BodyFontFamily,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 15.sp,
-                        color = Espresso
-                    )
-
-                    if (selectedCategory != "All" || searchQuery.isNotBlank()) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Text(
-                            text = "Clear filter",
+                            text = when {
+                                searchQuery.isNotBlank() -> "Search Results (${filteredAffirmations.size})"
+                                selectedCategory != "All" -> "$selectedCategory Declarations (${filteredAffirmations.size})"
+                                else -> "All Declarations"
+                            },
                             fontFamily = BodyFontFamily,
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 12.sp,
-                            color = Terracotta,
-                            modifier = Modifier.clickable {
-                                selectedCategory = "All"
-                                searchQuery = ""
-                            }
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 15.sp,
+                            color = Espresso
                         )
+
+                        if (selectedCategory != "All" || searchQuery.isNotBlank()) {
+                            Text(
+                                text = "Clear filter",
+                                fontFamily = BodyFontFamily,
+                                fontWeight = FontWeight.Medium,
+                                fontSize = 12.sp,
+                                color = Terracotta,
+                                modifier = Modifier.clickable {
+                                    selectedCategory = "All"
+                                    searchQuery = ""
+                                }
+                            )
+                        }
+                    }
+
+                    if (filteredAffirmations.isEmpty()) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 32.dp)
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(Surface)
+                                .border(1.dp, Border, RoundedCornerShape(16.dp))
+                                .padding(24.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(
+                                    text = "No declarations found",
+                                    fontFamily = DisplayFontFamily,
+                                    fontWeight = FontWeight.Medium,
+                                    fontSize = 17.sp,
+                                    color = Espresso
+                                )
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Text(
+                                    text = "Write your own declaration and match with scripture.",
+                                    fontFamily = BodyFontFamily,
+                                    fontSize = 13.sp,
+                                    color = Stone
+                                )
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Button(
+                                    onClick = { onNavigateToCreate("") },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = Espresso,
+                                        contentColor = Surface
+                                    ),
+                                    shape = RoundedCornerShape(14.dp)
+                                ) {
+                                    Text(
+                                        text = "Create Declaration",
+                                        fontFamily = BodyFontFamily,
+                                        fontWeight = FontWeight.SemiBold,
+                                        fontSize = 13.sp
+                                    )
+                                }
+                            }
+                        }
+                    } else {
+                        filteredAffirmations.forEach { affirmation ->
+                            var isSaved by remember(affirmation.id) {
+                                mutableStateOf(AffirmationRepository.isSaved(affirmation.id))
+                            }
+
+                            AffirmationCard(
+                                affirmation = affirmation,
+                                isSaved = isSaved,
+                                onToggleSave = {
+                                    AffirmationRepository.toggleSave(affirmation.id)
+                                    isSaved = !isSaved
+                                },
+                                onShare = {
+                                    ShareHelper.shareAffirmationGraphic(context, affirmation)
+                                },
+                                onCardClick = { onNavigateToDetail(affirmation) }
+                            )
+                        }
                     }
                 }
-
-                if (filteredAffirmations.isEmpty()) {
-                    // Empty state
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 32.dp)
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(Surface)
-                            .border(1.dp, Border, RoundedCornerShape(16.dp))
-                            .padding(24.dp),
-                        contentAlignment = Alignment.Center
+            } else {
+                // ── Community Affirmations Stream ──
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = when {
+                                searchQuery.isNotBlank() -> "Community Results (${filteredCommunityDeclarations.size})"
+                                selectedCategory != "All" -> "$selectedCategory Declarations (${filteredCommunityDeclarations.size})"
+                                else -> "Community Stream (${filteredCommunityDeclarations.size})"
+                            },
+                            fontFamily = BodyFontFamily,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 15.sp,
+                            color = Espresso
+                        )
+
+                        if (selectedCategory != "All" || searchQuery.isNotBlank()) {
                             Text(
-                                text = "No declarations found",
-                                fontFamily = DisplayFontFamily,
-                                fontWeight = FontWeight.Medium,
-                                fontSize = 17.sp,
-                                color = Espresso
-                            )
-                            Spacer(modifier = Modifier.height(6.dp))
-                            Text(
-                                text = "Write your own declaration and match with scripture.",
+                                text = "Clear filter",
                                 fontFamily = BodyFontFamily,
-                                fontSize = 13.sp,
-                                color = Stone
+                                fontWeight = FontWeight.Medium,
+                                fontSize = 12.sp,
+                                color = Terracotta,
+                                modifier = Modifier.clickable {
+                                    selectedCategory = "All"
+                                    searchQuery = ""
+                                }
                             )
-                            Spacer(modifier = Modifier.height(16.dp))
-                            Button(
-                                onClick = { onNavigateToCreate("") },
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = Espresso,
-                                    contentColor = Surface
-                                ),
-                                shape = RoundedCornerShape(14.dp)
-                            ) {
-                                Text(
-                                    text = "Create Declaration",
-                                    fontFamily = BodyFontFamily,
-                                    fontWeight = FontWeight.SemiBold,
-                                    fontSize = 13.sp
-                                )
-                            }
                         }
                     }
-                } else {
-                    filteredAffirmations.forEach { affirmation ->
-                        var isSaved by remember(affirmation.id) {
-                            mutableStateOf(AffirmationRepository.isSaved(affirmation.id))
-                        }
 
-                        AffirmationCard(
-                            affirmation = affirmation,
-                            isSaved = isSaved,
-                            onToggleSave = {
-                                AffirmationRepository.toggleSave(affirmation.id)
-                                isSaved = !isSaved
-                            },
-                            onShare = {
-                                ShareHelper.shareAffirmationGraphic(context, affirmation)
-                            },
-                            onCardClick = { onNavigateToDetail(affirmation) }
-                        )
+                    if (filteredCommunityDeclarations.isEmpty()) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 32.dp)
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(Surface)
+                                .border(1.dp, Border, RoundedCornerShape(16.dp))
+                                .padding(24.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(
+                                    text = if (searchQuery.isNotBlank()) "No matching declarations" else "Be the first to declare in this season",
+                                    fontFamily = DisplayFontFamily,
+                                    fontWeight = FontWeight.Medium,
+                                    fontSize = 17.sp,
+                                    color = Espresso
+                                )
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Text(
+                                    text = if (searchQuery.isNotBlank())
+                                        "Try searching for another keyword or scripture reference."
+                                    else
+                                        "Speak faith and share a grounded scripture declaration with the community.",
+                                    fontFamily = BodyFontFamily,
+                                    fontSize = 13.sp,
+                                    color = Stone,
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                )
+                                Spacer(modifier = Modifier.height(16.dp))
+                                Button(
+                                    onClick = { onNavigateToCreate("") },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = Espresso,
+                                        contentColor = Surface
+                                    ),
+                                    shape = RoundedCornerShape(14.dp)
+                                ) {
+                                    Text(
+                                        text = "Share a Declaration",
+                                        fontFamily = BodyFontFamily,
+                                        fontWeight = FontWeight.SemiBold,
+                                        fontSize = 13.sp
+                                    )
+                                }
+                            }
+                        }
+                    } else {
+                        filteredCommunityDeclarations.forEach { pub ->
+                            val pubAffirmation = pub.toAffirmation()
+                            var isSaved by remember(pub.id) {
+                                mutableStateOf(AffirmationRepository.isSaved(pub.id))
+                            }
+                            val myUid = AuthManager.currentUser?.uid.orEmpty()
+                            val isAmened = pub.amenedBy.contains(myUid)
+
+                            CommunityAffirmationCard(
+                                affirmation = pub,
+                                isSaved = isSaved,
+                                isAmened = isAmened,
+                                onToggleAmen = {
+                                    if (!AuthManager.isLoggedIn || AuthManager.isAnonymous) {
+                                        Toast.makeText(context, "Sign in to say Amen", Toast.LENGTH_SHORT).show()
+                                    } else {
+                                        CommunityRepository.toggleAmen(pub.id, pub.amenedBy)
+                                    }
+                                },
+                                onToggleSave = {
+                                    if (isSaved) {
+                                        AffirmationRepository.toggleSave(pub.id)
+                                        isSaved = false
+                                    } else {
+                                        AffirmationRepository.addPersonalAffirmation(pubAffirmation)
+                                        isSaved = true
+                                    }
+                                },
+                                onShare = {
+                                    ShareHelper.shareAffirmationGraphic(context, pubAffirmation)
+                                },
+                                onCardClick = { onNavigateToDetail(pubAffirmation) }
+                            )
+                        }
                     }
                 }
             }

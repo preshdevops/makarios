@@ -1,5 +1,9 @@
 package com.makarios.app.ui.screens
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import android.content.Intent
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
@@ -9,6 +13,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -37,11 +42,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.makarios.app.data.AffirmationRepository
 import com.makarios.app.data.AuthManager
+import com.makarios.app.data.CommunityRepository
 import com.makarios.app.ui.components.AuthDialog
+import com.makarios.app.ui.components.FindFriendsDialog
 import com.makarios.app.ui.components.SacredTimePickerDialog
 import com.makarios.app.ui.theme.*
 import com.makarios.app.util.ReminderManager
 import com.makarios.app.util.ReminderManager.ReminderSource
+import com.makarios.app.util.UsernameValidator
 import com.makarios.app.util.WidgetHelper
 
 @Composable
@@ -57,9 +65,14 @@ fun ProfileScreen(
     var authDialogIsSignUp by remember { mutableStateOf(true) }
     var showSignOutConfirm by remember { mutableStateOf(false) }
 
-    // User name
+    // User name & username
     var userName by remember { mutableStateOf(ReminderManager.getUserName(context)) }
     var showNameDialog by remember { mutableStateOf(false) }
+    var showUsernameDialog by remember { mutableStateOf(false) }
+    var showFindFriendsDialog by remember { mutableStateOf(false) }
+
+    val currentProfile = CommunityRepository.currentProfile
+    val friends = CommunityRepository.friendsList
 
     // Clean daily reminder toggle (replaces rigid multi-time switches)
     var isReminderEnabled by remember { mutableStateOf(ReminderManager.isDailyReminderEnabled(context)) }
@@ -180,14 +193,41 @@ fun ProfileScreen(
                                                 )
                                             }
                                         }
-                                        Text(
-                                            text = "Speaking life over every season",
-                                            fontFamily = BodyFontFamily,
-                                            fontSize = 12.5.sp,
-                                            color = Stone
-                                        )
 
-                                        Spacer(modifier = Modifier.height(3.dp))
+                                        if (AuthManager.isLoggedIn && !AuthManager.isAnonymous && currentProfile != null) {
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                            ) {
+                                                Text(
+                                                    text = "@${currentProfile.username}",
+                                                    fontFamily = BodyFontFamily,
+                                                    fontWeight = FontWeight.Medium,
+                                                    fontSize = 12.5.sp,
+                                                    color = Terracotta
+                                                )
+                                                IconButton(
+                                                    onClick = { showUsernameDialog = true },
+                                                    modifier = Modifier.size(20.dp)
+                                                ) {
+                                                    Icon(
+                                                        imageVector = Icons.Default.Edit,
+                                                        contentDescription = "Edit handle",
+                                                        tint = StoneMuted,
+                                                        modifier = Modifier.size(11.dp)
+                                                    )
+                                                }
+                                            }
+                                        } else {
+                                            Text(
+                                                text = "Speaking life over every season",
+                                                fontFamily = BodyFontFamily,
+                                                fontSize = 12.5.sp,
+                                                color = Stone
+                                            )
+                                        }
+
+                                        Spacer(modifier = Modifier.height(2.dp))
                                         Row(
                                             verticalAlignment = Alignment.CenterVertically,
                                             horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -206,6 +246,74 @@ fun ProfileScreen(
                                                 fontSize = 11.sp,
                                                 color = if (AuthManager.isLoggedIn && !AuthManager.isAnonymous) Sage else StoneMuted
                                             )
+                                        }
+
+                                        if (AuthManager.isLoggedIn && !AuthManager.isAnonymous && currentProfile != null && currentProfile.friendCode.isNotBlank()) {
+                                            Spacer(modifier = Modifier.height(6.dp))
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                            ) {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .clip(RoundedCornerShape(8.dp))
+                                                        .background(PorcelainWarm)
+                                                        .border(0.5.dp, Border, RoundedCornerShape(8.dp))
+                                                        .padding(horizontal = 8.dp, vertical = 3.dp)
+                                                ) {
+                                                    Text(
+                                                        text = "Code: ${currentProfile.friendCode}",
+                                                        fontFamily = BodyFontFamily,
+                                                        fontWeight = FontWeight.SemiBold,
+                                                        fontSize = 11.sp,
+                                                        letterSpacing = 0.5.sp,
+                                                        color = Espresso
+                                                    )
+                                                }
+
+                                                Text(
+                                                    text = "Copy",
+                                                    fontFamily = BodyFontFamily,
+                                                    fontWeight = FontWeight.Medium,
+                                                    fontSize = 11.sp,
+                                                    color = Terracotta,
+                                                    modifier = Modifier
+                                                        .clip(RoundedCornerShape(6.dp))
+                                                        .clickable {
+                                                            val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                                                            val clip = ClipData.newPlainText("Makarios Friend Code", currentProfile.friendCode)
+                                                            clipboard.setPrimaryClip(clip)
+                                                            Toast.makeText(context, "Friend code copied: ${currentProfile.friendCode} ✓", Toast.LENGTH_SHORT).show()
+                                                        }
+                                                        .padding(horizontal = 4.dp, vertical = 2.dp)
+                                                )
+
+                                                Text(
+                                                    text = "·",
+                                                    color = StoneMuted,
+                                                    fontSize = 11.sp
+                                                )
+
+                                                Text(
+                                                    text = "Share Link",
+                                                    fontFamily = BodyFontFamily,
+                                                    fontWeight = FontWeight.Medium,
+                                                    fontSize = 11.sp,
+                                                    color = Stone,
+                                                    modifier = Modifier
+                                                        .clip(RoundedCornerShape(6.dp))
+                                                        .clickable {
+                                                            val inviteLink = "https://makarios.app/friend/${currentProfile.friendCode}"
+                                                            val sendIntent = Intent().apply {
+                                                                action = Intent.ACTION_SEND
+                                                                putExtra(Intent.EXTRA_TEXT, "Connect with me on Makarios to share declarations and encourage one another: $inviteLink")
+                                                                type = "text/plain"
+                                                            }
+                                                            context.startActivity(Intent.createChooser(sendIntent, "Share Friend Link"))
+                                                        }
+                                                        .padding(horizontal = 4.dp, vertical = 2.dp)
+                                                )
+                                            }
                                         }
                                     }
                                 }
@@ -364,6 +472,136 @@ fun ProfileScreen(
                                             fontSize = 12.sp,
                                             color = Espresso
                                         )
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // ── Circle of Friends Card ──
+                    if (AuthManager.isLoggedIn && !AuthManager.isAnonymous) {
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .shadow(1.dp, RoundedCornerShape(20.dp), spotColor = Espresso.copy(alpha = 0.03f))
+                                .clip(RoundedCornerShape(20.dp))
+                                .background(Surface)
+                                .border(0.5.dp, BorderSubtle, RoundedCornerShape(20.dp))
+                                .padding(18.dp)
+                        ) {
+                            Column {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(36.dp)
+                                                .clip(CircleShape)
+                                                .background(PorcelainWarm),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Person,
+                                                contentDescription = null,
+                                                tint = Espresso,
+                                                modifier = Modifier.size(18.dp)
+                                            )
+                                        }
+                                        Column {
+                                            Text(
+                                                text = "Circle of Friends",
+                                                fontFamily = BodyFontFamily,
+                                                fontWeight = FontWeight.SemiBold,
+                                                fontSize = 13.5.sp,
+                                                color = Espresso
+                                            )
+                                            Text(
+                                                text = if (friends.isEmpty())
+                                                    "Connect by @username, email, or code"
+                                                else
+                                                    "${friends.size} connected ${if (friends.size == 1) "friend" else "friends"}",
+                                                fontFamily = BodyFontFamily,
+                                                fontSize = 11.5.sp,
+                                                color = Stone
+                                            )
+                                        }
+                                    }
+
+                                    Button(
+                                        onClick = { showFindFriendsDialog = true },
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = Espresso,
+                                            contentColor = Surface
+                                        ),
+                                        shape = RoundedCornerShape(12.dp),
+                                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                                        modifier = Modifier.height(34.dp)
+                                    ) {
+                                        Text(
+                                            text = "Find Friends",
+                                            fontFamily = BodyFontFamily,
+                                            fontWeight = FontWeight.Medium,
+                                            fontSize = 12.sp
+                                        )
+                                    }
+                                }
+
+                                if (friends.isNotEmpty()) {
+                                    Spacer(modifier = Modifier.height(14.dp))
+                                    HorizontalDivider(color = BorderSubtle, thickness = 0.5.dp)
+                                    Spacer(modifier = Modifier.height(12.dp))
+
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .horizontalScroll(rememberScrollState()),
+                                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        friends.forEach { friend ->
+                                            Box(
+                                                modifier = Modifier
+                                                    .clip(RoundedCornerShape(12.dp))
+                                                    .background(PorcelainWarm)
+                                                    .border(0.5.dp, BorderSubtle, RoundedCornerShape(12.dp))
+                                                    .padding(horizontal = 10.dp, vertical = 6.dp)
+                                            ) {
+                                                Row(
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                                ) {
+                                                    Box(
+                                                        modifier = Modifier
+                                                            .size(20.dp)
+                                                            .clip(CircleShape)
+                                                            .background(Sage),
+                                                        contentAlignment = Alignment.Center
+                                                    ) {
+                                                        Text(
+                                                            text = friend.displayName.take(1).uppercase(),
+                                                            fontFamily = DisplayFontFamily,
+                                                            fontWeight = FontWeight.Bold,
+                                                            fontSize = 10.sp,
+                                                            color = Color.White
+                                                        )
+                                                    }
+                                                    Text(
+                                                        text = if (friend.username.isNotBlank()) "@${friend.username}" else friend.displayName,
+                                                        fontFamily = BodyFontFamily,
+                                                        fontWeight = FontWeight.Medium,
+                                                        fontSize = 12.sp,
+                                                        color = Espresso
+                                                    )
+                                                }
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -1122,6 +1360,107 @@ fun ProfileScreen(
             },
             containerColor = Surface,
             shape = RoundedCornerShape(20.dp)
+        )
+    }
+
+    // ── Edit Username Dialog ─────────────────────────────────────────
+    if (showUsernameDialog) {
+        var candidateUsername by remember { mutableStateOf(currentProfile?.username.orEmpty()) }
+        var usernameError by remember { mutableStateOf<String?>(null) }
+        var isUpdating by remember { mutableStateOf(false) }
+
+        AlertDialog(
+            onDismissRequest = { if (!isUpdating) showUsernameDialog = false },
+            title = {
+                Text(
+                    text = "Choose Username",
+                    fontFamily = DisplayFontFamily,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 20.sp,
+                    color = Espresso
+                )
+            },
+            text = {
+                Column {
+                    Text(
+                        text = "Your @handle allows friends to find and connect with you on Makarios.",
+                        fontFamily = BodyFontFamily,
+                        fontSize = 13.sp,
+                        color = Stone
+                    )
+                    Spacer(modifier = Modifier.height(14.dp))
+                    OutlinedTextField(
+                        value = candidateUsername,
+                        onValueChange = { input ->
+                            candidateUsername = input
+                            val validation = UsernameValidator.validate(input)
+                            usernameError = if (validation is UsernameValidator.ValidationResult.Invalid) validation.message else null
+                        },
+                        prefix = {
+                            Text("@", fontFamily = BodyFontFamily, fontWeight = FontWeight.SemiBold, color = Terracotta)
+                        },
+                        singleLine = true,
+                        isError = usernameError != null,
+                        supportingText = {
+                            if (usernameError != null) {
+                                Text(usernameError!!, color = Terracotta, fontSize = 11.sp)
+                            } else {
+                                Text("3-20 letters, numbers, and underscores", fontSize = 11.sp, color = StoneMuted)
+                            }
+                        },
+                        shape = RoundedCornerShape(12.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Terracotta,
+                            unfocusedBorderColor = Border
+                        ),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    enabled = !isUpdating && usernameError == null && candidateUsername.isNotBlank(),
+                    onClick = {
+                        isUpdating = true
+                        CommunityRepository.updateUsername(
+                            newUsername = candidateUsername,
+                            onSuccess = {
+                                isUpdating = false
+                                showUsernameDialog = false
+                                Toast.makeText(context, "Username updated to @${UsernameValidator.normalize(candidateUsername)} ✓", Toast.LENGTH_SHORT).show()
+                            },
+                            onError = { err ->
+                                isUpdating = false
+                                usernameError = err
+                            }
+                        )
+                    }
+                ) {
+                    Text(
+                        text = if (isUpdating) "Saving…" else "Save",
+                        fontFamily = BodyFontFamily,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Terracotta
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    enabled = !isUpdating,
+                    onClick = { showUsernameDialog = false }
+                ) {
+                    Text("Cancel", fontFamily = BodyFontFamily, color = Stone)
+                }
+            },
+            containerColor = Surface,
+            shape = RoundedCornerShape(20.dp)
+        )
+    }
+
+    // ── Find Friends Dialog ───────────────────────────────────────────
+    if (showFindFriendsDialog) {
+        FindFriendsDialog(
+            onDismiss = { showFindFriendsDialog = false }
         )
     }
 }

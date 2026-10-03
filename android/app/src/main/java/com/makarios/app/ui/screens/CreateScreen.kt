@@ -50,6 +50,7 @@ import coil.compose.AsyncImage
 import com.makarios.app.data.Affirmation
 import com.makarios.app.data.AffirmationRepository
 import com.makarios.app.data.AffirmationTone
+import com.makarios.app.data.CommunityRepository
 import com.makarios.app.data.SacredBackgrounds
 import com.makarios.app.data.SacredPhotoBackground
 import com.makarios.app.data.ScriptureMatcher
@@ -159,6 +160,7 @@ fun CreateScreen(
     val currentPhotoUrl = selectedPhotoId?.let { SacredBackgrounds.getById(it)?.photoUrl }
 
     var savedPersonalAffirmationId by remember { mutableStateOf<String?>(null) }
+    var isShareToCommunity by remember { mutableStateOf(false) }
 
     fun getOrCreateAffirmation(): Affirmation {
         val existingId = savedPersonalAffirmationId
@@ -181,6 +183,21 @@ fun CreateScreen(
         )
         if (seedAffirmation == null || !AffirmationRepository.personalAffirmations.any { it.id == targetId }) {
             AffirmationRepository.addPersonalAffirmation(affirmation)
+            if (isShareToCommunity) {
+                CommunityRepository.publishDeclaration(
+                    declaration = affirmation.declaration,
+                    scriptureText = affirmation.scriptureText,
+                    reference = affirmation.reference,
+                    category = seedAffirmation?.category ?: "Peace",
+                    imageUrl = affirmation.imageUrl,
+                    onSuccess = {
+                        Toast.makeText(context, "Shared with Community ✓", Toast.LENGTH_SHORT).show()
+                    },
+                    onError = { err ->
+                        Toast.makeText(context, err, Toast.LENGTH_SHORT).show()
+                    }
+                )
+            }
         }
         savedPersonalAffirmationId = targetId
         return affirmation
@@ -456,7 +473,9 @@ fun CreateScreen(
                     onSaveToGallery = saveCurrentDesignToGallery,
                     onSaveAsWallpaper = openWallpaperDialog,
                     onShare = shareCurrentDesign,
-                    onSetNotificationTime = openTimePicker
+                    onSetNotificationTime = openTimePicker,
+                    isShareToCommunity = isShareToCommunity,
+                    onToggleShareToCommunity = { isShareToCommunity = it }
                 )
             }
         }
@@ -1042,7 +1061,9 @@ private fun DesignStage(
     onSaveToGallery: () -> Unit,
     onSaveAsWallpaper: () -> Unit,
     onShare: () -> Unit,
-    onSetNotificationTime: () -> Unit
+    onSetNotificationTime: () -> Unit,
+    isShareToCommunity: Boolean,
+    onToggleShareToCommunity: (Boolean) -> Unit
 ) {
     val currentFormat = shareFormats[selectedFormatIndex]
     val currentStyle = designStyles[selectedStyleIndex]
@@ -1543,7 +1564,44 @@ private fun DesignStage(
             }
         }
 
-        Spacer(modifier = Modifier.height(28.dp))
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // ── Community Visibility Toggle ──
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f).padding(end = 16.dp)) {
+                Text(
+                    text = "Share to Community",
+                    fontFamily = BodyFontFamily,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 14.sp,
+                    color = Espresso
+                )
+                Text(
+                    text = "Allow others in the Makarios community to discover this declaration",
+                    fontFamily = BodyFontFamily,
+                    fontSize = 11.5.sp,
+                    color = Stone
+                )
+            }
+            Switch(
+                checked = isShareToCommunity,
+                onCheckedChange = onToggleShareToCommunity,
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = Color.White,
+                    checkedTrackColor = Terracotta,
+                    uncheckedThumbColor = StoneMuted,
+                    uncheckedTrackColor = Border
+                )
+            )
+        }
+
+        Spacer(modifier = Modifier.height(20.dp))
 
         // ── Share & Export actions ────────────────────────────────
         Column(
