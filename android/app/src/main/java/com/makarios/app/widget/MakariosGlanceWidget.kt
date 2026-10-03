@@ -136,7 +136,6 @@ class MakariosGlanceWidget : GlanceAppWidget() {
                     // Bottom Row: Reference on left, Shuffle button tucked into bottom right
                     Row(
                         modifier = GlanceModifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
@@ -148,6 +147,8 @@ class MakariosGlanceWidget : GlanceAppWidget() {
                             ),
                             maxLines = 1
                         )
+
+                        Spacer(modifier = GlanceModifier.defaultWeight())
 
                         Box(
                             modifier = GlanceModifier
@@ -196,7 +197,6 @@ class MakariosGlanceWidget : GlanceAppWidget() {
                     // Bottom Row: Reference on left, Shuffle button tucked into bottom right
                     Row(
                         modifier = GlanceModifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
@@ -207,6 +207,8 @@ class MakariosGlanceWidget : GlanceAppWidget() {
                                 fontSize = 9.5.sp
                             )
                         )
+
+                        Spacer(modifier = GlanceModifier.defaultWeight())
 
                         Box(
                             modifier = GlanceModifier
@@ -268,7 +270,6 @@ class MakariosGlanceWidget : GlanceAppWidget() {
                     // Bottom Row: Reference on left, Shuffle button tucked into bottom right
                     Row(
                         modifier = GlanceModifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
@@ -279,6 +280,8 @@ class MakariosGlanceWidget : GlanceAppWidget() {
                                 fontSize = 10.sp
                             )
                         )
+
+                        Spacer(modifier = GlanceModifier.defaultWeight())
 
                         Box(
                             modifier = GlanceModifier
@@ -340,7 +343,6 @@ class MakariosGlanceWidget : GlanceAppWidget() {
                     // Bottom Row: Reference on left, Shuffle button tucked into bottom right
                     Row(
                         modifier = GlanceModifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
@@ -351,6 +353,8 @@ class MakariosGlanceWidget : GlanceAppWidget() {
                                 fontSize = 11.sp
                             )
                         )
+
+                        Spacer(modifier = GlanceModifier.defaultWeight())
 
                         Box(
                             modifier = GlanceModifier
