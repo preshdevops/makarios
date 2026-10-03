@@ -46,6 +46,9 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import android.widget.Toast
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.ui.res.painterResource
+import com.makarios.app.R
 import com.makarios.app.data.AuthManager
 import com.makarios.app.ui.components.AuthDialog
 
@@ -767,6 +770,28 @@ private fun PageAuth(onComplete: () -> Unit) {
         )
     }
 
+    val coroutineScope = rememberCoroutineScope()
+
+    fun signInWithGoogle() {
+        if (isLoading) return
+        errorMessage = null
+        isLoading = true
+        coroutineScope.launch {
+            AuthManager.signInWithGoogle(
+                context = context,
+                onSuccess = {
+                    isLoading = false
+                    Toast.makeText(context, "Welcome to Makarios ✓", Toast.LENGTH_SHORT).show()
+                    onComplete()
+                },
+                onError = { error ->
+                    isLoading = false
+                    errorMessage = error
+                }
+            )
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -942,6 +967,43 @@ private fun PageAuth(onComplete: () -> Unit) {
                     fontFamily = BodyFontFamily,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 14.5.sp
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // Google Sign-In Button
+        OutlinedButton(
+            onClick = { signInWithGoogle() },
+            enabled = !isLoading,
+            shape = RoundedCornerShape(16.dp),
+            colors = ButtonDefaults.outlinedButtonColors(
+                containerColor = Color.White,
+                contentColor = Espresso
+            ),
+            border = BorderStroke(0.5.dp, Color.White),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_google),
+                    contentDescription = "Google",
+                    tint = Color.Unspecified,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(10.dp))
+                Text(
+                    text = "Continue with Google",
+                    fontFamily = BodyFontFamily,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 14.sp,
+                    color = Espresso
                 )
             }
         }

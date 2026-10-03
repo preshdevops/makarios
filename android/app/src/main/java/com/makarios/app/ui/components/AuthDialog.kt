@@ -33,8 +33,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.ui.res.painterResource
+import com.makarios.app.R
 import com.makarios.app.data.AuthManager
 import com.makarios.app.ui.theme.*
+import kotlinx.coroutines.launch
 
 @Composable
 fun AuthDialog(
@@ -135,6 +139,28 @@ fun AuthDialog(
                 errorMessage = error
             }
         )
+    }
+
+    val coroutineScope = rememberCoroutineScope()
+
+    fun signInWithGoogle() {
+        if (isLoading) return
+        errorMessage = null
+        isLoading = true
+        coroutineScope.launch {
+            AuthManager.signInWithGoogle(
+                context = context,
+                onSuccess = {
+                    isLoading = false
+                    Toast.makeText(context, "Welcome to Makarios ✓", Toast.LENGTH_SHORT).show()
+                    onSuccess()
+                },
+                onError = { error ->
+                    isLoading = false
+                    errorMessage = error
+                }
+            )
+        }
     }
 
     Dialog(
@@ -334,6 +360,43 @@ fun AuthDialog(
                             fontFamily = BodyFontFamily,
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 14.5.sp
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // Google Sign-In Button
+                OutlinedButton(
+                    onClick = { signInWithGoogle() },
+                    enabled = !isLoading,
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        containerColor = Color.White,
+                        contentColor = Espresso
+                    ),
+                    border = BorderStroke(1.dp, Border),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_google),
+                            contentDescription = "Google",
+                            tint = Color.Unspecified,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text(
+                            text = "Continue with Google",
+                            fontFamily = BodyFontFamily,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 14.sp,
+                            color = Espresso
                         )
                     }
                 }
