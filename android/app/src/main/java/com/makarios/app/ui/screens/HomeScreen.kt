@@ -53,7 +53,6 @@ fun HomeScreen(
     onNavigateToDetail: (Affirmation) -> Unit,
     onNavigateToCreate: (String) -> Unit,
     onNavigateToLibrary: () -> Unit,
-    onNavigateToWidgets: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current

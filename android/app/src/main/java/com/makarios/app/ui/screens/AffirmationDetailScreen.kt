@@ -292,7 +292,7 @@ fun AffirmationDetailScreen(
                     .padding(bottom = 20.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                // Primary: Design Studio & Wallpapers
+                // Primary: Create Image / Wallpaper
                 Button(
                     onClick = { onNavigateToCreate(affirmation.id) },
                     colors = ButtonDefaults.buttonColors(
@@ -315,7 +315,7 @@ fun AffirmationDetailScreen(
                             modifier = Modifier.size(17.dp)
                         )
                         Text(
-                            text = "Design Studio & Wallpapers",
+                            text = "Create Image / Wallpaper",
                             fontFamily = BodyFontFamily,
                             fontWeight = FontWeight.Medium,
                             fontSize = 14.sp,

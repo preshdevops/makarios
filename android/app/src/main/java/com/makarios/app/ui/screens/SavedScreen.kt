@@ -413,7 +413,7 @@ fun SavedScreen(
                             ) {
                                 WallpaperCard(
                                     wallpaper = curatedWallpapers[i],
-                                    onOpenStudio = { onNavigateToCreate(curatedWallpapers[i].affirmationId) },
+                                    onEdit = { onNavigateToCreate(curatedWallpapers[i].affirmationId) },
                                     onSetWallpaper = { activeWallpaperItem = curatedWallpapers[i] },
                                     onDownload = { handleDownload(curatedWallpapers[i]) },
                                     onShare = { handleShare(curatedWallpapers[i]) },
@@ -423,7 +423,7 @@ fun SavedScreen(
                                 if (i + 1 < curatedWallpapers.size) {
                                     WallpaperCard(
                                         wallpaper = curatedWallpapers[i + 1],
-                                        onOpenStudio = { onNavigateToCreate(curatedWallpapers[i + 1].affirmationId) },
+                                        onEdit = { onNavigateToCreate(curatedWallpapers[i + 1].affirmationId) },
                                         onSetWallpaper = { activeWallpaperItem = curatedWallpapers[i + 1] },
                                         onDownload = { handleDownload(curatedWallpapers[i + 1]) },
                                         onShare = { handleShare(curatedWallpapers[i + 1]) },
@@ -550,7 +550,7 @@ fun SavedScreen(
 @Composable
 private fun WallpaperCard(
     wallpaper: WallpaperItem,
-    onOpenStudio: () -> Unit,
+    onEdit: () -> Unit,
     onSetWallpaper: () -> Unit,
     onDownload: () -> Unit,
     onShare: () -> Unit,
@@ -649,18 +649,18 @@ private fun WallpaperCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Edit in Studio
+                // Edit declaration
                 Box(
                     modifier = Modifier
                         .size(28.dp)
                         .clip(CircleShape)
                         .background(actionBg)
-                        .clickable(onClick = onOpenStudio),
+                        .clickable(onClick = onEdit),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Default.Edit,
-                        contentDescription = "Edit in Studio",
+                        contentDescription = "Edit declaration",
                         tint = actionTint,
                         modifier = Modifier.size(13.dp)
                     )

@@ -41,7 +41,7 @@ android/
       ml/                    # ONNX Runtime vector search engine
       ui/
         components/          # Reusable Compose components
-        screens/             # Home, Library, Create, Saved, Profile, WidgetStudio
+        screens/             # Home, Library, Create, Saved, Profile
         theme/               # Typography, color tokens, and theme definitions
       util/                  # WallpaperRenderer, ShareHelper, ReminderManager
       widget/                # Jetpack Glance widget implementation

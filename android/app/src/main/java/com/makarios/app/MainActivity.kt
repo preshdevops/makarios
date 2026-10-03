@@ -46,7 +46,6 @@ import com.makarios.app.ui.screens.LibraryScreen
 import com.makarios.app.ui.screens.OnboardingScreen
 import com.makarios.app.ui.screens.ProfileScreen
 import com.makarios.app.ui.screens.SavedScreen
-import com.makarios.app.ui.screens.WidgetStudioScreen
 import com.makarios.app.ui.theme.*
 import com.makarios.app.util.ReminderManager
 
@@ -95,7 +94,6 @@ fun MainAppScaffold() {
     var selectedTab by remember { mutableStateOf(0) }
     var activeAffirmationIdForCreate by remember { mutableStateOf<String?>(null) }
     var viewingAffirmation by remember { mutableStateOf<Affirmation?>(null) }
-    var viewingWidgets by remember { mutableStateOf(false) }
     var showOnboarding by remember {
         mutableStateOf(!prefs.getBoolean("onboarding_completed", false))
     }
@@ -111,15 +109,6 @@ fun MainAppScaffold() {
                 activeAffirmationIdForCreate = id.ifBlank { null }
                 selectedTab = 2 // Navigate to Create
             }
-        )
-        return
-    }
-
-    // If Widget Studio is opened
-    if (viewingWidgets) {
-        BackHandler { viewingWidgets = false }
-        WidgetStudioScreen(
-            onBack = { viewingWidgets = false }
         )
         return
     }
@@ -226,7 +215,6 @@ fun MainAppScaffold() {
                     selectedTab = 2
                 },
                 onNavigateToLibrary = { selectedTab = 1 },
-                onNavigateToWidgets = { viewingWidgets = true },
                 modifier = Modifier.padding(innerPadding)
             )
             1 -> LibraryScreen(
@@ -255,7 +243,6 @@ fun MainAppScaffold() {
                 modifier = Modifier.padding(innerPadding)
             )
             4 -> ProfileScreen(
-                onNavigateToWidgets = { viewingWidgets = true },
                 onRevisitOnboarding = { showOnboarding = true },
                 modifier = Modifier.padding(innerPadding)
             )

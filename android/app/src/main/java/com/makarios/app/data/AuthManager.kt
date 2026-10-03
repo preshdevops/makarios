@@ -87,7 +87,7 @@ object AuthManager {
                     onError(e.localizedMessage ?: "Unable to continue as guest")
                 }
         } catch (e: Exception) {
-            onError(e.localizedMessage ?: "Firebase Auth unavailable")
+            onError(friendlyAuthError(e))
         }
     }
 
@@ -116,7 +116,7 @@ object AuthManager {
                     onError(friendlyAuthError(e))
                 }
         } catch (e: Exception) {
-            onError(e.localizedMessage ?: "Sign up failed")
+            onError(friendlyAuthError(e))
         }
     }
 
@@ -144,7 +144,7 @@ object AuthManager {
                     onError(friendlyAuthError(e))
                 }
         } catch (e: Exception) {
-            onError(e.localizedMessage ?: "Sign in failed")
+            onError(friendlyAuthError(e))
         }
     }
 
@@ -166,7 +166,7 @@ object AuthManager {
                 .addOnSuccessListener { onSuccess() }
                 .addOnFailureListener { e -> onError(friendlyAuthError(e)) }
         } catch (e: Exception) {
-            onError(e.localizedMessage ?: "Could not send reset email")
+            onError(friendlyAuthError(e))
         }
     }
 
@@ -197,7 +197,7 @@ object AuthManager {
     ) {
         val serverClientId = getGoogleServerClientId(context)
         if (serverClientId.isNullOrBlank()) {
-            onError("Google Sign-In configuration required: Enable Google in Firebase Console and register SHA-1.")
+            onError("Google Sign-In is currently unavailable. Please sign in with email.")
             return
         }
 
@@ -231,19 +231,19 @@ object AuthManager {
                         onError(friendlyAuthError(e))
                     }
             } else {
-                onError("Received unexpected credential format from Google.")
+                onError("Could not complete sign in with Google. Please use email instead.")
             }
         } catch (e: GetCredentialCancellationException) {
             // User dismissed or tapped outside Google account picker — silently return
         } catch (e: GetCredentialException) {
             val msg = e.message.orEmpty()
             if (msg.contains("10", ignoreCase = true) || msg.contains("DEVELOPER_ERROR", ignoreCase = true)) {
-                onError("Google Sign-In configuration error: Add SHA-1 to Firebase Console.")
+                onError("Google Sign-In is temporarily unavailable. Please sign in with email.")
             } else {
                 onError(friendlyAuthError(e))
             }
         } catch (e: Exception) {
-            onError(e.localizedMessage ?: "Google sign-in failed.")
+            onError("Google sign-in failed. Please try again.")
         }
     }
 
@@ -273,8 +273,10 @@ object AuthManager {
             msg.contains("network error", ignoreCase = true) ->
                 "Network connection issue. Please check your internet."
             msg.contains("ERROR_OPERATION_NOT_ALLOWED", ignoreCase = true) || msg.contains("disabled for this project", ignoreCase = true) ->
-                "This sign-in method is disabled. Please enable it in Firebase Console."
-            else -> e.localizedMessage ?: "Authentication failed. Please try again."
+                "This sign-in method is temporarily unavailable. Please sign in with email."
+            msg.contains("firebase", ignoreCase = true) ->
+                "Service is currently unavailable. Please try again shortly."
+            else -> "Authentication failed. Please try again."
         }
     }
 }

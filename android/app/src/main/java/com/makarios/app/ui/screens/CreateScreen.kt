@@ -68,7 +68,7 @@ import kotlinx.coroutines.withContext
 enum class CreateStage {
     WRITE,   // 1. User writes their declaration
     MATCH,   // 2. Matched scripture is shown
-    DESIGN   // 3. Design Studio — format, style, share
+    DESIGN   // 3. Design & Share
 }
 
 // ── Output Formats ───────────────────────────────────────────────
@@ -174,7 +174,7 @@ fun CreateScreen(
             declaration = declarationText,
             scriptureText = matchedScripture.ifBlank { "I praise you because I am fearfully and wonderfully made; your works are wonderful, I know that full well." },
             reference = matchedReference.ifBlank { "PSALM 139:14" },
-            context = "Personal declaration created in Makarios Studio.",
+            context = "Personal declaration created in Makarios.",
             category = "Personal",
             tone = selectedTone ?: AffirmationTone.RESOLUTE,
             imageUrl = currentPhotoUrl ?: "https://images.unsplash.com/photo-1507652313519-d4e9174996dd?auto=format&fit=crop&w=1000&q=85",

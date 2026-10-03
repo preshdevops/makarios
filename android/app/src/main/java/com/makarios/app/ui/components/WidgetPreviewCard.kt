@@ -2,7 +2,6 @@ package com.makarios.app.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -26,7 +25,6 @@ import com.makarios.app.ui.theme.*
 fun WidgetPreviewCard(
     affirmation: Affirmation,
     onAddToHomeScreen: () -> Unit,
-    onSeeAllWidgets: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -55,15 +53,6 @@ fun WidgetPreviewCard(
                 fontSize = 10.sp,
                 letterSpacing = 1.2.sp,
                 color = Espresso.copy(alpha = 0.40f)
-            )
-
-            Text(
-                text = "Customize sizes →",
-                fontFamily = BodyFontFamily,
-                fontWeight = FontWeight.Medium,
-                fontSize = 11.5.sp,
-                color = Espresso.copy(alpha = 0.75f),
-                modifier = Modifier.clickable(onClick = onSeeAllWidgets)
             )
         }
 

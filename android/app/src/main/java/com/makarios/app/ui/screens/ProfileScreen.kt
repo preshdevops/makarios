@@ -54,7 +54,6 @@ import com.makarios.app.util.WidgetHelper
 
 @Composable
 fun ProfileScreen(
-    onNavigateToWidgets: () -> Unit,
     onRevisitOnboarding: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
@@ -368,14 +367,14 @@ fun ProfileScreen(
                                     )
                                     Column {
                                         Text(
-                                            text = "Cloud Sync Active",
+                                            text = "Account Synced",
                                             fontFamily = BodyFontFamily,
                                             fontWeight = FontWeight.SemiBold,
                                             fontSize = 13.5.sp,
                                             color = Espresso
                                         )
                                         Text(
-                                            text = "Declarations backed up with Firebase",
+                                            text = "Your declarations are safely backed up",
                                             fontFamily = BodyFontFamily,
                                             fontSize = 11.5.sp,
                                             color = Stone
@@ -410,14 +409,14 @@ fun ProfileScreen(
                                     )
                                     Column {
                                         Text(
-                                            text = "Save Declarations Across Devices",
+                                            text = "Back Up Your Declarations",
                                             fontFamily = BodyFontFamily,
                                             fontWeight = FontWeight.SemiBold,
                                             fontSize = 13.5.sp,
                                             color = Espresso
                                         )
                                         Text(
-                                            text = "Create an account to back up your declarations",
+                                            text = "Sign in to keep your declarations safe across all your devices",
                                             fontFamily = BodyFontFamily,
                                             fontSize = 11.5.sp,
                                             color = Stone
@@ -785,7 +784,7 @@ fun ProfileScreen(
                                     ReminderSourceOption(
                                         source = ReminderSource.CUSTOM,
                                         title = "My Created Affirmations",
-                                        subtitle = "Words you personally authored in Create Studio",
+                                        subtitle = "Words you personally wrote",
                                         pill = if (personalCount > 0) "$personalCount authored" else "None yet"
                                     ),
                                     ReminderSourceOption(
@@ -1013,7 +1012,7 @@ fun ProfileScreen(
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = "Pin any affirmation directly to your home screen glance.",
+                        text = "Pin your daily declaration directly to your home screen.",
                         fontFamily = BodyFontFamily,
                         fontSize = 12.5.sp,
                         color = Stone
@@ -1060,7 +1059,7 @@ fun ProfileScreen(
                                             horizontalArrangement = Arrangement.spacedBy(6.dp)
                                         ) {
                                             Text(
-                                                text = "Makarios Glance Widget",
+                                                text = "Home Screen Widget",
                                                 fontFamily = BodyFontFamily,
                                                 fontWeight = FontWeight.SemiBold,
                                                 fontSize = 13.5.sp,
@@ -1074,7 +1073,7 @@ fun ProfileScreen(
                                             )
                                         }
                                         Text(
-                                            text = "Ready · Tap any card in app to pin",
+                                            text = "Ready · Pin directly to your screen",
                                             fontFamily = BodyFontFamily,
                                             fontSize = 11.5.sp,
                                             color = StoneMuted
@@ -1082,29 +1081,17 @@ fun ProfileScreen(
                                     }
                                 }
 
-                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                    OutlinedButton(
-                                        onClick = onNavigateToWidgets,
-                                        shape = RoundedCornerShape(12.dp),
-                                        border = androidx.compose.foundation.BorderStroke(1.dp, Border),
-                                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
-                                        modifier = Modifier.height(34.dp)
-                                    ) {
-                                        Text("Studio", fontFamily = BodyFontFamily, fontWeight = FontWeight.Medium, fontSize = 12.sp, color = Espresso)
-                                    }
-
-                                    Button(
-                                        onClick = { WidgetHelper.pinWidgetToHomeScreen(context) },
-                                        colors = ButtonDefaults.buttonColors(
-                                            containerColor = Espresso,
-                                            contentColor = Surface
-                                        ),
-                                        shape = RoundedCornerShape(12.dp),
-                                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
-                                        modifier = Modifier.height(34.dp)
-                                    ) {
-                                        Text("Add to Screen", fontFamily = BodyFontFamily, fontWeight = FontWeight.Medium, fontSize = 12.sp)
-                                    }
+                                Button(
+                                    onClick = { WidgetHelper.pinWidgetToHomeScreen(context) },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = Espresso,
+                                        contentColor = Surface
+                                    ),
+                                    shape = RoundedCornerShape(12.dp),
+                                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
+                                    modifier = Modifier.height(34.dp)
+                                ) {
+                                    Text("Add Widget", fontFamily = BodyFontFamily, fontWeight = FontWeight.Medium, fontSize = 12.sp)
                                 }
                             }
 
@@ -1113,7 +1100,7 @@ fun ProfileScreen(
                             // Active widget declaration preview
                             Column {
                                 Text(
-                                    text = "CURRENT WIDGET DECLARATION",
+                                    text = "CURRENT DECLARATION",
                                     fontFamily = BodyFontFamily,
                                     fontWeight = FontWeight.SemiBold,
                                     fontSize = 9.5.sp,

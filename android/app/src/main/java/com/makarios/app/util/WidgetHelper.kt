@@ -119,7 +119,7 @@ object WidgetHelper {
             } catch (e: Exception) {
                 e.printStackTrace()
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(context, "Error setting lock screen: ${e.message}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "Unable to update lock screen wallpaper", Toast.LENGTH_SHORT).show()
                     onResult(false)
                 }
             }
