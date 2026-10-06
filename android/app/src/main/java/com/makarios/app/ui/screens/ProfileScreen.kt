@@ -393,7 +393,7 @@ fun ProfileScreen(
                                 )
                                 Spacer(modifier = Modifier.height(1.dp))
                                 Text(
-                                    text = AuthManager.userEmail.ifBlank { "Cloud active" },
+                                    text = AuthManager.userEmail?.ifBlank { "Cloud active" } ?: "Cloud active",
                                     fontFamily = BodyFontFamily,
                                     fontSize = 12.sp,
                                     color = Stone

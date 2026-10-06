@@ -53,6 +53,7 @@ import com.makarios.app.data.AffirmationTone
 import com.makarios.app.data.CommunityRepository
 import com.makarios.app.data.SacredBackgrounds
 import com.makarios.app.data.SacredPhotoBackground
+import com.makarios.app.data.ScriptureDatabase
 import com.makarios.app.data.ScriptureMatcher
 import com.makarios.app.data.VectorSearchEngine
 import com.makarios.app.data.VerseMatch
