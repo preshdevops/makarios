@@ -36,8 +36,10 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.makarios.app.data.AffirmationRepository
@@ -66,14 +68,13 @@ fun ProfileScreen(
 
     // User name & username
     var userName by remember { mutableStateOf(ReminderManager.getUserName(context)) }
-    var showNameDialog by remember { mutableStateOf(false) }
-    var showUsernameDialog by remember { mutableStateOf(false) }
+    var showEditProfileDialog by remember { mutableStateOf(false) }
     var showFindFriendsDialog by remember { mutableStateOf(false) }
 
     val currentProfile = CommunityRepository.currentProfile
     val friends = CommunityRepository.friendsList
 
-    // Clean daily reminder toggle (replaces rigid multi-time switches)
+    // Daily reminder toggle
     var isReminderEnabled by remember { mutableStateOf(ReminderManager.isDailyReminderEnabled(context)) }
 
     // Delivery time state
@@ -109,929 +110,776 @@ fun ProfileScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
-                .padding(bottom = 48.dp)
+                .padding(horizontal = 20.dp, vertical = 16.dp)
+                .padding(bottom = 56.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-
-            // ── 1. Sacred Identity Card ─────────────────────────────
-            AnimatedVisibility(
-                visible = visible,
-                enter = fadeIn(tween(380)) + slideInVertically(tween(380)) { -14 }
+            // ── Top Status Bar: Small Green Synced Pill ──────────────
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 20.dp)
-                        .padding(top = 16.dp)
-                ) {
+                if (AuthManager.isLoggedIn && !AuthManager.isAnonymous) {
                     Box(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .shadow(2.dp, RoundedCornerShape(24.dp), spotColor = Espresso.copy(alpha = 0.04f))
-                            .clip(RoundedCornerShape(24.dp))
-                            .background(Surface)
-                            .border(0.5.dp, BorderSubtle, RoundedCornerShape(24.dp))
-                            .padding(20.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(SageLight)
+                            .border(0.5.dp, Sage.copy(alpha = 0.35f), RoundedCornerShape(12.dp))
+                            .padding(horizontal = 10.dp, vertical = 5.dp)
                     ) {
-                        Column {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                                ) {
-                                    // Monogram Avatar
-                                    Box(
-                                        modifier = Modifier
-                                            .size(54.dp)
-                                            .clip(CircleShape)
-                                            .background(
-                                                Brush.radialGradient(
-                                                    colors = listOf(
-                                                        PorcelainWarm,
-                                                        Color(0xFFE8E0D4)
-                                                    )
-                                                )
-                                            )
-                                            .border(1.dp, Border, CircleShape),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Text(
-                                            text = userName.take(1).uppercase(),
-                                            fontFamily = DisplayFontFamily,
-                                            fontWeight = FontWeight.SemiBold,
-                                            fontSize = 24.sp,
-                                            color = Espresso
-                                        )
-                                    }
-
-                                    Column {
-                                        Row(
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                        ) {
-                                            Text(
-                                                text = userName,
-                                                fontFamily = DisplayFontFamily,
-                                                fontWeight = FontWeight.SemiBold,
-                                                fontSize = 22.sp,
-                                                letterSpacing = (-0.3).sp,
-                                                color = Espresso
-                                            )
-                                            IconButton(
-                                                onClick = { showNameDialog = true },
-                                                modifier = Modifier.size(24.dp)
-                                            ) {
-                                                Icon(
-                                                    imageVector = Icons.Default.Edit,
-                                                    contentDescription = "Edit name",
-                                                    tint = StoneMuted,
-                                                    modifier = Modifier.size(14.dp)
-                                                )
-                                            }
-                                        }
-
-                                        if (AuthManager.isLoggedIn && !AuthManager.isAnonymous && currentProfile != null) {
-                                            Row(
-                                                verticalAlignment = Alignment.CenterVertically,
-                                                horizontalArrangement = Arrangement.spacedBy(4.dp)
-                                            ) {
-                                                Text(
-                                                    text = "@${currentProfile.username}",
-                                                    fontFamily = BodyFontFamily,
-                                                    fontWeight = FontWeight.Medium,
-                                                    fontSize = 12.5.sp,
-                                                    color = Terracotta
-                                                )
-                                                IconButton(
-                                                    onClick = { showUsernameDialog = true },
-                                                    modifier = Modifier.size(20.dp)
-                                                ) {
-                                                    Icon(
-                                                        imageVector = Icons.Default.Edit,
-                                                        contentDescription = "Edit handle",
-                                                        tint = StoneMuted,
-                                                        modifier = Modifier.size(11.dp)
-                                                    )
-                                                }
-                                            }
-                                        } else {
-                                            Text(
-                                                text = "Speaking life over every season",
-                                                fontFamily = BodyFontFamily,
-                                                fontSize = 12.5.sp,
-                                                color = Stone
-                                            )
-                                        }
-
-                                        Spacer(modifier = Modifier.height(2.dp))
-                                        Row(
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                                        ) {
-                                            Box(
-                                                modifier = Modifier
-                                                    .size(6.dp)
-                                                    .clip(CircleShape)
-                                                    .background(if (AuthManager.isLoggedIn && !AuthManager.isAnonymous) Sage else StoneMuted)
-                                            )
-                                            Text(
-                                                text = if (AuthManager.isLoggedIn && !AuthManager.isAnonymous)
-                                                    "${AuthManager.userEmail} · Cloud Active"
-                                                else "Guest Mode · Local Device",
-                                                fontFamily = BodyFontFamily,
-                                                fontSize = 11.sp,
-                                                color = if (AuthManager.isLoggedIn && !AuthManager.isAnonymous) Sage else StoneMuted
-                                            )
-                                        }
-
-                                        if (AuthManager.isLoggedIn && !AuthManager.isAnonymous && currentProfile != null && currentProfile.friendCode.isNotBlank()) {
-                                            Spacer(modifier = Modifier.height(6.dp))
-                                            Row(
-                                                verticalAlignment = Alignment.CenterVertically,
-                                                horizontalArrangement = Arrangement.spacedBy(6.dp)
-                                            ) {
-                                                Box(
-                                                    modifier = Modifier
-                                                        .clip(RoundedCornerShape(8.dp))
-                                                        .background(PorcelainWarm)
-                                                        .border(0.5.dp, Border, RoundedCornerShape(8.dp))
-                                                        .padding(horizontal = 8.dp, vertical = 3.dp)
-                                                ) {
-                                                    Text(
-                                                        text = "Code: ${currentProfile.friendCode}",
-                                                        fontFamily = BodyFontFamily,
-                                                        fontWeight = FontWeight.SemiBold,
-                                                        fontSize = 11.sp,
-                                                        letterSpacing = 0.5.sp,
-                                                        color = Espresso
-                                                    )
-                                                }
-
-                                                Text(
-                                                    text = "Copy",
-                                                    fontFamily = BodyFontFamily,
-                                                    fontWeight = FontWeight.Medium,
-                                                    fontSize = 11.sp,
-                                                    color = Terracotta,
-                                                    modifier = Modifier
-                                                        .clip(RoundedCornerShape(6.dp))
-                                                        .clickable {
-                                                            val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                                                            val clip = ClipData.newPlainText("Makarios Friend Code", currentProfile.friendCode)
-                                                            clipboard.setPrimaryClip(clip)
-                                                            Toast.makeText(context, "Friend code copied: ${currentProfile.friendCode} ✓", Toast.LENGTH_SHORT).show()
-                                                        }
-                                                        .padding(horizontal = 4.dp, vertical = 2.dp)
-                                                )
-
-                                                Text(
-                                                    text = "·",
-                                                    color = StoneMuted,
-                                                    fontSize = 11.sp
-                                                )
-
-                                                Text(
-                                                    text = "Share Link",
-                                                    fontFamily = BodyFontFamily,
-                                                    fontWeight = FontWeight.Medium,
-                                                    fontSize = 11.sp,
-                                                    color = Stone,
-                                                    modifier = Modifier
-                                                        .clip(RoundedCornerShape(6.dp))
-                                                        .clickable {
-                                                            val inviteLink = "https://makarios.app/friend/${currentProfile.friendCode}"
-                                                            val sendIntent = Intent().apply {
-                                                                action = Intent.ACTION_SEND
-                                                                putExtra(Intent.EXTRA_TEXT, "Connect with me on Makarios to share declarations and encourage one another: $inviteLink")
-                                                                type = "text/plain"
-                                                            }
-                                                            context.startActivity(Intent.createChooser(sendIntent, "Share Friend Link"))
-                                                        }
-                                                        .padding(horizontal = 4.dp, vertical = 2.dp)
-                                                )
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-
-                            Spacer(modifier = Modifier.height(18.dp))
-                            HorizontalDivider(color = BorderSubtle, thickness = 0.5.dp)
-                            Spacer(modifier = Modifier.height(14.dp))
-
-                            // Summary Bar without nested box
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceAround,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                StatCadenceItem(count = "$savedCount", label = "Saved")
-                                Box(modifier = Modifier.width(1.dp).height(20.dp).background(Border))
-                                StatCadenceItem(count = "$personalCount", label = "Authored")
-                                Box(modifier = Modifier.width(1.dp).height(20.dp).background(Border))
-                                StatCadenceItem(count = "${AffirmationRepository.getAll().size}", label = "Total")
-                            }
-                        }
-                    }
-
-                    // ── Cloud Sync & Account Action Card ──
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .shadow(1.dp, RoundedCornerShape(20.dp), spotColor = Espresso.copy(alpha = 0.03f))
-                            .clip(RoundedCornerShape(20.dp))
-                            .background(Surface)
-                            .border(0.5.dp, BorderSubtle, RoundedCornerShape(20.dp))
-                            .padding(18.dp)
-                    ) {
-                        if (AuthManager.isLoggedIn && !AuthManager.isAnonymous) {
-                            // Signed in view
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Cloud,
-                                        contentDescription = null,
-                                        tint = Sage,
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                    Column {
-                                        Text(
-                                            text = "Account Synced",
-                                            fontFamily = BodyFontFamily,
-                                            fontWeight = FontWeight.SemiBold,
-                                            fontSize = 13.5.sp,
-                                            color = Espresso
-                                        )
-                                        Text(
-                                            text = "Your declarations are safely backed up",
-                                            fontFamily = BodyFontFamily,
-                                            fontSize = 11.5.sp,
-                                            color = Stone
-                                        )
-                                    }
-                                }
-
-                                TextButton(
-                                    onClick = { showSignOutConfirm = true }
-                                ) {
-                                    Text(
-                                        text = "Sign Out",
-                                        fontFamily = BodyFontFamily,
-                                        fontWeight = FontWeight.Medium,
-                                        fontSize = 12.sp,
-                                        color = Terracotta
-                                    )
-                                }
-                            }
-                        } else {
-                            // Guest mode view
-                            Column {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Cloud,
-                                        contentDescription = null,
-                                        tint = Terracotta,
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                    Column {
-                                        Text(
-                                            text = "Back Up Your Declarations",
-                                            fontFamily = BodyFontFamily,
-                                            fontWeight = FontWeight.SemiBold,
-                                            fontSize = 13.5.sp,
-                                            color = Espresso
-                                        )
-                                        Text(
-                                            text = "Sign in to keep your declarations safe across all your devices",
-                                            fontFamily = BodyFontFamily,
-                                            fontSize = 11.5.sp,
-                                            color = Stone
-                                        )
-                                    }
-                                }
-
-                                Spacer(modifier = Modifier.height(14.dp))
-
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    Button(
-                                        onClick = {
-                                            authDialogIsSignUp = true
-                                            showAuthDialog = true
-                                        },
-                                        shape = RoundedCornerShape(12.dp),
-                                        colors = ButtonDefaults.buttonColors(
-                                            containerColor = Terracotta,
-                                            contentColor = Color.White
-                                        ),
-                                        modifier = Modifier
-                                            .weight(1.2f)
-                                            .height(40.dp)
-                                    ) {
-                                        Text(
-                                            text = "Create Account",
-                                            fontFamily = BodyFontFamily,
-                                            fontWeight = FontWeight.SemiBold,
-                                            fontSize = 12.sp
-                                        )
-                                    }
-
-                                    OutlinedButton(
-                                        onClick = {
-                                            authDialogIsSignUp = false
-                                            showAuthDialog = true
-                                        },
-                                        shape = RoundedCornerShape(12.dp),
-                                        border = BorderStroke(1.dp, Border),
-                                        colors = ButtonDefaults.outlinedButtonColors(containerColor = Surface),
-                                        modifier = Modifier
-                                            .weight(0.8f)
-                                            .height(40.dp)
-                                    ) {
-                                        Text(
-                                            text = "Sign In",
-                                            fontFamily = BodyFontFamily,
-                                            fontWeight = FontWeight.Medium,
-                                            fontSize = 12.sp,
-                                            color = Espresso
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    // ── Circle of Friends Card ──
-                    if (AuthManager.isLoggedIn && !AuthManager.isAnonymous) {
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .shadow(1.dp, RoundedCornerShape(20.dp), spotColor = Espresso.copy(alpha = 0.03f))
-                                .clip(RoundedCornerShape(20.dp))
-                                .background(Surface)
-                                .border(0.5.dp, BorderSubtle, RoundedCornerShape(20.dp))
-                                .padding(18.dp)
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(5.dp)
                         ) {
-                            Column {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                                    ) {
-                                        Box(
-                                            modifier = Modifier
-                                                .size(36.dp)
-                                                .clip(CircleShape)
-                                                .background(PorcelainWarm),
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            Icon(
-                                                imageVector = Icons.Default.Person,
-                                                contentDescription = null,
-                                                tint = Espresso,
-                                                modifier = Modifier.size(18.dp)
-                                            )
-                                        }
-                                        Column {
-                                            Text(
-                                                text = "Circle of Friends",
-                                                fontFamily = BodyFontFamily,
-                                                fontWeight = FontWeight.SemiBold,
-                                                fontSize = 13.5.sp,
-                                                color = Espresso
-                                            )
-                                            Text(
-                                                text = if (friends.isEmpty())
-                                                    "Connect by @username, email, or code"
-                                                else
-                                                    "${friends.size} connected ${if (friends.size == 1) "friend" else "friends"}",
-                                                fontFamily = BodyFontFamily,
-                                                fontSize = 11.5.sp,
-                                                color = Stone
-                                            )
-                                        }
-                                    }
-
-                                    Button(
-                                        onClick = { showFindFriendsDialog = true },
-                                        colors = ButtonDefaults.buttonColors(
-                                            containerColor = Espresso,
-                                            contentColor = Surface
-                                        ),
-                                        shape = RoundedCornerShape(12.dp),
-                                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
-                                        modifier = Modifier.height(34.dp)
-                                    ) {
-                                        Text(
-                                            text = "Find Friends",
-                                            fontFamily = BodyFontFamily,
-                                            fontWeight = FontWeight.Medium,
-                                            fontSize = 12.sp
-                                        )
-                                    }
-                                }
-
-                                if (friends.isNotEmpty()) {
-                                    Spacer(modifier = Modifier.height(14.dp))
-                                    HorizontalDivider(color = BorderSubtle, thickness = 0.5.dp)
-                                    Spacer(modifier = Modifier.height(12.dp))
-
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .horizontalScroll(rememberScrollState()),
-                                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        friends.forEach { friend ->
-                                            Box(
-                                                modifier = Modifier
-                                                    .clip(RoundedCornerShape(12.dp))
-                                                    .background(PorcelainWarm)
-                                                    .border(0.5.dp, BorderSubtle, RoundedCornerShape(12.dp))
-                                                    .padding(horizontal = 10.dp, vertical = 6.dp)
-                                            ) {
-                                                Row(
-                                                    verticalAlignment = Alignment.CenterVertically,
-                                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                                                ) {
-                                                    Box(
-                                                        modifier = Modifier
-                                                            .size(20.dp)
-                                                            .clip(CircleShape)
-                                                            .background(Sage),
-                                                        contentAlignment = Alignment.Center
-                                                    ) {
-                                                        Text(
-                                                            text = friend.displayName.take(1).uppercase(),
-                                                            fontFamily = DisplayFontFamily,
-                                                            fontWeight = FontWeight.Bold,
-                                                            fontSize = 10.sp,
-                                                            color = Color.White
-                                                        )
-                                                    }
-                                                    Text(
-                                                        text = if (friend.username.isNotBlank()) "@${friend.username}" else friend.displayName,
-                                                        fontFamily = BodyFontFamily,
-                                                        fontWeight = FontWeight.Medium,
-                                                        fontSize = 12.sp,
-                                                        color = Espresso
-                                                    )
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
+                            Box(
+                                modifier = Modifier
+                                    .size(6.dp)
+                                    .clip(CircleShape)
+                                    .background(Sage)
+                            )
+                            Text(
+                                text = "Synced",
+                                fontFamily = BodyFontFamily,
+                                fontWeight = FontWeight.Medium,
+                                fontSize = 11.5.sp,
+                                color = Sage
+                            )
+                        }
+                    }
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(PorcelainWarm)
+                            .border(0.5.dp, BorderSubtle, RoundedCornerShape(12.dp))
+                            .padding(horizontal = 10.dp, vertical = 5.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(5.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(6.dp)
+                                    .clip(CircleShape)
+                                    .background(StoneMuted)
+                            )
+                            Text(
+                                text = "Local Device",
+                                fontFamily = BodyFontFamily,
+                                fontWeight = FontWeight.Medium,
+                                fontSize = 11.5.sp,
+                                color = StoneMuted
+                            )
                         }
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // ── 2. Daily Reminders (Clean, dignified, zero-bs) ─────────
+            // ── 1. Sacred Identity Card (Calm, Centered Hierarchy) ────
             AnimatedVisibility(
                 visible = visible,
-                enter = fadeIn(tween(440, delayMillis = 80)) + slideInVertically(tween(440, delayMillis = 80)) { 16 }
+                enter = fadeIn(tween(380)) + slideInVertically(tween(380)) { -14 }
             ) {
-                Column(
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 20.dp)
+                        .shadow(1.dp, RoundedCornerShape(22.dp), spotColor = Espresso.copy(alpha = 0.04f))
+                        .clip(RoundedCornerShape(22.dp))
+                        .background(Surface)
+                        .border(0.5.dp, BorderSubtle, RoundedCornerShape(22.dp))
+                        .padding(vertical = 24.dp, horizontal = 20.dp)
                 ) {
-                    Text(
-                        text = "Daily Scripture Reminders",
-                        fontFamily = DisplayFontFamily,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 18.sp,
-                        letterSpacing = (-0.2).sp,
-                        color = Espresso
-                    )
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        text = "Receive a quiet, grounding declaration on your lock screen.",
-                        fontFamily = BodyFontFamily,
-                        fontSize = 12.5.sp,
-                        color = Stone
-                    )
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .shadow(1.dp, RoundedCornerShape(22.dp), spotColor = Espresso.copy(alpha = 0.03f))
-                            .clip(RoundedCornerShape(22.dp))
-                            .background(Surface)
-                            .border(0.5.dp, BorderSubtle, RoundedCornerShape(22.dp))
-                            .padding(18.dp)
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Column {
-                            // Master Toggle Row
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
+                        // Centered Avatar (Larger, with edit badge)
+                        Box(
+                            modifier = Modifier
+                                .size(80.dp)
+                                .clickable { showEditProfileDialog = true }
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(76.dp)
+                                    .clip(CircleShape)
+                                    .background(
+                                        Brush.radialGradient(
+                                            colors = listOf(
+                                                PorcelainWarm,
+                                                Color(0xFFE8E0D4)
+                                            )
+                                        )
+                                    )
+                                    .border(1.dp, Border, CircleShape)
+                                    .align(Alignment.Center),
+                                contentAlignment = Alignment.Center
                             ) {
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = "Daily Notification",
-                                        fontFamily = BodyFontFamily,
-                                        fontWeight = FontWeight.SemiBold,
-                                        fontSize = 14.sp,
-                                        color = Espresso
-                                    )
-                                    Text(
-                                        text = if (isReminderEnabled) "Active · Delivered gently each morning" else "Turned off",
-                                        fontFamily = BodyFontFamily,
-                                        fontSize = 12.sp,
-                                        color = if (isReminderEnabled) Sage else StoneMuted
-                                    )
-                                }
-
-                                Switch(
-                                    checked = isReminderEnabled,
-                                    onCheckedChange = {
-                                        isReminderEnabled = it
-                                        ReminderManager.setDailyReminderEnabled(context, it)
-                                        if (it) Toast.makeText(context, "Daily reminders active ✓", Toast.LENGTH_SHORT).show()
-                                    },
-                                    colors = SwitchDefaults.colors(
-                                        checkedThumbColor = Surface,
-                                        checkedTrackColor = Terracotta,
-                                        uncheckedTrackColor = PorcelainWarm
-                                    )
+                                Text(
+                                    text = userName.ifBlank { "F" }.take(1).uppercase(),
+                                    fontFamily = DisplayFontFamily,
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 32.sp,
+                                    color = Espresso
                                 )
                             }
 
-                            if (isReminderEnabled) {
-                                Spacer(modifier = Modifier.height(16.dp))
-                                HorizontalDivider(color = BorderSubtle, thickness = 0.5.dp)
-                                Spacer(modifier = Modifier.height(14.dp))
-
-                                // Delivery Time Selector Row
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clip(RoundedCornerShape(14.dp))
-                                        .background(PorcelainWarm.copy(alpha = 0.6f))
-                                        .border(0.5.dp, BorderSubtle, RoundedCornerShape(14.dp))
-                                        .clickable { showTimePickerDialog = true }
-                                        .padding(horizontal = 14.dp, vertical = 12.dp),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                                    ) {
-                                        Box(
-                                            modifier = Modifier
-                                                .size(32.dp)
-                                                .clip(CircleShape)
-                                                .background(TerracottaLight),
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            Icon(
-                                                imageVector = Icons.Default.AccessTime,
-                                                contentDescription = null,
-                                                tint = Terracotta,
-                                                modifier = Modifier.size(16.dp)
-                                            )
-                                        }
-                                        Column {
-                                            Text(
-                                                text = "Notification Time",
-                                                fontFamily = BodyFontFamily,
-                                                fontWeight = FontWeight.SemiBold,
-                                                fontSize = 13.5.sp,
-                                                color = Espresso
-                                            )
-                                            Text(
-                                                text = "Delivered daily at this time",
-                                                fontFamily = BodyFontFamily,
-                                                fontSize = 11.5.sp,
-                                                color = Stone
-                                            )
-                                        }
-                                    }
-
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                                    ) {
-                                        Box(
-                                            modifier = Modifier
-                                                .clip(RoundedCornerShape(8.dp))
-                                                .background(Terracotta)
-                                                .padding(horizontal = 10.dp, vertical = 5.dp)
-                                        ) {
-                                            Text(
-                                                text = reminderTimeText,
-                                                fontFamily = BodyFontFamily,
-                                                fontWeight = FontWeight.SemiBold,
-                                                fontSize = 12.sp,
-                                                color = Color.White
-                                            )
-                                        }
-                                    }
-                                }
-
-                                Spacer(modifier = Modifier.height(18.dp))
-
-                                Column {
-                                    Text(
-                                        text = "WHICH DECLARATIONS TO RECEIVE",
-                                        fontFamily = BodyFontFamily,
-                                        fontWeight = FontWeight.SemiBold,
-                                        fontSize = 10.sp,
-                                        letterSpacing = 1.4.sp,
-                                        color = StoneMuted
-                                    )
-                                    Spacer(modifier = Modifier.height(2.dp))
-                                    Text(
-                                        text = "Select what kind of affirmations appear in your notifications.",
-                                        fontFamily = BodyFontFamily,
-                                        fontSize = 11.5.sp,
-                                        color = Stone
-                                    )
-                                }
-                                Spacer(modifier = Modifier.height(10.dp))
-
-                                val sources = listOf(
-                                    ReminderSourceOption(
-                                        source = ReminderSource.CUSTOM,
-                                        title = "My Created Affirmations",
-                                        subtitle = "Words you personally wrote",
-                                        pill = if (personalCount > 0) "$personalCount authored" else "None yet"
-                                    ),
-                                    ReminderSourceOption(
-                                        source = ReminderSource.SAVED,
-                                        title = "My Saved Favorites",
-                                        subtitle = "Your bookmarked collection of biblical declarations",
-                                        pill = "$savedCount saved"
-                                    ),
-                                    ReminderSourceOption(
-                                        source = ReminderSource.ALL,
-                                        title = "Daily Scripture Discovery",
-                                        subtitle = "A fresh biblical truth rotated from the full library each day",
-                                        pill = "$totalCount total"
-                                    ),
-                                    ReminderSourceOption(
-                                        source = ReminderSource.PINNED,
-                                        title = "Specific Pinned Declaration",
-                                        subtitle = "Keep meditating continuously on a single chosen verse",
-                                        pill = if (ReminderManager.getPinnedAffirmation(context) != null) "Selected" else "Default"
-                                    )
+                            // Edit badge at bottom end
+                            Box(
+                                modifier = Modifier
+                                    .size(26.dp)
+                                    .clip(CircleShape)
+                                    .background(Terracotta)
+                                    .border(2.dp, Surface, CircleShape)
+                                    .align(Alignment.BottomEnd),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Edit,
+                                    contentDescription = "Edit profile",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(13.dp)
                                 )
-
-                                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                    sources.forEach { opt ->
-                                        val isSelected = selectedReminderSource == opt.source
-                                        Box(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .clip(RoundedCornerShape(14.dp))
-                                                .background(if (isSelected) PorcelainWarm else Color.Transparent)
-                                                .border(
-                                                    width = if (isSelected) 1.dp else 0.5.dp,
-                                                    color = if (isSelected) Terracotta.copy(alpha = 0.4f) else BorderSubtle,
-                                                    shape = RoundedCornerShape(14.dp)
-                                                )
-                                                .clickable {
-                                                    selectedReminderSource = opt.source
-                                                    ReminderManager.setReminderSource(context, opt.source)
-                                                }
-                                                .padding(horizontal = 14.dp, vertical = 12.dp)
-                                        ) {
-                                            Row(
-                                                modifier = Modifier.fillMaxWidth(),
-                                                horizontalArrangement = Arrangement.SpaceBetween,
-                                                verticalAlignment = Alignment.CenterVertically
-                                            ) {
-                                                Column(modifier = Modifier.weight(1f)) {
-                                                    Row(
-                                                        verticalAlignment = Alignment.CenterVertically,
-                                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                                    ) {
-                                                        Text(
-                                                            text = opt.title,
-                                                            fontFamily = BodyFontFamily,
-                                                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
-                                                            fontSize = 13.5.sp,
-                                                            color = Espresso
-                                                        )
-                                                        Box(
-                                                            modifier = Modifier
-                                                                .clip(RoundedCornerShape(6.dp))
-                                                                .background(
-                                                                    if (isSelected) TerracottaLight else PorcelainWarm
-                                                                )
-                                                                .padding(horizontal = 6.dp, vertical = 2.dp)
-                                                        ) {
-                                                            Text(
-                                                                text = opt.pill,
-                                                                fontFamily = BodyFontFamily,
-                                                                fontWeight = FontWeight.Medium,
-                                                                fontSize = 9.sp,
-                                                                color = if (isSelected) Terracotta else StoneMuted
-                                                            )
-                                                        }
-                                                    }
-                                                    Spacer(modifier = Modifier.height(2.dp))
-                                                    Text(
-                                                        text = opt.subtitle,
-                                                        fontFamily = BodyFontFamily,
-                                                        fontSize = 11.5.sp,
-                                                        color = Stone
-                                                    )
-                                                }
-
-                                                if (isSelected) {
-                                                    Box(
-                                                        modifier = Modifier
-                                                            .size(20.dp)
-                                                            .clip(CircleShape)
-                                                            .background(Terracotta),
-                                                        contentAlignment = Alignment.Center
-                                                    ) {
-                                                        Icon(
-                                                            imageVector = Icons.Default.Check,
-                                                            contentDescription = null,
-                                                            tint = Color.White,
-                                                            modifier = Modifier.size(12.dp)
-                                                        )
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-
-                                // Active pool preview
-                                Spacer(modifier = Modifier.height(14.dp))
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clip(RoundedCornerShape(12.dp))
-                                        .background(PorcelainWarm.copy(alpha = 0.6f))
-                                        .padding(12.dp)
-                                ) {
-                                    Column {
-                                        Row(
-                                            modifier = Modifier.fillMaxWidth(),
-                                            horizontalArrangement = Arrangement.SpaceBetween,
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-                                            Text(
-                                                text = "TOMORROW'S MESSAGE PREVIEW",
-                                                fontFamily = BodyFontFamily,
-                                                fontWeight = FontWeight.SemiBold,
-                                                fontSize = 9.sp,
-                                                letterSpacing = 1.2.sp,
-                                                color = Terracotta
-                                            )
-                                            Text(
-                                                text = currentPreviewAffirmation.reference.uppercase(),
-                                                fontFamily = BodyFontFamily,
-                                                fontWeight = FontWeight.Medium,
-                                                fontSize = 9.sp,
-                                                color = StoneMuted
-                                            )
-                                        }
-                                        Spacer(modifier = Modifier.height(4.dp))
-                                        Text(
-                                            text = "“${currentPreviewAffirmation.declaration}”",
-                                            fontFamily = DisplayFontFamily,
-                                            fontStyle = FontStyle.Italic,
-                                            fontSize = 13.sp,
-                                            lineHeight = 18.sp,
-                                            color = Espresso,
-                                            maxLines = 2
-                                        )
-                                    }
-                                }
                             }
                         }
+
+                        Spacer(modifier = Modifier.height(14.dp))
+
+                        // Display name in Cormorant serif
+                        Text(
+                            text = userName.ifBlank { "Friend" },
+                            fontFamily = DisplayFontFamily,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 24.sp,
+                            letterSpacing = (-0.3).sp,
+                            color = Espresso,
+                            textAlign = TextAlign.Center
+                        )
+
+                        Spacer(modifier = Modifier.height(3.dp))
+
+                        // @handle below it in terracotta
+                        val handle = if (AuthManager.isLoggedIn && !AuthManager.isAnonymous && currentProfile != null && currentProfile.username.isNotBlank()) {
+                            "@${currentProfile.username}"
+                        } else {
+                            "@member"
+                        }
+                        Text(
+                            text = handle,
+                            fontFamily = BodyFontFamily,
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 13.5.sp,
+                            color = Terracotta,
+                            textAlign = TextAlign.Center
+                        )
+
+                        // Soft prompt if name is still default "Friend" or handle is "@member"
+                        val isDefaultIdentity = userName.isBlank() || userName.equals("Friend", ignoreCase = true) || handle == "@member"
+                        if (isDefaultIdentity) {
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(
+                                text = "Add your name to make this yours",
+                                fontFamily = BodyFontFamily,
+                                fontStyle = FontStyle.Italic,
+                                fontSize = 12.sp,
+                                color = StoneMuted,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        // Single "Edit profile" text button (replaces separate edit pencils)
+                        TextButton(
+                            onClick = { showEditProfileDialog = true },
+                            modifier = Modifier.height(38.dp)
+                        ) {
+                            Text(
+                                text = "Edit profile",
+                                fontFamily = BodyFontFamily,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 13.sp,
+                                color = Espresso
+                            )
+                        }
                     }
+                }
+            }
 
-                    if (isReminderEnabled) {
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    // Test notification pill — only shown when reminders are active
-                    Row(
+            // ── 2. Stats Row (Clean Card with 3 Evenly Spaced Columns) ──
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .shadow(1.dp, RoundedCornerShape(20.dp), spotColor = Espresso.copy(alpha = 0.03f))
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(Surface)
+                    .border(0.5.dp, BorderSubtle, RoundedCornerShape(20.dp))
+                    .padding(vertical = 18.dp, horizontal = 12.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                        StatCadenceItem(count = "$savedCount", label = "Saved")
+                    }
+                    Box(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(14.dp))
-                            .background(Surface)
-                            .border(0.5.dp, BorderSubtle, RoundedCornerShape(14.dp))
-                            .clickable {
-                                ReminderManager.sendTestNotification(context, isHourly = false)
-                                Toast.makeText(
-                                    context,
-                                    "Sent a preview notification ✓",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                            }
-                            .padding(horizontal = 16.dp, vertical = 12.dp),
+                            .width(0.5.dp)
+                            .height(28.dp)
+                            .background(BorderSubtle)
+                    )
+                    Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                        StatCadenceItem(count = "$personalCount", label = "Authored")
+                    }
+                    Box(
+                        modifier = Modifier
+                            .width(0.5.dp)
+                            .height(28.dp)
+                            .background(BorderSubtle)
+                    )
+                    Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                        StatCadenceItem(count = "$totalCount", label = "Total")
+                    }
+                }
+            }
+
+            // ── 3. Account Section Card ─────────────────────────────
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .shadow(1.dp, RoundedCornerShape(20.dp), spotColor = Espresso.copy(alpha = 0.03f))
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(Surface)
+                    .border(0.5.dp, BorderSubtle, RoundedCornerShape(20.dp))
+                    .padding(18.dp)
+            ) {
+                if (AuthManager.isLoggedIn && !AuthManager.isAnonymous) {
+                    // Signed in account view
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            modifier = Modifier.weight(1f).padding(end = 8.dp)
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.NotificationsActive,
-                                contentDescription = null,
-                                tint = Terracotta,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Text(
-                                text = "Send a test notification",
-                                fontFamily = BodyFontFamily,
-                                fontWeight = FontWeight.Medium,
-                                fontSize = 13.sp,
-                                color = Espresso
-                            )
+                            Box(
+                                modifier = Modifier
+                                    .size(38.dp)
+                                    .clip(CircleShape)
+                                    .background(SageLight),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Cloud,
+                                    contentDescription = null,
+                                    tint = Sage,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                            Column {
+                                Text(
+                                    text = "Account Synced",
+                                    fontFamily = BodyFontFamily,
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 13.5.sp,
+                                    color = Espresso
+                                )
+                                Spacer(modifier = Modifier.height(1.dp))
+                                Text(
+                                    text = AuthManager.userEmail.ifBlank { "Cloud active" },
+                                    fontFamily = BodyFontFamily,
+                                    fontSize = 12.sp,
+                                    color = Stone
+                                )
+                            }
                         }
 
-                        Text(
-                            text = "Test →",
-                            fontFamily = BodyFontFamily,
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 12.sp,
-                            color = Terracotta
-                        )
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(SageLight)
+                                .padding(horizontal = 8.dp, vertical = 4.dp)
+                        ) {
+                            Text(
+                                text = "Active",
+                                fontFamily = BodyFontFamily,
+                                fontWeight = FontWeight.Medium,
+                                fontSize = 10.5.sp,
+                                color = Sage
+                            )
+                        }
                     }
+                } else {
+                    // Guest mode account view
+                    Column {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(38.dp)
+                                    .clip(CircleShape)
+                                    .background(PorcelainWarm),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Cloud,
+                                    contentDescription = null,
+                                    tint = Terracotta,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                            Column {
+                                Text(
+                                    text = "Back Up Your Declarations",
+                                    fontFamily = BodyFontFamily,
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 13.5.sp,
+                                    color = Espresso
+                                )
+                                Spacer(modifier = Modifier.height(1.dp))
+                                Text(
+                                    text = "Sign in to keep your declarations safe across all your devices",
+                                    fontFamily = BodyFontFamily,
+                                    fontSize = 11.5.sp,
+                                    color = Stone
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(14.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Button(
+                                onClick = {
+                                    authDialogIsSignUp = true
+                                    showAuthDialog = true
+                                },
+                                shape = RoundedCornerShape(12.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Terracotta,
+                                    contentColor = Color.White
+                                ),
+                                modifier = Modifier
+                                    .weight(1.2f)
+                                    .height(44.dp)
+                            ) {
+                                Text(
+                                    text = "Create Account",
+                                    fontFamily = BodyFontFamily,
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 12.5.sp
+                                )
+                            }
+
+                            OutlinedButton(
+                                onClick = {
+                                    authDialogIsSignUp = false
+                                    showAuthDialog = true
+                                },
+                                shape = RoundedCornerShape(12.dp),
+                                border = BorderStroke(1.dp, Border),
+                                colors = ButtonDefaults.outlinedButtonColors(containerColor = Surface),
+                                modifier = Modifier
+                                    .weight(0.8f)
+                                    .height(44.dp)
+                            ) {
+                                Text(
+                                    text = "Sign In",
+                                    fontFamily = BodyFontFamily,
+                                    fontWeight = FontWeight.Medium,
+                                    fontSize = 12.5.sp,
+                                    color = Espresso
+                                )
+                            }
+                        }
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // ── 3. Home Screen Widget ───────────────────────────────
-            AnimatedVisibility(
-                visible = visible,
-                enter = fadeIn(tween(480, delayMillis = 120)) + slideInVertically(tween(480, delayMillis = 120)) { 18 }
-            ) {
-                Column(
+            // ── 4. Invite Code Card ─────────────────────────────────
+            val friendCode = currentProfile?.friendCode.orEmpty()
+            if (AuthManager.isLoggedIn && !AuthManager.isAnonymous && friendCode.isNotBlank()) {
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 20.dp)
+                        .shadow(1.dp, RoundedCornerShape(20.dp), spotColor = Espresso.copy(alpha = 0.03f))
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(Surface)
+                        .border(0.5.dp, BorderSubtle, RoundedCornerShape(20.dp))
+                        .padding(18.dp)
                 ) {
-                    Text(
-                        text = "Home Screen Widget",
-                        fontFamily = DisplayFontFamily,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 18.sp,
-                        letterSpacing = (-0.2).sp,
-                        color = Espresso
-                    )
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        text = "Pin your daily declaration directly to your home screen.",
-                        fontFamily = BodyFontFamily,
-                        fontSize = 12.5.sp,
-                        color = Stone
-                    )
+                    Column {
+                        Text(
+                            text = "Your Invite Code",
+                            fontFamily = BodyFontFamily,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 14.sp,
+                            color = Espresso
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = "Share with friends to connect and pray together.",
+                            fontFamily = BodyFontFamily,
+                            fontSize = 12.sp,
+                            color = Stone
+                        )
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(14.dp))
 
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .shadow(1.dp, RoundedCornerShape(22.dp), spotColor = Espresso.copy(alpha = 0.03f))
-                            .clip(RoundedCornerShape(22.dp))
-                            .background(Surface)
-                            .border(0.5.dp, BorderSubtle, RoundedCornerShape(22.dp))
-                            .padding(18.dp)
-                    ) {
-                        Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                        // Monospace Code Chip
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(PorcelainWarm)
+                                .border(0.5.dp, Border, RoundedCornerShape(12.dp))
+                                .padding(vertical = 12.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = friendCode,
+                                fontFamily = FontFamily.Monospace,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 18.sp,
+                                letterSpacing = 3.sp,
+                                color = Espresso
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        // Proper Buttons for Copy and Share
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            OutlinedButton(
+                                onClick = {
+                                    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                                    val clip = ClipData.newPlainText("Makarios Friend Code", friendCode)
+                                    clipboard.setPrimaryClip(clip)
+                                    Toast.makeText(context, "Code copied: $friendCode ✓", Toast.LENGTH_SHORT).show()
+                                },
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(44.dp),
+                                shape = RoundedCornerShape(12.dp),
+                                border = BorderStroke(1.dp, Border),
+                                colors = ButtonDefaults.outlinedButtonColors(containerColor = Surface)
+                            ) {
+                                Text(
+                                    text = "Copy Code",
+                                    fontFamily = BodyFontFamily,
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 12.5.sp,
+                                    color = Espresso
+                                )
+                            }
+
+                            Button(
+                                onClick = {
+                                    val inviteLink = "https://makarios.app/friend/$friendCode"
+                                    val sendIntent = Intent().apply {
+                                        action = Intent.ACTION_SEND
+                                        putExtra(Intent.EXTRA_TEXT, "Connect with me on Makarios to declare truth together: $inviteLink")
+                                        type = "text/plain"
+                                    }
+                                    context.startActivity(Intent.createChooser(sendIntent, "Share Invite Link"))
+                                },
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(44.dp),
+                                shape = RoundedCornerShape(12.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Espresso,
+                                    contentColor = Surface
+                                )
+                            ) {
+                                Text(
+                                    text = "Share Link",
+                                    fontFamily = BodyFontFamily,
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 12.5.sp
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            // ── 5. Circle of Friends Card (Safe Wrapping + Avatar Stack) ──
+            if (AuthManager.isLoggedIn && !AuthManager.isAnonymous) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .shadow(1.dp, RoundedCornerShape(20.dp), spotColor = Espresso.copy(alpha = 0.03f))
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(Surface)
+                        .border(0.5.dp, BorderSubtle, RoundedCornerShape(20.dp))
+                        .padding(18.dp)
+                ) {
+                    Column {
+                        // Header row with safe text wrapping and avatar stack on right
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f).padding(end = 12.dp)) {
+                                Text(
+                                    text = "Circle of Friends",
+                                    fontFamily = BodyFontFamily,
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 14.sp,
+                                    color = Espresso
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = if (friends.isEmpty())
+                                        "Connect by @username, email, or code"
+                                    else
+                                        "${friends.size} connected ${if (friends.size == 1) "friend" else "friends"}",
+                                    fontFamily = BodyFontFamily,
+                                    fontSize = 12.sp,
+                                    color = Stone
+                                )
+                            }
+
+                            // Avatar stack on right: up to 3 friends plus +N chip
                             Row(
-                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy((-8).dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                if (friends.isNotEmpty()) {
+                                    val displayFriends = friends.take(3)
+                                    displayFriends.forEach { friend ->
+                                        Box(
+                                            modifier = Modifier
+                                                .size(32.dp)
+                                                .clip(CircleShape)
+                                                .background(Sage)
+                                                .border(1.5.dp, Surface, CircleShape),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Text(
+                                                text = friend.displayName.take(1).uppercase(),
+                                                fontFamily = DisplayFontFamily,
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 12.sp,
+                                                color = Color.White
+                                            )
+                                        }
+                                    }
+                                    if (friends.size > 3) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(32.dp)
+                                                .clip(CircleShape)
+                                                .background(PorcelainWarm)
+                                                .border(1.5.dp, Surface, CircleShape),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Text(
+                                                text = "+${friends.size - 3}",
+                                                fontFamily = BodyFontFamily,
+                                                fontWeight = FontWeight.SemiBold,
+                                                fontSize = 10.sp,
+                                                color = Espresso
+                                            )
+                                        }
+                                    }
+                                } else {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(32.dp)
+                                            .clip(CircleShape)
+                                            .background(PorcelainWarm)
+                                            .border(1.dp, BorderSubtle, CircleShape),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Person,
+                                            contentDescription = null,
+                                            tint = StoneMuted,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        // Connected friends list (chips)
+                        if (friends.isNotEmpty()) {
+                            Spacer(modifier = Modifier.height(14.dp))
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .horizontalScroll(rememberScrollState()),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                friends.forEach { friend ->
+                                    Box(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(12.dp))
+                                            .background(PorcelainWarm)
+                                            .border(0.5.dp, BorderSubtle, RoundedCornerShape(12.dp))
+                                            .padding(horizontal = 10.dp, vertical = 6.dp)
+                                    ) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                        ) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(18.dp)
+                                                    .clip(CircleShape)
+                                                    .background(Sage),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Text(
+                                                    text = friend.displayName.take(1).uppercase(),
+                                                    fontFamily = DisplayFontFamily,
+                                                    fontWeight = FontWeight.Bold,
+                                                    fontSize = 9.sp,
+                                                    color = Color.White
+                                                )
+                                            }
+                                            Text(
+                                                text = if (friend.username.isNotBlank()) "@${friend.username}" else friend.displayName,
+                                                fontFamily = BodyFontFamily,
+                                                fontWeight = FontWeight.Medium,
+                                                fontSize = 11.5.sp,
+                                                color = Espresso
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(14.dp))
+
+                        // Full-width "Add friend" button below
+                        Button(
+                            onClick = { showFindFriendsDialog = true },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(44.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Espresso,
+                                contentColor = Surface
+                            )
+                        ) {
+                            Text(
+                                text = "Add Friend",
+                                fontFamily = BodyFontFamily,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 13.sp
+                            )
+                        }
+                    }
+                }
+            }
+
+            // ── 6. Daily Scripture Reminders (Grouped in One Card) ───
+            AnimatedVisibility(
+                visible = visible,
+                enter = fadeIn(tween(440, delayMillis = 80)) + slideInVertically(tween(440, delayMillis = 80)) { 16 }
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .shadow(1.dp, RoundedCornerShape(22.dp), spotColor = Espresso.copy(alpha = 0.03f))
+                        .clip(RoundedCornerShape(22.dp))
+                        .background(Surface)
+                        .border(0.5.dp, BorderSubtle, RoundedCornerShape(22.dp))
+                        .padding(18.dp)
+                ) {
+                    Column {
+                        // Card Header
+                        Text(
+                            text = "Daily Scripture Reminders",
+                            fontFamily = DisplayFontFamily,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 18.sp,
+                            letterSpacing = (-0.2).sp,
+                            color = Espresso
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = "Receive a quiet, grounding declaration on your lock screen.",
+                            fontFamily = BodyFontFamily,
+                            fontSize = 12.5.sp,
+                            color = Stone
+                        )
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // Master Toggle Row
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f).padding(end = 12.dp)) {
+                                Text(
+                                    text = "Daily Notification",
+                                    fontFamily = BodyFontFamily,
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 14.sp,
+                                    color = Espresso
+                                )
+                                Text(
+                                    text = if (isReminderEnabled) "Active · Delivered gently each morning" else "Turned off",
+                                    fontFamily = BodyFontFamily,
+                                    fontSize = 12.sp,
+                                    color = if (isReminderEnabled) Sage else StoneMuted
+                                )
+                            }
+
+                            Switch(
+                                checked = isReminderEnabled,
+                                onCheckedChange = {
+                                    isReminderEnabled = it
+                                    ReminderManager.setDailyReminderEnabled(context, it)
+                                    if (it) Toast.makeText(context, "Daily reminders active ✓", Toast.LENGTH_SHORT).show()
+                                },
+                                colors = SwitchDefaults.colors(
+                                    checkedThumbColor = Surface,
+                                    checkedTrackColor = Terracotta,
+                                    uncheckedTrackColor = PorcelainWarm
+                                )
+                            )
+                        }
+
+                        if (isReminderEnabled) {
+                            Spacer(modifier = Modifier.height(16.dp))
+                            HorizontalDivider(color = BorderSubtle, thickness = 0.5.dp)
+                            Spacer(modifier = Modifier.height(14.dp))
+
+                            // Delivery Time Selector Row
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(14.dp))
+                                    .background(PorcelainWarm.copy(alpha = 0.6f))
+                                    .border(0.5.dp, BorderSubtle, RoundedCornerShape(14.dp))
+                                    .clickable { showTimePickerDialog = true }
+                                    .padding(horizontal = 14.dp, vertical = 12.dp),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
@@ -1041,88 +889,276 @@ fun ProfileScreen(
                                 ) {
                                     Box(
                                         modifier = Modifier
-                                            .size(36.dp)
-                                            .clip(RoundedCornerShape(10.dp))
-                                            .background(PorcelainWarm),
+                                            .size(32.dp)
+                                            .clip(CircleShape)
+                                            .background(TerracottaLight),
                                         contentAlignment = Alignment.Center
                                     ) {
                                         Icon(
-                                            imageVector = Icons.Default.Widgets,
+                                            imageVector = Icons.Default.AccessTime,
                                             contentDescription = null,
-                                            tint = Espresso,
-                                            modifier = Modifier.size(18.dp)
+                                            tint = Terracotta,
+                                            modifier = Modifier.size(16.dp)
                                         )
                                     }
                                     Column {
-                                        Row(
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                                        ) {
-                                            Text(
-                                                text = "Home Screen Widget",
-                                                fontFamily = BodyFontFamily,
-                                                fontWeight = FontWeight.SemiBold,
-                                                fontSize = 13.5.sp,
-                                                color = Espresso
-                                            )
-                                            Box(
-                                                modifier = Modifier
-                                                    .size(7.dp)
-                                                    .clip(CircleShape)
-                                                    .background(Sage)
-                                            )
-                                        }
                                         Text(
-                                            text = "Ready · Pin directly to your screen",
+                                            text = "Notification Time",
+                                            fontFamily = BodyFontFamily,
+                                            fontWeight = FontWeight.SemiBold,
+                                            fontSize = 13.5.sp,
+                                            color = Espresso
+                                        )
+                                        Text(
+                                            text = "Delivered daily at this time",
                                             fontFamily = BodyFontFamily,
                                             fontSize = 11.5.sp,
-                                            color = StoneMuted
+                                            color = Stone
                                         )
                                     }
                                 }
 
-                                Button(
-                                    onClick = { WidgetHelper.pinWidgetToHomeScreen(context) },
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = Espresso,
-                                        contentColor = Surface
-                                    ),
-                                    shape = RoundedCornerShape(12.dp),
-                                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
-                                    modifier = Modifier.height(34.dp)
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
                                 ) {
-                                    Text("Add Widget", fontFamily = BodyFontFamily, fontWeight = FontWeight.Medium, fontSize = 12.sp)
+                                    Box(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(8.dp))
+                                            .background(Terracotta)
+                                            .padding(horizontal = 10.dp, vertical = 5.dp)
+                                    ) {
+                                        Text(
+                                            text = reminderTimeText,
+                                            fontFamily = BodyFontFamily,
+                                            fontWeight = FontWeight.SemiBold,
+                                            fontSize = 12.sp,
+                                            color = Color.White
+                                        )
+                                    }
                                 }
                             }
 
-                            HorizontalDivider(color = BorderSubtle, thickness = 0.5.dp)
+                            Spacer(modifier = Modifier.height(18.dp))
 
-                            // Active widget declaration preview
                             Column {
                                 Text(
-                                    text = "CURRENT DECLARATION",
-                                    fontFamily = BodyFontFamily,
-                                    fontWeight = FontWeight.SemiBold,
-                                    fontSize = 9.5.sp,
-                                    letterSpacing = 1.3.sp,
-                                    color = StoneMuted
-                                )
-                                Spacer(modifier = Modifier.height(6.dp))
-                                Text(
-                                    text = "“${activeWidgetAffirmation.declaration}”",
-                                    fontFamily = DisplayFontFamily,
-                                    fontStyle = FontStyle.Italic,
-                                    fontSize = 14.sp,
-                                    lineHeight = 20.sp,
-                                    color = Espresso
-                                )
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    text = activeWidgetAffirmation.reference.uppercase(),
+                                    text = "WHICH DECLARATIONS TO RECEIVE",
                                     fontFamily = BodyFontFamily,
                                     fontWeight = FontWeight.SemiBold,
                                     fontSize = 10.sp,
-                                    letterSpacing = 1.sp,
+                                    letterSpacing = 1.4.sp,
+                                    color = StoneMuted
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = "Select what kind of affirmations appear in your notifications.",
+                                    fontFamily = BodyFontFamily,
+                                    fontSize = 11.5.sp,
+                                    color = Stone
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(10.dp))
+
+                            val sources = listOf(
+                                ReminderSourceOption(
+                                    source = ReminderSource.CUSTOM,
+                                    title = "My Created Affirmations",
+                                    subtitle = "Words you personally wrote",
+                                    pill = if (personalCount > 0) "$personalCount authored" else "None yet"
+                                ),
+                                ReminderSourceOption(
+                                    source = ReminderSource.SAVED,
+                                    title = "My Saved Favorites",
+                                    subtitle = "Your bookmarked collection of biblical declarations",
+                                    pill = "$savedCount saved"
+                                ),
+                                ReminderSourceOption(
+                                    source = ReminderSource.ALL,
+                                    title = "Daily Scripture Discovery",
+                                    subtitle = "A fresh biblical truth rotated from the full library each day",
+                                    pill = "$totalCount total"
+                                ),
+                                ReminderSourceOption(
+                                    source = ReminderSource.PINNED,
+                                    title = "Specific Pinned Declaration",
+                                    subtitle = "Keep meditating continuously on a single chosen verse",
+                                    pill = if (ReminderManager.getPinnedAffirmation(context) != null) "Selected" else "Default"
+                                )
+                            )
+
+                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                sources.forEach { opt ->
+                                    val isSelected = selectedReminderSource == opt.source
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clip(RoundedCornerShape(14.dp))
+                                            .background(if (isSelected) PorcelainWarm else Color.Transparent)
+                                            .border(
+                                                width = if (isSelected) 1.dp else 0.5.dp,
+                                                color = if (isSelected) Terracotta.copy(alpha = 0.4f) else BorderSubtle,
+                                                shape = RoundedCornerShape(14.dp)
+                                            )
+                                            .clickable {
+                                                selectedReminderSource = opt.source
+                                                ReminderManager.setReminderSource(context, opt.source)
+                                            }
+                                            .padding(horizontal = 14.dp, vertical = 12.dp)
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Column(modifier = Modifier.weight(1f)) {
+                                                Row(
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                                ) {
+                                                    Text(
+                                                        text = opt.title,
+                                                        fontFamily = BodyFontFamily,
+                                                        fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
+                                                        fontSize = 13.5.sp,
+                                                        color = Espresso
+                                                    )
+                                                    Box(
+                                                        modifier = Modifier
+                                                            .clip(RoundedCornerShape(6.dp))
+                                                            .background(
+                                                                if (isSelected) TerracottaLight else PorcelainWarm
+                                                            )
+                                                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                                                    ) {
+                                                        Text(
+                                                            text = opt.pill,
+                                                            fontFamily = BodyFontFamily,
+                                                            fontWeight = FontWeight.Medium,
+                                                            fontSize = 9.sp,
+                                                            color = if (isSelected) Terracotta else StoneMuted
+                                                        )
+                                                    }
+                                                }
+                                                Spacer(modifier = Modifier.height(2.dp))
+                                                Text(
+                                                    text = opt.subtitle,
+                                                    fontFamily = BodyFontFamily,
+                                                    fontSize = 11.5.sp,
+                                                    color = Stone
+                                                )
+                                            }
+
+                                            if (isSelected) {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .size(20.dp)
+                                                        .clip(CircleShape)
+                                                        .background(Terracotta),
+                                                    contentAlignment = Alignment.Center
+                                                ) {
+                                                    Icon(
+                                                        imageVector = Icons.Default.Check,
+                                                        contentDescription = null,
+                                                        tint = Color.White,
+                                                        modifier = Modifier.size(12.dp)
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Active pool preview
+                            Spacer(modifier = Modifier.height(14.dp))
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(PorcelainWarm.copy(alpha = 0.6f))
+                                    .padding(12.dp)
+                            ) {
+                                Column {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = "TOMORROW'S MESSAGE PREVIEW",
+                                            fontFamily = BodyFontFamily,
+                                            fontWeight = FontWeight.SemiBold,
+                                            fontSize = 9.sp,
+                                            letterSpacing = 1.2.sp,
+                                            color = Terracotta
+                                        )
+                                        Text(
+                                            text = currentPreviewAffirmation.reference.uppercase(),
+                                            fontFamily = BodyFontFamily,
+                                            fontWeight = FontWeight.Medium,
+                                            fontSize = 9.sp,
+                                            color = StoneMuted
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = "“${currentPreviewAffirmation.declaration}”",
+                                        fontFamily = DisplayFontFamily,
+                                        fontStyle = FontStyle.Italic,
+                                        fontSize = 13.sp,
+                                        lineHeight = 18.sp,
+                                        color = Espresso,
+                                        maxLines = 2
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(14.dp))
+
+                            // Test notification button
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(Surface)
+                                    .border(0.5.dp, BorderSubtle, RoundedCornerShape(12.dp))
+                                    .clickable {
+                                        ReminderManager.sendTestNotification(context, isHourly = false)
+                                        Toast.makeText(
+                                            context,
+                                            "Sent a preview notification ✓",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
+                                    .padding(horizontal = 14.dp, vertical = 11.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.NotificationsActive,
+                                        contentDescription = null,
+                                        tint = Terracotta,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Text(
+                                        text = "Send a test notification",
+                                        fontFamily = BodyFontFamily,
+                                        fontWeight = FontWeight.Medium,
+                                        fontSize = 12.5.sp,
+                                        color = Espresso
+                                    )
+                                }
+
+                                Text(
+                                    text = "Test →",
+                                    fontFamily = BodyFontFamily,
+                                    fontWeight = FontWeight.Medium,
+                                    fontSize = 12.sp,
                                     color = Terracotta
                                 )
                             }
@@ -1131,13 +1167,124 @@ fun ProfileScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            // ── 7. Home Screen Widget Card ──────────────────────────
+            AnimatedVisibility(
+                visible = visible,
+                enter = fadeIn(tween(480, delayMillis = 120)) + slideInVertically(tween(480, delayMillis = 120)) { 18 }
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .shadow(1.dp, RoundedCornerShape(22.dp), spotColor = Espresso.copy(alpha = 0.03f))
+                        .clip(RoundedCornerShape(22.dp))
+                        .background(Surface)
+                        .border(0.5.dp, BorderSubtle, RoundedCornerShape(22.dp))
+                        .padding(18.dp)
+                ) {
+                    Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(36.dp)
+                                        .clip(RoundedCornerShape(10.dp))
+                                        .background(PorcelainWarm),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Widgets,
+                                        contentDescription = null,
+                                        tint = Espresso,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
+                                Column {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                    ) {
+                                        Text(
+                                            text = "Home Screen Widget",
+                                            fontFamily = BodyFontFamily,
+                                            fontWeight = FontWeight.SemiBold,
+                                            fontSize = 13.5.sp,
+                                            color = Espresso
+                                        )
+                                        Box(
+                                            modifier = Modifier
+                                                .size(7.dp)
+                                                .clip(CircleShape)
+                                                .background(Sage)
+                                        )
+                                    }
+                                    Text(
+                                        text = "Pin declaration directly to your screen",
+                                        fontFamily = BodyFontFamily,
+                                        fontSize = 11.5.sp,
+                                        color = StoneMuted
+                                    )
+                                }
+                            }
 
-            // ── 4. Welcome Journey ──────────────────────────────────
+                            Button(
+                                onClick = { WidgetHelper.pinWidgetToHomeScreen(context) },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Espresso,
+                                    contentColor = Surface
+                                ),
+                                shape = RoundedCornerShape(12.dp),
+                                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),
+                                modifier = Modifier.height(36.dp)
+                            ) {
+                                Text("Add Widget", fontFamily = BodyFontFamily, fontWeight = FontWeight.Medium, fontSize = 12.sp)
+                            }
+                        }
+
+                        HorizontalDivider(color = BorderSubtle, thickness = 0.5.dp)
+
+                        Column {
+                            Text(
+                                text = "CURRENT DECLARATION",
+                                fontFamily = BodyFontFamily,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 9.5.sp,
+                                letterSpacing = 1.3.sp,
+                                color = StoneMuted
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(
+                                text = "“${activeWidgetAffirmation.declaration}”",
+                                fontFamily = DisplayFontFamily,
+                                fontStyle = FontStyle.Italic,
+                                fontSize = 14.sp,
+                                lineHeight = 20.sp,
+                                color = Espresso
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = activeWidgetAffirmation.reference.uppercase(),
+                                fontFamily = BodyFontFamily,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 10.sp,
+                                letterSpacing = 1.sp,
+                                color = Terracotta
+                            )
+                        }
+                    }
+                }
+            }
+
+            // ── 8. Welcome Journey ──────────────────────────────────
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 20.dp)
                     .shadow(1.dp, RoundedCornerShape(16.dp), spotColor = Espresso.copy(alpha = 0.03f))
                     .clip(RoundedCornerShape(16.dp))
                     .background(Surface)
@@ -1176,13 +1323,32 @@ fun ProfileScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(28.dp))
+            // ── 9. Quiet Sign Out Text Button at Bottom ─────────────
+            if (AuthManager.isLoggedIn && !AuthManager.isAnonymous) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    TextButton(
+                        onClick = { showSignOutConfirm = true },
+                        modifier = Modifier.height(44.dp)
+                    ) {
+                        Text(
+                            text = "Sign Out",
+                            fontFamily = BodyFontFamily,
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 13.sp,
+                            color = StoneMuted
+                        )
+                    }
+                }
+            }
 
-            // ── 5. Free & Sacred Stamp ──────────────────────────────
+            // ── 10. Free & Sacred Stamp ─────────────────────────────
+            Spacer(modifier = Modifier.height(12.dp))
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp),
+                modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
@@ -1212,14 +1378,20 @@ fun ProfileScreen(
         }
     }
 
-    // ── Edit Name Dialog ─────────────────────────────────────────────
-    if (showNameDialog) {
+    // ── Edit Profile Dialog (Name & Handle Together) ─────────────────
+    if (showEditProfileDialog) {
         var tempName by remember { mutableStateOf(userName) }
+        var tempUsername by remember { mutableStateOf(currentProfile?.username.orEmpty()) }
+        var usernameError by remember { mutableStateOf<String?>(null) }
+        var isUpdating by remember { mutableStateOf(false) }
+
+        val isAuthUser = AuthManager.isLoggedIn && !AuthManager.isAnonymous
+
         AlertDialog(
-            onDismissRequest = { showNameDialog = false },
+            onDismissRequest = { if (!isUpdating) showEditProfileDialog = false },
             title = {
                 Text(
-                    text = "Your Name",
+                    text = "Edit Profile",
                     fontFamily = DisplayFontFamily,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 20.sp,
@@ -1229,16 +1401,28 @@ fun ProfileScreen(
             text = {
                 Column {
                     Text(
-                        text = "How would you like Makarios to greet you each morning?",
+                        text = "Customize how Makarios greets you and how friends recognize you.",
                         fontFamily = BodyFontFamily,
                         fontSize = 13.sp,
                         color = Stone
                     )
-                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    Text(
+                        text = "YOUR NAME",
+                        fontFamily = BodyFontFamily,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 10.sp,
+                        letterSpacing = 1.2.sp,
+                        color = StoneMuted
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
                     OutlinedTextField(
                         value = tempName,
                         onValueChange = { tempName = it },
                         singleLine = true,
+                        placeholder = { Text("e.g. David", color = StoneMuted) },
                         shape = RoundedCornerShape(12.dp),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = Terracotta,
@@ -1246,24 +1430,90 @@ fun ProfileScreen(
                         ),
                         modifier = Modifier.fillMaxWidth()
                     )
+
+                    if (isAuthUser) {
+                        Spacer(modifier = Modifier.height(14.dp))
+                        Text(
+                            text = "COMMUNITY @HANDLE",
+                            fontFamily = BodyFontFamily,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 10.sp,
+                            letterSpacing = 1.2.sp,
+                            color = StoneMuted
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        OutlinedTextField(
+                            value = tempUsername,
+                            onValueChange = { input ->
+                                tempUsername = input
+                                val validation = UsernameValidator.validate(input)
+                                usernameError = if (validation is UsernameValidator.ValidationResult.Invalid) validation.message else null
+                            },
+                            prefix = {
+                                Text("@", fontFamily = BodyFontFamily, fontWeight = FontWeight.SemiBold, color = Terracotta)
+                            },
+                            singleLine = true,
+                            isError = usernameError != null,
+                            supportingText = {
+                                if (usernameError != null) {
+                                    Text(usernameError!!, color = Terracotta, fontSize = 11.sp)
+                                } else {
+                                    Text("3-20 letters, numbers, and underscores", fontSize = 11.sp, color = StoneMuted)
+                                }
+                            },
+                            shape = RoundedCornerShape(12.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = Terracotta,
+                                unfocusedBorderColor = Border
+                            ),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
                 }
             },
             confirmButton = {
                 TextButton(
+                    enabled = !isUpdating && (usernameError == null || !isAuthUser),
                     onClick = {
-                        val trimmed = tempName.trim()
-                        if (trimmed.isNotEmpty()) {
-                            userName = trimmed
-                            ReminderManager.setUserName(context, trimmed)
+                        val trimmedName = tempName.trim()
+                        if (trimmedName.isNotEmpty()) {
+                            userName = trimmedName
+                            ReminderManager.setUserName(context, trimmedName)
                         }
-                        showNameDialog = false
+
+                        if (isAuthUser && tempUsername.isNotBlank() && tempUsername != currentProfile?.username) {
+                            isUpdating = true
+                            CommunityRepository.updateUsername(
+                                newUsername = tempUsername,
+                                onSuccess = {
+                                    isUpdating = false
+                                    showEditProfileDialog = false
+                                    Toast.makeText(context, "Profile updated ✓", Toast.LENGTH_SHORT).show()
+                                },
+                                onError = { err ->
+                                    isUpdating = false
+                                    usernameError = err
+                                }
+                            )
+                        } else {
+                            showEditProfileDialog = false
+                            Toast.makeText(context, "Profile saved ✓", Toast.LENGTH_SHORT).show()
+                        }
                     }
                 ) {
-                    Text("Save", fontFamily = BodyFontFamily, fontWeight = FontWeight.SemiBold, color = Terracotta)
+                    Text(
+                        text = if (isUpdating) "Saving…" else "Save",
+                        fontFamily = BodyFontFamily,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Terracotta
+                    )
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showNameDialog = false }) {
+                TextButton(
+                    enabled = !isUpdating,
+                    onClick = { showEditProfileDialog = false }
+                ) {
                     Text("Cancel", fontFamily = BodyFontFamily, color = Stone)
                 }
             },
@@ -1350,100 +1600,6 @@ fun ProfileScreen(
         )
     }
 
-    // ── Edit Username Dialog ─────────────────────────────────────────
-    if (showUsernameDialog) {
-        var candidateUsername by remember { mutableStateOf(currentProfile?.username.orEmpty()) }
-        var usernameError by remember { mutableStateOf<String?>(null) }
-        var isUpdating by remember { mutableStateOf(false) }
-
-        AlertDialog(
-            onDismissRequest = { if (!isUpdating) showUsernameDialog = false },
-            title = {
-                Text(
-                    text = "Choose Username",
-                    fontFamily = DisplayFontFamily,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 20.sp,
-                    color = Espresso
-                )
-            },
-            text = {
-                Column {
-                    Text(
-                        text = "Your @handle allows friends to find and connect with you on Makarios.",
-                        fontFamily = BodyFontFamily,
-                        fontSize = 13.sp,
-                        color = Stone
-                    )
-                    Spacer(modifier = Modifier.height(14.dp))
-                    OutlinedTextField(
-                        value = candidateUsername,
-                        onValueChange = { input ->
-                            candidateUsername = input
-                            val validation = UsernameValidator.validate(input)
-                            usernameError = if (validation is UsernameValidator.ValidationResult.Invalid) validation.message else null
-                        },
-                        prefix = {
-                            Text("@", fontFamily = BodyFontFamily, fontWeight = FontWeight.SemiBold, color = Terracotta)
-                        },
-                        singleLine = true,
-                        isError = usernameError != null,
-                        supportingText = {
-                            if (usernameError != null) {
-                                Text(usernameError!!, color = Terracotta, fontSize = 11.sp)
-                            } else {
-                                Text("3-20 letters, numbers, and underscores", fontSize = 11.sp, color = StoneMuted)
-                            }
-                        },
-                        shape = RoundedCornerShape(12.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Terracotta,
-                            unfocusedBorderColor = Border
-                        ),
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-            },
-            confirmButton = {
-                TextButton(
-                    enabled = !isUpdating && usernameError == null && candidateUsername.isNotBlank(),
-                    onClick = {
-                        isUpdating = true
-                        CommunityRepository.updateUsername(
-                            newUsername = candidateUsername,
-                            onSuccess = {
-                                isUpdating = false
-                                showUsernameDialog = false
-                                Toast.makeText(context, "Username updated to @${UsernameValidator.normalize(candidateUsername)} ✓", Toast.LENGTH_SHORT).show()
-                            },
-                            onError = { err ->
-                                isUpdating = false
-                                usernameError = err
-                            }
-                        )
-                    }
-                ) {
-                    Text(
-                        text = if (isUpdating) "Saving…" else "Save",
-                        fontFamily = BodyFontFamily,
-                        fontWeight = FontWeight.SemiBold,
-                        color = Terracotta
-                    )
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    enabled = !isUpdating,
-                    onClick = { showUsernameDialog = false }
-                ) {
-                    Text("Cancel", fontFamily = BodyFontFamily, color = Stone)
-                }
-            },
-            containerColor = Surface,
-            shape = RoundedCornerShape(20.dp)
-        )
-    }
-
     // ── Find Friends Dialog ───────────────────────────────────────────
     if (showFindFriendsDialog) {
         FindFriendsDialog(
@@ -1470,14 +1626,15 @@ private fun StatCadenceItem(count: String, label: String) {
             text = count,
             fontFamily = DisplayFontFamily,
             fontWeight = FontWeight.SemiBold,
-            fontSize = 16.sp,
+            fontSize = 17.sp,
             color = Espresso
         )
+        Spacer(modifier = Modifier.height(2.dp))
         Text(
             text = label.uppercase(),
             fontFamily = BodyFontFamily,
             fontWeight = FontWeight.Medium,
-            fontSize = 9.sp,
+            fontSize = 9.5.sp,
             letterSpacing = 1.sp,
             color = StoneMuted
         )

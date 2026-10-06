@@ -111,9 +111,21 @@ class VectorSearchEngine private constructor(private val context: Context) {
 
     /**
      * Searches the entire 31,000+ Bible verse corpus for the closest semantic matches.
-     * Returns topK ranked verses with devotional weighting and keyword boosting.
+     *
+     * Hybrid scoring:
+     *   finalScore = (vectorCosineSimilarity × 0.7) + (normalisedKeywordScore × 0.3) × devotionalMultiplier
+     *
+     * Returns the top [topK] results sorted by hybrid score, descending.
+     * Tone post-filtering is handled in the caller (CreateScreen) where ScriptureDatabase
+     * tone metadata is available.
+     *
+     * @param query  The user's declaration text
+     * @param topK   How many results to return (default 10)
      */
-    suspend fun search(query: String, topK: Int = 8): List<VerseMatch> = withContext(Dispatchers.Default) {
+    suspend fun search(
+        query: String,
+        topK: Int = 10
+    ): List<VerseMatch> = withContext(Dispatchers.Default) {
         if (!isInitialized) {
             initialize()
         }
@@ -121,15 +133,8 @@ class VectorSearchEngine private constructor(private val context: Context) {
         val queryVector = embedQuery(query) ?: return@withContext emptyList()
         val buffer = embeddingsBuffer ?: return@withContext emptyList()
 
-        val minHeap = PriorityQueue<VerseMatch>(topK + 1, compareBy { it.score })
-
-        // Extract key terms for topical keyword boosting
-        val stopWords = setOf("the", "and", "that", "this", "with", "for", "from", "have", "you", "your", "they", "will", "are", "was", "were")
-        val queryKeywords = query.lowercase()
-            .replace(Regex("[^a-z\\s]"), "")
-            .split("\\s+".toRegex())
-            .filter { it.length >= 3 && it !in stopWords }
-            .toSet()
+        // Stemmed & synonym-expanded keywords for hybrid keyword component
+        val queryKeywords = ScriptureMatcher.expandSynonyms(ScriptureMatcher.tokenize(query))
 
         // Duplicate buffer to be thread-safe; header is 8 bytes (2 ints)
         val dup = buffer.duplicate()
@@ -138,11 +143,14 @@ class VectorSearchEngine private constructor(private val context: Context) {
         val floatBuffer = dup.asFloatBuffer()
         val tempVerseVector = FloatArray(vectorDim)
 
+        // Collect top results by hybrid score using a min-heap
+        val minHeap = PriorityQueue<VerseMatch>(topK + 1, compareBy { it.score })
+
         for (i in 0 until numVerses) {
             floatBuffer.position(i * vectorDim)
             floatBuffer.get(tempVerseVector)
 
-            // Both vectors are L2-normalized, so cosine similarity is the dot product
+            // Both vectors are L2-normalized; cosine similarity = dot product
             var dot = 0f
             for (d in 0 until vectorDim) {
                 dot += queryVector[d] * tempVerseVector[d]
@@ -150,20 +158,19 @@ class VectorSearchEngine private constructor(private val context: Context) {
 
             val verse = verses.getOrNull(i) ?: continue
 
-            // Hybrid Keyword Boost: if the verse text contains core query keywords,
-            // reward direct promises so queries like "healed", "peace", "fear" strongly elevate matching verses
-            var keywordBonus = 0f
-            if (queryKeywords.isNotEmpty()) {
+            // Keyword component — normalised to [0, 1] using stemmed tokens
+            val keywordBonus = if (queryKeywords.isNotEmpty()) {
                 val verseLower = verse.text.lowercase()
                 val hits = queryKeywords.count { kw -> verseLower.contains(kw) }
-                if (hits > 0) {
-                    keywordBonus = (hits * 0.12f).coerceAtMost(0.36f)
-                }
-            }
+                (hits.toFloat() / queryKeywords.size.toFloat()).coerceIn(0f, 1f)
+            } else 0f
 
-            // Devotional Weighting: 1.15x multiplier if verse is in the devotional canon
-            val devotionalMultiplier = if (verse.isDevotional) 1.15f else 1.0f
-            val finalScore = (dot + keywordBonus) * devotionalMultiplier
+            // Hybrid: 70% semantic vector + 30% keyword overlap
+            val hybridScore = (dot * 0.7f) + (keywordBonus * 0.3f)
+
+            // Devotional weighting: 1.12x multiplier for curated promise verses
+            val devotionalMultiplier = if (verse.isDevotional) 1.12f else 1.0f
+            val finalScore = hybridScore * devotionalMultiplier
 
             val match = VerseMatch(
                 reference = verse.reference,
@@ -178,11 +185,10 @@ class VectorSearchEngine private constructor(private val context: Context) {
             }
         }
 
+        // Sort descending (best match first)
         val results = ArrayList<VerseMatch>(minHeap.size)
-        while (minHeap.isNotEmpty()) {
-            results.add(minHeap.poll())
-        }
-        results.reverse() // Sort descending (best match first)
+        while (minHeap.isNotEmpty()) results.add(minHeap.poll())
+        results.reverse()
         results
     }
 

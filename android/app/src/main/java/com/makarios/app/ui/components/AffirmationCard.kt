@@ -17,9 +17,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -58,17 +61,16 @@ fun AffirmationCard(
             modifier = Modifier.matchParentSize()
         )
 
-        // ── 2. Radiant Breathable Scrim ─────────────────────────────
+        // ── 2. Radiant Breathable Scrim (transparent at top to black ~65% at bottom) ──
         Box(
             modifier = Modifier
                 .matchParentSize()
                 .background(
                     Brush.verticalGradient(
-                        colors = listOf(
-                            Color.Black.copy(alpha = 0.08f),
-                            Color.Black.copy(alpha = 0.30f),
-                            Color(0xD91E1916)
-                        )
+                        0f to Color.Transparent,
+                        0.40f to Color.Black.copy(alpha = 0.20f),
+                        0.70f to Color.Black.copy(alpha = 0.48f),
+                        1f to Color.Black.copy(alpha = 0.65f)
                     )
                 )
         )
@@ -153,7 +155,14 @@ fun AffirmationCard(
                 fontSize = 22.sp,
                 lineHeight = 31.sp,
                 letterSpacing = (-0.2).sp,
-                color = Color.White
+                color = Color.White,
+                style = TextStyle(
+                    shadow = Shadow(
+                        color = Color.Black.copy(alpha = 0.60f),
+                        offset = Offset(0f, 2f),
+                        blurRadius = 8f
+                    )
+                )
             )
 
             Spacer(modifier = Modifier.height(18.dp))

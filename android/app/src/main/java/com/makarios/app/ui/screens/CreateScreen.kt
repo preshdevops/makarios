@@ -249,16 +249,35 @@ fun CreateScreen(
             isMatching = true
             coroutineScope.launch {
                 try {
-                    val vectorResults = VectorSearchEngine.getInstance(context).search(query, topK = 10)
+                    // 1. Semantic vector search across 31k verses (hybrid scored)
+                    val vectorResults = VectorSearchEngine.getInstance(context).search(query, topK = 20)
+
                     if (vectorResults.isNotEmpty()) {
-                        vectorMatches = vectorResults
+                        // 2. Tone post-filter: build a lookup of references that have a known tone
+                        //    from the curated ScriptureDatabase (120 devotional verses with toneAffinity)
+                        val toneDb: Map<String, AffirmationTone> = ScriptureDatabase.verses
+                            .associateBy({ it.reference }, { it.toneAffinity })
+
+                        val ordered = if (selectedTone != null) {
+                            val toneMatched = vectorResults.filter { toneDb[it.reference] == selectedTone }
+                            val unmatched  = vectorResults.filter { toneDb[it.reference] != selectedTone }
+                            // Prefer tone-matched but don't drop the rest — user can cycle through all
+                            (toneMatched + unmatched)
+                        } else {
+                            vectorResults
+                        }
+
+                        vectorMatches = ordered
+                        matchResults = emptyList()
                         matchIndex = 0
-                        matchedReference = vectorResults[0].reference
-                        matchedScripture = vectorResults[0].text
+                        matchedReference = ordered[0].reference
+                        matchedScripture = ordered[0].text
                         stage = CreateStage.MATCH
                     } else {
+                        // 3. Fallback: keyword + theme match on curated 120-verse corpus
                         val fallback = ScriptureMatcher.match(query, selectedTone)
                         matchResults = fallback
+                        vectorMatches = emptyList()
                         matchIndex = 0
                         if (fallback.isNotEmpty()) {
                             matchedReference = fallback[0].verse.reference
@@ -269,6 +288,7 @@ fun CreateScreen(
                 } catch (e: Exception) {
                     val fallback = ScriptureMatcher.match(query, selectedTone)
                     matchResults = fallback
+                    vectorMatches = emptyList()
                     matchIndex = 0
                     if (fallback.isNotEmpty()) {
                         matchedReference = fallback[0].verse.reference
@@ -602,7 +622,7 @@ private fun WriteStage(
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                Box(modifier = Modifier.fillMaxWidth().heightIn(min = 120.dp)) {
+                Box(modifier = Modifier.fillMaxWidth().heightIn(min = 80.dp)) {
                     if (declarationText.isEmpty()) {
                         Text(
                             text = "e.g. I am not moved by fear. I walk in perfect peace because my trust is in Him…",
@@ -653,7 +673,10 @@ private fun WriteStage(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
             listOf(
                 "Still & Restful" to AffirmationTone.STILL,
                 "Bold & Resolute" to AffirmationTone.RESOLUTE,
@@ -662,6 +685,8 @@ private fun WriteStage(
                 val isSelected = selectedTone == tone
                 Box(
                     modifier = Modifier
+                        .weight(1f)
+                        .height(44.dp)
                         .clip(RoundedCornerShape(20.dp))
                         .background(if (isSelected) Espresso else Surface)
                         .border(
@@ -669,15 +694,18 @@ private fun WriteStage(
                             color = if (isSelected) Color.Transparent else Border,
                             shape = RoundedCornerShape(20.dp)
                         )
-                        .clickable { onToneSelect(if (isSelected) null else tone) }
-                        .padding(horizontal = 14.dp, vertical = 8.dp)
+                        .clickable { onToneSelect(if (isSelected) null else tone) },
+                    contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = label,
                         fontFamily = BodyFontFamily,
                         fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-                        fontSize = 12.sp,
-                        color = if (isSelected) Color.White else Espresso
+                        fontSize = 11.5.sp,
+                        maxLines = 1,
+                        softWrap = false,
+                        color = if (isSelected) Color.White else Espresso,
+                        textAlign = TextAlign.Center
                     )
                 }
             }

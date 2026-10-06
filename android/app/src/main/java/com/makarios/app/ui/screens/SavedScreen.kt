@@ -23,10 +23,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -585,11 +588,9 @@ private fun WallpaperCard(
                     .fillMaxSize()
                     .background(
                         Brush.verticalGradient(
-                            listOf(
-                                Color(0x66000000),
-                                Color(0x99000000),
-                                Color(0xEB0A0806)
-                            )
+                            0f to Color.Transparent,
+                            0.45f to Color.Black.copy(alpha = 0.25f),
+                            1f to Color.Black.copy(alpha = 0.65f)
                         )
                     )
             )
@@ -621,7 +622,14 @@ private fun WallpaperCard(
                     lineHeight = 20.sp,
                     textAlign = TextAlign.Center,
                     color = if (wallpaper.photoUrl != null) Color.White else wallpaper.textColor,
-                    maxLines = 4
+                    maxLines = 4,
+                    style = TextStyle(
+                        shadow = Shadow(
+                            color = Color.Black.copy(alpha = 0.60f),
+                            offset = Offset(0f, 1.5f),
+                            blurRadius = 6f
+                        )
+                    )
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Box(

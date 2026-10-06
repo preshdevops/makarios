@@ -31,10 +31,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -223,16 +226,16 @@ private fun SanctuaryHero(
                 .heightIn(min = 420.dp)
         )
 
-        // Luminous scrim — breathes from top, deepens at bottom for legibility
+        // Luminous scrim — transparent at top to black ~65% at bottom for guaranteed legibility
         Box(
             modifier = Modifier
                 .matchParentSize()
                 .background(
                     Brush.verticalGradient(
-                        0f to Color.Black.copy(alpha = 0.04f),
-                        0.35f to Color.Black.copy(alpha = 0.12f),
-                        0.72f to Color.Black.copy(alpha = 0.48f),
-                        1f to Color(0xE61C1714)
+                        0f to Color.Transparent,
+                        0.35f to Color.Black.copy(alpha = 0.18f),
+                        0.68f to Color.Black.copy(alpha = 0.45f),
+                        1f to Color.Black.copy(alpha = 0.65f)
                     )
                 )
         )
@@ -240,19 +243,19 @@ private fun SanctuaryHero(
         Column(
             modifier = Modifier
                 .matchParentSize()
-                .padding(start = 26.dp, end = 26.dp, top = 26.dp, bottom = 26.dp),
+                .padding(horizontal = 22.dp, vertical = 22.dp),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            // Top row — category chip only, no label clutter
+            // Top row — category chip + high-contrast "Today's Declaration" pill
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(10.dp))
-                        .background(Color.White.copy(alpha = 0.18f))
+                        .background(Color.White.copy(alpha = 0.20f))
                         .padding(horizontal = 10.dp, vertical = 4.dp)
                 ) {
                     Text(
@@ -265,108 +268,131 @@ private fun SanctuaryHero(
                     )
                 }
 
-                Text(
-                    text = "Today's Declaration",
-                    fontFamily = DisplayFontFamily,
-                    fontStyle = FontStyle.Italic,
-                    fontSize = 13.sp,
-                    color = Color.White.copy(alpha = 0.75f)
-                )
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color.Black.copy(alpha = 0.25f))
+                        .padding(horizontal = 10.dp, vertical = 4.dp)
+                ) {
+                    Text(
+                        text = "Today's Declaration",
+                        fontFamily = DisplayFontFamily,
+                        fontStyle = FontStyle.Italic,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 12.5.sp,
+                        color = Color.White
+                    )
+                }
             }
 
-            // Declaration + scripture — generous breathing room at bottom
+            // Declaration + scripture + scripture reference + action buttons
             Column {
                 Text(
-                    text = "\u201c${affirmation.declaration}\u201d",
+                    text = "“${affirmation.declaration}”",
                     fontFamily = DisplayFontFamily,
                     fontWeight = FontWeight.Medium,
                     fontSize = 26.sp,
                     lineHeight = 35.sp,
                     letterSpacing = (-0.3).sp,
-                    color = Color.White
+                    color = Color.White,
+                    style = TextStyle(
+                        shadow = Shadow(
+                            color = Color.Black.copy(alpha = 0.60f),
+                            offset = Offset(0f, 2f),
+                            blurRadius = 8f
+                        )
+                    )
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(14.dp))
 
                 Text(
-                    text = "\u201c${affirmation.scriptureText}\u201d",
+                    text = "“${affirmation.scriptureText}”",
                     fontFamily = DisplayFontFamily,
                     fontStyle = FontStyle.Italic,
                     fontWeight = FontWeight.Normal,
                     fontSize = 14.5.sp,
                     lineHeight = 21.sp,
-                    color = Color.White.copy(alpha = 0.85f)
+                    color = Color.White.copy(alpha = 0.90f),
+                    style = TextStyle(
+                        shadow = Shadow(
+                            color = Color.Black.copy(alpha = 0.45f),
+                            offset = Offset(0f, 1f),
+                            blurRadius = 6f
+                        )
+                    )
                 )
 
-                Spacer(modifier = Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(14.dp))
 
-                // Bottom row — reference + minimal action icons
+                // Scripture reference moved to its own line above the action row (no collision)
+                Text(
+                    text = affirmation.reference.uppercase(),
+                    fontFamily = BodyFontFamily,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 10.5.sp,
+                    letterSpacing = 1.6.sp,
+                    color = Color.White.copy(alpha = 0.75f)
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Action icons in a single evenly spaced row aligned to card's inner padding
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = affirmation.reference.uppercase(),
-                        fontFamily = BodyFontFamily,
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 10.5.sp,
-                        letterSpacing = 1.6.sp,
-                        color = Color.White.copy(alpha = 0.70f)
-                    )
+                    SpringIconButton(
+                        onClick = { WidgetHelper.setWidgetAffirmation(context, affirmation) },
+                        contentDescription = "Set as Widget"
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Widgets,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
 
-                    Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
-                        SpringIconButton(
-                            onClick = { WidgetHelper.setWidgetAffirmation(context, affirmation) },
-                            contentDescription = "Set as Widget"
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Widgets,
-                                contentDescription = null,
-                                tint = Color.White,
-                                modifier = Modifier.size(15.dp)
-                            )
-                        }
+                    SpringIconButton(
+                        onClick = {
+                            ReminderManager.setPinnedAffirmation(context, affirmation)
+                            Toast.makeText(context, "Set as daily notification ✓", Toast.LENGTH_SHORT).show()
+                        },
+                        contentDescription = "Set as Notification"
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Notifications,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
 
-                        SpringIconButton(
-                            onClick = {
-                                ReminderManager.setPinnedAffirmation(context, affirmation)
-                                Toast.makeText(context, "Set as daily notification ✓", Toast.LENGTH_SHORT).show()
-                            },
-                            contentDescription = "Set as Notification"
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Notifications,
-                                contentDescription = null,
-                                tint = Color.White,
-                                modifier = Modifier.size(15.dp)
-                            )
-                        }
+                    SpringIconButton(
+                        onClick = onShare,
+                        contentDescription = "Share"
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Share,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
 
-                        SpringIconButton(
-                            onClick = onShare,
-                            contentDescription = "Share"
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Share,
-                                contentDescription = null,
-                                tint = Color.White,
-                                modifier = Modifier.size(15.dp)
-                            )
-                        }
-
-                        SpringIconButton(
-                            onClick = onToggleSave,
-                            contentDescription = if (isSaved) "Unsave" else "Save",
-                            filled = isSaved
-                        ) {
-                            Icon(
-                                imageVector = if (isSaved) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                                contentDescription = null,
-                                tint = Color.White,
-                                modifier = Modifier.size(15.dp)
-                            )
-                        }
+                    SpringIconButton(
+                        onClick = onToggleSave,
+                        contentDescription = if (isSaved) "Unsave" else "Save",
+                        filled = isSaved
+                    ) {
+                        Icon(
+                            imageVector = if (isSaved) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(18.dp)
+                        )
                     }
                 }
             }
@@ -374,7 +400,7 @@ private fun SanctuaryHero(
     }
 }
 
-// Pressable icon button with a satisfying spring scale micro-animation
+// Pressable icon button with a satisfying spring scale micro-animation (40px circular)
 @Composable
 private fun SpringIconButton(
     onClick: () -> Unit,
@@ -392,7 +418,7 @@ private fun SpringIconButton(
 
     Box(
         modifier = Modifier
-            .size(36.dp)
+            .size(40.dp)
             .scale(scale)
             .clip(CircleShape)
             .background(
