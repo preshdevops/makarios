@@ -29,12 +29,12 @@ object ScriptureText {
         text = text.replace(Regex("(^|[\\s(\\[])[\"]\\s+"), "$1\"")
         text = text.replace(Regex("(^|[\\s(\\[])[“]\\s+"), "$1“")
 
-        // Remove space before closing quotes: (word " -> word", word ” -> word”)
-        text = text.replace(Regex("\\s+[\"]"), "\"")
-        text = text.replace(Regex("\\s+[”]"), "”")
-
         // Re-check space before punctuation that may have been adjacent to quotes
         text = text.replace(Regex("\\s+([.,;:?!\\)])"), "$1")
+
+        // Normalize doubled closing quotes again after space removal
+        text = text.replace(Regex("\"\\s*\""), "\"")
+        text = text.replace(Regex("”\\s*”"), "”")
 
         // Collapse multiple whitespace down to single space
         text = text.replace(Regex("[ \\t]+"), " ")

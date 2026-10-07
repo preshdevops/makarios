@@ -51,9 +51,12 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import com.makarios.app.data.Affirmation
+import com.makarios.app.data.AffirmationTone
 import com.makarios.app.data.BibleVerseEntry
 import com.makarios.app.data.BibleVersion
 import com.makarios.app.data.BibleVersionRepository
+import com.makarios.app.data.PhotoLibrary
 import com.makarios.app.data.ScriptureDatabase
 import com.makarios.app.data.bible.BibleReaderPrefs
 import com.makarios.app.data.bible.ReaderTheme
@@ -579,129 +582,131 @@ fun ScripturePickerSheet(
             }
 
             // ── Floating Action Bar (when >= 1 verses selected) ───────────────
-            AnimatedVisibility(
-                visible = selectedVerseNumbers.isNotEmpty(),
-                enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
-                exit = slideOutVertically(targetOffsetY = { it }) + fadeOut(),
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(horizontal = 16.dp, vertical = 18.dp)
-            ) {
-                Surface(
-                    shape = RoundedCornerShape(20.dp),
-                    color = Espresso,
-                    shadowElevation = 8.dp,
-                    modifier = Modifier.fillMaxWidth()
+            if (selectedVerseNumbers.isNotEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(horizontal = 16.dp, vertical = 18.dp)
                 ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 12.dp, vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
+                    Surface(
+                        shape = RoundedCornerShape(20.dp),
+                        color = Espresso,
+                        shadowElevation = 8.dp,
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        // Use as match (Primary)
-                        Button(
-                            onClick = {
-                                val ref = formatSelectedReference()
-                                val text = getSelectedVersesText()
-                                onVerseSelected(ref, text)
-                                onDismiss()
-                            },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Olive,
-                                contentColor = Color.White
-                            ),
-                            shape = RoundedCornerShape(12.dp),
-                            contentPadding = PaddingValues(horizontal = 14.dp, vertical = 10.dp)
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 12.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Text(
-                                text = "Use as match",
-                                fontFamily = BodyFontFamily,
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 13.sp
-                            )
-                        }
-
-                        // Copy
-                        IconButton(
-                            onClick = {
-                                val ref = formatSelectedReference()
-                                val text = getSelectedVersesText()
-                                val formatted = ScriptureText.formatForCopy(ref, text, selectedVersion.displayName)
-                                val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                                cm.setPrimaryClip(ClipData.newPlainText("Scripture", formatted))
-                                Toast.makeText(context, "Copied $ref", Toast.LENGTH_SHORT).show()
-                                selectedVerseNumbers = emptySet()
-                            }
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.ContentCopy,
-                                contentDescription = "Copy",
-                                tint = Color.White,
-                                modifier = Modifier.size(19.dp)
-                            )
-                        }
-
-                        // Share image
-                        IconButton(
-                            onClick = {
-                                val ref = formatSelectedReference()
-                                val text = getSelectedVersesText()
-                                val aff = com.makarios.app.data.Affirmation(
-                                    id = "shared_${System.currentTimeMillis()}",
-                                    declaration = text,
-                                    scriptureText = text,
-                                    reference = ref,
-                                    category = selectedBook
+                            // Use as match (Primary)
+                            Button(
+                                onClick = {
+                                    val ref = formatSelectedReference()
+                                    val text = getSelectedVersesText()
+                                    onVerseSelected(ref, text)
+                                    onDismiss()
+                                },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Olive,
+                                    contentColor = Color.White
+                                ),
+                                shape = RoundedCornerShape(12.dp),
+                                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 10.dp)
+                            ) {
+                                Text(
+                                    text = "Use as match",
+                                    fontFamily = BodyFontFamily,
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 13.sp
                                 )
-                                ShareHelper.shareAffirmationGraphic(context, aff)
-                                selectedVerseNumbers = emptySet()
                             }
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Share,
-                                contentDescription = "Share image",
-                                tint = Color.White,
-                                modifier = Modifier.size(19.dp)
-                            )
-                        }
 
-                        // Highlight
-                        IconButton(
-                            onClick = {
-                                val current = highlights.toMutableSet()
-                                val chapterVerses = selectedVerseNumbers.map { "$selectedBook $selectedChapter:$it" }
-                                val anyHighlighted = chapterVerses.any { current.contains(it) }
-
-                                chapterVerses.forEach { ref ->
-                                    BibleReaderPrefs.toggleHighlight(context, ref)
+                            // Copy
+                            IconButton(
+                                onClick = {
+                                    val ref = formatSelectedReference()
+                                    val text = getSelectedVersesText()
+                                    val formatted = ScriptureText.formatForCopy(ref, text, selectedVersion.displayName)
+                                    val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                                    cm.setPrimaryClip(ClipData.newPlainText("Scripture", formatted))
+                                    Toast.makeText(context, "Copied $ref", Toast.LENGTH_SHORT).show()
+                                    selectedVerseNumbers = emptySet()
                                 }
-                                highlights = BibleReaderPrefs.getHighlights(context)
-                                Toast.makeText(
-                                    context,
-                                    if (anyHighlighted) "Removed highlight" else "Highlighted",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                                selectedVerseNumbers = emptySet()
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.ContentCopy,
+                                    contentDescription = "Copy",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(19.dp)
+                                )
                             }
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Highlight,
-                                contentDescription = "Highlight",
-                                tint = Color.White,
-                                modifier = Modifier.size(19.dp)
-                            )
-                        }
 
-                        // Clear selection
-                        IconButton(onClick = { selectedVerseNumbers = emptySet() }) {
-                            Icon(
-                                imageVector = Icons.Default.Close,
-                                contentDescription = "Cancel selection",
-                                tint = StoneMuted,
-                                modifier = Modifier.size(18.dp)
-                            )
+                            // Share image
+                            IconButton(
+                                onClick = {
+                                    val ref = formatSelectedReference()
+                                    val text = getSelectedVersesText()
+                                    val aff = Affirmation(
+                                        id = "shared_${System.currentTimeMillis()}",
+                                        declaration = text,
+                                        scriptureText = text,
+                                        reference = ref,
+                                        context = "Bible Selection",
+                                        category = selectedBook,
+                                        tone = AffirmationTone.RESOLUTE,
+                                        imageUrl = PhotoLibrary.getThemePhoto(selectedBook).url()
+                                    )
+                                    ShareHelper.shareAffirmationGraphic(context, aff)
+                                    selectedVerseNumbers = emptySet()
+                                }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Share,
+                                    contentDescription = "Share image",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(19.dp)
+                                )
+                            }
+
+                            // Highlight
+                            IconButton(
+                                onClick = {
+                                    val current = highlights.toMutableSet()
+                                    val chapterVerses = selectedVerseNumbers.map { "$selectedBook $selectedChapter:$it" }
+                                    val anyHighlighted = chapterVerses.any { current.contains(it) }
+
+                                    chapterVerses.forEach { ref ->
+                                        BibleReaderPrefs.toggleHighlight(context, ref)
+                                    }
+                                    highlights = BibleReaderPrefs.getHighlights(context)
+                                    Toast.makeText(
+                                        context,
+                                        if (anyHighlighted) "Removed highlight" else "Highlighted",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                    selectedVerseNumbers = emptySet()
+                                }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Highlight,
+                                    contentDescription = "Highlight",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(19.dp)
+                                )
+                            }
+
+                            // Clear selection
+                            IconButton(onClick = { selectedVerseNumbers = emptySet() }) {
+                                Icon(
+                                    imageVector = Icons.Default.Close,
+                                    contentDescription = "Cancel selection",
+                                    tint = StoneMuted,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
                         }
                     }
                 }
