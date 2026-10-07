@@ -72,16 +72,16 @@ class ImageEngineTest {
     fun safeMargins_adhereToLegibilityGuidelines() {
         for (format in ImageOutputFormat.values()) {
             // 8% horizontal safe margins
-            assertEquals(0.08f, format.horizontalSafeRatio, 0.001f)
+            assertEquals(0.08, format.horizontalSafeRatio.toDouble(), 0.001)
             val horizontalMarginPx = format.width * format.horizontalSafeRatio
-            assertEquals(86.4f, horizontalMarginPx, 0.01f)
+            assertEquals(86.4, horizontalMarginPx.toDouble(), 0.01)
         }
 
         // Story requires 14% top & bottom clearance for Instagram/Snapchat UI overlays
-        assertEquals(0.14f, ImageOutputFormat.STORY.topSafeRatio, 0.001f)
-        assertEquals(0.14f, ImageOutputFormat.STORY.bottomSafeRatio, 0.001f)
+        assertEquals(0.14, ImageOutputFormat.STORY.topSafeRatio.toDouble(), 0.001)
+        assertEquals(0.14, ImageOutputFormat.STORY.bottomSafeRatio.toDouble(), 0.001)
         val storyTopClearancePx = ImageOutputFormat.STORY.height * ImageOutputFormat.STORY.topSafeRatio
-        assertEquals(268.8f, storyTopClearancePx, 0.01f)
+        assertEquals(268.8, storyTopClearancePx.toDouble(), 0.01)
     }
 
     @Test

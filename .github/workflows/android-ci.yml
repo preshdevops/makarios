@@ -49,7 +49,13 @@ jobs:
           for log in android/gradle-test.log android/gradle-build.log; do
             if [ -f "$log" ]; then
               echo "=== Failure output from $log ==="
-              tail -n 35 "$log" | while IFS= read -r line; do
+              grep -E "(^e: |Compilation error|FAILED)" "$log" | head -n 30 | while IFS= read -r line; do
+                if [ -n "$line" ]; then
+                  clean=$(echo "$line" | tr -d '\r' | cut -c 1-200)
+                  echo "::error title=$log::$clean"
+                fi
+              done
+              tail -n 25 "$log" | while IFS= read -r line; do
                 if [ -n "$line" ]; then
                   clean=$(echo "$line" | tr -d '\r' | cut -c 1-200)
                   echo "::error title=$log::$clean"
