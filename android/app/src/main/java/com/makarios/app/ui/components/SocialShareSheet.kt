@@ -4,6 +4,7 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.graphics.Bitmap
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -32,6 +33,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.ui.graphics.layer.rememberGraphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -43,6 +46,8 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.makarios.app.data.Affirmation
 import com.makarios.app.ui.theme.*
+import com.makarios.app.util.ImageEngine
+import com.makarios.app.util.ImageOutputFormat
 import com.makarios.app.util.ShareHelper
 import com.makarios.app.util.ShareHelper.SocialPlatform
 import com.makarios.app.util.WallpaperRenderer
@@ -90,28 +95,68 @@ fun SocialShareSheet(
         SocialPlatform.WHATSAPP
     )
 
+    val exportGraphicsLayer = rememberGraphicsLayer()
+    val engineFormat = remember(selectedPlatform) {
+        ImageOutputFormat.fromSocialPlatform(selectedPlatform)
+    }
+    var decodedPhotoBitmap by remember { mutableStateOf<Bitmap?>(null) }
+
+    LaunchedEffect(activePhotoUrl, engineFormat) {
+        if (activePhotoUrl != null) {
+            decodedPhotoBitmap = ImageEngine.decodePhotoAtTargetSize(
+                context = context,
+                url = activePhotoUrl,
+                targetWidth = engineFormat.width,
+                targetHeight = engineFormat.height
+            )
+        } else {
+            decodedPhotoBitmap = null
+        }
+    }
+
+    suspend fun obtainExportBitmap(): Bitmap {
+        val layerBitmap: Bitmap? = try {
+            val imageBitmap = exportGraphicsLayer.toImageBitmap()
+            val bmp = imageBitmap.asAndroidBitmap()
+            if (bmp.width >= 1080 && bmp.height >= 1080) {
+                Log.d("ImageEngine", "Exported image dimensions: ${bmp.width}x${bmp.height} (GraphicsLayer offscreen)")
+                bmp
+            } else null
+        } catch (e: Exception) {
+            Log.w("ImageEngine", "GraphicsLayer offscreen capture fallback: ${e.message}")
+            null
+        }
+
+        if (layerBitmap != null) {
+            return layerBitmap
+        }
+
+        val photoBmp: Bitmap? = decodedPhotoBitmap ?: withContext(Dispatchers.IO) {
+            activePhotoUrl?.let {
+                ImageEngine.decodePhotoAtTargetSize(context, it, engineFormat.width, engineFormat.height)
+            }
+        }
+
+        return withContext(Dispatchers.IO) {
+            ImageEngine.renderCanvasBitmap(
+                context = context,
+                declaration = affirmation.declaration,
+                scripture = affirmation.scriptureText,
+                reference = affirmation.reference,
+                category = affirmation.category,
+                style = currentStyle,
+                format = engineFormat,
+                photoBitmap = photoBmp
+            )
+        }
+    }
+
     fun shareCurrentSelection() {
         if (isGenerating) return
         isGenerating = true
         coroutineScope.launch {
             try {
-                val photoBmp: Bitmap? = withContext(Dispatchers.IO) {
-                    activePhotoUrl?.let { WallpaperRenderer.fetchBitmapFromUrl(context, it) }
-                }
-
-                val bitmap = withContext(Dispatchers.IO) {
-                    WallpaperRenderer.renderBitmap(
-                        context = context,
-                        declaration = affirmation.declaration,
-                        scripture = affirmation.scriptureText,
-                        reference = affirmation.reference,
-                        category = affirmation.category,
-                        style = currentStyle,
-                        format = selectedPlatform.defaultFormat,
-                        photoBitmap = photoBmp
-                    )
-                }
-
+                val bitmap = obtainExportBitmap()
                 val caption = "“${affirmation.declaration}”\n\n“${affirmation.scriptureText}”\n— ${affirmation.reference}"
                 ShareHelper.shareToSocialPlatform(context, bitmap, selectedPlatform, caption)
             } catch (e: Exception) {
@@ -128,23 +173,7 @@ fun SocialShareSheet(
         isGenerating = true
         coroutineScope.launch {
             try {
-                val photoBmp: Bitmap? = withContext(Dispatchers.IO) {
-                    activePhotoUrl?.let { WallpaperRenderer.fetchBitmapFromUrl(context, it) }
-                }
-
-                val bitmap = withContext(Dispatchers.IO) {
-                    WallpaperRenderer.renderBitmap(
-                        context = context,
-                        declaration = affirmation.declaration,
-                        scripture = affirmation.scriptureText,
-                        reference = affirmation.reference,
-                        category = affirmation.category,
-                        style = currentStyle,
-                        format = selectedPlatform.defaultFormat,
-                        photoBitmap = photoBmp
-                    )
-                }
-
+                val bitmap = obtainExportBitmap()
                 val uri = withContext(Dispatchers.IO) {
                     WallpaperRenderer.saveToGallery(context, bitmap, "Makarios_${selectedPlatform.id}")
                 }
@@ -185,21 +214,7 @@ fun SocialShareSheet(
         isGenerating = true
         coroutineScope.launch {
             try {
-                val photoBmp: Bitmap? = withContext(Dispatchers.IO) {
-                    activePhotoUrl?.let { WallpaperRenderer.fetchBitmapFromUrl(context, it) }
-                }
-                val bitmap = withContext(Dispatchers.IO) {
-                    WallpaperRenderer.renderBitmap(
-                        context = context,
-                        declaration = affirmation.declaration,
-                        scripture = affirmation.scriptureText,
-                        reference = affirmation.reference,
-                        category = affirmation.category,
-                        style = currentStyle,
-                        format = selectedPlatform.defaultFormat,
-                        photoBitmap = photoBmp
-                    )
-                }
+                val bitmap = obtainExportBitmap()
                 val caption = "“${affirmation.declaration}”\n— ${affirmation.reference}"
                 ShareHelper.shareAffirmationImage(context, bitmap, "Makarios — ${affirmation.category}", caption)
             } finally {
@@ -224,6 +239,15 @@ fun SocialShareSheet(
             )
         }
     ) {
+        // Dedicated offscreen export host: rendered at fixed pixel sizes (density 3.0), never captures visible UI
+        OffscreenExportHost(
+            affirmation = affirmation,
+            format = engineFormat,
+            photoBitmap = decodedPhotoBitmap,
+            style = currentStyle,
+            graphicsLayer = exportGraphicsLayer
+        )
+
         Column(
             modifier = Modifier
                 .fillMaxWidth()

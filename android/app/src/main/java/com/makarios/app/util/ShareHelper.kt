@@ -88,19 +88,13 @@ object ShareHelper {
         captionText: String = ""
     ): Boolean {
         return try {
-            val imagesFolder = File(context.cacheDir, "images").apply { mkdirs() }
-            val imageFile = File(imagesFolder, "makarios_${platform.id}_${System.currentTimeMillis()}.png")
-            FileOutputStream(imageFile).use { out ->
-                if (!bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)) {
-                    throw IOException("Failed to write bitmap to cache")
-                }
-            }
-
-            val contentUri = FileProvider.getUriForFile(
-                context,
-                "${context.packageName}.fileprovider",
-                imageFile
+            val imageFile = ImageEngine.exportToCache(
+                context = context,
+                bitmap = bitmap,
+                format = Bitmap.CompressFormat.PNG,
+                prefix = "makarios_${platform.id}"
             )
+            val contentUri = ImageEngine.getShareUri(context, imageFile)
 
             val shareIntent = Intent(Intent.ACTION_SEND).apply {
                 type = "image/png"
@@ -170,19 +164,13 @@ object ShareHelper {
         captionText: String = ""
     ): Boolean {
         return try {
-            val imagesFolder = File(context.cacheDir, "images").apply { mkdirs() }
-            val imageFile = File(imagesFolder, "makarios_share_${System.currentTimeMillis()}.png")
-            FileOutputStream(imageFile).use { out ->
-                if (!bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)) {
-                    throw IOException("Failed to write bitmap to cache")
-                }
-            }
-
-            val contentUri = FileProvider.getUriForFile(
-                context,
-                "${context.packageName}.fileprovider",
-                imageFile
+            val imageFile = ImageEngine.exportToCache(
+                context = context,
+                bitmap = bitmap,
+                format = Bitmap.CompressFormat.PNG,
+                prefix = "makarios_share"
             )
+            val contentUri = ImageEngine.getShareUri(context, imageFile)
 
             val shareIntent = Intent(Intent.ACTION_SEND).apply {
                 type = "image/png"

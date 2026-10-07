@@ -40,14 +40,15 @@ object WallpaperRenderer {
         val width: Int,
         val height: Int,
         val isWallpaper: Boolean,
-        val aspectDescription: String
+        val aspectDescription: String,
+        val engineFormat: ImageOutputFormat
     ) {
-        STORY("Instagram Story", "Instagram", 1080, 1920, false, "9:16 Story"),
-        SQUARE("Instagram Post", "Instagram", 1080, 1080, false, "1:1 Archival Card"),
-        SNAPCHAT("Snapchat Story", "Snapchat", 1080, 1920, false, "9:16 Frosted Lens"),
-        X_CARD("X / Twitter Card", "X", 1200, 675, false, "16:9 Pull-Quote"),
-        STATUS("WhatsApp Status", "WhatsApp", 1080, 1350, false, "4:5 Blessing Card"),
-        WALLPAPER("Phone Wallpaper", "Lock Screen", 1080, 2400, true, "9:20 Wallpaper");
+        STORY("Instagram Story", "Instagram", 1080, 1920, false, "9:16 Story", ImageOutputFormat.STORY),
+        SQUARE("Instagram Post", "Instagram", 1080, 1080, false, "1:1 Archival Card", ImageOutputFormat.SQUARE),
+        SNAPCHAT("Snapchat Story", "Snapchat", 1080, 1920, false, "9:16 Frosted Lens", ImageOutputFormat.STORY),
+        X_CARD("X / Twitter Card", "X", 1080, 1350, false, "4:5 Pull-Quote", ImageOutputFormat.PORTRAIT_POST),
+        STATUS("WhatsApp Status", "WhatsApp", 1080, 1350, false, "4:5 Blessing Card", ImageOutputFormat.PORTRAIT_POST),
+        WALLPAPER("Phone Wallpaper", "Lock Screen", 1080, 1920, true, "9:16 Wallpaper", ImageOutputFormat.STORY);
 
         companion object {
             fun fromIndex(index: Int): OutputFormat {
@@ -183,7 +184,7 @@ object WallpaperRenderer {
         format: OutputFormat = OutputFormat.WALLPAPER,
         photoBitmap: Bitmap? = null
     ): Bitmap {
-        return when (format) {
+        val bitmap = when (format) {
             OutputFormat.STORY -> renderInstagramStory(context, declaration, scripture, reference, category, style, photoBitmap)
             OutputFormat.SQUARE -> renderInstagramPost(context, declaration, scripture, reference, category, style, photoBitmap)
             OutputFormat.SNAPCHAT -> renderSnapchatStory(context, declaration, scripture, reference, category, style, photoBitmap)
@@ -191,6 +192,8 @@ object WallpaperRenderer {
             OutputFormat.STATUS -> renderWhatsAppCard(context, declaration, scripture, reference, category, style, photoBitmap)
             OutputFormat.WALLPAPER -> renderLockscreenWallpaper(context, declaration, scripture, reference, category, style, photoBitmap)
         }
+        android.util.Log.d("ImageEngine", "Exported image dimensions: ${bitmap.width}x${bitmap.height} (${format.displayName})")
+        return bitmap
     }
 
     /**
@@ -634,8 +637,8 @@ object WallpaperRenderer {
         style: RenderStyle,
         photoBitmap: Bitmap?
     ): Bitmap {
-        val width = 1200
-        val height = 675
+        val width = 1080
+        val height = 1350
         val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
         val isPhotoActive = photoBitmap != null
@@ -896,7 +899,7 @@ object WallpaperRenderer {
         photoBitmap: Bitmap?
     ): Bitmap {
         val width = 1080
-        val height = 2400
+        val height = 1920
         val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
         val isPhotoActive = photoBitmap != null
@@ -1062,16 +1065,16 @@ object WallpaperRenderer {
             val photoPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { isFilterBitmap = true }
             canvas.drawBitmap(photoBitmap, matrix, photoPaint)
 
-            // Multi-stop protective scrim
+            // Multi-stop protective scrim: bottom-weighted black scrim (transparent to about 65%)
             val scrimShader = LinearGradient(
                 0f, 0f, 0f, height.toFloat(),
                 intArrayOf(
-                    0x4D000000.toInt(),
-                    0x660E0B08.toInt(),
-                    0x990E0B08.toInt(),
-                    0xE60A0806.toInt()
+                    0x00000000,          // Transparent at top
+                    0x26000000,          // ~15% black at 35%
+                    0x73000000,          // ~45% black at 65%
+                    0xA6000000.toInt()   // ~65% black at bottom
                 ),
-                floatArrayOf(0f, 0.30f, 0.65f, 1f),
+                floatArrayOf(0f, 0.35f, 0.65f, 1f),
                 Shader.TileMode.CLAMP
             )
             val scrimPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { shader = scrimShader }
@@ -1108,22 +1111,11 @@ object WallpaperRenderer {
     }
 
     /**
-     * Loads a Bitmap from a network or cache URL using Coil with hardware bitmaps disabled.
+     * Loads a Bitmap from a network or cache URL using ImageEngine.
+     * Guarantees decoding at target size or larger (>= 1080px) and upgrades any thumbnails.
      */
     suspend fun fetchBitmapFromUrl(context: Context, url: String): Bitmap? = withContext(Dispatchers.IO) {
-        try {
-            val request = coil.request.ImageRequest.Builder(context)
-                .data(url)
-                .allowHardware(false)
-                .build()
-            val result = coil.Coil.imageLoader(context).execute(request)
-            if (result is coil.request.SuccessResult) {
-                result.drawable.toBitmap()
-            } else null
-        } catch (e: Exception) {
-            e.printStackTrace()
-            null
-        }
+        ImageEngine.decodePhotoAtTargetSize(context, url, 1080, 1920)
     }
 
     private fun calculateDeclarationSize(baseDimension: Int, length: Int): Float {
