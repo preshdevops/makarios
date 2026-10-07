@@ -114,7 +114,7 @@ fun ProfileScreen(
                 .padding(bottom = 56.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // ── Top Status Bar: Small Green Synced Pill ──────────────
+            // ── Top Status Bar: Single Sync Status Pill ──────────────
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End,
@@ -124,8 +124,8 @@ fun ProfileScreen(
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(12.dp))
-                            .background(SageLight)
-                            .border(0.5.dp, Sage.copy(alpha = 0.35f), RoundedCornerShape(12.dp))
+                            .background(OliveLight)
+                            .border(0.5.dp, Olive.copy(alpha = 0.35f), RoundedCornerShape(12.dp))
                             .padding(horizontal = 10.dp, vertical = 5.dp)
                     ) {
                         Row(
@@ -136,14 +136,14 @@ fun ProfileScreen(
                                 modifier = Modifier
                                     .size(6.dp)
                                     .clip(CircleShape)
-                                    .background(Sage)
+                                    .background(Olive)
                             )
                             Text(
                                 text = "Synced",
                                 fontFamily = BodyFontFamily,
                                 fontWeight = FontWeight.Medium,
                                 fontSize = 11.5.sp,
-                                color = Sage
+                                color = Olive
                             )
                         }
                     }
@@ -166,7 +166,7 @@ fun ProfileScreen(
                                     .background(StoneMuted)
                             )
                             Text(
-                                text = "Local Device",
+                                text = "On this device",
                                 fontFamily = BodyFontFamily,
                                 fontWeight = FontWeight.Medium,
                                 fontSize = 11.5.sp,
@@ -231,7 +231,7 @@ fun ProfileScreen(
                                 modifier = Modifier
                                     .size(26.dp)
                                     .clip(CircleShape)
-                                    .background(Terracotta)
+                                    .background(Olive)
                                     .border(2.dp, Surface, CircleShape)
                                     .align(Alignment.BottomEnd),
                                 contentAlignment = Alignment.Center
@@ -260,7 +260,7 @@ fun ProfileScreen(
 
                         Spacer(modifier = Modifier.height(3.dp))
 
-                        // @handle below it in terracotta
+                        // @handle below it
                         val handle = if (AuthManager.isLoggedIn && !AuthManager.isAnonymous && currentProfile != null && currentProfile.username.isNotBlank()) {
                             "@${currentProfile.username}"
                         } else {
@@ -271,9 +271,24 @@ fun ProfileScreen(
                             fontFamily = BodyFontFamily,
                             fontWeight = FontWeight.Medium,
                             fontSize = 13.5.sp,
-                            color = Terracotta,
+                            color = Stone,
                             textAlign = TextAlign.Center
                         )
+
+                        // If signed in, show email quietly underneath
+                        if (AuthManager.isLoggedIn && !AuthManager.isAnonymous) {
+                            val email = AuthManager.userEmail
+                            if (!email.isNullOrBlank()) {
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = email,
+                                    fontFamily = BodyFontFamily,
+                                    fontSize = 12.sp,
+                                    color = StoneMuted,
+                                    textAlign = TextAlign.Center
+                                )
+                            }
+                        }
 
                         // Soft prompt if name is still default "Friend" or handle is "@member"
                         val isDefaultIdentity = userName.isBlank() || userName.equals("Friend", ignoreCase = true) || handle == "@member"
@@ -291,7 +306,7 @@ fun ProfileScreen(
 
                         Spacer(modifier = Modifier.height(10.dp))
 
-                        // Single "Edit profile" text button (replaces separate edit pencils)
+                        // Single "Edit profile" text button
                         TextButton(
                             onClick = { showEditProfileDialog = true },
                             modifier = Modifier.height(38.dp)
@@ -342,82 +357,22 @@ fun ProfileScreen(
                             .background(BorderSubtle)
                     )
                     Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                        StatCadenceItem(count = "$totalCount", label = "Total")
+                        StatCadenceItem(count = "$totalCount", label = "In library")
                     }
                 }
             }
 
-            // ── 3. Account Section Card ─────────────────────────────
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .shadow(1.dp, RoundedCornerShape(20.dp), spotColor = Espresso.copy(alpha = 0.03f))
-                    .clip(RoundedCornerShape(20.dp))
-                    .background(Surface)
-                    .border(0.5.dp, BorderSubtle, RoundedCornerShape(20.dp))
-                    .padding(18.dp)
-            ) {
-                if (AuthManager.isLoggedIn && !AuthManager.isAnonymous) {
-                    // Signed in account view
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
-                            modifier = Modifier.weight(1f).padding(end = 8.dp)
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(38.dp)
-                                    .clip(CircleShape)
-                                    .background(SageLight),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Cloud,
-                                    contentDescription = null,
-                                    tint = Sage,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                            }
-                            Column {
-                                Text(
-                                    text = "Account Synced",
-                                    fontFamily = BodyFontFamily,
-                                    fontWeight = FontWeight.SemiBold,
-                                    fontSize = 13.5.sp,
-                                    color = Espresso
-                                )
-                                Spacer(modifier = Modifier.height(1.dp))
-                                Text(
-                                    text = AuthManager.userEmail?.ifBlank { "Cloud active" } ?: "Cloud active",
-                                    fontFamily = BodyFontFamily,
-                                    fontSize = 12.sp,
-                                    color = Stone
-                                )
-                            }
-                        }
-
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(10.dp))
-                                .background(SageLight)
-                                .padding(horizontal = 8.dp, vertical = 4.dp)
-                        ) {
-                            Text(
-                                text = "Active",
-                                fontFamily = BodyFontFamily,
-                                fontWeight = FontWeight.Medium,
-                                fontSize = 10.5.sp,
-                                color = Sage
-                            )
-                        }
-                    }
-                } else {
-                    // Guest mode account view
+            // ── 3. Guest Backup Card (Only shown for guest accounts) ─
+            if (!AuthManager.isLoggedIn || AuthManager.isAnonymous) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .shadow(1.dp, RoundedCornerShape(20.dp), spotColor = Espresso.copy(alpha = 0.03f))
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(Surface)
+                        .border(0.5.dp, BorderSubtle, RoundedCornerShape(20.dp))
+                        .padding(18.dp)
+                ) {
                     Column {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
@@ -433,7 +388,7 @@ fun ProfileScreen(
                                 Icon(
                                     imageVector = Icons.Default.Cloud,
                                     contentDescription = null,
-                                    tint = Terracotta,
+                                    tint = Olive,
                                     modifier = Modifier.size(20.dp)
                                 )
                             }
@@ -468,7 +423,7 @@ fun ProfileScreen(
                                 },
                                 shape = RoundedCornerShape(12.dp),
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = Terracotta,
+                                    containerColor = Olive,
                                     contentColor = Color.White
                                 ),
                                 modifier = Modifier
@@ -860,7 +815,7 @@ fun ProfileScreen(
                                 },
                                 colors = SwitchDefaults.colors(
                                     checkedThumbColor = Surface,
-                                    checkedTrackColor = Terracotta,
+                                    checkedTrackColor = Olive,
                                     uncheckedTrackColor = PorcelainWarm
                                 )
                             )
@@ -891,13 +846,13 @@ fun ProfileScreen(
                                         modifier = Modifier
                                             .size(32.dp)
                                             .clip(CircleShape)
-                                            .background(TerracottaLight),
+                                            .background(OliveLight),
                                         contentAlignment = Alignment.Center
                                     ) {
                                         Icon(
                                             imageVector = Icons.Default.AccessTime,
                                             contentDescription = null,
-                                            tint = Terracotta,
+                                            tint = Olive,
                                             modifier = Modifier.size(16.dp)
                                         )
                                     }
@@ -925,7 +880,7 @@ fun ProfileScreen(
                                     Box(
                                         modifier = Modifier
                                             .clip(RoundedCornerShape(8.dp))
-                                            .background(Terracotta)
+                                            .background(Olive)
                                             .padding(horizontal = 10.dp, vertical = 5.dp)
                                     ) {
                                         Text(
@@ -943,12 +898,11 @@ fun ProfileScreen(
 
                             Column {
                                 Text(
-                                    text = "WHICH DECLARATIONS TO RECEIVE",
+                                    text = "Which declarations to receive",
                                     fontFamily = BodyFontFamily,
                                     fontWeight = FontWeight.SemiBold,
-                                    fontSize = 10.sp,
-                                    letterSpacing = 1.4.sp,
-                                    color = StoneMuted
+                                    fontSize = 12.sp,
+                                    color = Espresso
                                 )
                                 Spacer(modifier = Modifier.height(2.dp))
                                 Text(
@@ -977,7 +931,7 @@ fun ProfileScreen(
                                     source = ReminderSource.ALL,
                                     title = "Daily Scripture Discovery",
                                     subtitle = "A fresh biblical truth rotated from the full library each day",
-                                    pill = "$totalCount total"
+                                    pill = "$totalCount in library"
                                 ),
                                 ReminderSourceOption(
                                     source = ReminderSource.PINNED,
@@ -997,7 +951,7 @@ fun ProfileScreen(
                                             .background(if (isSelected) PorcelainWarm else Color.Transparent)
                                             .border(
                                                 width = if (isSelected) 1.dp else 0.5.dp,
-                                                color = if (isSelected) Terracotta.copy(alpha = 0.4f) else BorderSubtle,
+                                                color = if (isSelected) Olive.copy(alpha = 0.45f) else BorderSubtle,
                                                 shape = RoundedCornerShape(14.dp)
                                             )
                                             .clickable {
@@ -1027,7 +981,7 @@ fun ProfileScreen(
                                                         modifier = Modifier
                                                             .clip(RoundedCornerShape(6.dp))
                                                             .background(
-                                                                if (isSelected) TerracottaLight else PorcelainWarm
+                                                                if (isSelected) OliveLight else PorcelainWarm
                                                             )
                                                             .padding(horizontal = 6.dp, vertical = 2.dp)
                                                     ) {
@@ -1035,8 +989,8 @@ fun ProfileScreen(
                                                             text = opt.pill,
                                                             fontFamily = BodyFontFamily,
                                                             fontWeight = FontWeight.Medium,
-                                                            fontSize = 9.sp,
-                                                            color = if (isSelected) Terracotta else StoneMuted
+                                                            fontSize = 9.5.sp,
+                                                            color = if (isSelected) Olive else StoneMuted
                                                         )
                                                     }
                                                 }
@@ -1054,7 +1008,7 @@ fun ProfileScreen(
                                                     modifier = Modifier
                                                         .size(20.dp)
                                                         .clip(CircleShape)
-                                                        .background(Terracotta),
+                                                        .background(Olive),
                                                     contentAlignment = Alignment.Center
                                                 ) {
                                                     Icon(
@@ -1086,18 +1040,17 @@ fun ProfileScreen(
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
                                         Text(
-                                            text = "TOMORROW'S MESSAGE PREVIEW",
+                                            text = "Tomorrow's message preview",
                                             fontFamily = BodyFontFamily,
                                             fontWeight = FontWeight.SemiBold,
-                                            fontSize = 9.sp,
-                                            letterSpacing = 1.2.sp,
-                                            color = Terracotta
+                                            fontSize = 11.sp,
+                                            color = Olive
                                         )
                                         Text(
-                                            text = currentPreviewAffirmation.reference.uppercase(),
+                                            text = currentPreviewAffirmation.reference,
                                             fontFamily = BodyFontFamily,
                                             fontWeight = FontWeight.Medium,
-                                            fontSize = 9.sp,
+                                            fontSize = 11.sp,
                                             color = StoneMuted
                                         )
                                     }
@@ -1142,7 +1095,7 @@ fun ProfileScreen(
                                     Icon(
                                         imageVector = Icons.Default.NotificationsActive,
                                         contentDescription = null,
-                                        tint = Terracotta,
+                                        tint = Olive,
                                         modifier = Modifier.size(16.dp)
                                     )
                                     Text(
@@ -1159,7 +1112,7 @@ fun ProfileScreen(
                                     fontFamily = BodyFontFamily,
                                     fontWeight = FontWeight.Medium,
                                     fontSize = 12.sp,
-                                    color = Terracotta
+                                    color = Olive
                                 )
                             }
                         }
@@ -1251,11 +1204,10 @@ fun ProfileScreen(
 
                         Column {
                             Text(
-                                text = "CURRENT DECLARATION",
+                                text = "Current declaration",
                                 fontFamily = BodyFontFamily,
                                 fontWeight = FontWeight.SemiBold,
-                                fontSize = 9.5.sp,
-                                letterSpacing = 1.3.sp,
+                                fontSize = 11.sp,
                                 color = StoneMuted
                             )
                             Spacer(modifier = Modifier.height(6.dp))
@@ -1269,12 +1221,11 @@ fun ProfileScreen(
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = activeWidgetAffirmation.reference.uppercase(),
+                                text = activeWidgetAffirmation.reference,
                                 fontFamily = BodyFontFamily,
                                 fontWeight = FontWeight.SemiBold,
-                                fontSize = 10.sp,
-                                letterSpacing = 1.sp,
-                                color = Terracotta
+                                fontSize = 11.sp,
+                                color = Stone
                             )
                         }
                     }
@@ -1318,7 +1269,7 @@ fun ProfileScreen(
                         fontFamily = BodyFontFamily,
                         fontWeight = FontWeight.Medium,
                         fontSize = 12.sp,
-                        color = Terracotta
+                        color = Olive
                     )
                 }
             }
@@ -1410,11 +1361,10 @@ fun ProfileScreen(
                     Spacer(modifier = Modifier.height(14.dp))
 
                     Text(
-                        text = "YOUR NAME",
+                        text = "Your name",
                         fontFamily = BodyFontFamily,
                         fontWeight = FontWeight.SemiBold,
-                        fontSize = 10.sp,
-                        letterSpacing = 1.2.sp,
+                        fontSize = 11.sp,
                         color = StoneMuted
                     )
                     Spacer(modifier = Modifier.height(4.dp))
@@ -1425,7 +1375,7 @@ fun ProfileScreen(
                         placeholder = { Text("e.g. David", color = StoneMuted) },
                         shape = RoundedCornerShape(12.dp),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Terracotta,
+                            focusedBorderColor = Olive,
                             unfocusedBorderColor = Border
                         ),
                         modifier = Modifier.fillMaxWidth()
@@ -1434,11 +1384,10 @@ fun ProfileScreen(
                     if (isAuthUser) {
                         Spacer(modifier = Modifier.height(14.dp))
                         Text(
-                            text = "COMMUNITY @HANDLE",
+                            text = "Community handle",
                             fontFamily = BodyFontFamily,
                             fontWeight = FontWeight.SemiBold,
-                            fontSize = 10.sp,
-                            letterSpacing = 1.2.sp,
+                            fontSize = 11.sp,
                             color = StoneMuted
                         )
                         Spacer(modifier = Modifier.height(4.dp))
@@ -1450,20 +1399,20 @@ fun ProfileScreen(
                                 usernameError = if (validation is UsernameValidator.ValidationResult.Invalid) validation.message else null
                             },
                             prefix = {
-                                Text("@", fontFamily = BodyFontFamily, fontWeight = FontWeight.SemiBold, color = Terracotta)
+                                Text("@", fontFamily = BodyFontFamily, fontWeight = FontWeight.SemiBold, color = Olive)
                             },
                             singleLine = true,
                             isError = usernameError != null,
                             supportingText = {
                                 if (usernameError != null) {
-                                    Text(usernameError!!, color = Terracotta, fontSize = 11.sp)
+                                    Text(usernameError!!, color = Color(0xFFBA1A1A), fontSize = 11.sp)
                                 } else {
                                     Text("3-20 letters, numbers, and underscores", fontSize = 11.sp, color = StoneMuted)
                                 }
                             },
                             shape = RoundedCornerShape(12.dp),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = Terracotta,
+                                focusedBorderColor = Olive,
                                 unfocusedBorderColor = Border
                             ),
                             modifier = Modifier.fillMaxWidth()
@@ -1505,7 +1454,7 @@ fun ProfileScreen(
                         text = if (isUpdating) "Saving…" else "Save",
                         fontFamily = BodyFontFamily,
                         fontWeight = FontWeight.SemiBold,
-                        color = Terracotta
+                        color = Olive
                     )
                 }
             },
@@ -1582,7 +1531,7 @@ fun ProfileScreen(
                         text = "Sign Out",
                         fontFamily = BodyFontFamily,
                         fontWeight = FontWeight.SemiBold,
-                        color = Terracotta
+                        color = Color(0xFFBA1A1A)
                     )
                 }
             },
@@ -1631,11 +1580,10 @@ private fun StatCadenceItem(count: String, label: String) {
         )
         Spacer(modifier = Modifier.height(2.dp))
         Text(
-            text = label.uppercase(),
+            text = label,
             fontFamily = BodyFontFamily,
             fontWeight = FontWeight.Medium,
-            fontSize = 9.5.sp,
-            letterSpacing = 1.sp,
+            fontSize = 11.sp,
             color = StoneMuted
         )
     }

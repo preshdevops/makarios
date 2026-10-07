@@ -31,6 +31,12 @@ jobs:
         run: chmod +x gradlew
         working-directory: android
 
+      - name: Run Unit Tests
+        run: |
+          set -o pipefail
+          ./gradlew testDebugUnitTest --stacktrace 2>&1 | tee gradle-test.log
+        working-directory: android
+
       - name: Build Debug APK
         run: |
           set -o pipefail
@@ -40,10 +46,15 @@ jobs:
       - name: Report Build Failures
         if: failure()
         run: |
-          tail -n 35 android/gradle-build.log | while IFS= read -r line; do
-            if [ -n "$line" ]; then
-              clean=$(echo "$line" | tr -d '\r' | cut -c 1-200)
-              echo "::error title=Gradle Build Output::$clean"
+          for log in android/gradle-test.log android/gradle-build.log; do
+            if [ -f "$log" ]; then
+              echo "=== Failure output from $log ==="
+              tail -n 35 "$log" | while IFS= read -r line; do
+                if [ -n "$line" ]; then
+                  clean=$(echo "$line" | tr -d '\r' | cut -c 1-200)
+                  echo "::error title=$log::$clean"
+                fi
+              done
             fi
           done
 
@@ -59,6 +70,6 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: gradle-build-log
-          path: android/gradle-build.log
+          name: gradle-logs
+          path: android/*.log
           retention-days: 7

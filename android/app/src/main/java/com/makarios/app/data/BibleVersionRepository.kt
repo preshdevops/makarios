@@ -75,8 +75,9 @@ object BibleVersionRepository {
         fallbackText: String,
         version: BibleVersion
     ): String = withContext(Dispatchers.IO) {
+        val cleanFallback = com.makarios.app.data.bible.ScriptureText.clean(fallbackText)
         if (version.code == "web" || version.isOffline) {
-            return@withContext fallbackText
+            return@withContext cleanFallback
         }
 
         val cacheKey = "${reference.trim().lowercase()}:${version.code}"
@@ -98,8 +99,7 @@ object BibleVersionRepository {
                 val json = JSONObject(response)
                 val rawText = json.optString("text", "").trim()
                 if (rawText.isNotBlank()) {
-                    // Clean up any extra newlines or quotes
-                    val cleaned = rawText.replace("\n", " ").replace(Regex("\\s+"), " ").trim()
+                    val cleaned = com.makarios.app.data.bible.ScriptureText.clean(rawText)
                     textCache[cacheKey] = cleaned
                     return@withContext cleaned
                 }
@@ -108,6 +108,6 @@ object BibleVersionRepository {
             // Network failure or timeout — seamlessly return local text
         }
 
-        fallbackText
+        cleanFallback
     }
 }

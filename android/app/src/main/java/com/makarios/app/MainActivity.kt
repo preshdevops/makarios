@@ -181,23 +181,23 @@ fun MainAppScaffold() {
                                 Box(
                                     modifier = Modifier
                                         .clip(RoundedCornerShape(12.dp))
-                                        .background(if (isSelected) PorcelainWarm.copy(alpha = 0.6f) else Color.Transparent)
+                                        .background(if (isSelected) OliveLight else Color.Transparent)
                                         .padding(horizontal = 14.dp, vertical = 4.dp),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Icon(
                                         imageVector = if (isSelected) tab.selectedIcon else tab.unselectedIcon,
                                         contentDescription = tab.label,
-                                        tint = if (isSelected) Espresso else StoneMuted,
+                                        tint = if (isSelected) Olive else StoneMuted,
                                         modifier = Modifier.size(19.dp)
                                     )
                                 }
                                 Spacer(modifier = Modifier.height(2.dp))
                                 Text(
                                     text = tab.label,
-                                    color = if (isSelected) Espresso else StoneMuted,
+                                    color = if (isSelected) Olive else StoneMuted,
                                     fontFamily = BodyFontFamily,
-                                    fontWeight = if (isSelected) FontWeight.Medium else FontWeight.Normal,
+                                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
                                     fontSize = 10.5.sp
                                 )
                             }

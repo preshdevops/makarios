@@ -27,6 +27,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.makarios.app.data.PhotoLibrary
+import com.makarios.app.data.PhotoRole
 import com.makarios.app.data.PublicAffirmation
 import com.makarios.app.ui.theme.*
 
@@ -56,9 +58,10 @@ fun CommunityAffirmationCard(
     ) {
         // ── 1. Photography ──
         AsyncImage(
-            model = affirmation.imageUrl ?: "https://images.unsplash.com/photo-1507652313519-d4e9174996dd?auto=format&fit=crop&w=1200&q=85",
+            model = affirmation.imageUrl ?: PhotoLibrary.getForRole(PhotoRole.COMMUNITY_FALLBACK).url(width = 1200),
             contentDescription = null,
             contentScale = ContentScale.Crop,
+            colorFilter = WarmPhotoGrade,
             modifier = Modifier.matchParentSize()
         )
 
@@ -66,15 +69,7 @@ fun CommunityAffirmationCard(
         Box(
             modifier = Modifier
                 .matchParentSize()
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(
-                            Color.Black.copy(alpha = 0.15f),
-                            Color.Black.copy(alpha = 0.40f),
-                            Color(0xE61E1916)
-                        )
-                    )
-                )
+                .background(PhotoTextScrim)
         )
 
         // ── 3. Card Content ──
@@ -133,7 +128,7 @@ fun CommunityAffirmationCard(
                         modifier = Modifier
                             .size(32.dp)
                             .clip(CircleShape)
-                            .background(Color.White.copy(alpha = 0.18f))
+                            .background(ScrimPillColor)
                             .clickable(onClick = onShare),
                         contentAlignment = Alignment.Center
                     ) {
@@ -149,7 +144,7 @@ fun CommunityAffirmationCard(
                         modifier = Modifier
                             .size(32.dp)
                             .clip(CircleShape)
-                            .background(if (isSaved) Color.White.copy(alpha = 0.32f) else Color.White.copy(alpha = 0.18f))
+                            .background(if (isSaved) Olive else ScrimPillColor)
                             .clickable(onClick = onToggleSave),
                         contentAlignment = Alignment.Center
                     ) {
@@ -213,7 +208,7 @@ fun CommunityAffirmationCard(
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(16.dp))
-                        .background(if (isAmened) Terracotta else Color.White.copy(alpha = 0.18f))
+                        .background(if (isAmened) Olive else ScrimPillColor)
                         .clickable(onClick = onToggleAmen)
                         .padding(horizontal = 12.dp, vertical = 6.dp)
                 ) {

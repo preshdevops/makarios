@@ -634,7 +634,7 @@ fun SocialShareSheet(
                                 .background(Color(style.backgroundColors[0]))
                                 .border(
                                     width = if (isSelected) 2.5.dp else 1.dp,
-                                    color = if (isSelected) Terracotta else Border,
+                                    color = if (isSelected) Olive else Border,
                                     shape = RoundedCornerShape(12.dp)
                                 )
                                 .clickable { selectedStyleIndex = index },
@@ -660,7 +660,7 @@ fun SocialShareSheet(
                 onClick = ::shareCurrentSelection,
                 enabled = !isGenerating,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Terracotta,
+                    containerColor = Olive,
                     contentColor = Color.White
                 ),
                 shape = RoundedCornerShape(16.dp),

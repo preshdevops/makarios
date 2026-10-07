@@ -171,7 +171,7 @@ fun HomeScreen(
                         fontFamily = BodyFontFamily,
                         fontWeight = FontWeight.Medium,
                         fontSize = 13.sp,
-                        color = Terracotta,
+                        color = Olive,
                         modifier = Modifier
                             .clickable(onClick = onNavigateToLibrary)
                             .padding(vertical = 8.dp)
@@ -221,23 +221,17 @@ private fun SanctuaryHero(
             model = affirmation.imageUrl,
             contentDescription = null,
             contentScale = ContentScale.Crop,
+            colorFilter = WarmPhotoGrade,
             modifier = Modifier
                 .fillMaxWidth()
                 .heightIn(min = 420.dp)
         )
 
-        // Luminous scrim — transparent at top to black ~65% at bottom for guaranteed legibility
+        // Scrim
         Box(
             modifier = Modifier
                 .matchParentSize()
-                .background(
-                    Brush.verticalGradient(
-                        0f to Color.Transparent,
-                        0.35f to Color.Black.copy(alpha = 0.18f),
-                        0.68f to Color.Black.copy(alpha = 0.45f),
-                        1f to Color.Black.copy(alpha = 0.65f)
-                    )
-                )
+                .background(PhotoTextScrim)
         )
 
         Column(
@@ -246,18 +240,13 @@ private fun SanctuaryHero(
                 .padding(horizontal = 22.dp, vertical = 22.dp),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            // Top row — category chip + high-contrast "Today's Declaration" pill
+            // Top row — category chip + high-contrast "Today's declaration" pill
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(Color.White.copy(alpha = 0.20f))
-                        .padding(horizontal = 10.dp, vertical = 4.dp)
-                ) {
+                ScrimPill {
                     Text(
                         text = affirmation.category.uppercase(),
                         fontFamily = BodyFontFamily,
@@ -268,14 +257,9 @@ private fun SanctuaryHero(
                     )
                 }
 
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(Color.Black.copy(alpha = 0.25f))
-                        .padding(horizontal = 10.dp, vertical = 4.dp)
-                ) {
+                ScrimPill {
                     Text(
-                        text = "Today's Declaration",
+                        text = "Today's declaration",
                         fontFamily = DisplayFontFamily,
                         fontStyle = FontStyle.Italic,
                         fontWeight = FontWeight.Medium,
@@ -422,8 +406,8 @@ private fun SpringIconButton(
             .scale(scale)
             .clip(CircleShape)
             .background(
-                if (filled) Color.White.copy(alpha = 0.32f)
-                else Color.White.copy(alpha = 0.18f)
+                if (filled) Olive
+                else ScrimPillColor
             )
             .clickable(
                 interactionSource = interactionSource,

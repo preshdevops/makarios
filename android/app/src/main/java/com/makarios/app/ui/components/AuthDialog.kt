@@ -267,10 +267,10 @@ fun AuthDialog(
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedContainerColor = Surface,
                         unfocusedContainerColor = Surface,
-                        focusedBorderColor = Terracotta,
+                        focusedBorderColor = Olive,
                         unfocusedBorderColor = Border,
-                        focusedLabelColor = Terracotta,
-                        cursorColor = Terracotta
+                        focusedLabelColor = Olive,
+                        cursorColor = Olive
                     ),
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -306,10 +306,10 @@ fun AuthDialog(
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedContainerColor = Surface,
                         unfocusedContainerColor = Surface,
-                        focusedBorderColor = Terracotta,
+                        focusedBorderColor = Olive,
                         unfocusedBorderColor = Border,
-                        focusedLabelColor = Terracotta,
-                        cursorColor = Terracotta
+                        focusedLabelColor = Olive,
+                        cursorColor = Olive
                     ),
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -325,7 +325,7 @@ fun AuthDialog(
                             fontFamily = BodyFontFamily,
                             fontWeight = FontWeight.Medium,
                             fontSize = 12.sp,
-                            color = Terracotta,
+                            color = Olive,
                             modifier = Modifier
                                 .clickable { handleForgotPassword() }
                                 .padding(vertical = 4.dp)
@@ -341,7 +341,7 @@ fun AuthDialog(
                     enabled = !isLoading,
                     shape = RoundedCornerShape(16.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Terracotta,
+                        containerColor = Olive,
                         contentColor = Color.White
                     ),
                     modifier = Modifier
@@ -420,7 +420,7 @@ fun AuthDialog(
                         fontFamily = BodyFontFamily,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 12.5.sp,
-                        color = Terracotta,
+                        color = Olive,
                         modifier = Modifier
                             .clickable {
                                 isSignUp = !isSignUp

@@ -11,14 +11,14 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
 private val LightColorScheme = lightColorScheme(
-    primary = Espresso,
+    primary = Olive,
     onPrimary = Surface,
-    primaryContainer = EspressoLight,
-    onPrimaryContainer = Surface,
-    secondary = Terracotta,
+    primaryContainer = OliveLight,
+    onPrimaryContainer = Olive,
+    secondary = Olive,
     onSecondary = Surface,
-    secondaryContainer = TerracottaLight,
-    onSecondaryContainer = Terracotta,
+    secondaryContainer = OliveLight,
+    onSecondaryContainer = Olive,
     tertiary = Sage,
     onTertiary = Surface,
     tertiaryContainer = LiveFeedGreenBg,

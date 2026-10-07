@@ -26,7 +26,6 @@ import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Wallpaper
 import androidx.compose.material3.*
 import com.makarios.app.R
-import com.makarios.app.ui.components.SacredTimePickerDialog
 import com.makarios.app.ui.components.ScripturePickerSheet
 import com.makarios.app.ui.components.SocialShareSheet
 import com.makarios.app.ui.components.WallpaperActionDialog
@@ -58,7 +57,6 @@ import com.makarios.app.data.ScriptureMatcher
 import com.makarios.app.data.VectorSearchEngine
 import com.makarios.app.data.VerseMatch
 import com.makarios.app.ui.theme.*
-import com.makarios.app.util.ReminderManager
 import com.makarios.app.util.ShareHelper
 import com.makarios.app.util.WallpaperRenderer
 import kotlinx.coroutines.Dispatchers
@@ -97,7 +95,7 @@ val designStyles = listOf(
         "Alabaster",
         AlabasterDawnGradient,
         Espresso,
-        Terracotta
+        Olive
     ),
     DesignStyle(
         "Sunlit Gold",
@@ -152,7 +150,6 @@ fun CreateScreen(
     var showPickerSheet by remember { mutableStateOf(false) }
     var showWallpaperDialog by remember { mutableStateOf(false) }
     var showShareSheet by remember { mutableStateOf(false) }
-    var showTimePickerDialog by remember { mutableStateOf(false) }
     var selectedFormatIndex by remember { mutableIntStateOf(0) }
     var selectedStyleIndex by remember { mutableIntStateOf(0) }
     var selectedPhotoId by remember { mutableStateOf<String?>("dawn_01") }
@@ -178,7 +175,7 @@ fun CreateScreen(
             context = "Personal declaration created in Makarios.",
             category = "Personal",
             tone = selectedTone ?: AffirmationTone.RESOLUTE,
-            imageUrl = currentPhotoUrl ?: "https://images.unsplash.com/photo-1507652313519-d4e9174996dd?auto=format&fit=crop&w=1000&q=85",
+            imageUrl = currentPhotoUrl ?: SacredBackgrounds.PHOTOS.first().photoUrl,
             isFavorite = true,
             personalDeclaration = declarationText
         )
@@ -232,11 +229,6 @@ fun CreateScreen(
     val shareCurrentDesign: () -> Unit = {
         getOrCreateAffirmation()
         showShareSheet = true
-    }
-
-    val openTimePicker: () -> Unit = {
-        getOrCreateAffirmation()
-        showTimePickerDialog = true
     }
 
     val openWallpaperDialog: () -> Unit = {
@@ -350,6 +342,7 @@ fun CreateScreen(
                 }
 
                 // Stage progress indicator
+                // Stage progress indicator (progress only, non-clickable)
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                     verticalAlignment = Alignment.CenterVertically
@@ -363,14 +356,19 @@ fun CreateScreen(
                                 .clip(RoundedCornerShape(12.dp))
                                 .background(
                                     when {
-                                        isActive -> Espresso
-                                        isPast -> Terracotta
-                                        else -> Border
+                                        isActive -> Olive
+                                        isPast -> OliveLight
+                                        else -> Surface
                                     }
                                 )
-                                .then(
-                                    if (isPast) Modifier.clickable { stage = stageEnum }
-                                    else Modifier
+                                .border(
+                                    width = 1.dp,
+                                    color = when {
+                                        isActive -> Olive
+                                        isPast -> Olive.copy(alpha = 0.25f)
+                                        else -> Border
+                                    },
+                                    shape = RoundedCornerShape(12.dp)
                                 )
                                 .padding(horizontal = 10.dp, vertical = 5.dp)
                         ) {
@@ -379,27 +377,39 @@ fun CreateScreen(
                                 fontFamily = BodyFontFamily,
                                 fontWeight = if (isActive) FontWeight.SemiBold else FontWeight.Normal,
                                 fontSize = 11.sp,
-                                color = if (isActive || isPast) Color.White else StoneMuted
+                                color = when {
+                                    isActive -> Color.White
+                                    isPast -> Olive
+                                    else -> StoneMuted
+                                }
                             )
                         }
                     }
                 }
 
-                // Right action — context-aware
+                // Right action — the ONLY primary action, distinct labels per step
                 when (stage) {
                     CreateStage.WRITE -> {
                         Button(
                             onClick = runMatch,
                             enabled = !isMatching,
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = Terracotta, contentColor = Color.White
+                                containerColor = Olive, contentColor = Color.White
                             ),
                             shape = RoundedCornerShape(20.dp),
-                            contentPadding = PaddingValues(horizontal = 18.dp, vertical = 6.dp),
+                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
                             modifier = Modifier.height(36.dp)
                         ) {
+                            if (isMatching) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(13.dp),
+                                    color = Color.White,
+                                    strokeWidth = 2.dp
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                            }
                             Text(
-                                text = if (isMatching) "Matching…" else "Match",
+                                text = if (isMatching) "Finding…" else "Find a verse",
                                 fontFamily = BodyFontFamily,
                                 fontWeight = FontWeight.SemiBold,
                                 fontSize = 13.sp
@@ -410,32 +420,26 @@ fun CreateScreen(
                         Button(
                             onClick = { stage = CreateStage.DESIGN },
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = Espresso, contentColor = Color.White
+                                containerColor = Olive, contentColor = Color.White
                             ),
                             shape = RoundedCornerShape(20.dp),
-                            contentPadding = PaddingValues(horizontal = 18.dp, vertical = 6.dp),
+                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
                             modifier = Modifier.height(36.dp)
                         ) {
-                            Text("Design", fontFamily = BodyFontFamily, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                            Text("Use this verse", fontFamily = BodyFontFamily, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
                         }
                     }
                     CreateStage.DESIGN -> {
                         Button(
-                            onClick = shareCurrentDesign,
+                            onClick = saveCurrentDesignToGallery,
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = Terracotta, contentColor = Color.White
+                                containerColor = Olive, contentColor = Color.White
                             ),
                             shape = RoundedCornerShape(20.dp),
-                            contentPadding = PaddingValues(horizontal = 18.dp, vertical = 6.dp),
+                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
                             modifier = Modifier.height(36.dp)
                         ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(6.dp)
-                            ) {
-                                Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(14.dp))
-                                Text("Share", fontFamily = BodyFontFamily, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
-                            }
+                            Text("Save", fontFamily = BodyFontFamily, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
                         }
                     }
                 }
@@ -494,7 +498,6 @@ fun CreateScreen(
                     onSaveToGallery = saveCurrentDesignToGallery,
                     onSaveAsWallpaper = openWallpaperDialog,
                     onShare = shareCurrentDesign,
-                    onSetNotificationTime = openTimePicker,
                     isShareToCommunity = isShareToCommunity,
                     onToggleShareToCommunity = { isShareToCommunity = it }
                 )
@@ -531,25 +534,6 @@ fun CreateScreen(
                 initialStyleIndex = selectedStyleIndex,
                 photoUrl = currentPhotoUrl,
                 onDismiss = { showShareSheet = false }
-            )
-        }
-
-        if (showTimePickerDialog) {
-            val currentHour = ReminderManager.getReminderHour(context)
-            val currentMinute = ReminderManager.getReminderMinute(context)
-            SacredTimePickerDialog(
-                initialHour = currentHour,
-                initialMinute = currentMinute,
-                onDismiss = { showTimePickerDialog = false },
-                onConfirm = { hour, minute ->
-                    showTimePickerDialog = false
-                    val aff = getOrCreateAffirmation()
-                    ReminderManager.setReminderTime(context, hour, minute)
-                    ReminderManager.setPinnedAffirmation(context, aff)
-                    ReminderManager.scheduleDaily(context, hour, minute)
-                    val timeStr = ReminderManager.getFormattedReminderTime(context)
-                    Toast.makeText(context, "Daily notification scheduled for $timeStr with this declaration ✓", Toast.LENGTH_LONG).show()
-                }
             )
         }
     }
@@ -617,8 +601,8 @@ private fun WriteStage(
                     fontFamily = BodyFontFamily,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 10.sp,
-                    letterSpacing = 1.4.sp,
-                    color = Terracotta
+                    letterSpacing = 1.sp,
+                    color = Olive
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -655,7 +639,7 @@ private fun WriteStage(
                     text = "$charCount / 280",
                     fontFamily = BodyFontFamily,
                     fontSize = 11.sp,
-                    color = if (charCount > 250) Terracotta else StoneMuted
+                    color = if (charCount > 250) Olive else StoneMuted
                 )
             }
         }
@@ -664,11 +648,10 @@ private fun WriteStage(
 
         // Tone pickers
         Text(
-            text = "TONE",
+            text = "Tone",
             fontFamily = BodyFontFamily,
             fontWeight = FontWeight.SemiBold,
-            fontSize = 10.sp,
-            letterSpacing = 1.4.sp,
+            fontSize = 12.sp,
             color = StoneMuted
         )
 
@@ -689,7 +672,7 @@ private fun WriteStage(
                         .weight(1f)
                         .height(44.dp)
                         .clip(RoundedCornerShape(20.dp))
-                        .background(if (isSelected) Espresso else Surface)
+                        .background(if (isSelected) Olive else Surface)
                         .border(
                             width = if (isSelected) 0.dp else 1.dp,
                             color = if (isSelected) Color.Transparent else Border,
@@ -717,11 +700,10 @@ private fun WriteStage(
         // Inspiration seeds — pick from curated
         if (seedAffirmation == null) {
             Text(
-                text = "START FROM A CURATED DECLARATION",
+                text = "Start from a curated declaration",
                 fontFamily = BodyFontFamily,
                 fontWeight = FontWeight.SemiBold,
-                fontSize = 10.sp,
-                letterSpacing = 1.4.sp,
+                fontSize = 12.sp,
                 color = StoneMuted
             )
 
@@ -756,7 +738,7 @@ private fun WriteStage(
                                     fontWeight = FontWeight.SemiBold,
                                     fontSize = 9.5.sp,
                                     letterSpacing = 1.2.sp,
-                                    color = Terracotta
+                                    color = Olive
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
@@ -778,42 +760,6 @@ private fun WriteStage(
                         }
                     }
                 }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // Main CTA
-        Button(
-            onClick = onMatch,
-            enabled = !isMatching,
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Espresso, contentColor = Color.White
-            ),
-            shape = RoundedCornerShape(16.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(52.dp)
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                if (isMatching) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(17.dp),
-                        color = Color.White,
-                        strokeWidth = 2.dp
-                    )
-                } else {
-                    Icon(Icons.Default.AutoAwesome, contentDescription = null, modifier = Modifier.size(17.dp))
-                }
-                Text(
-                    text = if (isMatching) "Searching Scriptures…" else "Find Matching Scripture",
-                    fontFamily = BodyFontFamily,
-                    fontWeight = FontWeight.SemiBold,
-                    fontSize = 14.sp
-                )
             }
         }
     }
@@ -912,8 +858,8 @@ private fun MatchStage(
                             fontFamily = BodyFontFamily,
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 10.sp,
-                            letterSpacing = 1.4.sp,
-                            color = Terracotta
+                            letterSpacing = 1.2.sp,
+                            color = Olive
                         )
                     }
                 }
@@ -927,8 +873,8 @@ private fun MatchStage(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(14.dp))
-                .background(TerracottaLight)
-                .border(1.dp, Terracotta.copy(alpha = 0.25f), RoundedCornerShape(14.dp))
+                .background(OliveLight)
+                .border(1.dp, Olive.copy(alpha = 0.25f), RoundedCornerShape(14.dp))
                 .padding(14.dp)
         ) {
             Row(
@@ -938,12 +884,12 @@ private fun MatchStage(
                 Icon(
                     imageVector = Icons.Default.AutoAwesome,
                     contentDescription = null,
-                    tint = Terracotta,
+                    tint = Olive,
                     modifier = Modifier.size(18.dp).padding(top = 2.dp)
                 )
                 Column {
                     Text(
-                        text = "This verse grounds your declaration",
+                        text = "Your words, grounded in this verse.",
                         fontFamily = BodyFontFamily,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 13.sp,
@@ -951,7 +897,7 @@ private fun MatchStage(
                     )
                     Spacer(modifier = Modifier.height(3.dp))
                     Text(
-                        text = "Your words, rooted in God's Word. Not the verse itself — a declaration built on its truth.",
+                        text = "Rooted in God's Word. Not the verse itself — a declaration built on its truth.",
                         fontFamily = BodyFontFamily,
                         fontSize = 12.sp,
                         lineHeight = 17.sp,
@@ -965,18 +911,17 @@ private fun MatchStage(
 
         if (matchCount > 1) {
             Text(
-                text = "MATCH ${matchIndex + 1} OF $matchCount",
+                text = "Match ${matchIndex + 1} of $matchCount",
                 fontFamily = BodyFontFamily,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 11.sp,
-                letterSpacing = 1.4.sp,
                 color = StoneMuted,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)
             )
         }
 
-        // Action row
+        // Secondary actions
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -987,10 +932,10 @@ private fun MatchStage(
                 shape = RoundedCornerShape(14.dp),
                 modifier = Modifier
                     .weight(1f)
-                    .height(50.dp)
+                    .height(48.dp)
             ) {
                 Text(
-                    text = "Try another",
+                    text = "Try another verse",
                     fontFamily = BodyFontFamily,
                     fontWeight = FontWeight.Medium,
                     fontSize = 13.sp,
@@ -998,28 +943,21 @@ private fun MatchStage(
                 )
             }
 
-            Button(
-                onClick = onAccept,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Espresso, contentColor = Color.White
-                ),
+            OutlinedButton(
+                onClick = onBack,
+                border = BorderStroke(1.dp, Border),
                 shape = RoundedCornerShape(14.dp),
                 modifier = Modifier
                     .weight(1f)
-                    .height(50.dp)
+                    .height(48.dp)
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(15.dp))
-                    Text(
-                        text = "Use this verse",
-                        fontFamily = BodyFontFamily,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 13.sp
-                    )
-                }
+                Text(
+                    text = "Edit declaration",
+                    fontFamily = BodyFontFamily,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 13.sp,
+                    color = Stone
+                )
             }
         }
 
@@ -1041,7 +979,7 @@ private fun MatchStage(
                 Icon(
                     imageVector = Icons.Default.MenuBook,
                     contentDescription = null,
-                    tint = Terracotta,
+                    tint = Olive,
                     modifier = Modifier.size(16.dp)
                 )
                 Text(
@@ -1052,25 +990,6 @@ private fun MatchStage(
                     color = Espresso
                 )
             }
-        }
-
-        Spacer(modifier = Modifier.height(10.dp))
-
-        // Back to editing
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable(onClick = onBack)
-                .padding(vertical = 12.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "Edit my declaration",
-                fontFamily = BodyFontFamily,
-                fontWeight = FontWeight.Medium,
-                fontSize = 13.sp,
-                color = Stone
-            )
         }
     }
 }
@@ -1090,7 +1009,6 @@ private fun DesignStage(
     onSaveToGallery: () -> Unit,
     onSaveAsWallpaper: () -> Unit,
     onShare: () -> Unit,
-    onSetNotificationTime: () -> Unit,
     isShareToCommunity: Boolean,
     onToggleShareToCommunity: (Boolean) -> Unit
 ) {
@@ -1224,6 +1142,7 @@ private fun DesignStage(
                     AsyncImage(
                         model = selectedPhoto.photoUrl,
                         contentDescription = selectedPhoto.title,
+                        colorFilter = WarmPhotoGrade,
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.fillMaxSize()
                     )
@@ -1231,15 +1150,7 @@ private fun DesignStage(
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .background(
-                                Brush.verticalGradient(
-                                    colors = listOf(
-                                        Color(0x55000000),
-                                        Color(0x88000000),
-                                        Color(0xD90A0806)
-                                    )
-                                )
-                            )
+                            .background(PhotoTextScrim)
                     )
                 }
 
@@ -1252,28 +1163,33 @@ private fun DesignStage(
                     verticalArrangement = Arrangement.Center
                 ) {
                     // Category pill
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(
-                                if (selectedPhoto != null) Color(0x33D4AF37)
-                                else currentStyle.accentColor.copy(alpha = 0.18f)
+                    if (selectedPhoto != null) {
+                        ScrimPill {
+                            Text(
+                                text = "DECLARATION",
+                                fontFamily = BodyFontFamily,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 9.sp,
+                                letterSpacing = 1.6.sp,
+                                color = Color.White
                             )
-                            .border(
-                                width = 1.dp,
-                                color = if (selectedPhoto != null) Color(0x66D4AF37) else Color.Transparent,
-                                shape = RoundedCornerShape(12.dp)
+                        }
+                    } else {
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(currentStyle.accentColor.copy(alpha = 0.18f))
+                                .padding(horizontal = 12.dp, vertical = 4.dp)
+                        ) {
+                            Text(
+                                text = "DECLARATION",
+                                fontFamily = BodyFontFamily,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 9.sp,
+                                letterSpacing = 1.6.sp,
+                                color = currentStyle.accentColor
                             )
-                            .padding(horizontal = 12.dp, vertical = 4.dp)
-                    ) {
-                        Text(
-                            text = "DECLARATION",
-                            fontFamily = BodyFontFamily,
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 9.sp,
-                            letterSpacing = 1.6.sp,
-                            color = if (selectedPhoto != null) Color(0xFFFFDF7A) else currentStyle.accentColor
-                        )
+                        }
                     }
 
                     Spacer(modifier = Modifier.height(14.dp))
@@ -1298,7 +1214,7 @@ private fun DesignStage(
                             .fillMaxWidth(0.45f)
                             .height(1.dp)
                             .background(
-                                if (selectedPhoto != null) Color(0x66D4AF37)
+                                if (selectedPhoto != null) Color.White.copy(alpha = 0.35f)
                                 else currentStyle.textColor.copy(alpha = 0.18f)
                             )
                     )
@@ -1312,7 +1228,7 @@ private fun DesignStage(
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 10.sp,
                         letterSpacing = 1.2.sp,
-                        color = if (selectedPhoto != null) Color(0xFFFFE8A3) else currentStyle.accentColor
+                        color = if (selectedPhoto != null) Color.White else currentStyle.accentColor
                     )
                 }
 
@@ -1351,8 +1267,8 @@ private fun DesignStage(
                         .then(
                             if (selectedBackgroundTab == 0) {
                                 Modifier
-                                    .background(Espresso)
-                                    .shadow(2.dp, RoundedCornerShape(9.dp), spotColor = Espresso.copy(0.2f))
+                                    .background(Olive)
+                                    .shadow(2.dp, RoundedCornerShape(9.dp), spotColor = Olive.copy(0.2f))
                             } else Modifier
                         )
                         .clickable { selectedBackgroundTab = 0 }
@@ -1370,7 +1286,7 @@ private fun DesignStage(
                             modifier = Modifier.size(14.dp)
                         )
                         Text(
-                            text = "Photo Backgrounds",
+                            text = "Photo backgrounds",
                             fontFamily = BodyFontFamily,
                             fontWeight = if (selectedBackgroundTab == 0) FontWeight.SemiBold else FontWeight.Medium,
                             fontSize = 12.sp,
@@ -1387,8 +1303,8 @@ private fun DesignStage(
                         .then(
                             if (selectedBackgroundTab == 1) {
                                 Modifier
-                                    .background(Espresso)
-                                    .shadow(2.dp, RoundedCornerShape(9.dp), spotColor = Espresso.copy(0.2f))
+                                    .background(Olive)
+                                    .shadow(2.dp, RoundedCornerShape(9.dp), spotColor = Olive.copy(0.2f))
                             } else Modifier
                         )
                         .clickable { selectedBackgroundTab = 1 }
@@ -1406,7 +1322,7 @@ private fun DesignStage(
                             modifier = Modifier.size(14.dp)
                         )
                         Text(
-                            text = "Color Themes",
+                            text = "Color themes",
                             fontFamily = BodyFontFamily,
                             fontWeight = if (selectedBackgroundTab == 1) FontWeight.SemiBold else FontWeight.Medium,
                             fontSize = 12.sp,
@@ -1436,7 +1352,7 @@ private fun DesignStage(
                             .clip(RoundedCornerShape(20.dp))
                             .then(
                                 if (isCatSelected) {
-                                    Modifier.background(Terracotta)
+                                    Modifier.background(Olive)
                                 } else {
                                     Modifier
                                         .background(Surface)
@@ -1481,7 +1397,7 @@ private fun DesignStage(
                             .clip(RoundedCornerShape(14.dp))
                             .border(
                                 width = if (isSelected) 2.5.dp else 1.dp,
-                                color = if (isSelected) Terracotta else Border,
+                                color = if (isSelected) Olive else Border,
                                 shape = RoundedCornerShape(14.dp)
                             )
                             .clickable { onSelectPhoto(photo.id) }
@@ -1489,6 +1405,7 @@ private fun DesignStage(
                         AsyncImage(
                             model = photo.thumbnailUrl,
                             contentDescription = photo.title,
+                            colorFilter = WarmPhotoGrade,
                             contentScale = ContentScale.Crop,
                             modifier = Modifier.fillMaxSize()
                         )
@@ -1523,7 +1440,7 @@ private fun DesignStage(
                                     .padding(6.dp)
                                     .size(20.dp)
                                     .align(Alignment.TopEnd)
-                                    .background(Terracotta, CircleShape),
+                                    .background(Olive, CircleShape),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(
@@ -1560,7 +1477,7 @@ private fun DesignStage(
                             .background(style.background)
                             .border(
                                 if (isSelected) 2.5.dp else 1.dp,
-                                if (isSelected) Terracotta else Border,
+                                if (isSelected) Olive else Border,
                                 RoundedCornerShape(14.dp)
                             )
                             .clickable {
@@ -1623,7 +1540,7 @@ private fun DesignStage(
                 onCheckedChange = onToggleShareToCommunity,
                 colors = SwitchDefaults.colors(
                     checkedThumbColor = Color.White,
-                    checkedTrackColor = Terracotta,
+                    checkedTrackColor = Olive,
                     uncheckedThumbColor = StoneMuted,
                     uncheckedTrackColor = Border
                 )
@@ -1632,53 +1549,41 @@ private fun DesignStage(
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        // ── Share & Export actions ────────────────────────────────
+        // ── Secondary Export actions ────────────────────────────────
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 20.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            // Primary: Share
-            Button(
-                onClick = onShare,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Terracotta, contentColor = Color.White
-                ),
-                shape = RoundedCornerShape(16.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(17.dp))
-                    Text(
-                        text = "Share your declaration",
-                        fontFamily = BodyFontFamily,
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 14.sp
-                    )
-                }
-            }
-
-            // Secondary: Save to gallery & Wallpaper
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 OutlinedButton(
-                    onClick = onSaveToGallery,
+                    onClick = onShare,
                     border = BorderStroke(1.dp, Border),
                     shape = RoundedCornerShape(14.dp),
                     modifier = Modifier.weight(1f).height(46.dp)
                 ) {
-                    Text(
-                        text = "Save Image",
-                        fontFamily = BodyFontFamily,
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 13.sp,
-                        color = Espresso
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Share,
+                            contentDescription = null,
+                            tint = Espresso,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Text(
+                            text = "Share image",
+                            fontFamily = BodyFontFamily,
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 13.sp,
+                            color = Espresso
+                        )
+                    }
                 }
 
                 OutlinedButton(
@@ -1692,49 +1597,19 @@ private fun DesignStage(
                         horizontalArrangement = Arrangement.spacedBy(5.dp)
                     ) {
                         Icon(
-                            Icons.Default.Wallpaper,
+                            imageVector = Icons.Default.Wallpaper,
                             contentDescription = null,
                             tint = Espresso,
                             modifier = Modifier.size(14.dp)
                         )
                         Text(
-                            text = "Wallpaper",
+                            text = "Set wallpaper",
                             fontFamily = BodyFontFamily,
                             fontWeight = FontWeight.Medium,
                             fontSize = 13.sp,
                             color = Espresso
                         )
                     }
-                }
-            }
-
-            // Schedule Daily Notification Time
-            OutlinedButton(
-                onClick = onSetNotificationTime,
-                border = BorderStroke(1.dp, Border),
-                shape = RoundedCornerShape(14.dp),
-                colors = ButtonDefaults.outlinedButtonColors(containerColor = Surface),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp)
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_schedule_time),
-                        contentDescription = null,
-                        tint = Terracotta,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Text(
-                        text = "Schedule Daily Notification Time",
-                        fontFamily = BodyFontFamily,
-                        fontWeight = FontWeight.Medium,
-                        fontSize = 13.sp,
-                        color = Espresso
-                    )
                 }
             }
         }

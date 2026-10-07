@@ -88,7 +88,7 @@ object WallpaperRenderer {
     }
 
     val STYLES = listOf(
-        // 0: Alabaster Dawn — Alabaster linen ground with warm terracotta
+        // 0: Alabaster Dawn — Alabaster linen ground with deep olive
         RenderStyle(
             name = "Alabaster",
             backgroundColors = intArrayOf(
@@ -97,8 +97,8 @@ object WallpaperRenderer {
             ),
             primaryTextColor = 0xFF2C2622.toInt(),      // Deep warm Espresso
             secondaryTextColor = 0xFF655C54.toInt(),    // Warm Stone
-            accentColor = 0xFFA85842.toInt(),           // Terracotta
-            frameColor = 0x24A85842.toInt(),            // Terracotta hairline
+            accentColor = 0xFF4A5A3C.toInt(),           // Olive
+            frameColor = 0x244A5A3C.toInt(),            // Olive hairline
             isDark = false
         ),
         // 1: Sunlit Gold — Morning dawn sunlight
@@ -127,7 +127,7 @@ object WallpaperRenderer {
             frameColor = 0x2A607768.toInt(),
             isDark = false
         ),
-        // 3: Rose Dawn — Terracotta sunrise
+        // 3: Rose Dawn — Morning sunrise
         RenderStyle(
             name = "Rose Dawn",
             backgroundColors = intArrayOf(

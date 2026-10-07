@@ -38,6 +38,8 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.makarios.app.data.Affirmation
 import com.makarios.app.data.AffirmationRepository
+import com.makarios.app.data.PhotoLibrary
+import com.makarios.app.data.PhotoRole
 import com.makarios.app.data.SacredBackgrounds
 import com.makarios.app.ui.components.AffirmationCard
 import com.makarios.app.ui.components.WallpaperActionDialog
@@ -77,10 +79,10 @@ val curatedWallpapers = listOf(
         category = "Identity",
         background = AlabasterDawnGradient,
         textColor = Espresso,
-        accentColor = Terracotta,
+        accentColor = Olive,
         affirmationId = "ident-1",
         styleIndex = 0,
-        photoUrl = "https://images.unsplash.com/photo-1507652313519-d4e9174996dd?auto=format&fit=crop&w=1600&q=85"
+        photoUrl = PhotoLibrary.getForRole(PhotoRole.WALLPAPER_1).url()
     ),
     WallpaperItem(
         id = "wp-2",
@@ -93,7 +95,7 @@ val curatedWallpapers = listOf(
         accentColor = SunlitGold,
         affirmationId = "aotd-1",
         styleIndex = 1,
-        photoUrl = "https://images.unsplash.com/photo-1505765050516-f72dcac9c60e?auto=format&fit=crop&w=1600&q=85"
+        photoUrl = PhotoLibrary.getForRole(PhotoRole.WALLPAPER_2).url()
     ),
     WallpaperItem(
         id = "wp-3",
@@ -106,7 +108,7 @@ val curatedWallpapers = listOf(
         accentColor = Sage,
         affirmationId = "peace-still",
         styleIndex = 2,
-        photoUrl = "https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=1600&q=85"
+        photoUrl = PhotoLibrary.getForRole(PhotoRole.WALLPAPER_3).url()
     ),
     WallpaperItem(
         id = "wp-4",
@@ -119,7 +121,7 @@ val curatedWallpapers = listOf(
         accentColor = Color(0xFFFFF0EC),
         affirmationId = "conf-1",
         styleIndex = 3,
-        photoUrl = "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1600&q=85"
+        photoUrl = PhotoLibrary.getForRole(PhotoRole.WALLPAPER_4).url()
     ),
     WallpaperItem(
         id = "wp-5",
@@ -132,7 +134,7 @@ val curatedWallpapers = listOf(
         accentColor = AmberGold,
         affirmationId = "str-1",
         styleIndex = 1,
-        photoUrl = "https://images.unsplash.com/photo-1486870591958-9b9d0d1dda99?auto=format&fit=crop&w=1600&q=85"
+        photoUrl = PhotoLibrary.getForRole(PhotoRole.WALLPAPER_5).url()
     ),
     WallpaperItem(
         id = "wp-6",
@@ -145,7 +147,7 @@ val curatedWallpapers = listOf(
         accentColor = Color(0xFFDEAC46),
         affirmationId = "str-2",
         styleIndex = 4,
-        photoUrl = "https://images.unsplash.com/photo-1506703719100-a0f3a48c0f86?auto=format&fit=crop&w=1600&q=85"
+        photoUrl = PhotoLibrary.getForRole(PhotoRole.WALLPAPER_6).url()
     )
 )
 
@@ -294,8 +296,8 @@ fun SavedScreen(
                             .then(
                                 if (isSelected) {
                                     Modifier
-                                        .background(Surface)
-                                        .shadow(1.dp, RoundedCornerShape(20.dp), spotColor = Espresso.copy(alpha = 0.05f))
+                                        .background(Olive)
+                                        .shadow(1.dp, RoundedCornerShape(20.dp), spotColor = Olive.copy(alpha = 0.25f))
                                 } else {
                                     Modifier.background(Color.Transparent)
                                 }
@@ -311,15 +313,15 @@ fun SavedScreen(
                             Text(
                                 text = tab.label,
                                 fontFamily = BodyFontFamily,
-                                fontWeight = if (isSelected) FontWeight.Medium else FontWeight.Normal,
+                                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
                                 fontSize = 12.5.sp,
-                                color = if (isSelected) Espresso else Stone
+                                color = if (isSelected) Color.White else Stone
                             )
                             Box(
                                 modifier = Modifier
                                     .clip(CircleShape)
                                     .background(
-                                        if (isSelected) PorcelainWarm else Color.Transparent
+                                        if (isSelected) Color.White.copy(alpha = 0.25f) else Color.Transparent
                                     )
                                     .padding(horizontal = 6.dp, vertical = 1.dp)
                             ) {
@@ -328,7 +330,7 @@ fun SavedScreen(
                                     fontFamily = BodyFontFamily,
                                     fontWeight = FontWeight.Medium,
                                     fontSize = 10.sp,
-                                    color = if (isSelected) Espresso else StoneMuted
+                                    color = if (isSelected) Color.White else StoneMuted
                                 )
                             }
                         }
@@ -485,7 +487,7 @@ fun SavedScreen(
                                 Button(
                                     onClick = { onNavigateToCreate("") },
                                     colors = ButtonDefaults.buttonColors(
-                                        containerColor = Terracotta,
+                                        containerColor = Olive,
                                         contentColor = Color.White
                                     ),
                                     shape = RoundedCornerShape(14.dp),
@@ -559,7 +561,7 @@ private fun WallpaperCard(
     onShare: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val actionBg = if (wallpaper.photoUrl != null) Color.White.copy(alpha = 0.22f) else wallpaper.textColor.copy(alpha = 0.14f)
+    val actionBg = if (wallpaper.photoUrl != null) ScrimPillColor else wallpaper.textColor.copy(alpha = 0.14f)
     val actionTint = if (wallpaper.photoUrl != null) Color.White else wallpaper.textColor
 
     Box(
@@ -581,18 +583,13 @@ private fun WallpaperCard(
                 model = wallpaper.photoUrl,
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
+                colorFilter = WarmPhotoGrade,
                 modifier = Modifier.fillMaxSize()
             )
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(
-                        Brush.verticalGradient(
-                            0f to Color.Transparent,
-                            0.45f to Color.Black.copy(alpha = 0.25f),
-                            1f to Color.Black.copy(alpha = 0.65f)
-                        )
-                    )
+                    .background(PhotoTextScrim)
             )
         }
 
@@ -604,14 +601,27 @@ private fun WallpaperCard(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Top tag
-            Text(
-                text = "MAKARIOS",
-                fontFamily = BodyFontFamily,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 8.sp,
-                letterSpacing = 2.sp,
-                color = if (wallpaper.photoUrl != null) Color(0xFFFFDF7A) else wallpaper.accentColor.copy(alpha = 0.7f)
-            )
+            if (wallpaper.photoUrl != null) {
+                ScrimPill {
+                    Text(
+                        text = wallpaper.category.uppercase(),
+                        fontFamily = BodyFontFamily,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 8.sp,
+                        letterSpacing = 1.4.sp,
+                        color = Color.White
+                    )
+                }
+            } else {
+                Text(
+                    text = wallpaper.category.uppercase(),
+                    fontFamily = BodyFontFamily,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 8.sp,
+                    letterSpacing = 1.4.sp,
+                    color = wallpaper.accentColor.copy(alpha = 0.7f)
+                )
+            }
 
             // Center quote
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -785,7 +795,7 @@ private fun EmptySavedState(
         Button(
             onClick = onAction,
             colors = ButtonDefaults.buttonColors(
-                containerColor = Espresso,
+                containerColor = Olive,
                 contentColor = Color.White
             ),
             shape = RoundedCornerShape(16.dp),

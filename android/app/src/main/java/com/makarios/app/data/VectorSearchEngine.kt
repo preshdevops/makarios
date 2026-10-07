@@ -83,7 +83,7 @@ class VectorSearchEngine private constructor(private val context: Context) {
                     parsed.add(
                         BibleVerseEntry(
                             reference = obj.getString("r"),
-                            text = obj.getString("t"),
+                            text = com.makarios.app.data.bible.ScriptureText.clean(obj.getString("t")),
                             isDevotional = obj.optInt("d", 0) == 1
                         )
                     )

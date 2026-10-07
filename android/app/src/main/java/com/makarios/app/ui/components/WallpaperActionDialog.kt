@@ -113,7 +113,7 @@ fun WallpaperActionDialog(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         CircularProgressIndicator(
-                            color = Terracotta,
+                            color = Olive,
                             strokeWidth = 2.5.dp,
                             modifier = Modifier.size(32.dp)
                         )
@@ -258,7 +258,7 @@ fun WallpaperActionDialog(
                         icon = Icons.Default.Download,
                         title = "Save to Photos",
                         subtitle = "Download to your camera roll",
-                        accentColor = Terracotta,
+                        accentColor = Olive,
                         onClick = {
                             isProcessing = true
                             statusMessage = "Saving to your Photos…"

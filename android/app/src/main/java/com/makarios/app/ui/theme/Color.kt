@@ -15,9 +15,16 @@ val EspressoLight = Color(0xFF453E38)       // Secondary display text
 val Stone = Color(0xFF787069)              // Body text, scripture — warm driftwood
 val StoneMuted = Color(0xFFA39B93)          // Captions, metadata, search placeholder
 
-// ── Brand Accents (Quiet Luxury / Contemplative) ───────────────
-val Terracotta = Color(0xFFA85842)          // Primary accent — quiet earthy terracotta clay
-val TerracottaLight = Color(0xFFF7EBE7)     // Soft terracotta blush wash
+// ── Accent ────────────────────────────────────────────────────
+// Deep olive is the ONLY accent. Use it for primary actions and the active
+// state (selected tab, selected chip, toggles) — nothing decorative.
+// Contrast: 7.1:1 on Porcelain, 7.5:1 for white text on Olive.
+val Olive = Color(0xFF4A5A3C)
+val OliveLight = Color(0xFFECEFE6)          // Active-state wash behind olive content
+
+// Legacy — do not use for new UI. Kept so untouched code still compiles.
+val Terracotta = Color(0xFFA85842)
+val TerracottaLight = Color(0xFFF7EBE7)
 val Sage = Color(0xFF607768)               // Secondary accent — muted eucalyptus sage
 val SageLight = Color(0xFFF0F4F1)           // Soft sage mist wash
 val AmberGold = Color(0xFFC49B45)           // Warm sacred amber/ochre

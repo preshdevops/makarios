@@ -49,6 +49,7 @@ import com.makarios.app.data.Affirmation
 import com.makarios.app.data.AffirmationRepository
 import com.makarios.app.data.AuthManager
 import com.makarios.app.data.CommunityRepository
+import com.makarios.app.data.PhotoLibrary
 import com.makarios.app.data.PublicAffirmation
 import com.makarios.app.ui.components.AffirmationCard
 import com.makarios.app.ui.components.CommunityAffirmationCard
@@ -75,15 +76,15 @@ private val categoryThemes = listOf(
         name = "Identity",
         description = "Rooted in who God declares you are, redeemed and unconditionally beloved.",
         previewQuote = "I am fully known, deeply loved, and precisely placed.",
-        imageUrl = "https://images.unsplash.com/photo-1518495973542-4542c06a5843?auto=format&fit=crop&w=800&q=85",
-        accentColor = Terracotta,
-        badgeBg = TerracottaLight
+        imageUrl = PhotoLibrary.getThemePhoto("Identity").url(width = 800),
+        accentColor = Olive,
+        badgeBg = OliveLight
     ),
     ThemeItem(
         name = "Peace",
         description = "Stillness that guards your heart and mind when anxiety and worry press in.",
         previewQuote = "The peace of God guards my heart and mind today.",
-        imageUrl = "https://images.unsplash.com/photo-1507652313519-d4e9174996dd?auto=format&fit=crop&w=800&q=85",
+        imageUrl = PhotoLibrary.getThemePhoto("Peace").url(width = 800),
         accentColor = Sage,
         badgeBg = SageLight
     ),
@@ -91,7 +92,7 @@ private val categoryThemes = listOf(
         name = "Strength",
         description = "Divine endurance and quiet power renewed when human stamina runs out.",
         previewQuote = "My strength is made perfect in weakness.",
-        imageUrl = "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=800&q=85",
+        imageUrl = PhotoLibrary.getThemePhoto("Strength").url(width = 800),
         accentColor = SunlitGold,
         badgeBg = SunlitGoldLight
     ),
@@ -99,7 +100,7 @@ private val categoryThemes = listOf(
         name = "Purpose",
         description = "Clarity for your calling and steady confidence for the road ahead.",
         previewQuote = "He who began a good work in you will complete it.",
-        imageUrl = "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=85",
+        imageUrl = PhotoLibrary.getThemePhoto("Purpose").url(width = 800),
         accentColor = Espresso,
         badgeBg = PorcelainWarm
     ),
@@ -107,15 +108,15 @@ private val categoryThemes = listOf(
         name = "Courage",
         description = "Holy boldness to step into the unknown and conquer fear with faith.",
         previewQuote = "The Lord is my light and salvation; whom shall I fear?",
-        imageUrl = "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=800&q=85",
-        accentColor = Terracotta,
-        badgeBg = DawnBlush
+        imageUrl = PhotoLibrary.getThemePhoto("Courage").url(width = 800),
+        accentColor = Olive,
+        badgeBg = OliveLight
     ),
     ThemeItem(
         name = "Joy",
         description = "Unshakeable gladness flowing from thankfulness and the favor of God.",
         previewQuote = "The joy of the Lord is my unshakeable strength.",
-        imageUrl = "https://images.unsplash.com/photo-1500534623283-312aade485b7?auto=format&fit=crop&w=800&q=85",
+        imageUrl = PhotoLibrary.getThemePhoto("Joy").url(width = 800),
         accentColor = SunlitGold,
         badgeBg = SunlitGoldLight
     ),
@@ -123,7 +124,7 @@ private val categoryThemes = listOf(
         name = "Provision",
         description = "Resting in the inexhaustible abundance and daily care of your Father.",
         previewQuote = "My God meets every need according to His glory.",
-        imageUrl = "https://images.unsplash.com/photo-1499209974431-9dddcece7f88?auto=format&fit=crop&w=800&q=85",
+        imageUrl = PhotoLibrary.getThemePhoto("Provision").url(width = 800),
         accentColor = Sage,
         badgeBg = SageLight
     ),
@@ -131,7 +132,7 @@ private val categoryThemes = listOf(
         name = "Confidence",
         description = "Quiet assurance and unshakable trust that will not shrink back in doubt.",
         previewQuote = "I can do all things through Christ who empowers me.",
-        imageUrl = "https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=800&q=85",
+        imageUrl = PhotoLibrary.getThemePhoto("Confidence").url(width = 800),
         accentColor = Espresso,
         badgeBg = PorcelainWarm
     )
@@ -259,7 +260,7 @@ fun LibraryScreen(
                             Box(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(17.dp))
-                                    .background(if (isSelected) Espresso else Color.Transparent)
+                                    .background(if (isSelected) Olive else Color.Transparent)
                                     .clickable { selectedTab = tab }
                                     .padding(horizontal = 12.dp, vertical = 6.dp),
                                 contentAlignment = Alignment.Center
@@ -358,7 +359,7 @@ fun LibraryScreen(
                             Box(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(12.dp))
-                                    .background(Terracotta.copy(alpha = 0.10f))
+                                    .background(OliveLight)
                                     .clickable { showBibleBrowser = true }
                                     .padding(horizontal = 9.dp, vertical = 5.dp),
                                 contentAlignment = Alignment.Center
@@ -370,7 +371,7 @@ fun LibraryScreen(
                                     Icon(
                                         imageVector = Icons.Outlined.MenuBook,
                                         contentDescription = "Open Bible Browser",
-                                        tint = Terracotta,
+                                        tint = Olive,
                                         modifier = Modifier.size(13.dp)
                                     )
                                     Text(
@@ -378,7 +379,7 @@ fun LibraryScreen(
                                         fontFamily = BodyFontFamily,
                                         fontWeight = FontWeight.SemiBold,
                                         fontSize = 11.5.sp,
-                                        color = Terracotta
+                                        color = Olive
                                     )
                                 }
                             }
@@ -404,8 +405,8 @@ fun LibraryScreen(
                                     .then(
                                         if (isSelected) {
                                             Modifier
-                                                .background(Espresso)
-                                                .shadow(1.dp, RoundedCornerShape(20.dp), spotColor = Espresso.copy(alpha = 0.15f))
+                                                .background(Olive)
+                                                .shadow(1.dp, RoundedCornerShape(20.dp), spotColor = Olive.copy(alpha = 0.25f))
                                         } else {
                                             Modifier
                                                 .background(Surface)
@@ -419,9 +420,9 @@ fun LibraryScreen(
                                 Text(
                                     text = category,
                                     fontFamily = BodyFontFamily,
-                                    fontWeight = if (isSelected) FontWeight.Medium else FontWeight.Normal,
+                                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
                                     fontSize = 13.sp,
-                                    color = if (isSelected) Surface else Stone
+                                    color = if (isSelected) Color.White else Stone
                                 )
                             }
                         }
@@ -524,7 +525,7 @@ fun LibraryScreen(
                             fontFamily = BodyFontFamily,
                             fontWeight = FontWeight.Medium,
                             fontSize = 12.sp,
-                            color = Terracotta,
+                            color = Olive,
                             modifier = Modifier.clickable {
                                 selectedCategory = "All"
                                 searchQuery = ""
@@ -568,8 +569,8 @@ fun LibraryScreen(
                                 Button(
                                     onClick = { onNavigateToCreate("") },
                                     colors = ButtonDefaults.buttonColors(
-                                        containerColor = Espresso,
-                                        contentColor = Surface
+                                        containerColor = Olive,
+                                        contentColor = Color.White
                                     ),
                                     shape = RoundedCornerShape(14.dp),
                                     modifier = Modifier.height(44.dp)
@@ -718,7 +719,7 @@ fun LibraryScreen(
                             Icon(
                                 imageVector = Icons.Default.ArrowForward,
                                 contentDescription = "Create",
-                                tint = Terracotta,
+                                tint = Olive,
                                 modifier = Modifier.size(16.dp)
                             )
                         }
@@ -767,21 +768,15 @@ private fun FeaturedTodayCard(
             model = affirmation.imageUrl,
             contentDescription = "Featured declaration",
             contentScale = ContentScale.Crop,
+            colorFilter = WarmPhotoGrade,
             modifier = Modifier.fillMaxSize()
         )
 
-        // Dark gradient overlay (transparent at top to black ~65% at bottom)
+        // Dark gradient overlay
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(
-                    Brush.verticalGradient(
-                        0f to Color.Transparent,
-                        0.35f to Color.Black.copy(alpha = 0.22f),
-                        0.7f to Color.Black.copy(alpha = 0.52f),
-                        1f to Color.Black.copy(alpha = 0.72f)
-                    )
-                )
+                .background(PhotoTextScrim)
         )
 
         // Card Content
@@ -797,12 +792,7 @@ private fun FeaturedTodayCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(Color.Black.copy(alpha = 0.28f))
-                        .padding(horizontal = 10.dp, vertical = 4.dp)
-                ) {
+                ScrimPill {
                     Text(
                         text = "FEATURED TODAY · ${affirmation.category.uppercase()}",
                         color = Color.White,
@@ -893,6 +883,7 @@ private fun ThemeCard(
             model = item.imageUrl,
             contentDescription = item.name,
             contentScale = ContentScale.Crop,
+            colorFilter = WarmPhotoGrade,
             modifier = Modifier.fillMaxSize()
         )
 
@@ -930,12 +921,7 @@ private fun ThemeCard(
                     color = Color.White
                 )
 
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(Color.White.copy(alpha = 0.22f))
-                        .padding(horizontal = 7.dp, vertical = 2.5.dp)
-                ) {
+                ScrimPill {
                     Text(
                         text = countLabel,
                         fontFamily = BodyFontFamily,
@@ -1012,13 +998,13 @@ private fun EmptyCommunityState(
                     modifier = Modifier
                         .size(46.dp)
                         .clip(CircleShape)
-                        .background(TerracottaLight),
+                        .background(OliveLight),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Default.Edit,
                         contentDescription = null,
-                        tint = Terracotta,
+                        tint = Olive,
                         modifier = Modifier.size(22.dp)
                     )
                 }
@@ -1058,8 +1044,8 @@ private fun EmptyCommunityState(
             Button(
                 onClick = onShareClick,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Espresso,
-                    contentColor = Surface
+                    containerColor = Olive,
+                    contentColor = Color.White
                 ),
                 shape = RoundedCornerShape(14.dp),
                 modifier = Modifier.height(44.dp)

@@ -50,6 +50,8 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.ui.res.painterResource
 import com.makarios.app.R
 import com.makarios.app.data.AuthManager
+import com.makarios.app.data.PhotoLibrary
+import com.makarios.app.data.PhotoRole
 import com.makarios.app.ui.components.AuthDialog
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -177,10 +179,10 @@ fun OnboardingScreen(
 @Composable
 private fun OnboardingBackgroundLayer(pagerState: PagerState) {
     val photos = listOf(
-        "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=900&q=80", // mountain dawn
-        "https://images.unsplash.com/photo-1501854140801-50d01698950b?auto=format&fit=crop&w=900&q=80", // valley mist
-        "https://images.unsplash.com/photo-1491466424936-e304919aada7?auto=format&fit=crop&w=900&q=80", // golden horizon
-        "https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=900&q=80"  // starry sanctuary
+        PhotoLibrary.getForRole(PhotoRole.ONBOARDING_1).url(width = 900),
+        PhotoLibrary.getForRole(PhotoRole.ONBOARDING_2).url(width = 900),
+        PhotoLibrary.getForRole(PhotoRole.ONBOARDING_3).url(width = 900),
+        PhotoLibrary.getForRole(PhotoRole.ONBOARDING_4).url(width = 900)
     )
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -195,6 +197,7 @@ private fun OnboardingBackgroundLayer(pagerState: PagerState) {
                     model = url,
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
+                    colorFilter = WarmPhotoGrade,
                     modifier = Modifier
                         .fillMaxSize()
                         .alpha(alpha)
@@ -339,7 +342,7 @@ private fun DeclarationPreviewCard() {
             Box(
                 modifier = Modifier
                     .clip(RoundedCornerShape(8.dp))
-                    .background(TerracottaLight)
+                    .background(OliveLight)
                     .padding(horizontal = 12.dp, vertical = 4.dp)
             ) {
                 Text(
@@ -348,7 +351,7 @@ private fun DeclarationPreviewCard() {
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 9.sp,
                     letterSpacing = 1.6.sp,
-                    color = Terracotta
+                    color = Olive
                 )
             }
 
@@ -392,7 +395,7 @@ private fun DeclarationPreviewCard() {
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 10.sp,
                 letterSpacing = 1.5.sp,
-                color = Terracotta
+                color = Stone
             )
         }
     }
@@ -503,7 +506,7 @@ private fun PageSeasonPicker(
                                     Icon(
                                         imageVector = Icons.Default.Check,
                                         contentDescription = null,
-                                        tint = Terracotta,
+                                        tint = Olive,
                                         modifier = Modifier.size(12.dp)
                                     )
                                 }
@@ -635,7 +638,7 @@ private fun PageReady(chosenArea: String) {
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(8.dp))
-                        .background(TerracottaLight)
+                        .background(OliveLight)
                         .padding(horizontal = 12.dp, vertical = 4.dp)
                 ) {
                     Text(
@@ -644,7 +647,7 @@ private fun PageReady(chosenArea: String) {
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 9.sp,
                         letterSpacing = 1.6.sp,
-                        color = Terracotta
+                        color = Olive
                     )
                 }
 
@@ -653,7 +656,7 @@ private fun PageReady(chosenArea: String) {
                 Text(
                     text = "“$declaration”",
                     fontFamily = DisplayFontFamily,
-                    fontSize = 17.sp,
+                    fontSize = 17.5.sp,
                     lineHeight = 25.sp,
                     textAlign = TextAlign.Center,
                     color = Espresso
@@ -688,7 +691,7 @@ private fun PageReady(chosenArea: String) {
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 10.sp,
                     letterSpacing = 1.5.sp,
-                    color = Terracotta
+                    color = Stone
                 )
             }
         }
@@ -948,7 +951,7 @@ private fun PageAuth(onComplete: () -> Unit) {
             enabled = !isLoading,
             shape = RoundedCornerShape(16.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = Terracotta,
+                containerColor = Olive,
                 contentColor = Color.White
             ),
             modifier = Modifier
@@ -1041,7 +1044,7 @@ private fun OnboardingCTA(
     }
 
     val ctaBg by animateColorAsState(
-        targetValue = if (isLast) Terracotta else Color.White,
+        targetValue = if (isLast) Olive else Color.White,
         animationSpec = tween(250),
         label = "cta-bg"
     )

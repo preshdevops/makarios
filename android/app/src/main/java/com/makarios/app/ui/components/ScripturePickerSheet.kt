@@ -1,12 +1,19 @@
 package com.makarios.app.ui.components
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import android.widget.Toast
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -17,7 +24,11 @@ import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.ArrowForwardIos
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.FormatSize
+import androidx.compose.material.icons.filled.Highlight
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -25,10 +36,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.BaselineShift
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextIndent
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -37,7 +55,11 @@ import com.makarios.app.data.BibleVerseEntry
 import com.makarios.app.data.BibleVersion
 import com.makarios.app.data.BibleVersionRepository
 import com.makarios.app.data.ScriptureDatabase
+import com.makarios.app.data.bible.BibleReaderPrefs
+import com.makarios.app.data.bible.ReaderTheme
+import com.makarios.app.data.bible.ScriptureText
 import com.makarios.app.ui.theme.*
+import com.makarios.app.util.ShareHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -73,13 +95,15 @@ private enum class BrowseLevel { BOOKS, CHAPTERS, VERSES }
 // ─── Main composable ──────────────────────────────────────────────────────────
 
 /**
- * Full-Bible browser bottom sheet.
+ * Full-Bible browser and reader bottom sheet.
  *
  * Capabilities:
- *  - Verse, Chapter, Book, and Testament drill-down navigation
- *  - Multiple Bible versions (WEB offline, KJV, BBE, ASV online)
- *  - Instant keyword & reference search across 31,000+ verses
- *  - Retains backward-compatible onVerseSelected(reference, text)
+ *  - Flowing chapter reader with Cormorant serif and 1.6 line height
+ *  - Small superscript verse numbers and indented poetry
+ *  - Verse multi-selection with floating action bar (Use as match, Copy, Share image, Highlight)
+ *  - Reader settings (font size, light/sepia/dark themes, verse numbers toggle)
+ *  - Bible translation switching (WEB offline, KJV, BBE, ASV online)
+ *  - Global keyword and citation search
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -91,7 +115,15 @@ fun ScripturePickerSheet(
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 
-    // ── State ────────────────────────────────────────────────────────────────
+    // ── Reader Preferences ───────────────────────────────────────────────────
+    var readerFontSize by remember { mutableFloatStateOf(BibleReaderPrefs.getFontSize(context)) }
+    var readerTheme by remember { mutableStateOf(BibleReaderPrefs.getTheme(context)) }
+    var showVerseNumbers by remember { mutableStateOf(BibleReaderPrefs.getShowVerseNumbers(context)) }
+    var highlights by remember { mutableStateOf(BibleReaderPrefs.getHighlights(context)) }
+
+    var showSettingsDialog by remember { mutableStateOf(false) }
+
+    // ── Corpus Data ──────────────────────────────────────────────────────────
     var allVerses by remember { mutableStateOf<List<BibleVerseEntry>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
     var isTranslating by remember { mutableStateOf(false) }
@@ -104,6 +136,14 @@ fun ScripturePickerSheet(
     var browseLevel by remember { mutableStateOf(BrowseLevel.BOOKS) }
     var selectedBook by remember { mutableStateOf("") }
     var selectedChapter by remember { mutableIntStateOf(0) }
+
+    // Selected verse numbers within currently viewed chapter
+    var selectedVerseNumbers by remember(selectedBook, selectedChapter) { mutableStateOf<Set<Int>>(emptySet()) }
+
+    // Hand-curated promise set for search results badge
+    val promiseReferences = remember {
+        ScriptureDatabase.verses.map { it.reference }.toSet()
+    }
 
     // ── Load corpus once ─────────────────────────────────────────────────────
     LaunchedEffect(Unit) {
@@ -118,7 +158,7 @@ fun ScripturePickerSheet(
                         list.add(
                             BibleVerseEntry(
                                 reference = obj.getString("r"),
-                                text = obj.getString("t"),
+                                text = ScriptureText.clean(obj.getString("t")),
                                 isDevotional = obj.optInt("d", 0) == 1
                             )
                         )
@@ -127,7 +167,7 @@ fun ScripturePickerSheet(
                 }
             } catch (_: Exception) {
                 allVerses = ScriptureDatabase.verses.map {
-                    BibleVerseEntry(it.reference, it.text, true)
+                    BibleVerseEntry(it.reference, ScriptureText.clean(it.text), true)
                 }
             } finally {
                 isLoading = false
@@ -135,11 +175,9 @@ fun ScripturePickerSheet(
         }
     }
 
-    // ── Derived data ─────────────────────────────────────────────────────────
-
     val canonBooks = if (testament == "OT") OLD_TESTAMENT_BOOKS else NEW_TESTAMENT_BOOKS
 
-    // Keyword/reference search — searches ALL verses (both testaments)
+    // Search results across entire corpus
     val searchResults = remember(searchQuery, allVerses) {
         if (searchQuery.isBlank()) emptyList()
         else {
@@ -150,7 +188,7 @@ fun ScripturePickerSheet(
         }
     }
 
-    // Chapters available in the selected book
+    // Chapters available in selected book
     val chaptersInBook = remember(selectedBook, allVerses) {
         if (selectedBook.isBlank()) emptyList()
         else {
@@ -162,17 +200,19 @@ fun ScripturePickerSheet(
         }
     }
 
-    // Verses in the selected book + chapter
+    // Verses in selected chapter
     val versesInChapter = remember(selectedBook, selectedChapter, allVerses) {
         if (selectedBook.isBlank() || selectedChapter == 0) emptyList()
         else allVerses.filter { isVerseInChapter(it.reference, selectedBook, selectedChapter) }
     }
 
     // ── Handlers ─────────────────────────────────────────────────────────────
-
     fun goBack() {
         when (browseLevel) {
-            BrowseLevel.VERSES -> browseLevel = BrowseLevel.CHAPTERS
+            BrowseLevel.VERSES -> {
+                browseLevel = BrowseLevel.CHAPTERS
+                selectedVerseNumbers = emptySet()
+            }
             BrowseLevel.CHAPTERS -> {
                 browseLevel = BrowseLevel.BOOKS
                 selectedBook = ""
@@ -181,7 +221,7 @@ fun ScripturePickerSheet(
         }
     }
 
-    fun handleVerseClick(verse: BibleVerseEntry) {
+    fun handleSingleVerseSelect(verse: BibleVerseEntry) {
         if (selectedVersion.isOffline || selectedVersion.code == "web") {
             onVerseSelected(verse.reference, verse.text)
             onDismiss()
@@ -200,10 +240,37 @@ fun ScripturePickerSheet(
         }
     }
 
-    // ── Sheet ─────────────────────────────────────────────────────────────────
+    // Formats reference range for multiple selected verses (e.g. "John 3:16–17")
+    fun formatSelectedReference(): String {
+        if (selectedVerseNumbers.isEmpty()) return ""
+        val sorted = selectedVerseNumbers.sorted()
+        val isContiguous = sorted.last() - sorted.first() == sorted.size - 1
+        return if (sorted.size == 1) {
+            "$selectedBook $selectedChapter:${sorted.first()}"
+        } else if (isContiguous) {
+            "$selectedBook $selectedChapter:${sorted.first()}–${sorted.last()}"
+        } else {
+            "$selectedBook $selectedChapter:" + sorted.joinToString(", ")
+        }
+    }
+
+    fun getSelectedVersesText(): String {
+        val sorted = selectedVerseNumbers.sorted()
+        return versesInChapter
+            .filter { parseVerseNumber(it.reference, selectedBook, selectedChapter) in sorted }
+            .joinToString(" ") { it.text }
+    }
+
+    // Sheet container color follows reader theme when on verses level
+    val containerBg = if (browseLevel == BrowseLevel.VERSES && searchQuery.isBlank()) {
+        readerTheme.background
+    } else {
+        Porcelain
+    }
+
     ModalBottomSheet(
         onDismissRequest = onDismiss,
-        containerColor = Porcelain,
+        containerColor = containerBg,
         dragHandle = {
             Box(
                 modifier = Modifier
@@ -214,7 +281,7 @@ fun ScripturePickerSheet(
                     .background(Border)
             )
         },
-        modifier = modifier.fillMaxHeight(0.92f)
+        modifier = modifier.fillMaxHeight(0.94f)
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
             Column(
@@ -228,11 +295,10 @@ fun ScripturePickerSheet(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Back button (when drilling down or in search)
                     if (browseLevel != BrowseLevel.BOOKS || searchQuery.isNotBlank()) {
                         Box(
                             modifier = Modifier
-                                .size(34.dp)
+                                .size(36.dp)
                                 .clip(CircleShape)
                                 .background(Surface)
                                 .border(1.dp, Border, CircleShape)
@@ -246,147 +312,173 @@ fun ScripturePickerSheet(
                                 imageVector = Icons.Default.ArrowBack,
                                 contentDescription = "Back",
                                 tint = Espresso,
-                                modifier = Modifier.size(15.dp)
+                                modifier = Modifier.size(16.dp)
                             )
                         }
                         Spacer(modifier = Modifier.width(10.dp))
                     }
 
                     Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = when {
-                                searchQuery.isNotBlank() -> "Search Results"
-                                browseLevel == BrowseLevel.VERSES -> "$selectedBook $selectedChapter"
-                                browseLevel == BrowseLevel.CHAPTERS -> selectedBook
-                                else -> "Holy Bible"
-                            },
-                            fontFamily = DisplayFontFamily,
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 22.sp,
-                            color = Espresso
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                text = when {
+                                    searchQuery.isNotBlank() -> "Search results"
+                                    browseLevel == BrowseLevel.VERSES -> "$selectedBook $selectedChapter"
+                                    browseLevel == BrowseLevel.CHAPTERS -> selectedBook
+                                    else -> "Holy Bible"
+                                },
+                                fontFamily = DisplayFontFamily,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 22.sp,
+                                color = if (browseLevel == BrowseLevel.VERSES && searchQuery.isBlank()) readerTheme.text else Espresso
+                            )
+
+                            // Translation badge shown once in header
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(6.dp))
+                                    .background(BorderSubtle)
+                                    .clickable { showVersionDialog = true }
+                                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(2.dp)
+                                ) {
+                                    Text(
+                                        text = selectedVersion.displayName,
+                                        fontFamily = BodyFontFamily,
+                                        fontWeight = FontWeight.SemiBold,
+                                        fontSize = 11.sp,
+                                        color = Olive
+                                    )
+                                    Icon(
+                                        imageVector = Icons.Default.ArrowDropDown,
+                                        contentDescription = "Change translation",
+                                        tint = Olive,
+                                        modifier = Modifier.size(14.dp)
+                                    )
+                                }
+                            }
+                        }
+
                         Text(
                             text = when {
                                 searchQuery.isNotBlank() -> "${searchResults.size} verse${if (searchResults.size != 1) "s" else ""} found"
-                                browseLevel == BrowseLevel.VERSES -> "${versesInChapter.size} verses"
+                                browseLevel == BrowseLevel.VERSES -> "${versesInChapter.size} verses · ${selectedVersion.fullTitle}"
                                 browseLevel == BrowseLevel.CHAPTERS -> "${chaptersInBook.size} chapters"
                                 else -> if (testament == "OT") "Old Testament · ${OLD_TESTAMENT_BOOKS.size} books"
                                 else "New Testament · ${NEW_TESTAMENT_BOOKS.size} books"
                             },
                             fontFamily = BodyFontFamily,
                             fontSize = 12.sp,
-                            color = Stone
+                            color = if (browseLevel == BrowseLevel.VERSES && searchQuery.isBlank()) readerTheme.verseNumber else Stone
                         )
                     }
 
-                    // Version Selector Chip
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(Surface)
-                            .border(1.dp, Border, RoundedCornerShape(12.dp))
-                            .clickable { showVersionDialog = true }
-                            .padding(horizontal = 10.dp, vertical = 6.dp)
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(2.dp)
+                    // Reader Settings Button (shown when viewing a chapter)
+                    if (browseLevel == BrowseLevel.VERSES && searchQuery.isBlank()) {
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(CircleShape)
+                                .background(Surface)
+                                .border(1.dp, Border, CircleShape)
+                                .clickable { showSettingsDialog = true },
+                            contentAlignment = Alignment.Center
                         ) {
-                            Text(
-                                text = selectedVersion.displayName,
-                                fontFamily = BodyFontFamily,
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 12.sp,
-                                color = Terracotta
-                            )
                             Icon(
-                                imageVector = Icons.Default.ArrowDropDown,
-                                contentDescription = "Select Bible Version",
-                                tint = Terracotta,
-                                modifier = Modifier.size(16.dp)
+                                imageVector = Icons.Default.FormatSize,
+                                contentDescription = "Reader settings",
+                                tint = Espresso,
+                                modifier = Modifier.size(18.dp)
                             )
                         }
+                        Spacer(modifier = Modifier.width(8.dp))
                     }
-
-                    Spacer(modifier = Modifier.width(8.dp))
 
                     // Close button
                     Box(
                         modifier = Modifier
-                            .size(34.dp)
+                            .size(36.dp)
                             .clip(CircleShape)
                             .background(Surface)
                             .border(1.dp, Border, CircleShape)
                             .clickable(onClick = onDismiss),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(Icons.Default.Close, contentDescription = "Close", tint = Espresso, modifier = Modifier.size(15.dp))
+                        Icon(Icons.Default.Close, contentDescription = "Close", tint = Espresso, modifier = Modifier.size(16.dp))
                     }
                 }
 
                 Spacer(modifier = Modifier.height(14.dp))
 
                 // ── Search bar ────────────────────────────────────────────────
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(14.dp))
-                        .background(Surface)
-                        .border(1.dp, Border, RoundedCornerShape(14.dp))
-                        .padding(horizontal = 14.dp, vertical = 11.dp)
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                if (browseLevel != BrowseLevel.VERSES || searchQuery.isNotBlank()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(Surface)
+                            .border(1.dp, Border, RoundedCornerShape(14.dp))
+                            .padding(horizontal = 14.dp, vertical = 11.dp)
                     ) {
-                        Icon(Icons.Default.Search, contentDescription = null, tint = StoneMuted, modifier = Modifier.size(17.dp))
-                        BasicTextField(
-                            value = searchQuery,
-                            onValueChange = {
-                                searchQuery = it
-                                if (it.isNotBlank()) {
-                                    browseLevel = BrowseLevel.BOOKS
-                                    selectedBook = ""
-                                    selectedChapter = 0
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Icon(Icons.Default.Search, contentDescription = null, tint = StoneMuted, modifier = Modifier.size(17.dp))
+                            BasicTextField(
+                                value = searchQuery,
+                                onValueChange = {
+                                    searchQuery = it
+                                    if (it.isNotBlank()) {
+                                        browseLevel = BrowseLevel.BOOKS
+                                        selectedBook = ""
+                                        selectedChapter = 0
+                                    }
+                                },
+                                textStyle = TextStyle(
+                                    fontFamily = BodyFontFamily,
+                                    fontSize = 13.5.sp,
+                                    color = Espresso
+                                ),
+                                cursorBrush = SolidColor(Olive),
+                                modifier = Modifier.weight(1f),
+                                decorationBox = { innerTextField ->
+                                    if (searchQuery.isEmpty()) {
+                                        Text(
+                                            text = "Search verse, citation, or topic…",
+                                            fontFamily = BodyFontFamily,
+                                            fontSize = 13.sp,
+                                            color = StoneMuted
+                                        )
+                                    }
+                                    innerTextField()
                                 }
-                            },
-                            textStyle = TextStyle(
-                                fontFamily = BodyFontFamily,
-                                fontSize = 13.5.sp,
-                                color = Espresso
-                            ),
-                            cursorBrush = SolidColor(Terracotta),
-                            modifier = Modifier.weight(1f),
-                            decorationBox = { innerTextField ->
-                                if (searchQuery.isEmpty()) {
-                                    Text(
-                                        text = "Search verse, book, chapter, or keyword…",
-                                        fontFamily = BodyFontFamily,
-                                        fontSize = 13.sp,
-                                        color = StoneMuted
-                                    )
+                            )
+                            if (searchQuery.isNotBlank()) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(20.dp)
+                                        .clip(CircleShape)
+                                        .background(Border)
+                                        .clickable { searchQuery = "" },
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(Icons.Default.Close, contentDescription = "Clear", tint = Espresso, modifier = Modifier.size(11.dp))
                                 }
-                                innerTextField()
-                            }
-                        )
-                        if (searchQuery.isNotBlank()) {
-                            Box(
-                                modifier = Modifier
-                                    .size(20.dp)
-                                    .clip(CircleShape)
-                                    .background(Border)
-                                    .clickable { searchQuery = "" },
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(Icons.Default.Close, contentDescription = "Clear", tint = Espresso, modifier = Modifier.size(11.dp))
                             }
                         }
                     }
+
+                    Spacer(modifier = Modifier.height(12.dp))
                 }
 
-                Spacer(modifier = Modifier.height(12.dp))
-
-                // ── Testament toggle (visible only on books level with no search) ──
+                // ── Testament toggle ──────────────────────────────────────────
                 AnimatedVisibility(
                     visible = browseLevel == BrowseLevel.BOOKS && searchQuery.isBlank(),
                     enter = fadeIn() + expandVertically(),
@@ -422,7 +514,7 @@ fun ScripturePickerSheet(
                 // ── Content ───────────────────────────────────────────────────
                 if (isLoading) {
                     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator(color = Terracotta, strokeWidth = 2.5.dp)
+                        CircularProgressIndicator(color = Olive, strokeWidth = 2.5.dp)
                     }
                 } else {
                     // Search results
@@ -430,10 +522,10 @@ fun ScripturePickerSheet(
                         if (searchResults.isEmpty()) {
                             EmptySearchState(query = searchQuery)
                         } else {
-                            VerseList(
+                            SearchResultList(
                                 verses = searchResults,
-                                versionName = selectedVersion.displayName,
-                                onSelect = { handleVerseClick(it) }
+                                promiseReferences = promiseReferences,
+                                onSelect = { handleSingleVerseSelect(it) }
                             )
                         }
                         return@Column
@@ -463,18 +555,159 @@ fun ScripturePickerSheet(
                         )
                     }
 
-                    // Verses level
+                    // Verses level: Flowing Paragraph Chapter Reader
                     if (browseLevel == BrowseLevel.VERSES) {
-                        VerseList(
+                        ChapterReader(
+                            book = selectedBook,
+                            chapter = selectedChapter,
                             verses = versesInChapter,
-                            versionName = selectedVersion.displayName,
-                            onSelect = { handleVerseClick(it) }
+                            selectedVerseNumbers = selectedVerseNumbers,
+                            highlights = highlights,
+                            readerTheme = readerTheme,
+                            fontSize = readerFontSize,
+                            showVerseNumbers = showVerseNumbers,
+                            onToggleVerseSelect = { verseNum ->
+                                selectedVerseNumbers = if (selectedVerseNumbers.contains(verseNum)) {
+                                    selectedVerseNumbers - verseNum
+                                } else {
+                                    selectedVerseNumbers + verseNum
+                                }
+                            }
                         )
                     }
                 }
             }
 
-            // Translation loading overlay
+            // ── Floating Action Bar (when >= 1 verses selected) ───────────────
+            AnimatedVisibility(
+                visible = selectedVerseNumbers.isNotEmpty(),
+                enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
+                exit = slideOutVertically(targetOffsetY = { it }) + fadeOut(),
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(horizontal = 16.dp, vertical = 18.dp)
+            ) {
+                Surface(
+                    shape = RoundedCornerShape(20.dp),
+                    color = Espresso,
+                    shadowElevation = 8.dp,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 12.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        // Use as match (Primary)
+                        Button(
+                            onClick = {
+                                val ref = formatSelectedReference()
+                                val text = getSelectedVersesText()
+                                onVerseSelected(ref, text)
+                                onDismiss()
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Olive,
+                                contentColor = Color.White
+                            ),
+                            shape = RoundedCornerShape(12.dp),
+                            contentPadding = PaddingValues(horizontal = 14.dp, vertical = 10.dp)
+                        ) {
+                            Text(
+                                text = "Use as match",
+                                fontFamily = BodyFontFamily,
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 13.sp
+                            )
+                        }
+
+                        // Copy
+                        IconButton(
+                            onClick = {
+                                val ref = formatSelectedReference()
+                                val text = getSelectedVersesText()
+                                val formatted = ScriptureText.formatForCopy(ref, text, selectedVersion.displayName)
+                                val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                                cm.setPrimaryClip(ClipData.newPlainText("Scripture", formatted))
+                                Toast.makeText(context, "Copied $ref", Toast.LENGTH_SHORT).show()
+                                selectedVerseNumbers = emptySet()
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.ContentCopy,
+                                contentDescription = "Copy",
+                                tint = Color.White,
+                                modifier = Modifier.size(19.dp)
+                            )
+                        }
+
+                        // Share image
+                        IconButton(
+                            onClick = {
+                                val ref = formatSelectedReference()
+                                val text = getSelectedVersesText()
+                                val aff = com.makarios.app.data.Affirmation(
+                                    id = "shared_${System.currentTimeMillis()}",
+                                    declaration = text,
+                                    scriptureText = text,
+                                    reference = ref,
+                                    category = selectedBook
+                                )
+                                ShareHelper.shareAffirmationGraphic(context, aff)
+                                selectedVerseNumbers = emptySet()
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Share,
+                                contentDescription = "Share image",
+                                tint = Color.White,
+                                modifier = Modifier.size(19.dp)
+                            )
+                        }
+
+                        // Highlight
+                        IconButton(
+                            onClick = {
+                                val current = highlights.toMutableSet()
+                                val chapterVerses = selectedVerseNumbers.map { "$selectedBook $selectedChapter:$it" }
+                                val anyHighlighted = chapterVerses.any { current.contains(it) }
+
+                                chapterVerses.forEach { ref ->
+                                    BibleReaderPrefs.toggleHighlight(context, ref)
+                                }
+                                highlights = BibleReaderPrefs.getHighlights(context)
+                                Toast.makeText(
+                                    context,
+                                    if (anyHighlighted) "Removed highlight" else "Highlighted",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                selectedVerseNumbers = emptySet()
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Highlight,
+                                contentDescription = "Highlight",
+                                tint = Color.White,
+                                modifier = Modifier.size(19.dp)
+                            )
+                        }
+
+                        // Clear selection
+                        IconButton(onClick = { selectedVerseNumbers = emptySet() }) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Cancel selection",
+                                tint = StoneMuted,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Translating overlay
             if (isTranslating) {
                 Box(
                     modifier = Modifier
@@ -492,11 +725,7 @@ fun ScripturePickerSheet(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
-                            CircularProgressIndicator(
-                                color = Terracotta,
-                                strokeWidth = 2.5.dp,
-                                modifier = Modifier.size(24.dp)
-                            )
+                            CircularProgressIndicator(color = Olive, strokeWidth = 2.5.dp, modifier = Modifier.size(24.dp))
                             Text(
                                 text = "Loading ${selectedVersion.displayName} text…",
                                 fontFamily = BodyFontFamily,
@@ -524,7 +753,7 @@ fun ScripturePickerSheet(
             ) {
                 Column(modifier = Modifier.padding(22.dp)) {
                     Text(
-                        text = "Bible Translation",
+                        text = "Bible translation",
                         fontFamily = DisplayFontFamily,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 20.sp,
@@ -546,10 +775,10 @@ fun ScripturePickerSheet(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(12.dp))
-                                .background(if (isSelected) Surface else Color.Transparent)
+                                .background(if (isSelected) OliveLight else Color.Transparent)
                                 .border(
                                     1.dp,
-                                    if (isSelected) Terracotta.copy(alpha = 0.5f) else Color.Transparent,
+                                    if (isSelected) Olive else Color.Transparent,
                                     RoundedCornerShape(12.dp)
                                 )
                                 .clickable {
@@ -573,7 +802,7 @@ fun ScripturePickerSheet(
                                             fontFamily = BodyFontFamily,
                                             fontWeight = FontWeight.Bold,
                                             fontSize = 14.sp,
-                                            color = if (isSelected) Terracotta else Espresso
+                                            color = if (isSelected) Olive else Espresso
                                         )
                                         Text(
                                             text = "· ${version.fullTitle}",
@@ -595,7 +824,7 @@ fun ScripturePickerSheet(
                                     Icon(
                                         imageVector = Icons.Default.Check,
                                         contentDescription = "Selected",
-                                        tint = Terracotta,
+                                        tint = Olive,
                                         modifier = Modifier.size(18.dp)
                                     )
                                 }
@@ -604,6 +833,296 @@ fun ScripturePickerSheet(
                         Spacer(modifier = Modifier.height(4.dp))
                     }
                 }
+            }
+        }
+    }
+
+    // ── Reader Settings Dialog ─────────────────────────────────────────────────
+    if (showSettingsDialog) {
+        Dialog(onDismissRequest = { showSettingsDialog = false }) {
+            Surface(
+                shape = RoundedCornerShape(20.dp),
+                color = Porcelain,
+                border = androidx.compose.foundation.BorderStroke(1.dp, Border),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+            ) {
+                Column(modifier = Modifier.padding(22.dp)) {
+                    Text(
+                        text = "Reader settings",
+                        fontFamily = DisplayFontFamily,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 20.sp,
+                        color = Espresso
+                    )
+                    Spacer(modifier = Modifier.height(18.dp))
+
+                    // Font size selector
+                    Text(
+                        text = "Text size",
+                        fontFamily = BodyFontFamily,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 12.sp,
+                        color = Stone
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        listOf(15f to "Small", 18f to "Default", 21f to "Large", 24f to "Extra").forEach { (size, label) ->
+                            val isSelected = readerFontSize == size
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(if (isSelected) Olive else Surface)
+                                    .border(1.dp, if (isSelected) Olive else Border, RoundedCornerShape(10.dp))
+                                    .clickable {
+                                        readerFontSize = size
+                                        BibleReaderPrefs.setFontSize(context, size)
+                                    }
+                                    .padding(vertical = 8.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = label,
+                                    fontFamily = BodyFontFamily,
+                                    fontSize = 11.sp,
+                                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                                    color = if (isSelected) Color.White else Espresso
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(18.dp))
+
+                    // Reading Theme
+                    Text(
+                        text = "Reading theme",
+                        fontFamily = BodyFontFamily,
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 12.sp,
+                        color = Stone
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        ReaderTheme.values().forEach { theme ->
+                            val isSelected = readerTheme == theme
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(theme.background)
+                                    .border(
+                                        width = if (isSelected) 2.dp else 1.dp,
+                                        color = if (isSelected) Olive else Border,
+                                        shape = RoundedCornerShape(12.dp)
+                                    )
+                                    .clickable {
+                                        readerTheme = theme
+                                        BibleReaderPrefs.setTheme(context, theme)
+                                    }
+                                    .padding(vertical = 12.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = theme.title,
+                                    fontFamily = BodyFontFamily,
+                                    fontSize = 12.sp,
+                                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                                    color = theme.text
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(18.dp))
+
+                    // Verse numbers toggle
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column {
+                            Text(
+                                text = "Verse numbers",
+                                fontFamily = BodyFontFamily,
+                                fontWeight = FontWeight.Medium,
+                                fontSize = 13.sp,
+                                color = Espresso
+                            )
+                            Text(
+                                text = "Show superscript numbers in text",
+                                fontFamily = BodyFontFamily,
+                                fontSize = 11.sp,
+                                color = StoneMuted
+                            )
+                        }
+                        Switch(
+                            checked = showVerseNumbers,
+                            onCheckedChange = {
+                                showVerseNumbers = it
+                                BibleReaderPrefs.setShowVerseNumbers(context, it)
+                            },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = Color.White,
+                                checkedTrackColor = Olive
+                            )
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(18.dp))
+
+                    Button(
+                        onClick = { showSettingsDialog = false },
+                        colors = ButtonDefaults.buttonColors(containerColor = Espresso),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = "Done",
+                            fontFamily = BodyFontFamily,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ─── Flowing Chapter Reader ──────────────────────────────────────────────────
+
+@Composable
+private fun ChapterReader(
+    book: String,
+    chapter: Int,
+    verses: List<BibleVerseEntry>,
+    selectedVerseNumbers: Set<Int>,
+    highlights: Set<String>,
+    readerTheme: ReaderTheme,
+    fontSize: Float,
+    showVerseNumbers: Boolean,
+    onToggleVerseSelect: (Int) -> Unit
+) {
+    // Check if poetic book
+    val isPoetry = book in setOf("Psalms", "Proverbs", "Song of Solomon", "Lamentations") ||
+            (book == "Job" && chapter in 3..41)
+
+    // For prose, group verses into paragraphs of ~4 verses
+    val paragraphs = remember(verses, isPoetry) {
+        if (isPoetry) verses.map { listOf(it) }
+        else verses.chunked(4)
+    }
+
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(bottom = 90.dp)
+    ) {
+        items(paragraphs) { paragraphVerses ->
+            // Paragraph layout state for tap detection
+            var layoutResult by remember { mutableStateOf<TextLayoutResult?>(null) }
+
+            val annotatedText = buildAnnotatedString {
+                paragraphVerses.forEachIndexed { idx, verse ->
+                    val verseNum = parseVerseNumber(verse.reference, book, chapter) ?: (idx + 1)
+                    val fullRef = "$book $chapter:$verseNum"
+                    val isSelected = selectedVerseNumbers.contains(verseNum)
+                    val isHighlighted = highlights.contains(fullRef)
+
+                    val startOffset = length
+
+                    // Add superscript verse number
+                    if (showVerseNumbers) {
+                        pushStyle(
+                            SpanStyle(
+                                color = readerTheme.verseNumber,
+                                fontSize = (fontSize * 0.65f).sp,
+                                baselineShift = BaselineShift(0.35f),
+                                fontWeight = FontWeight.Normal
+                            )
+                        )
+                        append("$verseNum ")
+                        pop()
+                    }
+
+                    // Apply selection / highlight styles to verse text
+                    val verseStart = length
+                    append(verse.text)
+                    val verseEnd = length
+
+                    if (isSelected) {
+                        addStyle(
+                            SpanStyle(
+                                textDecoration = TextDecoration.Underline,
+                                background = OliveLight
+                            ),
+                            startOffset,
+                            verseEnd
+                        )
+                    } else if (isHighlighted) {
+                        addStyle(
+                            SpanStyle(background = readerTheme.highlightColor),
+                            startOffset,
+                            verseEnd
+                        )
+                    }
+
+                    // Attach verse number tag for tap detection
+                    addStringAnnotation(
+                        tag = "VERSE",
+                        annotation = "$verseNum",
+                        start = startOffset,
+                        end = verseEnd
+                    )
+
+                    // Space between verses in prose
+                    if (!isPoetry && idx < paragraphVerses.size - 1) {
+                        append(" ")
+                    }
+                }
+            }
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        vertical = if (isPoetry) 3.dp else 8.dp,
+                        horizontal = if (isPoetry) 14.dp else 0.dp
+                    )
+            ) {
+                Text(
+                    text = annotatedText,
+                    fontFamily = DisplayFontFamily,
+                    fontSize = fontSize.sp,
+                    lineHeight = (fontSize * 1.6f).sp,
+                    color = readerTheme.text,
+                    style = TextStyle(
+                        textIndent = if (isPoetry) TextIndent(firstLine = 0.sp, restLine = 16.sp)
+                        else TextIndent.None
+                    ),
+                    onTextLayout = { layoutResult = it },
+                    modifier = Modifier.pointerInput(paragraphVerses) {
+                        detectTapGestures { offset ->
+                            val layout = layoutResult ?: return@detectTapGestures
+                            val position = layout.getOffsetForPosition(offset)
+                            annotatedText.getStringAnnotations("VERSE", position, position)
+                                .firstOrNull()?.let { annotation ->
+                                    annotation.item.toIntOrNull()?.let { verseNum ->
+                                        onToggleVerseSelect(verseNum)
+                                    }
+                                }
+                        }
+                    }
+                )
             }
         }
     }
@@ -696,60 +1215,39 @@ private fun ChapterGrid(
     chapters: List<Int>,
     onSelect: (Int) -> Unit
 ) {
-    LazyColumn(
+    LazyVerticalGrid(
+        columns = GridCells.Adaptive(52.dp),
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(bottom = 32.dp)
+        contentPadding = PaddingValues(bottom = 32.dp),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        item {
-            Text(
-                text = "${book.uppercase()} · CHAPTERS",
-                fontFamily = BodyFontFamily,
-                fontWeight = FontWeight.Medium,
-                fontSize = 10.sp,
-                letterSpacing = 1.4.sp,
-                color = StoneMuted,
-                modifier = Modifier.padding(bottom = 14.dp)
-            )
-        }
-        val rows = chapters.chunked(5)
-        items(rows) { row ->
-            Row(
+        items(chapters) { chapter ->
+            Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 10.dp),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    .size(52.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Surface)
+                    .border(1.dp, Border, RoundedCornerShape(12.dp))
+                    .clickable { onSelect(chapter) },
+                contentAlignment = Alignment.Center
             ) {
-                row.forEach { chapter ->
-                    Box(
-                        modifier = Modifier
-                            .size(52.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(Surface)
-                            .border(1.dp, Border, RoundedCornerShape(12.dp))
-                            .clickable { onSelect(chapter) },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "$chapter",
-                            fontFamily = BodyFontFamily,
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 15.sp,
-                            color = Espresso
-                        )
-                    }
-                }
-                repeat(5 - row.size) {
-                    Spacer(modifier = Modifier.size(52.dp))
-                }
+                Text(
+                    text = "$chapter",
+                    fontFamily = BodyFontFamily,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 15.sp,
+                    color = Espresso
+                )
             }
         }
     }
 }
 
 @Composable
-private fun VerseList(
+private fun SearchResultList(
     verses: List<BibleVerseEntry>,
-    versionName: String,
+    promiseReferences: Set<String>,
     onSelect: (BibleVerseEntry) -> Unit
 ) {
     LazyColumn(
@@ -758,6 +1256,8 @@ private fun VerseList(
         contentPadding = PaddingValues(bottom = 32.dp)
     ) {
         items(verses, key = { it.reference }) { verse ->
+            val isPromise = verse.reference in promiseReferences
+
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -773,48 +1273,27 @@ private fun VerseList(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            Text(
-                                text = verse.reference.uppercase(),
-                                fontFamily = BodyFontFamily,
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 10.5.sp,
-                                letterSpacing = 1.2.sp,
-                                color = Terracotta
-                            )
-                            Box(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(4.dp))
-                                    .background(BorderSubtle)
-                                    .padding(horizontal = 5.dp, vertical = 1.5.dp)
-                            ) {
-                                Text(
-                                    text = versionName,
-                                    fontFamily = BodyFontFamily,
-                                    fontSize = 8.5.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = Stone
-                                )
-                            }
-                        }
+                        Text(
+                            text = verse.reference,
+                            fontFamily = BodyFontFamily,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 12.sp,
+                            color = Olive
+                        )
 
-                        if (verse.isDevotional) {
+                        if (isPromise) {
                             Box(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(6.dp))
-                                    .background(Terracotta.copy(alpha = 0.10f))
+                                    .background(OliveLight)
                                     .padding(horizontal = 7.dp, vertical = 2.dp)
                             ) {
                                 Text(
-                                    text = "PROMISE",
+                                    text = "Promise",
                                     fontFamily = BodyFontFamily,
                                     fontWeight = FontWeight.Medium,
-                                    fontSize = 9.sp,
-                                    letterSpacing = 0.8.sp,
-                                    color = Terracotta
+                                    fontSize = 10.sp,
+                                    color = Olive
                                 )
                             }
                         }
@@ -823,13 +1302,12 @@ private fun VerseList(
                     Spacer(modifier = Modifier.height(6.dp))
 
                     Text(
-                        text = "\u201C${verse.text}\u201D",
+                        text = verse.text,
                         fontFamily = DisplayFontFamily,
-                        fontStyle = FontStyle.Italic,
                         fontSize = 15.sp,
                         lineHeight = 22.sp,
                         color = Espresso,
-                        maxLines = 5,
+                        maxLines = 4,
                         overflow = TextOverflow.Ellipsis
                     )
                 }
@@ -847,10 +1325,7 @@ private fun EmptySearchState(query: String) {
         contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(
-                text = "📖",
-                fontSize = 36.sp
-            )
+            Text(text = "📖", fontSize = 36.sp)
             Spacer(modifier = Modifier.height(12.dp))
             Text(
                 text = "No verses found for \"$query\"",
@@ -861,7 +1336,7 @@ private fun EmptySearchState(query: String) {
             )
             Spacer(modifier = Modifier.height(6.dp))
             Text(
-                text = "Try a book name (e.g. Psalms), citation (e.g. John 3:16), or a topic like \"peace\" or \"strength\".",
+                text = "Try a book name (e.g. Psalms), citation (e.g. John 3:16), or a topic like peace or strength.",
                 fontFamily = BodyFontFamily,
                 fontSize = 13.sp,
                 color = Stone,
@@ -878,6 +1353,13 @@ private fun EmptySearchState(query: String) {
 private fun parseChapter(reference: String, book: String): Int? {
     val remainder = reference.removePrefix(book).trim()
     return remainder.substringBefore(":").trim().toIntOrNull()
+}
+
+private fun parseVerseNumber(reference: String, book: String, chapter: Int): Int? {
+    val remainder = reference.removePrefix(book).trim()
+    if (!remainder.startsWith("$chapter:")) return null
+    val verseStr = remainder.substringAfter(":").trim()
+    return verseStr.takeWhile { it.isDigit() }.toIntOrNull()
 }
 
 private fun isVerseInChapter(reference: String, book: String, chapter: Int): Boolean {

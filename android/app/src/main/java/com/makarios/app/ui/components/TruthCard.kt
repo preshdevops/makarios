@@ -57,25 +57,26 @@ fun TruthCard(
             AsyncImage(
                 model = affirmation.imageUrl,
                 contentDescription = "Contemplative imagery",
+                colorFilter = WarmPhotoGrade,
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.Crop
             )
 
-            // Circular white bookmark button in top-right overlay matching mockup
+            // Scrim circular bookmark button in top-right overlay
             Box(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
                     .padding(14.dp)
                     .size(34.dp)
                     .clip(CircleShape)
-                    .background(Surface.copy(alpha = 0.90f))
+                    .background(ScrimPillColor)
                     .clickable(onClick = onToggleSave),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = if (isSaved) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
                     contentDescription = "Save declaration",
-                    tint = if (isSaved) Terracotta else Espresso,
+                    tint = if (isSaved) Olive else Color.White,
                     modifier = Modifier.size(18.dp)
                 )
             }

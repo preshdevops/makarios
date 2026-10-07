@@ -164,7 +164,7 @@ fun FindFriendsDialog(
                         if (isSearching) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(16.dp),
-                                color = Terracotta,
+                                color = Olive,
                                 strokeWidth = 2.dp
                             )
                         }
@@ -278,7 +278,7 @@ fun FindFriendsDialog(
                                         },
                                         shape = RoundedCornerShape(12.dp),
                                         colors = ButtonDefaults.buttonColors(
-                                            containerColor = Terracotta,
+                                            containerColor = Olive,
                                             contentColor = Color.White
                                         ),
                                         contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp),

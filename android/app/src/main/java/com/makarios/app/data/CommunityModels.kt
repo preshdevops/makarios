@@ -45,7 +45,7 @@ data class PublicAffirmation(
             context = "Authored by $authorName${if (authorUsername.isNotBlank()) " (@$authorUsername)" else ""}",
             category = category,
             tone = AffirmationTone.RESOLUTE,
-            imageUrl = imageUrl ?: "https://images.unsplash.com/photo-1507652313519-d4e9174996dd?auto=format&fit=crop&w=1200&q=85",
+            imageUrl = imageUrl ?: PhotoLibrary.getForRole(PhotoRole.COMMUNITY_FALLBACK).url(width = 1200),
             isFavorite = false,
             personalDeclaration = declaration
         )
