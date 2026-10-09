@@ -8,6 +8,7 @@ import android.widget.Toast
 import androidx.glance.appwidget.updateAll
 import com.makarios.app.data.Affirmation
 import com.makarios.app.data.AffirmationRepository
+import com.makarios.app.ui.theme.Light
 import com.makarios.app.widget.MakariosGlanceWidget
 import com.makarios.app.widget.MakariosGlanceWidgetReceiver
 import kotlinx.coroutines.CoroutineScope
@@ -70,7 +71,7 @@ object WidgetHelper {
     fun setWidgetAffirmation(context: Context, affirmation: Affirmation) {
         AffirmationRepository.updateActiveWidgetAffirmation(affirmation)
         refreshGlanceWidgets(context)
-        Toast.makeText(context, "Added to Home Screen widget ✓", Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, "Added to Home Screen widget", Toast.LENGTH_SHORT).show()
     }
 
     fun shuffleWidget(context: Context): Affirmation {
@@ -79,47 +80,52 @@ object WidgetHelper {
         return next
     }
 
-    /**
-     * Renders full-resolution lockscreen artwork with safe clearance and sets it as the lock screen wallpaper.
-     * Guarantees a breathtaking typographic lock screen experience on all Android devices.
-     */
     fun setLockScreenAffirmation(
         context: Context,
         affirmation: Affirmation,
-        styleIndex: Int = 4,
-        photoUrl: String? = null,
+        light: Light,
+        photoUri: android.net.Uri? = null,
         onResult: (Boolean) -> Unit = {}
     ) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val photoBmp = photoUrl?.let { WallpaperRenderer.fetchBitmapFromUrl(context, it) }
-                val bitmap = WallpaperRenderer.renderBitmap(
-                    context = context,
+                val renderer = LightCanvas(context)
+                val out = java.io.File(context.cacheDir, "wallpaper_${System.currentTimeMillis()}.png")
+                // Determine device resolution
+                val metrics = context.resources.displayMetrics
+                renderer.render(
                     declaration = affirmation.declaration,
-                    scripture = affirmation.scriptureText,
-                    reference = affirmation.reference,
-                    category = affirmation.category,
-                    style = WallpaperRenderer.getStyle(styleIndex),
-                    format = WallpaperRenderer.OutputFormat.WALLPAPER,
-                    photoBitmap = photoBmp
+                    verseText = affirmation.scriptureText,
+                    verseReference = affirmation.reference,
+                    light = light,
+                    format = ExportFormat.Wallpaper,
+                    deviceWidth = metrics.widthPixels,
+                    deviceHeight = metrics.heightPixels,
+                    userPhotoUri = photoUri,
+                    outputFile = out
                 )
-                val success = WallpaperRenderer.setAsSystemWallpaper(
-                    context = context,
-                    bitmap = bitmap,
-                    target = WallpaperRenderer.WallpaperTarget.LOCK_SCREEN
-                )
+                
+                val bitmap = android.graphics.BitmapFactory.decodeFile(out.absolutePath)
+                val wallpaperManager = android.app.WallpaperManager.getInstance(context)
+                val success = try {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                        wallpaperManager.setBitmap(bitmap, null, true, android.app.WallpaperManager.FLAG_LOCK)
+                        true
+                    } else {
+                        wallpaperManager.setBitmap(bitmap)
+                        true
+                    }
+                } catch(e: Exception) { false }
+                
                 withContext(Dispatchers.Main) {
                     if (success) {
-                        Toast.makeText(context, "Applied to your Lock Screen ✓", Toast.LENGTH_SHORT).show()
-                    } else {
-                        Toast.makeText(context, "Couldn't set lock screen directly", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "Applied to your Lock Screen", Toast.LENGTH_SHORT).show()
                     }
                     onResult(success)
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(context, "Unable to update lock screen wallpaper", Toast.LENGTH_SHORT).show()
                     onResult(false)
                 }
             }
