@@ -65,7 +65,7 @@ fun BibleReaderSheet(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "$bookAndChapter ?" $translation",
+                        text = "$bookAndChapter • $translation",
                         style = MakariosTypography.displaySmall,
                         color = selectedLight.text
                     )
