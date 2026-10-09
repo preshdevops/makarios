@@ -1,6 +1,7 @@
 package com.makarios.app.ui.theme
 
 import androidx.compose.ui.graphics.Color
+import java.util.Calendar
 
 enum class Light(
     val top: Color,
@@ -29,8 +30,6 @@ enum class Light(
     val buttonText: Color
         get() = if (isLight) Cream else Ink
 }
-
-import java.util.Calendar
 
 fun getCurrentLightForTime(): Light {
     val calendar = Calendar.getInstance()

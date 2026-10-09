@@ -112,38 +112,34 @@ fun MainAppScaffold() {
     }
 
 
-    // 5 Bottom Navigation Tabs directly from PDF: Home | Library | Create | Saved | Profile
+    val currentLight = remember { getCurrentLightForTime() }
+
+    // Five tabs: Today, Explore, Declare, Kept, You
     val tabs = listOf(
-        TabItem("Home", Icons.Filled.Home, Icons.Outlined.Home),
-        TabItem("Library", Icons.Filled.MenuBook, Icons.Outlined.MenuBook),
-        TabItem("Create", Icons.Filled.Palette, Icons.Outlined.Palette),
-        TabItem("Saved", Icons.Filled.Bookmark, Icons.Outlined.BookmarkBorder),
-        TabItem("Profile", Icons.Filled.Person, Icons.Outlined.Person)
+        TabItem("Today", Icons.Filled.Home, Icons.Outlined.Home),
+        TabItem("Explore", Icons.Filled.MenuBook, Icons.Outlined.MenuBook),
+        TabItem("Declare", Icons.Filled.Palette, Icons.Outlined.Palette),
+        TabItem("Kept", Icons.Filled.Bookmark, Icons.Outlined.BookmarkBorder),
+        TabItem("You", Icons.Filled.Person, Icons.Outlined.Person)
     )
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        containerColor = Porcelain,
+        containerColor = currentLight.bottom,
         bottomBar = {
-            // Sleek 58dp editorial navigation bar matching mockup palette
-            Surface(
-                color = Surface,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .navigationBarsPadding()
-            ) {
-                Column {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(0.5.dp)
-                            .background(BorderSubtle)
-                    )
+            // The bar hides inside the Declare flow (selectedTab == 2)
+            if (selectedTab != 2) {
+                Surface(
+                    color = currentLight.bottom,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .navigationBarsPadding()
+                ) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(60.dp)
-                            .padding(horizontal = 6.dp),
+                            .height(56.dp)
+                            .padding(horizontal = 8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         tabs.forEachIndexed { index, tab ->
@@ -161,27 +157,19 @@ fun MainAppScaffold() {
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 verticalArrangement = Arrangement.Center
                             ) {
-                                Box(
-                                    modifier = Modifier
-                                        .clip(RoundedCornerShape(12.dp))
-                                        .background(if (isSelected) OliveLight else Color.Transparent)
-                                        .padding(horizontal = 14.dp, vertical = 4.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        imageVector = if (isSelected) tab.selectedIcon else tab.unselectedIcon,
-                                        contentDescription = tab.label,
-                                        tint = if (isSelected) Olive else StoneMuted,
-                                        modifier = Modifier.size(19.dp)
-                                    )
-                                }
+                                Icon(
+                                    imageVector = if (isSelected) tab.selectedIcon else tab.unselectedIcon,
+                                    contentDescription = tab.label,
+                                    tint = if (isSelected) currentLight.text else currentLight.text.copy(alpha = 0.55f),
+                                    modifier = Modifier.size(24.dp)
+                                )
                                 Spacer(modifier = Modifier.height(2.dp))
                                 Text(
                                     text = tab.label,
-                                    color = if (isSelected) Olive else StoneMuted,
-                                    fontFamily = BodyFontFamily,
+                                    color = if (isSelected) currentLight.text else currentLight.text.copy(alpha = 0.55f),
+                                    fontFamily = HankenGroteskFontFamily,
                                     fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-                                    fontSize = 10.5.sp
+                                    fontSize = 11.sp
                                 )
                             }
                         }

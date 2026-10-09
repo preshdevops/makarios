@@ -20,6 +20,9 @@ val HankenGroteskFontFamily = FontFamily(
     Font(R.font.hanken_grotesk, FontWeight.SemiBold)
 )
 
+val DisplayFontFamily = NewsreaderFontFamily
+val BodyFontFamily = HankenGroteskFontFamily
+
 val MakariosTypography = androidx.compose.material3.Typography(
     // Screen titles (Newsreader 34)
     displayLarge = TextStyle(
