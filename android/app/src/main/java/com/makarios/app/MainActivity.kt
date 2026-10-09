@@ -39,9 +39,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.makarios.app.data.Affirmation
+import com.makarios.app.ui.screens.AffirmationDetailScreen
 import com.makarios.app.ui.screens.CreateScreen
 import com.makarios.app.ui.screens.HomeScreen
-import com.makarios.app.ui.screens.ExploreScreen
+import com.makarios.app.ui.screens.LibraryScreen
 import com.makarios.app.ui.screens.OnboardingScreen
 import com.makarios.app.ui.screens.ProfileScreen
 import com.makarios.app.ui.screens.SavedScreen
@@ -92,8 +93,24 @@ fun MainAppScaffold() {
     val prefs = remember { context.getSharedPreferences("makarios_prefs", Context.MODE_PRIVATE) }
     var selectedTab by remember { mutableStateOf(0) }
     var activeAffirmationIdForCreate by remember { mutableStateOf<String?>(null) }
+    var viewingAffirmation by remember { mutableStateOf<Affirmation?>(null) }
     var showOnboarding by remember {
         mutableStateOf(!prefs.getBoolean("onboarding_completed", false))
+    }
+
+    // If an affirmation is selected for fullscreen contemplation (Page 1 in PDF)
+    if (viewingAffirmation != null) {
+        BackHandler { viewingAffirmation = null }
+        AffirmationDetailScreen(
+            affirmation = viewingAffirmation!!,
+            onClose = { viewingAffirmation = null },
+            onNavigateToCreate = { id ->
+                viewingAffirmation = null
+                activeAffirmationIdForCreate = id.ifBlank { null }
+                selectedTab = 2 // Navigate to Create
+            }
+        )
+        return
     }
 
     // If Onboarding is opened
@@ -112,34 +129,38 @@ fun MainAppScaffold() {
     }
 
 
-    val currentLight = remember { getCurrentLightForTime() }
-
-    // Five tabs: Today, Explore, Declare, Kept, You
+    // 5 Bottom Navigation Tabs directly from PDF: Home | Library | Create | Saved | Profile
     val tabs = listOf(
-        TabItem("Today", Icons.Filled.Home, Icons.Outlined.Home),
-        TabItem("Explore", Icons.Filled.MenuBook, Icons.Outlined.MenuBook),
-        TabItem("Declare", Icons.Filled.Palette, Icons.Outlined.Palette),
-        TabItem("Kept", Icons.Filled.Bookmark, Icons.Outlined.BookmarkBorder),
-        TabItem("You", Icons.Filled.Person, Icons.Outlined.Person)
+        TabItem("Home", Icons.Filled.Home, Icons.Outlined.Home),
+        TabItem("Library", Icons.Filled.MenuBook, Icons.Outlined.MenuBook),
+        TabItem("Create", Icons.Filled.Palette, Icons.Outlined.Palette),
+        TabItem("Saved", Icons.Filled.Bookmark, Icons.Outlined.BookmarkBorder),
+        TabItem("Profile", Icons.Filled.Person, Icons.Outlined.Person)
     )
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        containerColor = currentLight.bottom,
+        containerColor = Porcelain,
         bottomBar = {
-            // The bar hides inside the Declare flow (selectedTab == 2)
-            if (selectedTab != 2) {
-                Surface(
-                    color = currentLight.bottom,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .navigationBarsPadding()
-                ) {
+            // Sleek 58dp editorial navigation bar matching mockup palette
+            Surface(
+                color = Surface,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .navigationBarsPadding()
+            ) {
+                Column {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(0.5.dp)
+                            .background(BorderSubtle)
+                    )
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(56.dp)
-                            .padding(horizontal = 8.dp),
+                            .height(60.dp)
+                            .padding(horizontal = 6.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         tabs.forEachIndexed { index, tab ->
@@ -157,19 +178,27 @@ fun MainAppScaffold() {
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 verticalArrangement = Arrangement.Center
                             ) {
-                                Icon(
-                                    imageVector = if (isSelected) tab.selectedIcon else tab.unselectedIcon,
-                                    contentDescription = tab.label,
-                                    tint = if (isSelected) currentLight.text else currentLight.text.copy(alpha = 0.55f),
-                                    modifier = Modifier.size(24.dp)
-                                )
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .background(if (isSelected) OliveLight else Color.Transparent)
+                                        .padding(horizontal = 14.dp, vertical = 4.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = if (isSelected) tab.selectedIcon else tab.unselectedIcon,
+                                        contentDescription = tab.label,
+                                        tint = if (isSelected) Olive else StoneMuted,
+                                        modifier = Modifier.size(19.dp)
+                                    )
+                                }
                                 Spacer(modifier = Modifier.height(2.dp))
                                 Text(
                                     text = tab.label,
-                                    color = if (isSelected) currentLight.text else currentLight.text.copy(alpha = 0.55f),
-                                    fontFamily = HankenGroteskFontFamily,
+                                    color = if (isSelected) Olive else StoneMuted,
+                                    fontFamily = BodyFontFamily,
                                     fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-                                    fontSize = 11.sp
+                                    fontSize = 10.5.sp
                                 )
                             }
                         }
@@ -179,18 +208,42 @@ fun MainAppScaffold() {
         }
     ) { innerPadding ->
         when (selectedTab) {
-            0 -> HomeScreen(modifier = Modifier.padding(innerPadding))
-            1 -> ExploreScreen(
-                onNavigateToTopic = { topic, light -> /* Placeholder for topic nav */ },
+            0 -> HomeScreen(
+                onNavigateToDetail = { affirmation -> viewingAffirmation = affirmation },
+                onNavigateToCreate = { id ->
+                    activeAffirmationIdForCreate = id.ifBlank { null }
+                    selectedTab = 2
+                },
+                onNavigateToLibrary = { selectedTab = 1 },
+                modifier = Modifier.padding(innerPadding)
+            )
+            1 -> LibraryScreen(
+                onNavigateToDetail = { affirmation -> viewingAffirmation = affirmation },
+                onNavigateToCreate = { id ->
+                    activeAffirmationIdForCreate = id.ifBlank { null }
+                    selectedTab = 2
+                },
                 modifier = Modifier.padding(innerPadding)
             )
             2 -> CreateScreen(
-                onNavigateBack = { selectedTab = 0 },
+                affirmationId = activeAffirmationIdForCreate,
+                onBack = {
+                    selectedTab = 0
+                    activeAffirmationIdForCreate = null
+                },
                 modifier = Modifier.padding(innerPadding)
             )
-            3 -> SavedScreen(modifier = Modifier.padding(innerPadding))
+            3 -> SavedScreen(
+                onNavigateToDetail = { affirmation -> viewingAffirmation = affirmation },
+                onNavigateToCreate = { id ->
+                    activeAffirmationIdForCreate = id.ifBlank { null }
+                    selectedTab = 2
+                },
+                onNavigateToLibrary = { selectedTab = 1 },
+                modifier = Modifier.padding(innerPadding)
+            )
             4 -> ProfileScreen(
-                onSignOut = { /* Sign Out logic */ },
+                onRevisitOnboarding = { showOnboarding = true },
                 modifier = Modifier.padding(innerPadding)
             )
         }

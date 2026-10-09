@@ -1,5 +1,6 @@
 package com.makarios.app.ui.theme
 
+import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -8,93 +9,95 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.makarios.app.R
 
-// Using the variable fonts we downloaded. We instantiate the specific weights we need.
-val NewsreaderFontFamily = FontFamily(
-    Font(R.font.newsreader, FontWeight.Medium, FontStyle.Normal),
-    Font(R.font.newsreader_italic, FontWeight.Normal, FontStyle.Italic)
+// ── Cormorant Garamond — Classical, sacred display serif ─────
+val CormorantGaramondFontFamily = FontFamily(
+    Font(R.font.cormorant_garamond_regular, FontWeight.Normal),
+    Font(R.font.cormorant_garamond_regular, FontWeight.Medium),
+    Font(R.font.cormorant_garamond_regular, FontWeight.SemiBold),
+    Font(R.font.cormorant_garamond_regular, FontWeight.Bold),
+    Font(R.font.cormorant_garamond_italic, FontWeight.Normal, FontStyle.Italic),
+    Font(R.font.cormorant_garamond_italic, FontWeight.Medium, FontStyle.Italic)
 )
 
-val HankenGroteskFontFamily = FontFamily(
-    Font(R.font.hanken_grotesk, FontWeight.Normal),
-    Font(R.font.hanken_grotesk, FontWeight.Medium),
-    Font(R.font.hanken_grotesk, FontWeight.SemiBold)
+// Legacy alias to prevent any build breakage
+val FrauncesFontFamily = CormorantGaramondFontFamily
+
+// ── Work Sans — UI humanist sans ─────────────────────────────
+val WorkSansFontFamily = FontFamily(
+    Font(R.font.worksans_regular, FontWeight.Normal),
+    Font(R.font.worksans_regular, FontWeight.Medium),
+    Font(R.font.worksans_regular, FontWeight.SemiBold),
+    Font(R.font.worksans_regular, FontWeight.Bold)
 )
 
-val DisplayFontFamily = NewsreaderFontFamily
-val BodyFontFamily = HankenGroteskFontFamily
+// Semantic aliases
+val DisplayFontFamily = CormorantGaramondFontFamily
+val BodyFontFamily = WorkSansFontFamily
 
-val MakariosTypography = androidx.compose.material3.Typography(
-    // Screen titles (Newsreader 34)
+val MakariosTypography = Typography(
+    // Hero question: "What are you carrying today?"
     displayLarge = TextStyle(
-        fontFamily = NewsreaderFontFamily,
-        fontWeight = FontWeight.Medium,
-        fontSize = 34.sp,
-        lineHeight = 42.sp,
-        fontFeatureSettings = "lnum, tnum"
+        fontFamily = CormorantGaramondFontFamily,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 27.sp,
+        lineHeight = 35.sp,
+        letterSpacing = (-0.3).sp
     ),
-    // Today declaration (Newsreader 34/42 sp)
-    displayMedium = TextStyle(
-        fontFamily = NewsreaderFontFamily,
+    // Declaration text on truth card
+    headlineMedium = TextStyle(
+        fontFamily = CormorantGaramondFontFamily,
         fontWeight = FontWeight.Medium,
-        fontSize = 34.sp,
-        lineHeight = 42.sp,
-        fontFeatureSettings = "lnum, tnum"
-    ),
-    // Explore band title (Newsreader 28/32)
-    displaySmall = TextStyle(
-        fontFamily = NewsreaderFontFamily,
-        fontWeight = FontWeight.Medium,
-        fontSize = 28.sp,
+        fontSize = 23.sp,
         lineHeight = 32.sp,
-        fontFeatureSettings = "lnum, tnum"
+        letterSpacing = (-0.2).sp
     ),
-    // Kept card (Newsreader 22/28)
-    headlineLarge = TextStyle(
-        fontFamily = NewsreaderFontFamily,
+    // Makarios wordmark / section titles
+    titleLarge = TextStyle(
+        fontFamily = CormorantGaramondFontFamily,
         fontWeight = FontWeight.Medium,
-        fontSize = 22.sp,
-        lineHeight = 28.sp,
-        fontFeatureSettings = "lnum, tnum"
-    ),
-    // Verse italic (Newsreader Italic 17/26)
-    bodyLarge = TextStyle(
-        fontFamily = NewsreaderFontFamily,
-        fontWeight = FontWeight.Normal,
-        fontStyle = FontStyle.Italic,
-        fontSize = 17.sp,
+        fontSize = 20.sp,
         lineHeight = 26.sp,
-        fontFeatureSettings = "lnum, tnum"
+        letterSpacing = (-0.1).sp
     ),
-    // Body (Hanken 16/24)
+    // Section headers, tab labels
+    titleMedium = TextStyle(
+        fontFamily = WorkSansFontFamily,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 15.sp,
+        lineHeight = 22.sp,
+        letterSpacing = 0.1.sp
+    ),
+    // Body text, descriptions
+    bodyLarge = TextStyle(
+        fontFamily = WorkSansFontFamily,
+        fontWeight = FontWeight.Normal,
+        fontSize = 14.5.sp,
+        lineHeight = 23.sp,
+        letterSpacing = 0.1.sp
+    ),
+    // Scripture text in italic serif
     bodyMedium = TextStyle(
-        fontFamily = HankenGroteskFontFamily,
+        fontFamily = CormorantGaramondFontFamily,
+        fontStyle = FontStyle.Italic,
         fontWeight = FontWeight.Normal,
-        fontSize = 16.sp,
-        lineHeight = 24.sp,
-        fontFeatureSettings = "lnum, tnum"
+        fontSize = 15.5.sp,
+        lineHeight = 23.sp,
+        letterSpacing = 0.1.sp
     ),
-    // Label (Hanken 14/20)
+    // Button labels, category pills
     labelLarge = TextStyle(
-        fontFamily = HankenGroteskFontFamily,
-        fontWeight = FontWeight.Normal,
+        fontFamily = WorkSansFontFamily,
+        fontWeight = FontWeight.SemiBold,
         fontSize = 14.sp,
-        lineHeight = 20.sp,
-        fontFeatureSettings = "lnum, tnum"
-    ),
-    // Reference text (13sp, weight 500)
-    labelMedium = TextStyle(
-        fontFamily = HankenGroteskFontFamily,
-        fontWeight = FontWeight.Medium,
-        fontSize = 13.sp,
         lineHeight = 18.sp,
-        fontFeatureSettings = "lnum, tnum"
+        letterSpacing = 0.1.sp
     ),
-    // Caption (12/16 minimum)
+    // Scripture reference, meta text
     labelSmall = TextStyle(
-        fontFamily = HankenGroteskFontFamily,
-        fontWeight = FontWeight.Normal,
-        fontSize = 12.sp,
-        lineHeight = 16.sp,
-        fontFeatureSettings = "lnum, tnum"
+        fontFamily = WorkSansFontFamily,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 10.5.sp,
+        lineHeight = 14.sp,
+        letterSpacing = 1.6.sp
     )
 )

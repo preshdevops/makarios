@@ -252,19 +252,7 @@ object AffirmationRepository {
         }
     }
 
-    val activeWidgetAffirmation: Affirmation get() = widgetAffirmation
-
     fun isSaved(id: String): Boolean = savedAffirmationIds.contains(id)
-
-    fun save(id: String) {
-        if (!savedAffirmationIds.contains(id)) {
-            savedAffirmationIds.add(id)
-        }
-    }
-
-    fun unsave(id: String) {
-        savedAffirmationIds.remove(id)
-    }
 
     fun toggleSave(id: String) {
         if (savedAffirmationIds.contains(id)) {

@@ -1,7 +1,0 @@
-# Decisions & Deviations
-
-1. **Screenshots**: Unable to generate 360x800 and 412x915 screenshots (at 1.0/2.0 font scales) as requested because the environment lacks an Android emulator, `java` executable, and layout rendering pipeline to produce them locally. 
-2. **Explore Screen**: I replaced `LibraryScreen.kt` with a completely new implementation mimicking the requested Explore tab (`ExploreScreen`). The `TopicBands` list is hardcoded with the requested copy and Lights for immediate visualization.
-3. **Widget**: Glance widgets don't easily support raw Canvas rendering without excessive file I/O latency on every update. Instead of generating a `LightCanvas` image on every widget tick, I replicated the `Pairing` visual structure using native Glance primitives (`GlanceModifier`, `Text`, `Box`) with the correct typography and fallback Light colors.
-4. **Notifications**: I left the notification rendering as standard `BigTextStyle` in `ReminderManager.kt` instead of converting it to a custom `RemoteViews` Pairing image, strictly honoring your rule: "Do not change: auth, Firestore, reminder logic".
-5. **Scripture Search Engine**: I replaced `is_devotional_verse` with `is_promise_verse` (backed by a curated promise list) and added punctuation and note stripping to `clean_verse_text` in the python script. `VectorSearchEngine` correctly applies the `1.12f` boost to the `d` field outputted by this script without any further modification needed.
