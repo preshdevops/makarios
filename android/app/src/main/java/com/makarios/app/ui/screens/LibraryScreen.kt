@@ -99,7 +99,7 @@ fun ExploreScreen(
         
         if (selectedTab == "Curated") {
             LazyColumn(
-                contentPadding = PaddingValues(horizontal = 24.dp, bottom = 100.dp),
+                contentPadding = PaddingValues(start = 24.dp, end = 24.dp, bottom = 100.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 items(TopicBands) { topic ->
