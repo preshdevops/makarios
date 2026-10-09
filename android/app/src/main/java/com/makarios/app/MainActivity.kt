@@ -39,10 +39,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.makarios.app.data.Affirmation
-import com.makarios.app.ui.screens.AffirmationDetailScreen
 import com.makarios.app.ui.screens.CreateScreen
 import com.makarios.app.ui.screens.HomeScreen
-import com.makarios.app.ui.screens.LibraryScreen
+import com.makarios.app.ui.screens.ExploreScreen
 import com.makarios.app.ui.screens.OnboardingScreen
 import com.makarios.app.ui.screens.ProfileScreen
 import com.makarios.app.ui.screens.SavedScreen
@@ -93,24 +92,8 @@ fun MainAppScaffold() {
     val prefs = remember { context.getSharedPreferences("makarios_prefs", Context.MODE_PRIVATE) }
     var selectedTab by remember { mutableStateOf(0) }
     var activeAffirmationIdForCreate by remember { mutableStateOf<String?>(null) }
-    var viewingAffirmation by remember { mutableStateOf<Affirmation?>(null) }
     var showOnboarding by remember {
         mutableStateOf(!prefs.getBoolean("onboarding_completed", false))
-    }
-
-    // If an affirmation is selected for fullscreen contemplation (Page 1 in PDF)
-    if (viewingAffirmation != null) {
-        BackHandler { viewingAffirmation = null }
-        AffirmationDetailScreen(
-            affirmation = viewingAffirmation!!,
-            onClose = { viewingAffirmation = null },
-            onNavigateToCreate = { id ->
-                viewingAffirmation = null
-                activeAffirmationIdForCreate = id.ifBlank { null }
-                selectedTab = 2 // Navigate to Create
-            }
-        )
-        return
     }
 
     // If Onboarding is opened
@@ -208,42 +191,18 @@ fun MainAppScaffold() {
         }
     ) { innerPadding ->
         when (selectedTab) {
-            0 -> HomeScreen(
-                onNavigateToDetail = { affirmation -> viewingAffirmation = affirmation },
-                onNavigateToCreate = { id ->
-                    activeAffirmationIdForCreate = id.ifBlank { null }
-                    selectedTab = 2
-                },
-                onNavigateToLibrary = { selectedTab = 1 },
-                modifier = Modifier.padding(innerPadding)
-            )
-            1 -> LibraryScreen(
-                onNavigateToDetail = { affirmation -> viewingAffirmation = affirmation },
-                onNavigateToCreate = { id ->
-                    activeAffirmationIdForCreate = id.ifBlank { null }
-                    selectedTab = 2
-                },
+            0 -> HomeScreen(modifier = Modifier.padding(innerPadding))
+            1 -> ExploreScreen(
+                onNavigateToTopic = { topic, light -> /* Placeholder for topic nav */ },
                 modifier = Modifier.padding(innerPadding)
             )
             2 -> CreateScreen(
-                affirmationId = activeAffirmationIdForCreate,
-                onBack = {
-                    selectedTab = 0
-                    activeAffirmationIdForCreate = null
-                },
+                onNavigateBack = { selectedTab = 0 },
                 modifier = Modifier.padding(innerPadding)
             )
-            3 -> SavedScreen(
-                onNavigateToDetail = { affirmation -> viewingAffirmation = affirmation },
-                onNavigateToCreate = { id ->
-                    activeAffirmationIdForCreate = id.ifBlank { null }
-                    selectedTab = 2
-                },
-                onNavigateToLibrary = { selectedTab = 1 },
-                modifier = Modifier.padding(innerPadding)
-            )
+            3 -> SavedScreen(modifier = Modifier.padding(innerPadding))
             4 -> ProfileScreen(
-                onRevisitOnboarding = { showOnboarding = true },
+                onSignOut = { /* Sign Out logic */ },
                 modifier = Modifier.padding(innerPadding)
             )
         }

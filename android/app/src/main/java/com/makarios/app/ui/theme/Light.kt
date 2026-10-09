@@ -29,3 +29,19 @@ enum class Light(
     val buttonText: Color
         get() = if (isLight) Cream else Ink
 }
+
+import java.util.Calendar
+
+fun getCurrentLightForTime(): Light {
+    val calendar = Calendar.getInstance()
+    val hour = calendar.get(Calendar.HOUR_OF_DAY)
+    val minute = calendar.get(Calendar.MINUTE)
+    val timeFloat = hour + minute / 60f
+    
+    return when {
+        timeFloat >= 5.5f && timeFloat < 9.0f -> Light.Dawn
+        timeFloat >= 9.0f && timeFloat < 16.5f -> Light.Midday
+        timeFloat >= 16.5f && timeFloat < 19.5f -> Light.Dusk
+        else -> Light.Night
+    }
+}

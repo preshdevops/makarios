@@ -21,16 +21,16 @@ class LightTest {
     @Test
     fun testLightAnchorColors() {
         // Light anchor rule #8A5A14
-        assertEquals(0xFF8A5A14.toInt(), Light.Dawn.anchorRule.value.toInt() or 0xFF000000.toInt())
+        assertEquals(0xFF8A5A14.toInt(), androidx.compose.ui.graphics.toArgb(Light.Dawn.anchorRule))
         // Dark anchor rule #C9964A
-        assertEquals(0xFFC9964A.toInt(), Light.Night.anchorRule.value.toInt() or 0xFF000000.toInt())
+        assertEquals(0xFFC9964A.toInt(), androidx.compose.ui.graphics.toArgb(Light.Night.anchorRule))
     }
 
     @Test
     fun testLightButtonColors() {
         // Light themes get Ink fill
-        assertEquals(0xFF2A1B14.toInt(), Light.Dawn.buttonFill.value.toInt() or 0xFF000000.toInt())
+        assertEquals(0xFF2A1B14.toInt(), androidx.compose.ui.graphics.toArgb(Light.Dawn.buttonFill))
         // Dark themes get Cream fill
-        assertEquals(0xFFFFF4E4.toInt(), Light.Night.buttonFill.value.toInt() or 0xFF000000.toInt())
+        assertEquals(0xFFFFF4E4.toInt(), androidx.compose.ui.graphics.toArgb(Light.Night.buttonFill))
     }
 }
