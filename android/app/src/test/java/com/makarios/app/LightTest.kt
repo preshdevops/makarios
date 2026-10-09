@@ -1,5 +1,9 @@
 package com.makarios.app
 
+import com.makarios.app.ui.theme.AnchorDark
+import com.makarios.app.ui.theme.AnchorLight
+import com.makarios.app.ui.theme.Cream
+import com.makarios.app.ui.theme.Ink
 import com.makarios.app.ui.theme.Light
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -21,16 +25,16 @@ class LightTest {
     @Test
     fun testLightAnchorColors() {
         // Light anchor rule #8A5A14
-        assertEquals(0xFF8A5A14.toInt(), androidx.compose.ui.graphics.toArgb(Light.Dawn.anchorRule))
+        assertEquals(AnchorLight, Light.Dawn.anchorRule)
         // Dark anchor rule #C9964A
-        assertEquals(0xFFC9964A.toInt(), androidx.compose.ui.graphics.toArgb(Light.Night.anchorRule))
+        assertEquals(AnchorDark, Light.Night.anchorRule)
     }
 
     @Test
     fun testLightButtonColors() {
         // Light themes get Ink fill
-        assertEquals(0xFF2A1B14.toInt(), androidx.compose.ui.graphics.toArgb(Light.Dawn.buttonFill))
+        assertEquals(Ink, Light.Dawn.buttonFill)
         // Dark themes get Cream fill
-        assertEquals(0xFFFFF4E4.toInt(), androidx.compose.ui.graphics.toArgb(Light.Night.buttonFill))
+        assertEquals(Cream, Light.Night.buttonFill)
     }
 }
