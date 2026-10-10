@@ -181,16 +181,22 @@ fun MainAppScaffold() {
         when (selectedTab) {
             0 -> HomeScreen(modifier = Modifier.padding(innerPadding))
             1 -> ExploreScreen(
-                onNavigateToTopic = { topic, light -> /* Placeholder for topic nav */ },
+                onNavigateToTopic = { _, _ -> },
+                onNavigateToCreate = { selectedTab = 2 },
                 modifier = Modifier.padding(innerPadding)
             )
             2 -> CreateScreen(
                 onNavigateBack = { selectedTab = 0 },
                 modifier = Modifier.padding(innerPadding)
             )
-            3 -> SavedScreen(modifier = Modifier.padding(innerPadding))
+            3 -> SavedScreen(
+                onNavigateToCreate = { selectedTab = 2 },
+                modifier = Modifier.padding(innerPadding)
+            )
             4 -> ProfileScreen(
-                onSignOut = { /* Sign Out logic */ },
+                onSignOut = {
+                    // Sign out callbacks if any
+                },
                 modifier = Modifier.padding(innerPadding)
             )
         }
