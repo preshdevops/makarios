@@ -45,9 +45,10 @@ data class PublicAffirmation(
             context = "Authored by $authorName${if (authorUsername.isNotBlank()) " (@$authorUsername)" else ""}",
             category = category,
             tone = AffirmationTone.RESOLUTE,
-            imageUrl = imageUrl ?: PhotoLibrary.getForRole(PhotoRole.COMMUNITY_FALLBACK).url(width = 1200),
+            imageUrl = imageUrl ?: "",
             isFavorite = false,
             personalDeclaration = declaration
         )
     }
 }
+

@@ -1,4 +1,4 @@
-﻿package com.makarios.app.ui.screens
+package com.makarios.app.ui.screens
 
 import android.app.WallpaperManager
 import android.graphics.BitmapFactory
@@ -35,7 +35,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImage
 import com.makarios.app.data.*
 import com.makarios.app.ui.components.BibleReaderSheet
 import com.makarios.app.ui.components.Pairing
@@ -83,7 +82,7 @@ fun CreateScreen(
                 "Gentle" -> AffirmationTone.GENTLE
                 else -> AffirmationTone.STILL
             },
-            imageUrl = selectedPhotoUrl ?: PhotoLibrary.getForRole(PhotoRole.AFFIRMATION_PERSONAL_1).url(width = 1200),
+            imageUrl = selectedPhotoUrl ?: "",
             isFavorite = true
         )
         AffirmationRepository.addPersonalAffirmation(aff)
@@ -383,7 +382,7 @@ fun WriteStep(
                         .padding(horizontal = 16.dp, vertical = 12.dp)
                 ) {
                     Text(
-                        text = "â€œ$starterâ€",
+                        text = "“$starter”",
                         style = MakariosTypography.bodyMedium,
                         color = Ink
                     )
@@ -530,5 +529,6 @@ fun LookStep(
         Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween){TextButton(onClick=onSavePhotos){Icon(Icons.Outlined.Image,null,tint=Ink);Spacer(Modifier.width(6.dp));Text("Save to photos",color=Ink)};TextButton(onClick=onSetWallpaper){Icon(Icons.Outlined.Wallpaper,null,tint=Ink);Spacer(Modifier.width(6.dp));Text("Set as wallpaper",color=Ink)}};Spacer(Modifier.height(40.dp))
     }
 }
+
 
 

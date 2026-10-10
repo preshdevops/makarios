@@ -18,42 +18,42 @@ object AffirmationRepository {
         MoodCategory(
             name = "Peace",
             subtitle = "Stillness over anxiety",
-            imageUrl = PhotoLibrary.getThemePhoto("Peace").url(width = 800)
+            imageUrl = ""
         ),
         MoodCategory(
             name = "Strength",
             subtitle = "Endurance in weakness",
-            imageUrl = PhotoLibrary.getThemePhoto("Strength").url(width = 800)
+            imageUrl = ""
         ),
         MoodCategory(
             name = "Identity",
             subtitle = "Who God says you are",
-            imageUrl = PhotoLibrary.getThemePhoto("Identity").url(width = 800)
+            imageUrl = ""
         ),
         MoodCategory(
             name = "Purpose",
             subtitle = "Calling & direction",
-            imageUrl = PhotoLibrary.getThemePhoto("Purpose").url(width = 800)
+            imageUrl = ""
         ),
         MoodCategory(
             name = "Courage",
             subtitle = "Courage over fear",
-            imageUrl = PhotoLibrary.getThemePhoto("Courage").url(width = 800)
+            imageUrl = ""
         ),
         MoodCategory(
             name = "Joy",
             subtitle = "Unshakeable gladness",
-            imageUrl = PhotoLibrary.getThemePhoto("Joy").url(width = 800)
+            imageUrl = ""
         ),
         MoodCategory(
             name = "Provision",
             subtitle = "Resting in abundance",
-            imageUrl = PhotoLibrary.getThemePhoto("Provision").url(width = 800)
+            imageUrl = ""
         ),
         MoodCategory(
             name = "Confidence",
             subtitle = "Confidence & assurance",
-            imageUrl = PhotoLibrary.getThemePhoto("Confidence").url(width = 800)
+            imageUrl = ""
         )
     )
 
@@ -66,7 +66,7 @@ object AffirmationRepository {
         context = "David meditates on the inescapable love and presence of God. Nothing in your story is an accident.",
         category = "Identity",
         tone = AffirmationTone.RESOLUTE,
-        imageUrl = PhotoLibrary.getForRole(PhotoRole.AFFIRMATION_AOTD).url(width = 1200)
+        imageUrl = ""
     )
 
     val fullscreenAffirmation = Affirmation(
@@ -78,7 +78,7 @@ object AffirmationRepository {
         context = "Paul anchors the believer's standing not in personal performance, but in Christ's finished reconciliation.",
         category = "Identity",
         tone = AffirmationTone.RESOLUTE,
-        imageUrl = PhotoLibrary.getForRole(PhotoRole.AFFIRMATION_IDENT_1).url(width = 1200)
+        imageUrl = ""
     )
 
     val strengthAffirmation = Affirmation(
@@ -89,7 +89,7 @@ object AffirmationRepository {
         context = "When human stamina reaches its limit, divine power finds its most potent expression.",
         category = "Strength",
         tone = AffirmationTone.RESOLUTE,
-        imageUrl = PhotoLibrary.getForRole(PhotoRole.AFFIRMATION_STR_1).url(width = 1200)
+        imageUrl = ""
     )
 
     val provisionAffirmation = Affirmation(
@@ -100,7 +100,7 @@ object AffirmationRepository {
         context = "Paul writes from confinement with unshakable assurance that divine resources are inexhaustible.",
         category = "Provision",
         tone = AffirmationTone.STILL,
-        imageUrl = PhotoLibrary.getForRole(PhotoRole.AFFIRMATION_PROV_1).url(width = 1200)
+        imageUrl = ""
     )
 
     val courageAffirmation = Affirmation(
@@ -111,7 +111,7 @@ object AffirmationRepository {
         context = "Joshua stood on the threshold of unknown territory. Courage is obedience in the presence of fear.",
         category = "Courage",
         tone = AffirmationTone.RESOLUTE,
-        imageUrl = PhotoLibrary.getForRole(PhotoRole.AFFIRMATION_COUR_1).url(width = 1200)
+        imageUrl = ""
     )
 
     val favorite1 = Affirmation(
@@ -122,7 +122,7 @@ object AffirmationRepository {
         context = "Victory is not merely surviving difficulty, but emerging deepened in God's love.",
         category = "Strength",
         tone = AffirmationTone.RESOLUTE,
-        imageUrl = PhotoLibrary.getForRole(PhotoRole.AFFIRMATION_FAV_1).url(width = 1200),
+        imageUrl = ""
         isFavorite = true
     )
 
@@ -134,7 +134,7 @@ object AffirmationRepository {
         context = "Spiritual joy is not superficial optimism; it is the deep, immovable wellspring of God's delight.",
         category = "Joy",
         tone = AffirmationTone.GENTLE,
-        imageUrl = PhotoLibrary.getForRole(PhotoRole.AFFIRMATION_FAV_2).url(width = 1200),
+        imageUrl = ""
         isFavorite = true
     )
 
@@ -146,7 +146,7 @@ object AffirmationRepository {
         context = "Step out of frantic preservation and rest in God's protection. God takes responsibility for the outcome.",
         category = "Peace",
         tone = AffirmationTone.STILL,
-        imageUrl = PhotoLibrary.getForRole(PhotoRole.AFFIRMATION_WIDGET_1).url(width = 1200)
+        imageUrl = ""
     )
 
     var widgetAffirmation by mutableStateOf(defaultWidgetAffirmation)
@@ -170,7 +170,7 @@ object AffirmationRepository {
         context = "You are not a cosmic coincidence. Your life was intentionally authored for purpose.",
         category = "Purpose",
         tone = AffirmationTone.RESOLUTE,
-        imageUrl = PhotoLibrary.getForRole(PhotoRole.AFFIRMATION_PURP_1).url(width = 1200)
+        imageUrl = ""
     )
 
     val confidenceAffirmation = Affirmation(
@@ -181,7 +181,7 @@ object AffirmationRepository {
         context = "True confidence is not reliance on self-sufficiency, but deep reliance on God's unending faithfulness.",
         category = "Confidence",
         tone = AffirmationTone.RESOLUTE,
-        imageUrl = PhotoLibrary.getForRole(PhotoRole.AFFIRMATION_CONF_1).url(width = 1200)
+        imageUrl = ""
     )
 
     val relationshipsAffirmation = Affirmation(
@@ -192,7 +192,7 @@ object AffirmationRepository {
         context = "Grace in relationships requires laying down self-preservation and offering the same mercy we received.",
         category = "Relationships",
         tone = AffirmationTone.GENTLE,
-        imageUrl = PhotoLibrary.getForRole(PhotoRole.AFFIRMATION_REL_1).url(width = 1200)
+        imageUrl = ""
     )
 
     val disciplineAffirmation = Affirmation(
@@ -203,7 +203,7 @@ object AffirmationRepository {
         context = "Spiritual discipline is not self-punishment; it is training our affections in alignment with God's truth.",
         category = "Discipline",
         tone = AffirmationTone.RESOLUTE,
-        imageUrl = PhotoLibrary.getForRole(PhotoRole.AFFIRMATION_DISC_1).url(width = 1200)
+        imageUrl = ""
     )
 
     val starterAffirmation = fullscreenAffirmation
@@ -239,7 +239,7 @@ object AffirmationRepository {
             context = "Written for seasons of transition and unexpected decisions.",
             category = "Peace",
             tone = AffirmationTone.STILL,
-            imageUrl = PhotoLibrary.getForRole(PhotoRole.AFFIRMATION_PERSONAL_1).url(width = 1200),
+            imageUrl = ""
             isFavorite = true,
             personalDeclaration = "I release the need to control the outcome. My steps are ordered by the Lord."
         )
@@ -288,3 +288,4 @@ object AffirmationRepository {
     val featuredAffirmation: Affirmation get() = affirmationOfTheDay
     val curatedAffirmations: List<Affirmation> get() = getAll()
 }
+

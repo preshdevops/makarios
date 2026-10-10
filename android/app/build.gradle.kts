@@ -1,4 +1,4 @@
-﻿plugins {
+plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
@@ -78,7 +78,6 @@ dependencies {
     implementation(libs.androidx.work.runtime.ktx)
 
     // Coil for modern async image loading
-    implementation(libs.coil.compose)
 
     // ONNX Runtime Mobile for on-device local vector search
     implementation("com.microsoft.onnxruntime:onnxruntime-android:1.20.0")
@@ -99,5 +98,6 @@ dependencies {
     androidTestImplementation("androidx.test:runner:1.6.2")
     androidTestImplementation("androidx.test:core:1.6.1")
 }
+
 
 
