@@ -36,10 +36,10 @@ import kotlin.math.sin
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun HomeScreen(modifier: Modifier = Modifier) {
+fun HomeScreen(modifier: Modifier = Modifier, initialAffirmationId: String? = null) {
     val context = LocalContext.current; val haptic = LocalHapticFeedback.current
     var light by remember { mutableStateOf(Light.forNow()) }; var picker by remember { mutableStateOf(false) }; var swiped by remember { mutableStateOf(false) }
-    val affirmations = remember { AffirmationRepository.getAll() }; val pager = rememberPagerState(pageCount = { affirmations.size })
+    val affirmations = remember { AffirmationRepository.getAll() }; val initialPage = affirmations.indexOfFirst { it.id == initialAffirmationId }.coerceAtLeast(0); val pager = rememberPagerState(initialPage = initialPage, pageCount = { affirmations.size })
     LaunchedEffect(pager.currentPage) { swiped = pager.currentPage > 0; if (affirmations.isNotEmpty()) ProfileActivityLog.recordShown(context) }
     Box(modifier.fillMaxSize().background(light.bottom)) {
         VerticalPager(state = pager, modifier = Modifier.fillMaxSize()) { page ->
@@ -60,5 +60,3 @@ fun HomeScreen(modifier: Modifier = Modifier) {
 private fun hourDiscPosition(size: androidx.compose.ui.geometry.Size): androidx.compose.ui.geometry.Offset { val now = Calendar.getInstance(); val hour = now.get(Calendar.HOUR_OF_DAY) + now.get(Calendar.MINUTE) / 60f; val phase = ((hour - 5.5f) / 14f).coerceIn(0f, 1f); return androidx.compose.ui.geometry.Offset(size.width * (.25f + .5f * phase), size.height * (.65f - .2f * sin(Math.PI * phase).toFloat())) }
 @Composable private fun LightPicker(current: Light, choose: (Light) -> Unit, close: () -> Unit) { Dialog(onDismissRequest = close) { Column(Modifier.clip(RoundedCornerShape(24.dp)).background(Color(0xFFFBF9F5)).padding(20.dp)) { Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) { Text("Choose Light", style = MakariosTypography.displaySmall, color = Ink); TextButton(onClick = close) { Text("Done", color = Ink) } }; listOf(Light.Dawn, Light.Midday, Light.Mist, Light.Rain, Light.Ember, Light.Dusk, Light.Grove, Light.Night).chunked(4).forEach { row -> Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) { row.forEach { item -> Box(Modifier.weight(1f).padding(vertical = 6.dp).size(52.dp).clip(RoundedCornerShape(12.dp)).lightBackground(item).clickable { choose(item) }, contentAlignment = Alignment.Center) { if (item == current) Text("?", color = item.text) } } } } } } }
 @Composable fun IconRailButton(icon: androidx.compose.ui.graphics.vector.ImageVector, contentDescription: String, light: Light, onClick: () -> Unit) { IconButton(onClick = onClick, modifier = Modifier.size(48.dp).clip(CircleShape).background(light.text.copy(alpha = .14f))) { Icon(icon, contentDescription, tint = light.text) } }
-
-

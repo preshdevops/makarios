@@ -1,398 +1,154 @@
 package com.makarios.app.util
 
+import android.Manifest
 import android.app.AlarmManager
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
 import com.makarios.app.MainActivity
 import com.makarios.app.R
 import com.makarios.app.data.Affirmation
 import com.makarios.app.data.AffirmationRepository
+import com.makarios.app.ui.theme.Light
+import java.time.DayOfWeek
+import java.time.Duration
+import java.time.LocalDate
+import java.time.ZonedDateTime
 import java.util.Calendar
 
-/**
- * ReminderManager
- *
- * Scheduler and notification manager for Makarios.
- * Handles daily declaration reminders and lets users set any specific affirmation
- * as their active notification, or choose a delivery pool (Pinned, Custom, Saved, All).
- */
 object ReminderManager {
+    const val MORNING_CHANNEL = "morning_declaration"
+    const val EVENING_CHANNEL = "evening_verse"
+    const val STREAK_CHANNEL = "streak_reminder"
+    const val MORNING_ID = 4101
+    const val EVENING_ID = 4102
+    const val STREAK_ID = 4103
+    const val ACTION_MORNING = "com.makarios.app.NOTIFY_MORNING"
+    const val ACTION_EVENING = "com.makarios.app.NOTIFY_EVENING"
+    const val ACTION_STREAK = "com.makarios.app.NOTIFY_STREAK"
+    const val ACTION_KEEP = "com.makarios.app.NOTIFY_KEEP"
+    const val ACTION_SHARE = "com.makarios.app.NOTIFY_SHARE"
+    const val EXTRA_ID = "affirmation_id"
+    const val EXTRA_LIGHT = "light"
+    const val REQ_MORNING = 4101
+    const val REQ_EVENING = 4102
+    const val REQ_STREAK = 4103
+    private const val LEGACY_PREFS = "makarios_reminders_prefs"
 
-    const val CHANNEL_ID = "makarios_reminders"
-    const val CHANNEL_NAME = "Daily Declarations"
-    private const val PREFS_NAME = "makarios_reminders_prefs"
+    enum class ReminderType(val action: String, val requestCode: Int, val hour: Int, val minute: Int) { DAWN(ACTION_MORNING, REQ_MORNING, 6, 30), MIDDAY(ACTION_MORNING, REQ_MORNING, 12, 0), EVENING(ACTION_EVENING, REQ_EVENING, 21, 30), HOURLY(ACTION_MORNING, REQ_MORNING, 6, 30) }
+    enum class ReminderSource(val id: String, val title: String, val subtitle: String) { CUSTOM("custom", "My Created Declarations", ""), SAVED("saved", "Kept declarations", ""), ALL("all", "Daily declaration", ""), PINNED("pinned", "Selected declaration", "") }
 
-    const val ACTION_DAWN = "com.makarios.app.ACTION_DAWN_REMINDER"
-    const val ACTION_MIDDAY = "com.makarios.app.ACTION_MIDDAY_REMINDER"
-    const val ACTION_EVENING = "com.makarios.app.ACTION_EVENING_REMINDER"
-    const val ACTION_HOURLY = "com.makarios.app.ACTION_HOURLY_REMINDER"
-
-    const val REQ_DAWN = 1001
-    const val REQ_MIDDAY = 1002
-    const val REQ_EVENING = 1003
-    const val REQ_HOURLY = 1004
-
-    enum class ReminderType(val action: String, val requestCode: Int, val hour: Int, val minute: Int) {
-        DAWN(ACTION_DAWN, REQ_DAWN, 8, 30),
-        MIDDAY(ACTION_MIDDAY, REQ_MIDDAY, 12, 30),
-        EVENING(ACTION_EVENING, REQ_EVENING, 20, 30),
-        HOURLY(ACTION_HOURLY, REQ_HOURLY, -1, -1)
+    fun init(context: Context) { createNotificationChannels(context); rescheduleAll(context) }
+    fun createNotificationChannels(context: Context) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
+        val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        listOf(
+            NotificationChannel(MORNING_CHANNEL, "Morning declaration", NotificationManager.IMPORTANCE_DEFAULT),
+            NotificationChannel(EVENING_CHANNEL, "Evening verse", NotificationManager.IMPORTANCE_DEFAULT),
+            NotificationChannel(STREAK_CHANNEL, "Streak reminder", NotificationManager.IMPORTANCE_DEFAULT)
+        ).forEach { channel -> channel.setSound(null, null); channel.enableVibration(false); channel.enableLights(false); manager.createNotificationChannel(channel) }
     }
 
-    enum class ReminderSource(val id: String, val title: String, val subtitle: String) {
-        CUSTOM("custom", "My Created Declarations", "Affirmations you personally authored in Create Studio"),
-        SAVED("saved", "My Saved Favorites", "Your bookmarked collection of biblical promises"),
-        ALL("all", "Daily Scripture Discovery", "A fresh biblical declaration rotated from the full library each day"),
-        PINNED("pinned", "Specific Pinned Declaration", "Keep meditating on a single declaration of your choice")
+    fun isDailyReminderEnabled(c: Context) = NotificationStore.morningEnabled(c)
+    fun setDailyReminderEnabled(c: Context, enabled: Boolean) { NotificationStore.setMorningEnabled(c, enabled); rescheduleAll(c) }
+    fun getReminderHour(c: Context) = NotificationStore.morningTime(c).first
+    fun getReminderMinute(c: Context) = NotificationStore.morningTime(c).second
+    fun setReminderTime(c: Context, hour: Int, minute: Int) { NotificationStore.setMorningTime(c, hour, minute); rescheduleAll(c) }
+    fun getFormattedReminderTime(c: Context) = formatTime(getReminderHour(c), getReminderMinute(c))
+    fun formatTime(hour: Int, minute: Int): String { val ap = if (hour < 12) "AM" else "PM"; val h = when { hour == 0 -> 12; hour > 12 -> hour - 12; else -> hour }; return "$h:${minute.toString().padStart(2, '0')} $ap" }
+    fun isDawnEnabled(c: Context) = NotificationStore.morningEnabled(c)
+    fun isMiddayEnabled(c: Context) = false
+    fun isEveningEnabled(c: Context) = NotificationStore.eveningEnabled(c)
+    fun isHourlyEnabled(c: Context) = false
+    fun setDawnEnabled(c: Context, enabled: Boolean) = setDailyReminderEnabled(c, enabled)
+    fun setEveningEnabled(c: Context, enabled: Boolean) { NotificationStore.setEveningEnabled(c, enabled); rescheduleAll(c) }
+    fun setStreakEnabled(c: Context, enabled: Boolean) { NotificationStore.setStreakEnabled(c, enabled); rescheduleAll(c) }
+    fun setSilent(c: Context, silent: Boolean) = NotificationStore.setSilent(c, silent)
+    fun setWeekdays(c: Context, days: Set<DayOfWeek>) { NotificationStore.setWeekdays(c, days); rescheduleAll(c) }
+    fun getWeekdays(c: Context) = NotificationStore.weekdays(c)
+
+    fun chooseMorningAffirmation(context: Context): Affirmation {
+        val recent = NotificationStore.recentIds(context)
+        val kept = AffirmationRepository.getSaved().filterNot { it.id in recent }
+        val pool = if (kept.isNotEmpty()) kept else AffirmationRepository.getAll().filterNot { it.id in recent }
+        return (pool.ifEmpty { AffirmationRepository.getAll() }).firstOrNull() ?: AffirmationRepository.affirmationOfTheDay
     }
-
-    fun init(context: Context) {
-        createNotificationChannel(context)
-        rescheduleAll(context)
-    }
-
-    fun createNotificationChannel(context: Context) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                CHANNEL_ID,
-                CHANNEL_NAME,
-                NotificationManager.IMPORTANCE_HIGH
-            ).apply {
-                description = "Daily declaration reminders from Makarios"
-                enableLights(true)
-                lightColor = 0xFFD97706.toInt()
-                enableVibration(true)
-            }
-            val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            manager.createNotificationChannel(channel)
-        }
-    }
-
-    // ── Preference Accessors ──────────────────────────────────────
-
-    fun isDailyReminderEnabled(context: Context): Boolean =
-        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            .getBoolean("daily_reminder_enabled", true)
-
-    fun setDailyReminderEnabled(context: Context, enabled: Boolean) {
-        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit()
-            .putBoolean("daily_reminder_enabled", enabled).apply()
-        if (enabled) {
-            scheduleDaily(context, ReminderType.DAWN)
-        } else {
-            cancelReminder(context, ReminderType.DAWN)
-            cancelReminder(context, ReminderType.MIDDAY)
-            cancelReminder(context, ReminderType.EVENING)
-            cancelReminder(context, ReminderType.HOURLY)
-        }
-    }
-
-    fun getReminderHour(context: Context): Int =
-        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            .getInt("reminder_hour", 8)
-
-    fun getReminderMinute(context: Context): Int =
-        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            .getInt("reminder_minute", 30)
-
-    fun setReminderTime(context: Context, hour: Int, minute: Int) {
-        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit()
-            .putInt("reminder_hour", hour)
-            .putInt("reminder_minute", minute)
-            .apply()
-        if (isDailyReminderEnabled(context)) {
-            scheduleDaily(context, ReminderType.DAWN, customHour = hour, customMinute = minute)
-        }
-    }
-
-    fun getFormattedReminderTime(context: Context): String {
-        val hour = getReminderHour(context)
-        val minute = getReminderMinute(context)
-        return formatTime(hour, minute)
-    }
-
-    fun formatTime(hour: Int, minute: Int): String {
-        val amPm = if (hour >= 12) "PM" else "AM"
-        val displayHour = when {
-            hour == 0 -> 12
-            hour > 12 -> hour - 12
-            else -> hour
-        }
-        val displayMinute = if (minute < 10) "0$minute" else "$minute"
-        return "$displayHour:$displayMinute $amPm"
-    }
-
-    fun isDawnEnabled(context: Context): Boolean = isDailyReminderEnabled(context)
-    fun isMiddayEnabled(context: Context): Boolean = false
-    fun isEveningEnabled(context: Context): Boolean = false
-    fun isHourlyEnabled(context: Context): Boolean = false
-
-    fun setDawnEnabled(context: Context, enabled: Boolean) {
-        setDailyReminderEnabled(context, enabled)
-    }
-
-    // ── Specific / Pinned Affirmation Delivery ────────────────────
-
-    fun setPinnedAffirmation(context: Context, affirmation: Affirmation) {
-        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit()
-            .putString("pinned_affirmation_id", affirmation.id)
-            .putString("reminder_source", ReminderSource.PINNED.id)
-            .putBoolean("daily_reminder_enabled", true)
-            .apply()
-
-        scheduleDaily(context, ReminderType.DAWN)
-
-        showSacredNotification(
-            context = context,
-            notificationId = 1001,
-            title = "Your declaration · Makarios",
-            declaration = affirmation.declaration,
-            scripture = affirmation.scriptureText,
-            reference = affirmation.reference
-        )
-    }
-
-    /**
-     * Schedules a custom reminder specifically for an affirmation (e.g. newly created declaration).
-     * Saves the affirmation, configures the requested time, enables daily reminders, and schedules the alarm.
-     */
-    fun scheduleAffirmationReminder(
-        context: Context,
-        affirmation: Affirmation,
-        hour: Int? = null,
-        minute: Int? = null
-    ) {
-        if (hour != null && minute != null) {
-            context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit()
-                .putInt("reminder_hour", hour)
-                .putInt("reminder_minute", minute)
-                .putString("pinned_affirmation_id", affirmation.id)
-                .putString("reminder_source", ReminderSource.PINNED.id)
-                .putBoolean("daily_reminder_enabled", true)
-                .apply()
-            scheduleDaily(context, ReminderType.DAWN, customHour = hour, customMinute = minute)
-        } else {
-            setPinnedAffirmation(context, affirmation)
-        }
-
-        val formattedTime = if (hour != null && minute != null) formatTime(hour, minute) else getFormattedReminderTime(context)
-        showSacredNotification(
-            context = context,
-            notificationId = 1001,
-            title = "Daily declaration set for $formattedTime",
-            declaration = affirmation.declaration,
-            scripture = affirmation.scriptureText,
-            reference = affirmation.reference
-        )
-    }
-
-    fun getPinnedAffirmation(context: Context): Affirmation? {
-        val id = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            .getString("pinned_affirmation_id", null) ?: return null
-        return AffirmationRepository.getById(id)
-    }
-
-    // ── Reminder Content Source ───────────────────────────────────
-
-    fun getReminderSource(context: Context): ReminderSource {
-        val key = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            .getString("reminder_source", ReminderSource.ALL.id) ?: ReminderSource.ALL.id
-        return ReminderSource.values().find { it.id == key } ?: ReminderSource.ALL
-    }
-
-    fun setReminderSource(context: Context, source: ReminderSource) {
-        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit()
-            .putString("reminder_source", source.id).apply()
-    }
-
-    fun getUserName(context: Context): String {
-        return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            .getString("user_name", "Friend") ?: "Friend"
-    }
-
-    fun setUserName(context: Context, name: String) {
-        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit()
-            .putString("user_name", name.trim().ifEmpty { "Friend" }).apply()
-    }
-
-    /**
-     * Resolves the exact affirmation to deliver based on user preference:
-     * - PINNED: Specific declaration chosen by user
-     * - CUSTOM: User-authored personal declarations
-     * - SAVED: User-bookmarked declarations
-     * - ALL: Any biblical declaration from the complete library
-     */
-    fun resolveAffirmationForReminder(context: Context): Affirmation {
-        val source = getReminderSource(context)
-
-        return when (source) {
-            ReminderSource.PINNED -> {
-                getPinnedAffirmation(context) ?: AffirmationRepository.affirmationOfTheDay
-            }
-            ReminderSource.CUSTOM -> {
-                val personal = AffirmationRepository.personalAffirmations
-                if (personal.isNotEmpty()) {
-                    personal.random()
-                } else {
-                    val saved = AffirmationRepository.getSaved()
-                    if (saved.isNotEmpty()) saved.random() else AffirmationRepository.affirmationOfTheDay
-                }
-            }
-            ReminderSource.SAVED -> {
-                val saved = AffirmationRepository.getSaved()
-                if (saved.isNotEmpty()) {
-                    saved.random()
-                } else {
-                    AffirmationRepository.affirmationOfTheDay
-                }
-            }
-            ReminderSource.ALL -> {
-                AffirmationRepository.getAll().randomOrNull() ?: AffirmationRepository.affirmationOfTheDay
-            }
-        }
-    }
-
-    // ── Scheduling Engine ─────────────────────────────────────────
-
-    fun scheduleDaily(
-        context: Context,
-        hour: Int,
-        minute: Int
-    ) {
-        scheduleDaily(context, ReminderType.DAWN, customHour = hour, customMinute = minute)
-    }
-
-    fun scheduleDaily(
-        context: Context,
-        type: ReminderType = ReminderType.DAWN,
-        customHour: Int? = null,
-        customMinute: Int? = null
-    ) {
-        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager ?: return
-
-        val hour = customHour ?: if (type == ReminderType.DAWN) getReminderHour(context) else type.hour
-        val minute = customMinute ?: if (type == ReminderType.DAWN) getReminderMinute(context) else type.minute
-
-        val now = Calendar.getInstance()
-        val target = Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, hour)
-            set(Calendar.MINUTE, minute)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
-            if (before(now)) {
-                add(Calendar.DAY_OF_YEAR, 1)
-            }
-        }
-
-        val intent = Intent(context, ReminderReceiver::class.java).apply {
-            action = type.action
-        }
-        val flags = PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        val pendingIntent = PendingIntent.getBroadcast(context, type.requestCode, intent, flags)
-
-        try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                alarmManager.setExactAndAllowWhileIdle(
-                    AlarmManager.RTC_WAKEUP,
-                    target.timeInMillis,
-                    pendingIntent
-                )
-            } else {
-                alarmManager.setExact(
-                    AlarmManager.RTC_WAKEUP,
-                    target.timeInMillis,
-                    pendingIntent
-                )
-            }
-        } catch (e: SecurityException) {
-            alarmManager.set(AlarmManager.RTC_WAKEUP, target.timeInMillis, pendingIntent)
-        }
-    }
-
-    fun scheduleHourly(context: Context) {
-        scheduleDaily(context, ReminderType.DAWN)
-    }
-
-    fun cancelReminder(context: Context, type: ReminderType) {
-        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager ?: return
-        val intent = Intent(context, ReminderReceiver::class.java).apply {
-            action = type.action
-        }
-        val flags = PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        val pendingIntent = PendingIntent.getBroadcast(context, type.requestCode, intent, flags)
-        alarmManager.cancel(pendingIntent)
-    }
+    fun deliveryLight(): Light = Light.forNow()
+    fun resolveAffirmationForReminder(c: Context) = chooseMorningAffirmation(c)
 
     fun rescheduleAll(context: Context) {
-        if (isDailyReminderEnabled(context)) {
-            scheduleDaily(context, ReminderType.DAWN)
-        }
+        cancel(context, REQ_MORNING); cancel(context, REQ_EVENING); cancel(context, REQ_STREAK)
+        if (NotificationStore.morningEnabled(context)) schedule(context, ACTION_MORNING, REQ_MORNING, NotificationStore.morningTime(context).first, NotificationStore.morningTime(context).second)
+        if (NotificationStore.eveningEnabled(context)) schedule(context, ACTION_EVENING, REQ_EVENING, NotificationStore.eveningTime(context).first, NotificationStore.eveningTime(context).second)
+        if (NotificationStore.streakEnabled(context)) schedule(context, ACTION_STREAK, REQ_STREAK, 20, 0)
+        val morning = NotificationStore.morningTime(context)
+        val renderAt = nextDateTime(context, morning.first, morning.second).minusHours(1)
+        val rawDelay = Duration.between(ZonedDateTime.now(), renderAt)
+        val delay = if (rawDelay.isNegative) Duration.ZERO else rawDelay
+        WorkManager.getInstance(context).enqueueUniqueWork("notification-artwork", ExistingWorkPolicy.REPLACE, OneTimeWorkRequestBuilder<NotificationArtworkWorker>().setInitialDelay(delay.toMillis(), java.util.concurrent.TimeUnit.MILLISECONDS).build())
     }
+    fun scheduleDaily(c: Context, type: ReminderType = ReminderType.DAWN, customHour: Int? = null, customMinute: Int? = null) = rescheduleAll(c)
+    fun scheduleHourly(c: Context) = rescheduleAll(c)
+    fun cancelReminder(c: Context, type: ReminderType) = cancel(c, type.requestCode)
 
-    /**
-     * Instantly triggers a notification preview according to user's selected source or pinned affirmation.
-     */
-    fun sendTestNotification(context: Context, isHourly: Boolean = false) {
-        createNotificationChannel(context)
-
-        val affirmation = resolveAffirmationForReminder(context)
-        val source = getReminderSource(context)
-        val title = when (source) {
-            ReminderSource.PINNED -> "Your declaration · Makarios"
-            ReminderSource.CUSTOM -> "Your declaration · Makarios"
-            ReminderSource.SAVED -> "Your declaration · Makarios"
-            else -> "Makarios"
-        }
-
-        showSacredNotification(
-            context = context,
-            notificationId = 1001,
-            title = title,
-            declaration = affirmation.declaration,
-            scripture = affirmation.scriptureText,
-            reference = affirmation.reference
-        )
-    }
-
-    fun showSacredNotification(
-        context: Context,
-        notificationId: Int,
-        title: String,
-        declaration: String,
-        scripture: String,
-        reference: String
-    ) {
-        createNotificationChannel(context)
-
-        val openAppIntent = Intent(context, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-        }
-        val flags = PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        val pendingIntent = PendingIntent.getActivity(context, notificationId, openAppIntent, flags)
-
-        val bigText = "“$declaration”\n\n“$scripture”\n— $reference"
-
-        val notification = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_notification)
-            .setContentTitle(title)
-            .setContentText("“$declaration”")
-            .setStyle(NotificationCompat.BigTextStyle().bigText(bigText))
-            .setContentIntent(pendingIntent)
-            .setAutoCancel(true)
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setColor(0xFFD97706.toInt()) // Sacred amber gold
-            .build()
-
+    private fun schedule(context: Context, action: String, requestCode: Int, hour: Int, minute: Int) {
+        val alarm = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val target = nextDateTime(context, hour, minute)
+        val intent = Intent(context, ReminderReceiver::class.java).setAction(action)
+        val pi = PendingIntent.getBroadcast(context, requestCode, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
         try {
-            NotificationManagerCompat.from(context).notify(notificationId, notification)
-        } catch (e: SecurityException) {
-            e.printStackTrace()
-        }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && alarm.canScheduleExactAlarms()) alarm.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, target.toInstant().toEpochMilli(), pi)
+            else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) alarm.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, target.toInstant().toEpochMilli(), pi)
+            else alarm.set(AlarmManager.RTC_WAKEUP, target.toInstant().toEpochMilli(), pi)
+        } catch (_: SecurityException) { alarm.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, target.toInstant().toEpochMilli(), pi) }
     }
+    private fun nextDateTime(c: Context, hour: Int, minute: Int): ZonedDateTime {
+        var next = ZonedDateTime.now().withHour(hour).withMinute(minute).withSecond(0).withNano(0)
+        if (!next.isAfter(ZonedDateTime.now())) next = next.plusDays(1)
+        val allowed = NotificationStore.weekdays(c)
+        while (next.dayOfWeek !in allowed) next = next.plusDays(1)
+        return next
+    }
+    private fun cancel(context: Context, requestCode: Int) { val alarm = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager; val pi = PendingIntent.getBroadcast(context, requestCode, Intent(context, ReminderReceiver::class.java), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE); alarm.cancel(pi) }
+
+    fun showNotification(context: Context, kind: String, affirmation: Affirmation, light: Light, kept: Boolean = false) {
+        if (Build.VERSION.SDK_INT >= 33 && ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) return
+        createNotificationChannels(context)
+        val id = when (kind) { ACTION_EVENING -> EVENING_ID; ACTION_STREAK -> STREAK_ID; else -> MORNING_ID }
+        val channel = when (kind) { ACTION_EVENING -> EVENING_CHANNEL; ACTION_STREAK -> STREAK_CHANNEL; else -> MORNING_CHANNEL }
+        val title = when (kind) { ACTION_EVENING -> "Before you sleep"; ACTION_STREAK -> "${ProfileActivityLogCompat.streak(context)} days of declaring"; else -> when (light) { Light.Dawn, Light.Midday -> "Good morning"; Light.Dusk -> "Good evening"; else -> "Good afternoon" } }
+        val text = if (kind == ACTION_STREAK) "Today's declaration is still waiting." else affirmation.declaration
+        val content = PendingIntent.getActivity(context, id, Intent(context, MainActivity::class.java).apply { data = Uri.parse("makarios://today/${affirmation.id}"); putExtra(EXTRA_ID, affirmation.id); flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP }, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+        val builder = NotificationCompat.Builder(context, channel).setSmallIcon(R.drawable.ic_notification).setColor(0xFF8A5A14.toInt()).setContentTitle(if (kept) "Kept" else title).setContentText(text).setContentIntent(content).setAutoCancel(true).setOnlyAlertOnce(true).setSilent(NotificationStore.silent(context))
+        if (kind == ACTION_MORNING) {
+            val file = NotificationArtwork.cacheFile(context, affirmation, light); val picture = if (file.exists()) android.graphics.BitmapFactory.decodeFile(file.absolutePath) else NotificationArtwork.bigPicture(context, affirmation, light)
+            builder.setStyle(NotificationCompat.BigPictureStyle().bigPicture(picture).setSummaryText(affirmation.reference)).addAction(R.drawable.ic_notification, "Share", action(context, ACTION_SHARE, affirmation, light, id)).addAction(R.drawable.ic_notification, "Keep", action(context, ACTION_KEEP, affirmation, light, id))
+        } else builder.setLargeIcon(NotificationArtwork.tile(context, light))
+        try { NotificationManagerCompat.from(context).notify(id, builder.build()) } catch (_: SecurityException) { }
+        if (kind != ACTION_STREAK) NotificationStore.addHistory(context, affirmation.id)
+    }
+    private fun action(c: Context, action: String, a: Affirmation, light: Light, id: Int): PendingIntent = PendingIntent.getBroadcast(c, id + action.hashCode(), Intent(c, NotificationActionReceiver::class.java).setAction(action).putExtra(EXTRA_ID, a.id).putExtra(EXTRA_LIGHT, light.name), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+
+    fun sendTestNotification(c: Context, isHourly: Boolean = false) = showNotification(c, ACTION_MORNING, chooseMorningAffirmation(c), deliveryLight())
+    fun createNotificationChannel(c: Context) = createNotificationChannels(c)
+    fun setPinnedAffirmation(c: Context, a: Affirmation) = showNotification(c, ACTION_MORNING, a, deliveryLight())
+    fun scheduleAffirmationReminder(c: Context, a: Affirmation, hour: Int? = null, minute: Int? = null) { if (hour != null && minute != null) setReminderTime(c, hour, minute); setPinnedAffirmation(c, a) }
+    fun getPinnedAffirmation(c: Context): Affirmation? = null
+    fun getReminderSource(c: Context) = ReminderSource.ALL
+    fun setReminderSource(c: Context, source: ReminderSource) = Unit
+    fun getUserName(c: Context) = "Friend"
+    fun setUserName(c: Context, name: String) = Unit
 }
+
+private object ProfileActivityLogCompat { fun streak(context: Context): Int { val dates = context.getSharedPreferences("makarios_activity_log", Context.MODE_PRIVATE).getStringSet("action", emptySet()).orEmpty(); var day = LocalDate.now(); var count = 0; while (day.toString() in dates) { count++; day = day.minusDays(1) }; return count } }

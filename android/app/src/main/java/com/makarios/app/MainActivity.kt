@@ -1,16 +1,11 @@
-﻿package com.makarios.app
+package com.makarios.app
 
-import android.Manifest
 import android.content.Context
-import android.content.pm.PackageManager
-import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.content.ContextCompat
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.ui.platform.LocalContext
@@ -51,35 +46,20 @@ import com.makarios.app.util.ReminderManager
 
 class MainActivity : ComponentActivity() {
 
-    private val requestPermissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { isGranted: Boolean ->
-        if (isGranted) {
-            ReminderManager.rescheduleAll(this)
-        }
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         ReminderManager.init(this)
         com.makarios.app.widget.WidgetScheduling.schedule(this)
-        requestNotificationPermission()
 
         setContent {
             MakariosTheme {
-                MainAppScaffold()
+                MainAppScaffold(initialAffirmationId = intent.getStringExtra(ReminderManager.EXTRA_ID))
             }
         }
     }
 
-    private fun requestNotificationPermission() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-                requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-            }
-        }
-    }
 }
 
 private data class TabItem(
@@ -89,7 +69,7 @@ private data class TabItem(
 )
 
 @Composable
-fun MainAppScaffold() {
+fun MainAppScaffold(initialAffirmationId: String? = null) {
     val context = LocalContext.current
     val prefs = remember { context.getSharedPreferences("makarios_prefs", Context.MODE_PRIVATE) }
     var selectedTab by remember { mutableStateOf(0) }
@@ -188,7 +168,7 @@ fun MainAppScaffold() {
         }
     ) { innerPadding ->
         when (selectedTab) {
-            0 -> HomeScreen(modifier = Modifier.padding(innerPadding))
+            0 -> HomeScreen(modifier = Modifier.padding(innerPadding), initialAffirmationId = initialAffirmationId)
             1 -> ExploreScreen(
                 onNavigateToTopic = { _, _ -> },
                 onNavigateToCreate = { selectedTab = 2 },
@@ -212,10 +192,6 @@ fun MainAppScaffold() {
         }
     }
 }
-
-
-
-
 
 
 

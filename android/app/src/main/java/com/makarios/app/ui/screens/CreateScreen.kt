@@ -58,6 +58,7 @@ fun CreateScreen(
     var formatName by remember { mutableStateOf("Story") }
     var selectedPhotoUrl by remember { mutableStateOf<String?>(null) }
     var showBibleReader by remember { mutableStateOf(false) }
+    var showNotificationAsk by remember { mutableStateOf(false) }
 
     // Verses matched for the declaration
     var matchedVerses by remember { mutableStateOf<List<ScriptureVerse>>(emptyList()) }
@@ -211,6 +212,7 @@ fun CreateScreen(
                     onPhotoSelected = { selectedPhotoUrl = it },
                     onShare = {
                         val aff = saveCreatedAffirmation()
+                        showNotificationAsk = true
                         val exportFmt = when (formatName) {
                             "WhatsApp", "Status", "Story" -> ExportFormat.Story
                             "Square" -> ExportFormat.Square
@@ -227,12 +229,14 @@ fun CreateScreen(
                     },
                     onSavePhotos = {
                         val aff = saveCreatedAffirmation()
+                        showNotificationAsk = true
                         val exportFmt = when (formatName) { "Story", "Status" -> ExportFormat.Story; "Square" -> ExportFormat.Square; "X" -> ExportFormat.X; else -> ExportFormat.Portrait }
                         val saved = ShareHelper.saveToPhotos(context, aff, selectedLight, exportFmt)
                         Toast.makeText(context, if (saved != null) "Saved to Pictures/Makarios" else "Could not save image", Toast.LENGTH_SHORT).show()
                     },
                     onSetWallpaper = {
                         val aff = saveCreatedAffirmation()
+                        showNotificationAsk = true
                         try {
                             val wm = WallpaperManager.getInstance(context)
                             val renderer = LightCanvas(context)
@@ -255,6 +259,10 @@ fun CreateScreen(
                 )
             }
         }
+    }
+
+    if (showNotificationAsk && !com.makarios.app.util.NotificationStore.askShown(context)) {
+        NotificationSoftAsk { showNotificationAsk = false }
     }
 
     if (showBibleReader) {
@@ -529,6 +537,4 @@ fun LookStep(
         Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween){TextButton(onClick=onSavePhotos){Icon(Icons.Outlined.Image,null,tint=Ink);Spacer(Modifier.width(6.dp));Text("Save to photos",color=Ink)};TextButton(onClick=onSetWallpaper){Icon(Icons.Outlined.Wallpaper,null,tint=Ink);Spacer(Modifier.width(6.dp));Text("Set as wallpaper",color=Ink)}};Spacer(Modifier.height(40.dp))
     }
 }
-
-
 
