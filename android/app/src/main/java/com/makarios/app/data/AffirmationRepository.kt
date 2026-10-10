@@ -246,7 +246,12 @@ object AffirmationRepository {
     )
 
     fun addPersonalAffirmation(affirmation: Affirmation) {
-        personalAffirmations.add(0, affirmation)
+        val existingIndex = personalAffirmations.indexOfFirst { it.id == affirmation.id }
+        if (existingIndex >= 0) {
+            personalAffirmations[existingIndex] = affirmation
+        } else {
+            personalAffirmations.add(0, affirmation)
+        }
         if (!savedAffirmationIds.contains(affirmation.id)) {
             savedAffirmationIds.add(affirmation.id)
         }

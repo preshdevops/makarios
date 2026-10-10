@@ -105,7 +105,7 @@ object BibleVersionRepository {
                 }
             }
         } catch (_: Exception) {
-            // Network failure or timeout — seamlessly return local text
+            // Network failure or timeout - seamlessly return local text
         }
 
         cleanFallback

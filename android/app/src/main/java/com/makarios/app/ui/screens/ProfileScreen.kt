@@ -17,6 +17,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import kotlinx.coroutines.launch
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.draw.drawBehind
@@ -115,13 +116,17 @@ fun ProfileScreen(
     val streak = ProfileActivityLog.streak(context)
     val dates = ProfileActivityLog.qualifiedDates(context)
     val navBottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
+    val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val invite = remember(user) { (user?.uid ?: "XR79K").take(5).uppercase() }
+    val isEmailVerified by AuthManager.isEmailVerified.collectAsState()
+
+    SystemBarsController(Light.Midday)
 
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
             .background(Brush.verticalGradient(listOf(Color(0xFFFFF4D6), Color(0xFFF6E3B0)))),
-        contentPadding = PaddingValues(start = 24.dp, end = 24.dp, top = 48.dp, bottom = navBottom + 24.dp),
+        contentPadding = PaddingValues(start = 24.dp, end = 24.dp, top = statusBarTop + 16.dp, bottom = navBottom + 24.dp),
         verticalArrangement = Arrangement.spacedBy(0.dp)
     ) {
         item {
@@ -145,7 +150,7 @@ fun ProfileScreen(
         }
 
         // Email verification banner if not verified
-        if (user != null && !guest && !user.isEmailVerified) {
+        if (user != null && !guest && !isEmailVerified) {
             item {
                 EmailVerificationBanner(
                     onResend = {
@@ -153,6 +158,10 @@ fun ProfileScreen(
                             onSuccess = { Toast.makeText(context, "Verification email sent.", Toast.LENGTH_SHORT).show() },
                             onError = { err -> Toast.makeText(context, err, Toast.LENGTH_SHORT).show() }
                         )
+                    },
+                    onAccountDeleted = {
+                        authInitialStep = AuthFlowStep.CHOOSE
+                        showAuth = true
                     }
                 )
                 Spacer(Modifier.height(20.dp))
@@ -335,47 +344,154 @@ fun ProfileScreen(
 }
 
 @Composable
-private fun EmailVerificationBanner(onResend: () -> Unit) {
-    Row(
+private fun EmailVerificationBanner(
+    onResend: () -> Unit,
+    onAccountDeleted: () -> Unit
+) {
+    val coroutineScope = rememberCoroutineScope()
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    val isVerified by AuthManager.isEmailVerified.collectAsState()
+
+    var isChecking by remember { mutableStateOf(false) }
+    var inlineError by remember { mutableStateOf<String?>(null) }
+    var resendCooldown by remember { mutableStateOf(0) }
+
+    // 1. Polling: check every 3 seconds while visible & resumed, stop on onPause or verified == true
+    LaunchedEffect(isVerified, lifecycleOwner) {
+        while (!isVerified) {
+            kotlinx.coroutines.delay(3000)
+            if (lifecycleOwner.lifecycle.currentState.isAtLeast(androidx.lifecycle.Lifecycle.State.RESUMED)) {
+                try {
+                    val verified = AuthManager.reloadUser()
+                    if (verified) break
+                } catch (e: com.google.firebase.auth.FirebaseAuthInvalidUserException) {
+                    onAccountDeleted()
+                    break
+                } catch (_: Exception) {}
+            }
+        }
+    }
+
+    // 2. Cooldown timer for Resend button (60s countdown)
+    LaunchedEffect(resendCooldown) {
+        if (resendCooldown > 0) {
+            kotlinx.coroutines.delay(1000)
+            resendCooldown -= 1
+        }
+    }
+
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(Color(0xFFFFF4E4).copy(alpha = 0.90f))
+            .background(Color(0xFFFFF4E4).copy(alpha = 0.95f))
             .border(1.dp, Ink.copy(alpha = 0.15f), RoundedCornerShape(16.dp))
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .padding(16.dp)
     ) {
-        Icon(
-            imageVector = Icons.Outlined.MarkEmailUnread,
-            contentDescription = null,
-            tint = Ink,
-            modifier = Modifier.size(20.dp)
-        )
-        Spacer(modifier = Modifier.width(12.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = "Please verify your email address.",
-                style = MakariosTypography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
-                color = Ink
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.MarkEmailUnread,
+                contentDescription = null,
+                tint = Ink,
+                modifier = Modifier.size(22.dp)
             )
+            Spacer(modifier = Modifier.width(12.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "Please verify your email address.",
+                    style = MakariosTypography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+                    color = Ink
+                )
+                Text(
+                    text = "Check your inbox for a verification link.",
+                    style = MakariosTypography.labelSmall.copy(fontSize = 12.sp),
+                    color = Ink.copy(alpha = 0.70f)
+                )
+            }
+        }
+
+        if (inlineError != null) {
+            Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "Check your inbox for a verification link.",
-                style = MakariosTypography.labelSmall.copy(fontSize = 12.sp),
-                color = Ink.copy(alpha = 0.70f)
+                text = inlineError!!,
+                style = MakariosTypography.labelSmall.copy(fontSize = 12.sp, color = Color(0xFF7A2012)),
+                modifier = Modifier.padding(start = 34.dp)
             )
         }
-        TextButton(
-            onClick = onResend,
-            contentPadding = PaddingValues(horizontal = 8.dp)
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.End,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = "Resend",
-                style = MakariosTypography.labelSmall.copy(
-                    fontWeight = FontWeight.SemiBold,
-                    textDecoration = TextDecoration.Underline
-                ),
-                color = Ink
-            )
+            // "Resend email" button with 60s cooldown timer
+            TextButton(
+                onClick = {
+                    if (resendCooldown == 0) {
+                        resendCooldown = 60
+                        inlineError = null
+                        onResend()
+                    }
+                },
+                enabled = resendCooldown == 0,
+                contentPadding = PaddingValues(horizontal = 8.dp)
+            ) {
+                Text(
+                    text = if (resendCooldown > 0) "Resend in ${resendCooldown}s" else "Resend email",
+                    style = MakariosTypography.labelSmall.copy(
+                        fontWeight = FontWeight.SemiBold,
+                        textDecoration = if (resendCooldown == 0) TextDecoration.Underline else TextDecoration.None
+                    ),
+                    color = if (resendCooldown == 0) Ink else Ink.copy(alpha = 0.45f)
+                )
+            }
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            // "I've verified" button with small spinner and immediate reload
+            Button(
+                onClick = {
+                    if (!isChecking) {
+                        isChecking = true
+                        inlineError = null
+                        coroutineScope.launch {
+                            try {
+                                val verified = AuthManager.reloadUser()
+                                if (!verified) {
+                                    inlineError = "Not verified yet. Check your spam folder or tap Resend below."
+                                }
+                            } catch (e: com.google.firebase.auth.FirebaseAuthInvalidUserException) {
+                                onAccountDeleted()
+                            } catch (e: Exception) {
+                                inlineError = "Not verified yet. Check your spam folder or tap Resend below."
+                            } finally {
+                                isChecking = false
+                            }
+                        }
+                    }
+                },
+                shape = RoundedCornerShape(20.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Ink, contentColor = Cream),
+                contentPadding = PaddingValues(horizontal = 14.dp, vertical = 6.dp)
+            ) {
+                if (isChecking) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(16.dp),
+                        color = Cream,
+                        strokeWidth = 2.dp
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                }
+                Text(
+                    text = "I've verified",
+                    style = MakariosTypography.labelSmall.copy(fontWeight = FontWeight.SemiBold)
+                )
+            }
         }
     }
 }

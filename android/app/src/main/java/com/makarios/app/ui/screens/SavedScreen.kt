@@ -1,7 +1,9 @@
 package com.makarios.app.ui.screens
 
 import android.widget.Toast
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -25,9 +27,10 @@ import com.makarios.app.util.ShareHelper
 fun SavedScreen(onNavigateToCreate: () -> Unit = {}, modifier: Modifier = Modifier) {
     val context = LocalContext.current; var tab by remember { mutableStateOf("Declarations") }
     val saved = remember(AffirmationRepository.savedAffirmationIds.size) { AffirmationRepository.getSaved() }; val mine = remember(AffirmationRepository.personalAffirmations.size) { AffirmationRepository.personalAffirmations.toList() }; val list = if (tab == "Mine") mine else saved
-    Column(modifier.fillMaxSize().padding(top = 48.dp)) {
-        Text("Kept", style = MakariosTypography.displayLarge, color = Ink, modifier = Modifier.padding(horizontal = 24.dp))
-        Row(Modifier.padding(horizontal = 24.dp, vertical = 20.dp), horizontalArrangement = Arrangement.spacedBy(24.dp)) { KeptTab("Declarations", saved.size, tab == "Declarations") { tab = "Declarations" }; KeptTab("Mine", mine.size, tab == "Mine") { tab = "Mine" } }
+    SystemBarsController(Light.Dawn)
+    Column(modifier.fillMaxSize().background(Color(0xFFFBF9F5)).statusBarsPadding()) {
+        Text("Kept", style = MakariosTypography.displayLarge, color = Ink, modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp))
+        Row(Modifier.padding(horizontal = 24.dp, vertical = 12.dp), horizontalArrangement = Arrangement.spacedBy(24.dp)) { KeptTab("Declarations", saved.size, tab == "Declarations") { tab = "Declarations" }; KeptTab("Mine", mine.size, tab == "Mine") { tab = "Mine" } }
         if (list.isEmpty()) Text(if (tab == "Mine") "Your written declarations will appear here." else "Nothing kept yet.", color = Ink.copy(alpha = .65f), modifier = Modifier.padding(32.dp))
         else LazyColumn(contentPadding = PaddingValues(start = 24.dp, end = 24.dp, bottom = 100.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) { items(list, key = { it.id }) { KeptCard(it, lightFor(it), context) } }
     }

@@ -34,8 +34,9 @@ val TopicBands = listOf(
 fun ExploreScreen(onNavigateToTopic: (String, Light) -> Unit = { _, _ -> }, onNavigateToCreate: () -> Unit = {}, modifier: Modifier = Modifier) {
     var query by remember { mutableStateOf("") }; val all = remember { AffirmationRepository.getAll() }
     val bands = TopicBands.filter { query.isBlank() || it.name.contains(query, true) || it.promise.contains(query, true) }
-    Column(modifier.fillMaxSize().background(Color(0xFFFBF9F5)).padding(top = 48.dp)) {
-        Row(Modifier.fillMaxWidth().padding(horizontal = 24.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) { Text("Explore", style = MakariosTypography.displayLarge, color = Ink); IconButton(onClick = onNavigateToCreate) { Icon(Icons.Outlined.MenuBook, "Open Bible reader", tint = Ink) } }
+    SystemBarsController(Light.Dawn)
+    Column(modifier.fillMaxSize().background(Color(0xFFFBF9F5)).statusBarsPadding()) {
+        Row(Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 8.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) { Text("Explore", style = MakariosTypography.displayLarge, color = Ink); IconButton(onClick = onNavigateToCreate) { Icon(Icons.Outlined.MenuBook, "Open Bible reader", tint = Ink) } }
         Row(Modifier.padding(horizontal = 24.dp).fillMaxWidth().height(56.dp).clip(RoundedCornerShape(16.dp)).background(Ink.copy(alpha = .07f)).padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.Default.Search, "Search library", tint = Ink.copy(alpha = .6f)); Spacer(Modifier.width(12.dp))
             BasicTextField(query, { query = it }, Modifier.weight(1f), singleLine = true, textStyle = MakariosTypography.bodyMedium.copy(color = Ink), decorationBox = { field -> if (query.isEmpty()) Text("Search promises and scriptures", color = Ink.copy(alpha = .5f)); field() })

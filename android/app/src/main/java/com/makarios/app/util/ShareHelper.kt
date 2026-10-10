@@ -1,5 +1,6 @@
 package com.makarios.app.util
 
+import android.content.ClipData
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -9,9 +10,15 @@ import androidx.core.content.FileProvider
 import com.makarios.app.data.Affirmation
 import com.makarios.app.ui.theme.Light
 import com.makarios.app.ui.wallpaper.Style
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import java.io.File
 
 object ShareHelper {
+
+    private val renderLock = Any()
 
     enum class SocialPlatform(
         val displayName: String,
@@ -33,6 +40,42 @@ object ShareHelper {
         )
     }
 
+    /**
+     * Deletes files in cacheDir/share older than 24 hours.
+     */
+    fun cleanOldShareFiles(shareDir: File) {
+        try {
+            val cutoff = System.currentTimeMillis() - (24 * 60 * 60 * 1000L)
+            shareDir.listFiles()?.forEach { file ->
+                if (file.lastModified() < cutoff) {
+                    file.delete()
+                }
+            }
+        } catch (_: Exception) {}
+    }
+
+    /**
+     * Fallback to sharing plain text when image preparation fails.
+     */
+    fun sharePlainTextFallback(context: Context, affirmation: Affirmation) {
+        val text = buildString {
+            appendLine(affirmation.declaration)
+            appendLine()
+            appendLine("\"${affirmation.scriptureText}\"")
+            appendLine(affirmation.reference)
+            appendLine()
+            append("Shared via Makarios: https://makarios.app")
+        }
+        val textIntent = Intent(Intent.ACTION_SEND).apply {
+            type = "text/plain"
+            putExtra(Intent.EXTRA_TEXT, text)
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        val chooser = Intent.createChooser(textIntent, "Share declaration")
+        chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        context.startActivity(chooser)
+    }
+
     fun shareToSocialPlatform(
         context: Context,
         affirmation: Affirmation,
@@ -40,36 +83,52 @@ object ShareHelper {
         platform: SocialPlatform,
         style: Style? = null
     ) {
-        val cacheDir = File(context.cacheDir, "images").apply { mkdirs() }
-        val outputFile = File(cacheDir, "share_${System.currentTimeMillis()}.png")
+        try {
+            val isJpegTarget = platform == SocialPlatform.WHATSAPP_STATUS ||
+                    platform == SocialPlatform.INSTAGRAM_STORY ||
+                    platform == SocialPlatform.INSTAGRAM_POST
 
-        val renderer = LightCanvas(context)
-        val renderedFile = renderer.render(
-            declaration = affirmation.declaration,
-            verseText = affirmation.scriptureText,
-            verseReference = affirmation.reference,
-            light = light,
-            format = platform.defaultFormat,
-            style = style,
-            outputFile = outputFile
-        )
+            val renderedFile = synchronized(renderLock) {
+                val shareDir = File(context.cacheDir, "share").apply { mkdirs() }
+                cleanOldShareFiles(shareDir)
+                val ext = if (isJpegTarget) "jpg" else "png"
+                val outputFile = File(shareDir, "share_${System.currentTimeMillis()}.$ext")
 
-        val contentUri = getFileProviderUri(context, renderedFile)
-        val shareIntent = Intent(Intent.ACTION_SEND).apply {
-            type = if (renderedFile.name.endsWith(".jpg") || renderedFile.name.endsWith(".jpeg")) "image/jpeg" else "image/png"
-            putExtra(Intent.EXTRA_STREAM, contentUri)
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        }
+                val renderer = LightCanvas(context)
+                renderer.render(
+                    declaration = affirmation.declaration,
+                    verseText = affirmation.scriptureText,
+                    verseReference = affirmation.reference,
+                    light = light,
+                    format = platform.defaultFormat,
+                    style = style,
+                    outputFile = outputFile,
+                    asJpeg = isJpegTarget,
+                    jpegQuality = 95
+                )
+            }
 
-        if (isAppInstalled(context, platform.packageName)) {
-            shareIntent.setPackage(platform.packageName)
-            context.startActivity(shareIntent)
-        } else {
-            Toast.makeText(context, "Opening share sheet (${platform.displayName} not installed)", Toast.LENGTH_SHORT).show()
-            val chooser = Intent.createChooser(shareIntent, "Share to ${platform.displayName}")
-            chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            context.startActivity(chooser)
+            val contentUri = getFileProviderUri(context, renderedFile)
+            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                type = if (renderedFile.name.endsWith(".jpg") || renderedFile.name.endsWith(".jpeg")) "image/jpeg" else "image/png"
+                putExtra(Intent.EXTRA_STREAM, contentUri)
+                clipData = ClipData.newRawUri("", contentUri)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+
+            if (isAppInstalled(context, platform.packageName)) {
+                shareIntent.setPackage(platform.packageName)
+                context.startActivity(shareIntent)
+            } else {
+                Toast.makeText(context, "Opening share sheet (${platform.displayName} not installed)", Toast.LENGTH_SHORT).show()
+                val chooser = Intent.createChooser(shareIntent, "Share to ${platform.displayName}")
+                chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                context.startActivity(chooser)
+            }
+        } catch (e: Throwable) {
+            Toast.makeText(context, "Could not prepare image to share", Toast.LENGTH_SHORT).show()
+            sharePlainTextFallback(context, affirmation)
         }
     }
 
@@ -80,31 +139,88 @@ object ShareHelper {
         format: ExportFormat = ExportFormat.Portrait,
         style: Style? = null
     ) {
-        val cacheDir = File(context.cacheDir, "images").apply { mkdirs() }
-        val outputFile = File(cacheDir, "share_${System.currentTimeMillis()}.png")
+        try {
+            val renderedFile = synchronized(renderLock) {
+                val shareDir = File(context.cacheDir, "share").apply { mkdirs() }
+                cleanOldShareFiles(shareDir)
+                val outputFile = File(shareDir, "share_${System.currentTimeMillis()}.png")
 
-        val renderer = LightCanvas(context)
-        val renderedFile = renderer.render(
-            declaration = affirmation.declaration,
-            verseText = affirmation.scriptureText,
-            verseReference = affirmation.reference,
-            light = light,
-            format = format,
-            style = style,
-            outputFile = outputFile
-        )
+                val renderer = LightCanvas(context)
+                renderer.render(
+                    declaration = affirmation.declaration,
+                    verseText = affirmation.scriptureText,
+                    verseReference = affirmation.reference,
+                    light = light,
+                    format = format,
+                    style = style,
+                    outputFile = outputFile,
+                    asJpeg = false
+                )
+            }
 
-        val contentUri = getFileProviderUri(context, renderedFile)
-        val shareIntent = Intent(Intent.ACTION_SEND).apply {
-            type = if (renderedFile.name.endsWith(".jpg") || renderedFile.name.endsWith(".jpeg")) "image/jpeg" else "image/png"
-            putExtra(Intent.EXTRA_STREAM, contentUri)
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            val contentUri = getFileProviderUri(context, renderedFile)
+            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                type = if (renderedFile.name.endsWith(".jpg") || renderedFile.name.endsWith(".jpeg")) "image/jpeg" else "image/png"
+                putExtra(Intent.EXTRA_STREAM, contentUri)
+                clipData = ClipData.newRawUri("", contentUri)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+
+            val chooser = Intent.createChooser(shareIntent, "Share via")
+            chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            context.startActivity(chooser)
+        } catch (e: Throwable) {
+            Toast.makeText(context, "Could not prepare image to share", Toast.LENGTH_SHORT).show()
+            sharePlainTextFallback(context, affirmation)
         }
+    }
 
-        val chooser = Intent.createChooser(shareIntent, "Share via")
-        chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        context.startActivity(chooser)
+    /**
+     * Item I: Shares lossless PNG as a document file so WhatsApp and other apps do not recompress.
+     */
+    fun shareAsFile(
+        context: Context,
+        affirmation: Affirmation,
+        light: Light,
+        format: ExportFormat = ExportFormat.Portrait,
+        style: Style? = null
+    ) {
+        try {
+            val renderedFile = synchronized(renderLock) {
+                val shareDir = File(context.cacheDir, "share").apply { mkdirs() }
+                cleanOldShareFiles(shareDir)
+                val outputFile = File(shareDir, "document_${System.currentTimeMillis()}.png")
+
+                val renderer = LightCanvas(context)
+                renderer.render(
+                    declaration = affirmation.declaration,
+                    verseText = affirmation.scriptureText,
+                    verseReference = affirmation.reference,
+                    light = light,
+                    format = format,
+                    style = style,
+                    outputFile = outputFile,
+                    asJpeg = false
+                )
+            }
+
+            val contentUri = getFileProviderUri(context, renderedFile)
+            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                type = "application/octet-stream"
+                putExtra(Intent.EXTRA_STREAM, contentUri)
+                clipData = ClipData.newRawUri("", contentUri)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+
+            val chooser = Intent.createChooser(shareIntent, "Share as file")
+            chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            context.startActivity(chooser)
+        } catch (e: Throwable) {
+            Toast.makeText(context, "Could not prepare file to share", Toast.LENGTH_SHORT).show()
+            sharePlainTextFallback(context, affirmation)
+        }
     }
 
     fun saveToPhotos(
@@ -112,7 +228,8 @@ object ShareHelper {
         affirmation: Affirmation,
         light: Light,
         format: ExportFormat = ExportFormat.Portrait,
-        style: Style? = null
+        style: Style? = null,
+        scale2x: Boolean = true
     ): Uri? {
         val values = android.content.ContentValues().apply {
             put(android.provider.MediaStore.Images.Media.DISPLAY_NAME, "makarios_${System.currentTimeMillis()}.png")
@@ -132,7 +249,9 @@ object ShareHelper {
                     light = light,
                     format = format,
                     style = style,
-                    outputFile = file
+                    outputFile = file,
+                    scaleMultiplier = if (scale2x) 2f else 1f,
+                    asJpeg = false
                 )
                 rendered.inputStream().use { it.copyTo(out) }
                 rendered.delete()

@@ -180,6 +180,8 @@ private fun OnboardingWelcomeScreen(
         )
     )
 
+    SystemBarsController(Light.Night)
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -197,10 +199,12 @@ private fun OnboardingWelcomeScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 28.dp),
+                .padding(horizontal = 28.dp)
+                .statusBarsPadding()
+                .navigationBarsPadding(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(72.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
             // Wordmark: "makarios" Newsreader italic 22 centred at top (y=80)
             Text(
@@ -386,6 +390,8 @@ private fun OnboardingNeedsScreen(
         listOf(Light.Dawn.top, Light.Dawn.bottom)
     )
 
+    SystemBarsController(Light.Dawn)
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -396,8 +402,10 @@ private fun OnboardingNeedsScreen(
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 24.dp)
+                .statusBarsPadding()
+                .navigationBarsPadding()
         ) {
-            Spacer(modifier = Modifier.height(48.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             // Header Row: Progress Dots and Skip button
             Row(
@@ -676,6 +684,8 @@ private fun OnboardingDeclarationScreen(
         label = "bookmark_pop"
     )
 
+    SystemBarsController(currentLight)
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -688,8 +698,10 @@ private fun OnboardingDeclarationScreen(
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 24.dp)
+                .statusBarsPadding()
+                .navigationBarsPadding()
         ) {
-            Spacer(modifier = Modifier.height(48.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             // 3 Progress dots (last active)
             OnboardingProgressDots(

@@ -1,0 +1,62 @@
+E. Numerals style bug (lone "5" with clipped artefacts and a glow blob)
+
+Symptom: Numerals share image for a chapter like "5" renders a giant broken "5" with hard clip edges and a glowing blob.
+
+A single-digit chapter makes a poor Numerals image. Rule: use Numerals only when the chapter has 2 or more digits. For a 1-digit chapter, the style picker greys it out, and Auto picks another style. Alternative: use the VERSE number if that is 2+ digits, or both together ("5:13" set as one numeral group).
+Do not render a giant glyph with Paint.textSize above about 2000px (glyph rasterisation limits cause the clipped edges). Get the glyph outline with Paint.getTextPath at a modest size (200px), then scale it up with a Matrix, and fill the Path.
+Fill or gradient inside the numerals must use canvas.clipPath(numeralPath) and the sun/glow drawn inside that clip only. No glow outside the numeral.
+Test with chapters 1, 5, 9, 10, 23, 119, 150 at all five formats.
+F. Disc and glow must never sit behind text or the right rail
+
+The sun/moon disc and its glow are placed using the text block bounds. Compute the text rect first, then place the disc in the largest free region (usually between the text block and the ridges), at least 6% of width clear of the text rect. On Story, the disc may never overlap the top 25% (where the system clock lives on wallpapers) or the right 14% (the Instagram/WhatsApp reaction rail). Add the contact sheet check from D.
+
+G. Mojibake in references ("â€“" in "Ephesians 1:4â€“6")
+Read verses.json and every asset as UTF-8 explicitly (InputStreamReader(stream, Charsets.UTF_8)), and fix the data file itself: if it contains â€“, â€”, â€™, â€œ, â€\u009d, re-encode (latin1 to utf8) or replace with -, -, ', ", ".
+Normalise all references to use a plain hyphen between ranges ("Ephesians 1:4-6") everywhere shown to the user.
+Add a unit test: no string in the verse database contains â€, Ã, or the replacement character �.
+H. Declare flow: Done button and migrating the old screen
+The old "2. Anchor in Scripture" screen is still the previous off-white design with broken characters. Replace it with the new Declare Verse design from the canvas (Light background, best match card, two alternatives, Search the Bible). Every Declare screen uses the Light background and the shared system bar logic from A.
+Step 3 (Look): bottom has two equal pills, Share (outline) and Done (ink). Beneath: text buttons "Save to photos" and "Set as wallpaper". See canvas "Declare, 3 Look (styles)".
+Done: saves the declaration (if not already saved), then navigates to the new Done screen ("Declare, Done" board): check mark, "Kept.", "Saved to Mine. It will be waiting for you.", small preview of the image, primary "Back to Today", text button "Declare another". Back press on Done goes to Today, not back into the flow.
+If the user shares, then returns to the app, keep them on Look, with Done still available. Never trap the user.
+Success haptic (HapticFeedback.CONFIRM on API 30+) when Kept appears.
+I. Share image quality (poor, blurry, banded)
+Render at the exact export size, never render small and upscale. Story and Wallpaper 1080x1920 minimum. Offer 2x (2160x3840) for "Save to photos".
+Export PNG for "Save to photos" and "Share as file". For direct share to WhatsApp/Instagram, WhatsApp recompresses to JPEG, so ALSO produce a high-quality JPEG (quality 95) variant and share that for those targets, since JPEG of a clean render beats WhatsApp recompressing a noisy PNG.
+Banding: smooth gradients band in 8-bit. Add 1-bit ordered dither noise (the grain, at alpha 0.04 to 0.07) to every gradient region. Grain must be fine (1 px at export size) and generated at export resolution, not scaled from a small tile. Heavy grain hurts JPEG compression, so cap at alpha 0.05 for JPEG variants.
+Text anti-aliasing: Paint.isAntiAlias = true, isSubpixelText = true, isLinearText = true. Use real font files (Newsreader, Hanken Grotesk) from res/font, never fall back to system serif.
+Offer a "Share as file" action in the share sheet (sent as a document so WhatsApp does not recompress). Add this under the Share button as a small text option or in a long press.
+Verify by pixel-peeping a 100% crop of the declaration text and the horizon.
+J. Scripture engine stopgap (until Prompt 8 lands)
+
+Evidence from my own port of the current engine:
+
+"I can literally do anything" returns John 14:14, 1 Cor 6:12, 1 Tim 6:7, John 7:4 and buries Philippians 4:13 (which pure semantic search ranks #1). The keyword boost ("anyth", "literal") is pulling in verses that merely contain those words.
+"I am never stranded" returns Mark 14:7, Psalm 30:6, Psalm 62:2, John 8:29, Matthew 26:11.
+
+Immediate fixes, shippable today:
+
+Remove the substring keyword match (syn.contains(token) || token.contains(syn) and the contains on text). Use whole-token matches against a stop-word-filtered, stemmed token set. Drop filler words ("literally", "really", "just", "very", "always", "never") from the keyword set so they cannot boost anything.
+Reduce keyword weight from 0.3 to 0.1, and only apply it when the keyword score is above 0.5.
+Add an exact/near-exact bank: a declaration_bank.json of the top 200 declarations people actually write mapped to curated verses (e.g. "I can do all things" and "I can do anything" -> Philippians 4:13; "I am loved" -> Romans 8:38-39; "I am not afraid" -> Isaiah 41:10; "I am healed" -> Isaiah 53:5; "I am blessed" -> Ephesians 1:3; "I am never alone" -> Deuteronomy 31:6; "I am forgiven" -> 1 John 1:9). Embed the user's text, and if cosine to a bank entry is >= 0.80, return that entry's verses first, then fill with engine results. Write the 200 entries carefully, and have a human read them.
+Cap output to verses flagged as declarable (first-person, promissory or identity statements). Start with a simple filter: exclude narrative verses (begin with "And he said", contain only names or events) using a quick classifier or a hand-built exclusion list of the worst offenders (John 7:4, Mark 14:7, Matthew 26:11 style).
+Show a "No confident match" state (cosine below 0.35) with the Search the Bible fallback instead of showing junk.
+Speed: load embeddings once with a memory-mapped file on a background dispatcher at app start (not on first search), score with a single matrix pass (FloatArray, flat loop), keep the ONNX session alive, run the tokenizer on Dispatchers.Default, and show a skeleton. Target under 150 ms per search on a mid-range phone. Log timing.
+Then continue with Prompt 8 (curated index, paraphrases, fine-tuned model, held-out eval of 400+ labelled declarations). The 98% target needs that work. Tuning alone will not reach it. Report top-1, top-3 and no-match precision from the eval harness, not by feel.
+K. QA protocol (required before you say done)
+
+Provide a single reply with:
+
+Screenshots of Today in 8 Lights showing no edge bands (A).
+A recording or screenshots of verification flipping without restart (B).
+The crash trace you found and the fix, plus proof of sharing to WhatsApp and saving to photos (C).
+Three contact sheet montages (D) and Numerals chapters 1, 5, 10, 23, 119 (E).
+The Declare flow with Done and the Done screen (H).
+A 100% crop of a Story export (I).
+Engine eval numbers before and after (J).
+
+If any item cannot be completed, say which and why. Do not mark an item done without evidence.
+</USER_REQUEST>
+<ADDITIONAL_METADATA>
+The current local time is: 2026-10-10T15:34:35+01:00.
+</ADDITIONAL_METADATA>

@@ -18,6 +18,7 @@ enum class Light(
     Grove(true,Color(0xFF3F5A37),Color(0xFF223019),Cream,.88f,Color(0x33081006),Color(0x57081006),Color(0xFFE8F0D0),Color(0xFFE8F0D0),.74f,.60f,22f,.90f),
     Night(true,Color(0xFF1F2B2A),Color(0xFF0F1716),Cream,.88f,Color(0x33000000),Color(0x52000000),Color(0xFFF3E6C8),Color(0xFFF3E6C8),.76f,.62f,20f,.92f);
     val isLight get()=!dark
+    val isDark get()=dark
     val anchorRule get()=if(dark) AnchorDark else AnchorLight
     val buttonFill get()=if(dark) Cream else Ink
     val buttonText get()=if(dark) Ink else Cream

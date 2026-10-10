@@ -3,6 +3,9 @@
     <cache-path
         name="shared_images"
         path="images/" />
+    <cache-path
+        name="share"
+        path="share/" />
     <external-cache-path
         name="external_shared_images"
         path="images/" />

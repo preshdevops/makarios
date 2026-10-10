@@ -43,12 +43,27 @@ object ScriptureText {
     }
 
     /**
+     * Normalizes all Scripture references to use a plain hyphen between chapter/verse ranges,
+     * e.g. "Ephesians 1:4-6" without corrupted multi-byte mojibake or en/em dashes.
+     */
+    fun normalizeReference(raw: String): String {
+        if (raw.isBlank()) return ""
+        return raw.trim()
+            .replace("â€“", "-")
+            .replace("â€”", "-")
+            .replace("–", "-")
+            .replace("—", "-")
+            .replace(Regex("\\s*-\\s*"), "-")
+            .replace(Regex("\\s+"), " ")
+    }
+
+    /**
      * Formats selected verses for clipboard copy:
      * curly-quoted text, blank line, "Book Ch:vv WEB"
      */
     fun formatForCopy(reference: String, text: String, version: String = "WEB"): String {
         val cleaned = clean(text)
-        // Format with curly quotes around the text, followed by blank line and citation
-        return "“$cleaned”\n\n$reference $version"
+        val normalizedRef = normalizeReference(reference)
+        return "“$cleaned”\n\n$normalizedRef $version"
     }
 }

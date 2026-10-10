@@ -46,3 +46,23 @@ fun drawPairing(canvas: android.graphics.Canvas, widthPx: Int, declaration: Stri
     val vp=android.text.TextPaint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply{color=light.text.toArgb();typeface=italicTypeface;textSize=17f;isSubpixelText=true};val vl=layout(verse,vp);canvas.save();canvas.translate(0f,y);vl.draw(canvas);canvas.restore();y+=vl.height+8f
     val rp=android.text.TextPaint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply{color=light.text.copy(alpha=light.secondaryAlpha).toArgb();typeface=referenceTypeface;textSize=13f;isSubpixelText=true};val rl=layout(reference,rp);canvas.save();canvas.translate(0f,y);rl.draw(canvas);canvas.restore()
 }
+
+/**
+ * Dynamically synchronizes system bar appearance (status bar and navigation bar)
+ * with the active Light theme.
+ * Light Lights (Dawn, Midday, Mist, Rain) get dark icons.
+ * Dark Lights (Ember, Dusk, Grove, Night) get light icons.
+ */
+@Composable
+fun SystemBarsController(light: Light) {
+    val view = androidx.compose.ui.platform.LocalView.current
+    if (!view.isInEditMode) {
+        androidx.compose.runtime.SideEffect {
+            val window = (view.context as? android.app.Activity)?.window ?: return@SideEffect
+            val insetsController = androidx.core.view.WindowCompat.getInsetsController(window, view)
+            insetsController.isAppearanceLightStatusBars = !light.isDark
+            insetsController.isAppearanceLightNavigationBars = !light.isDark
+        }
+    }
+}
+

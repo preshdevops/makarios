@@ -52,7 +52,19 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        enableEdgeToEdge(
+            statusBarStyle = androidx.activity.SystemBarStyle.auto(
+                android.graphics.Color.TRANSPARENT,
+                android.graphics.Color.TRANSPARENT
+            ),
+            navigationBarStyle = androidx.activity.SystemBarStyle.auto(
+                android.graphics.Color.TRANSPARENT,
+                android.graphics.Color.TRANSPARENT
+            )
+        )
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+            window.isNavigationBarContrastEnforced = false
+        }
         ReminderManager.init(this)
         lifecycleScope.launch(Dispatchers.IO) { com.makarios.app.data.MatchEngine.getInstance(this@MainActivity).initialize() }
         com.makarios.app.widget.WidgetScheduling.schedule(this)
@@ -102,12 +114,51 @@ fun MainAppScaffold(initialAffirmationId: String? = null) {
     }
 
 
+    var showAuthChoose by remember { mutableStateOf(false) }
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    val coroutineScope = rememberCoroutineScope()
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_START || event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+                coroutineScope.launch {
+                    try {
+                        com.makarios.app.data.AuthManager.reloadUser()
+                    } catch (e: com.google.firebase.auth.FirebaseAuthInvalidUserException) {
+                        showAuthChoose = true
+                    } catch (_: Exception) {}
+                }
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+
+    if (showAuthChoose) {
+        com.makarios.app.ui.screens.AuthFlowHost(
+            onContinueToApp = { showAuthChoose = false }
+        )
+        return
+    }
+
     if (showWallpaper) {
         WallpaperGallery(onBack = { showWallpaper = false })
         return
     }
 
-    val currentLight = remember { getCurrentLightForTime() }
+    var activeLight by remember { mutableStateOf(getCurrentLightForTime()) }
+    SystemBarsController(activeLight)
+
+    LaunchedEffect(selectedTab) {
+        when (selectedTab) {
+            1 -> activeLight = Light.Dawn
+            3 -> activeLight = Light.Dawn
+            4 -> activeLight = Light.Midday
+            else -> {}
+        }
+    }
 
     // Five tabs: Today, Explore, Declare, Kept, You
     val tabs = listOf(
@@ -120,19 +171,21 @@ fun MainAppScaffold(initialAffirmationId: String? = null) {
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        containerColor = currentLight.bottom,
+        containerColor = Color.Transparent,
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         bottomBar = {
             // The bar hides inside the Declare flow (selectedTab == 2)
             if (selectedTab != 2) {
                 Surface(
-                    color = currentLight.bottom,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .navigationBarsPadding()
+                    color = activeLight.bottom,
+                    tonalElevation = 0.dp,
+                    shadowElevation = 0.dp,
+                    modifier = Modifier.fillMaxWidth()
                 ) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
+                            .navigationBarsPadding()
                             .height(56.dp)
                             .padding(horizontal = 8.dp),
                         verticalAlignment = Alignment.CenterVertically
@@ -155,13 +208,13 @@ fun MainAppScaffold(initialAffirmationId: String? = null) {
                                 Icon(
                                     imageVector = if (isSelected) tab.selectedIcon else tab.unselectedIcon,
                                     contentDescription = tab.label,
-                                    tint = if (isSelected) currentLight.text else currentLight.text.copy(alpha = 0.55f),
+                                    tint = if (isSelected) activeLight.text else activeLight.text.copy(alpha = 0.55f),
                                     modifier = Modifier.size(24.dp)
                                 )
                                 Spacer(modifier = Modifier.height(2.dp))
                                 Text(
                                     text = tab.label,
-                                    color = if (isSelected) currentLight.text else currentLight.text.copy(alpha = 0.55f),
+                                    color = if (isSelected) activeLight.text else activeLight.text.copy(alpha = 0.55f),
                                     fontFamily = HankenGroteskFontFamily,
                                     fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
                                     fontSize = 11.sp
@@ -172,21 +225,25 @@ fun MainAppScaffold(initialAffirmationId: String? = null) {
                 }
             }
         }
-    ) { innerPadding ->
+    ) { _ ->
         when (selectedTab) {
-            0 -> HomeScreen(modifier = Modifier.padding(innerPadding), initialAffirmationId = initialAffirmationId)
+            0 -> HomeScreen(
+                modifier = Modifier.fillMaxSize(),
+                initialAffirmationId = initialAffirmationId,
+                onLightChanged = { activeLight = it }
+            )
             1 -> ExploreScreen(
                 onNavigateToTopic = { _, _ -> },
                 onNavigateToCreate = { selectedTab = 2 },
-                modifier = Modifier.padding(innerPadding)
+                modifier = Modifier.fillMaxSize()
             )
             2 -> CreateScreen(
                 onNavigateBack = { selectedTab = 0 },
-                modifier = Modifier.padding(innerPadding)
+                modifier = Modifier.fillMaxSize()
             )
             3 -> SavedScreen(
                 onNavigateToCreate = { selectedTab = 2 },
-                modifier = Modifier.padding(innerPadding)
+                modifier = Modifier.fillMaxSize()
             )
             4 -> ProfileScreen(
                 onSignOut = {
@@ -194,7 +251,7 @@ fun MainAppScaffold(initialAffirmationId: String? = null) {
                 },
                 onOpenWallpapers = { showWallpaper = true },
                 onResetOnboarding = { showOnboarding = true },
-                modifier = Modifier.padding(innerPadding)
+                modifier = Modifier.fillMaxSize()
             )
         }
     }

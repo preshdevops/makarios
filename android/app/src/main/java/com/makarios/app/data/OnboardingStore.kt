@@ -177,8 +177,8 @@ object OnboardingStore {
             ),
             Affirmation(
                 id = "bank-courage-3",
-                declaration = "The Lord is my light and my salvation—whom shall I fear?",
-                scriptureText = "The Lord is my light and my salvation—whom shall I fear? The Lord is the stronghold of my life—of whom shall I be afraid?",
+                declaration = "The Lord is my light and my salvation-whom shall I fear?",
+                scriptureText = "The Lord is my light and my salvation-whom shall I fear? The Lord is the stronghold of my life-of whom shall I be afraid?",
                 reference = "Psalm 27:1",
                 category = "Courage",
                 context = "Fear dissolves in the light of His salvation.",

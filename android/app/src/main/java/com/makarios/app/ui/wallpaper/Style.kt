@@ -30,9 +30,42 @@ data class StyleSpec(
 ) {
     /** Resolved chapter number: uses explicit value, extracts from reference, or defaults to 23. */
     val resolvedChapter: String
-        get() = chapterNumber
-            ?: reference?.substringAfterLast(" ")?.substringBefore(":")?.filter { it.isDigit() }?.ifEmpty { null }
-            ?: "23"
+        get() {
+            if (!chapterNumber.isNullOrBlank()) {
+                return chapterNumber.trim()
+            }
+            val ref = reference
+            if (ref != null && ref.contains(":")) {
+                val lastToken = ref.substringAfterLast(" ")
+                val ch = lastToken.substringBefore(":").filter { it.isDigit() }
+                val v = lastToken.substringAfter(":").substringBefore("-").substringBefore("-").filter { it.isDigit() }
+                if (ch.length >= 2) return ch
+                if (v.length >= 2) return v
+                val combined = lastToken.filter { it.isDigit() || it == ':' }
+                if (combined.isNotBlank() && combined.filter { it.isDigit() }.length >= 2) return combined
+                if (ch.isNotEmpty()) return ch
+            }
+            return "23"
+        }
+
+    /**
+     * Numerals style is eligible only when chapter has 2 or more digits,
+     * or verse number has 2+ digits, or combined group (e.g. 5:13) has 2+ digits.
+     */
+    val isNumeralsEligible: Boolean
+        get() {
+            if (!chapterNumber.isNullOrBlank()) {
+                return chapterNumber.filter { it.isDigit() }.length >= 2
+            }
+            val ref = reference
+            if (ref != null && ref.contains(":")) {
+                val lastToken = ref.substringAfterLast(" ")
+                val ch = lastToken.substringBefore(":").filter { it.isDigit() }
+                val v = lastToken.substringAfter(":").substringBefore("-").substringBefore("-").filter { it.isDigit() }
+                return ch.length >= 2 || v.length >= 2
+            }
+            return false
+        }
 }
 
 data class CuratedVerse(val text: String, val reference: String)
@@ -174,9 +207,10 @@ object AutoStyleSelector {
             return StyleRegistry.WORD
         }
 
-        // 3. Scripture-forward -> Page or Numerals
+        // 3. Scripture-forward -> Page or Numerals (Numerals requires 2+ digits)
+        val tempSpec = StyleSpec(declaration = trimmed, verse = verse, reference = reference, chapterNumber = chapterNumber)
         if (verse != null && (verse.length >= len || !chapterNumber.isNullOrBlank())) {
-            return if (!chapterNumber.isNullOrBlank()) StyleRegistry.NUMERALS else StyleRegistry.PAGE
+            return if (tempSpec.isNumeralsEligible) StyleRegistry.NUMERALS else StyleRegistry.PAGE
         }
 
         // 4. Peace / rest -> Tide or Paper

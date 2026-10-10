@@ -22,7 +22,7 @@ class MatchEngine private constructor(private val context: Context) {
         initialize()
         val ranked = ScriptureMatcher.match(text, limit = maxOf(limit, 3)).take(3)
         val top = ranked.map { VerseMatch(it.verse.reference, ScriptureText.clean(it.verse.text), true, it.score) }
-        val confident = top.firstOrNull()?.score?.let { it >= .42f } == true
+        val confident = top.firstOrNull()?.score?.let { it >= 0.35f } == true
         EngineMatchResult(top, confident, if (confident) "curated_match" else "No confident match")
     }
 

@@ -79,7 +79,7 @@ fun PromptInput(
 
         Spacer(modifier = Modifier.width(8.dp))
 
-        // Send button — deep espresso-plum circle per mockup with upward arrow
+        // Send button - deep espresso-plum circle per mockup with upward arrow
         Box(
             modifier = Modifier
                 .size(34.dp)

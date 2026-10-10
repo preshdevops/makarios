@@ -38,11 +38,17 @@ class LightCanvas(private val context: Context) {
         style: Style? = null,
         deviceWidth: Int = 1080,
         deviceHeight: Int = 1920,
-        outputFile: File
+        outputFile: File,
+        scaleMultiplier: Float = 1f,
+        asJpeg: Boolean = false,
+        jpegQuality: Int = 95
     ): File {
         StyleTypefaces.init(context)
-        val width = if (format == ExportFormat.Wallpaper) deviceWidth else format.width
-        val height = if (format == ExportFormat.Wallpaper) deviceHeight else format.height
+        val baseWidth = if (format == ExportFormat.Wallpaper) (deviceWidth * 1.08f).toInt() else format.width
+        val baseHeight = if (format == ExportFormat.Wallpaper) deviceHeight else format.height
+
+        val width = (baseWidth * scaleMultiplier).toInt()
+        val height = (baseHeight * scaleMultiplier).toInt()
 
         val resolvedStyle = style ?: AutoStyleSelector.pickStyle(
             declaration = declaration,
@@ -58,17 +64,18 @@ class LightCanvas(private val context: Context) {
         )
 
         val bitmap = resolvedStyle.render(spec, light, IntSize(width, height))
-
-        val png = if (outputFile.extension.lowercase() == "png") outputFile else File(outputFile.parentFile, outputFile.nameWithoutExtension + ".png")
-        FileOutputStream(png).use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
-        if (png.length() > 8L * 1024L * 1024L) {
-            val jpg = File(png.parentFile, png.nameWithoutExtension + ".jpg")
-            FileOutputStream(jpg).use { bitmap.compress(Bitmap.CompressFormat.JPEG, 92, it) }
-            png.delete()
+        try {
+            if (asJpeg) {
+                val jpg = if (outputFile.extension.lowercase() in listOf("jpg", "jpeg")) outputFile else File(outputFile.parentFile, outputFile.nameWithoutExtension + ".jpg")
+                FileOutputStream(jpg).use { bitmap.compress(Bitmap.CompressFormat.JPEG, jpegQuality, it) }
+                return jpg
+            } else {
+                val png = if (outputFile.extension.lowercase() == "png") outputFile else File(outputFile.parentFile, outputFile.nameWithoutExtension + ".png")
+                FileOutputStream(png).use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
+                return png
+            }
+        } finally {
             bitmap.recycle()
-            return jpg
         }
-        bitmap.recycle()
-        return png
     }
 }

@@ -12,8 +12,13 @@ import androidx.credentials.exceptions.GetCredentialException
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.tasks.await
 
 /**
  * AuthManager
@@ -31,6 +36,11 @@ object AuthManager {
 
     var currentUser by mutableStateOf<FirebaseUser?>(null)
         private set
+
+    private val _isEmailVerified = MutableStateFlow(false)
+    val isEmailVerified: StateFlow<Boolean> = _isEmailVerified.asStateFlow()
+
+    var userReloader: (suspend () -> Boolean)? = null
 
     val isLoggedIn: Boolean
         get() = currentUser != null
@@ -60,13 +70,47 @@ object AuthManager {
         } catch (e: Exception) {
             null
         }
+        _isEmailVerified.value = currentUser?.isEmailVerified == true
 
         try {
             auth.addAuthStateListener { firebaseAuth ->
                 currentUser = firebaseAuth.currentUser
+                _isEmailVerified.value = firebaseAuth.currentUser?.isEmailVerified == true
             }
         } catch (e: Exception) {
             e.printStackTrace()
+        }
+    }
+
+    /**
+     * Reload the current user and drop cached token to fetch fresh emailVerified claim.
+     * Throws FirebaseAuthInvalidUserException if account deleted remotely.
+     */
+    suspend fun reloadUser(): Boolean {
+        userReloader?.let {
+            val res = it.invoke()
+            _isEmailVerified.value = res
+            return res
+        }
+        val user = auth.currentUser ?: run {
+            _isEmailVerified.value = false
+            return false
+        }
+        return try {
+            user.reload().await()
+            user.getIdToken(true).await()
+            currentUser = auth.currentUser
+            val verified = currentUser?.isEmailVerified == true
+            _isEmailVerified.value = verified
+            verified
+        } catch (e: FirebaseAuthInvalidUserException) {
+            signOut()
+            _isEmailVerified.value = false
+            throw e
+        } catch (e: Exception) {
+            val verified = currentUser?.isEmailVerified == true
+            _isEmailVerified.value = verified
+            verified
         }
     }
 
@@ -316,6 +360,7 @@ object AuthManager {
         try {
             auth.signOut()
             currentUser = null
+            _isEmailVerified.value = false
         } catch (e: Exception) {
             e.printStackTrace()
         }

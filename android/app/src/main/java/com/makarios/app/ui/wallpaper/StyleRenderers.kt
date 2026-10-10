@@ -7,6 +7,7 @@ import android.graphics.Canvas as AndroidCanvas
 import android.graphics.Color as AndroidColor
 import android.graphics.DashPathEffect
 import android.graphics.LinearGradient
+import android.graphics.Matrix as AndroidMatrix
 import android.graphics.Paint as AndroidPaint
 import android.graphics.Path as AndroidPath
 import android.graphics.RadialGradient
@@ -52,9 +53,9 @@ object StyleTypefaces {
         }
     }
 
-    fun getNewsreader(): Typeface = newsreader ?: Typeface.SERIF
-    fun getNewsreaderItalic(): Typeface = newsreaderItalic ?: Typeface.create(Typeface.SERIF, Typeface.ITALIC)
-    fun getHankenGrotesk(): Typeface = hankenGrotesk ?: Typeface.SANS_SERIF
+    fun getNewsreader(): Typeface? = newsreader ?: runCatching { Typeface.SERIF }.getOrNull()
+    fun getNewsreaderItalic(): Typeface? = newsreaderItalic ?: runCatching { Typeface.create(Typeface.SERIF, Typeface.ITALIC) }.getOrNull()
+    fun getHankenGrotesk(): Typeface? = hankenGrotesk ?: runCatching { Typeface.SANS_SERIF }.getOrNull()
 }
 
 /** Grain noise texture tile for eliminating color banding and adding tactile paper warmth. */
@@ -86,7 +87,7 @@ data class LayoutGeometry(
         fun compute(size: IntSize): LayoutGeometry {
             val w = size.width.toFloat()
             val h = size.height.toFloat()
-            val s = w / 390f
+            val s = min(w / 390f, h / 844f)
             val format = when {
                 w == 1600f && h == 900f -> ExportFormat.X
                 w == 1080f && h == 1080f -> ExportFormat.Square
@@ -97,23 +98,24 @@ data class LayoutGeometry(
                 else -> ExportFormat.Story
             }
             val margin = when (format) {
-                ExportFormat.Portrait -> w * 0.072f // 10% tighter margins than Story
+                ExportFormat.Portrait -> w * 0.08f
                 ExportFormat.X -> w * 0.06f
                 ExportFormat.Square -> w * 0.08f
                 else -> w * 0.08f
             }
             val topSafe = when (format) {
-                ExportFormat.Story -> h * 0.14f // 14% top safe zone
+                ExportFormat.Story -> h * 0.20f // 20% top safe zone
                 ExportFormat.Wallpaper -> h * 0.22f // Top 22% free for lock screen clock
-                ExportFormat.Square -> h * 0.09f
-                ExportFormat.Portrait -> h * 0.10f
-                ExportFormat.X -> h * 0.10f
+                ExportFormat.Square -> h * 0.08f // 8% on all sides
+                ExportFormat.Portrait -> h * 0.14f // 14% top safe
+                ExportFormat.X -> h * 0.08f // top/bottom 8%
             }
             val bottomSafe = when (format) {
-                ExportFormat.Story, ExportFormat.Wallpaper -> h * 0.86f // 14% bottom safe zone
-                ExportFormat.Square -> h * 0.91f
-                ExportFormat.Portrait -> h * 0.88f
-                ExportFormat.X -> h * 0.90f
+                ExportFormat.Story -> h * 0.80f // 20% bottom safe zone
+                ExportFormat.Wallpaper -> h * 0.80f // 20% bottom safe zone
+                ExportFormat.Square -> h * 0.92f // 8% bottom safe
+                ExportFormat.Portrait -> h * 0.86f // 14% bottom safe
+                ExportFormat.X -> h * 0.92f // 8% bottom safe
             }
             return LayoutGeometry(
                 format = format,
@@ -144,21 +146,23 @@ fun DrawScope.drawGrainOverlay(light: Light, size: Size = this.size) {
     }
 }
 
-/** Draws smooth mountain ridges with seed-deterministic Bezier curves. */
+/** Draws smooth mountain ridges with seed-deterministic Bezier curves overextending 10% past edges. */
 fun DrawScope.drawRidgePath(w: Float, h: Float, y0: Float, amp: Float, seed: Int, color: Color) {
+    val overscan = w * 0.10f
     val r = Random(seed)
     val points = (0..6).map { i ->
-        Offset(w * i / 6f, y0 + amp * sin(i * 1.3f + seed) + (r.nextFloat() - 0.5f) * 0.8f * amp)
+        val x = -overscan + (w + 2 * overscan) * i / 6f
+        Offset(x, y0 + amp * sin(i * 1.3f + seed) + (r.nextFloat() - 0.5f) * 0.8f * amp)
     }
     val path = Path().apply {
-        moveTo(0f, h)
+        moveTo(-overscan, h)
         lineTo(points[0].x, points[0].y)
         for (i in 0 until 6) {
             val m = Offset((points[i].x + points[i + 1].x) / 2f, (points[i].y + points[i + 1].y) / 2f)
-            quadraticBezierTo(points[i].x, points[i].y, m.x, m.y)
+            quadraticTo(points[i].x, points[i].y, m.x, m.y)
         }
         lineTo(points.last().x, points.last().y)
-        lineTo(w, h)
+        lineTo(w + overscan, h)
         close()
     }
     drawPath(path, color)
@@ -182,6 +186,208 @@ fun drawWordmark(
     val x = if (geom.isLandscapeX) geom.margin else geom.width / 2f
     val y = geom.height * 0.94f
     canvas.drawText("makarios", x, y, paint)
+}
+
+/**
+ * Item F: Pre-calculates exact text bounding box for layout and safe disc placement.
+ */
+fun measurePairingBounds(
+    geom: LayoutGeometry,
+    light: Light,
+    spec: StyleSpec,
+    declarationSizeSp: Float = 34f,
+    verseSizeSp: Float = 17f,
+    topOverride: Float? = null,
+    textWidthOverride: Float? = null,
+    includeDeclaration: Boolean = true,
+    includeVerse: Boolean = true,
+    includeReference: Boolean = true,
+    centerAlign: Boolean = false
+): RectF {
+    val textWidth = (textWidthOverride ?: if (geom.isLandscapeX) (geom.width * 0.55f - geom.margin * 2f) else (geom.width - geom.margin * 2f)).coerceAtLeast(100f)
+    val s = geom.scale
+    val startX = if (centerAlign) geom.width / 2f - textWidth / 2f else geom.margin
+
+    val newsreader = StyleTypefaces.getNewsreader()
+    val newsreaderItalic = StyleTypefaces.getNewsreaderItalic()
+    val hanken = StyleTypefaces.getHankenGrotesk()
+
+    fun makeLayout(text: String, typeface: Typeface, sizePx: Float): StaticLayout? = runCatching {
+        val paint = TextPaint(AndroidPaint.ANTI_ALIAS_FLAG or AndroidPaint.DITHER_FLAG).apply {
+            this.typeface = typeface
+            this.textSize = sizePx
+            this.color = light.text.toArgb()
+            this.isSubpixelText = true
+        }
+        StaticLayout.Builder.obtain(text, 0, text.length, paint, textWidth.toInt())
+            .setIncludePad(false)
+            .setLineSpacing(0f, 1.18f)
+            .build()
+    }.getOrNull()
+
+    val boldTypeface = runCatching { Typeface.create(newsreader, Typeface.BOLD) }.getOrNull()
+    if (boldTypeface == null) {
+        val estLines = (spec.declaration.length / 26) + 1
+        val estH = estLines * (declarationSizeSp * s * 1.25f) + 50f * s
+        val startY = topOverride ?: (geom.topSafe + 20f * s)
+        return RectF(startX, startY, startX + textWidth, startY + estH)
+    }
+
+    var declPx = declarationSizeSp * s
+    val minDeclPx = 14f * s
+    var dl = if (includeDeclaration) makeLayout(spec.declaration, boldTypeface, declPx) else null
+    if (includeDeclaration && dl == null) {
+        val estLines = (spec.declaration.length / 26) + 1
+        val estH = estLines * (declarationSizeSp * s * 1.25f) + 50f * s
+        val startY = topOverride ?: (geom.topSafe + 20f * s)
+        return RectF(startX, startY, startX + textWidth, startY + estH)
+    }
+    while (dl != null && (dl.height > geom.height * 0.40f || dl.width > textWidth) && declPx > minDeclPx) {
+        declPx *= 0.98f
+        dl = makeLayout(spec.declaration, Typeface.create(newsreader, Typeface.BOLD), declPx)
+    }
+
+    val ruleH = 2f * s
+    val gap1 = 20f * s
+    val gap2 = 18f * s
+    val gap3 = 10f * s
+
+    var vPx = verseSizeSp * s
+    val minVPx = 12f * s
+    val verseText = spec.verse.orEmpty()
+    var vl = if (includeVerse && verseText.isNotBlank()) makeLayout(verseText, Typeface.create(newsreaderItalic, Typeface.ITALIC), vPx) else null
+
+    val refText = (spec.reference ?: "").uppercase()
+    val refLayout = if (includeReference && refText.isNotBlank()) makeLayout(refText, Typeface.create(hanken, Typeface.NORMAL), 12f * s) else null
+
+    fun totalHeight(includeV: Boolean): Float {
+        var h = 0f
+        val currentDl = dl
+        if (currentDl != null) h += currentDl.height + gap1 + ruleH + gap2
+        val currentVl = vl
+        if (includeV && currentVl != null) h += currentVl.height + gap3
+        val currentRef = refLayout
+        if (currentRef != null) h += currentRef.height
+        return h
+    }
+
+    var showVerse = vl != null
+    val availableH = geom.bottomSafe - geom.topSafe
+    while (showVerse && totalHeight(true) > availableH && vPx > minVPx) {
+        vPx *= 0.98f
+        vl = makeLayout(verseText, Typeface.create(newsreaderItalic, Typeface.ITALIC), vPx)
+    }
+    if (totalHeight(true) > availableH && dl != null) {
+        showVerse = false
+    }
+
+    val totalH = totalHeight(showVerse)
+    val startY = topOverride ?: when {
+        geom.isSquare -> geom.topSafe + (geom.height * 0.42f - geom.topSafe - totalH).coerceAtLeast(0f) * 0.4f
+        geom.isLandscapeX -> geom.topSafe + (geom.height - geom.topSafe - totalH).coerceAtLeast(0f) * 0.35f
+        else -> geom.topSafe + (availableH - totalH).coerceAtLeast(0f) * 0.30f
+    }
+
+    return RectF(startX, startY, startX + textWidth, startY + totalH)
+}
+
+/**
+ * Item F: Disc and glow positioning logic.
+ * The sun/moon disc and its glow must NEVER sit behind the text block or the right rail.
+ * - Disc and glow clear the text bounding box by at least 6% of screen width.
+ * - On Story (and Wallpaper), the disc may never overlap the top 25% (clock) or the right 14% (reaction rail).
+ * - Finds the largest free region between the text block and the ridges.
+ */
+fun computeSafeDiscPosition(
+    geom: LayoutGeometry,
+    light: Light,
+    textBounds: RectF? = null
+): Offset {
+    val w = geom.width
+    val h = geom.height
+    val s = geom.scale
+    val discRadius = light.discR * s
+    val marginClear = w * 0.06f // >= 6% of width clearance from text
+
+    val isStoryOrWallpaper = geom.format == ExportFormat.Story || geom.format == ExportFormat.Wallpaper
+    val minTopY = if (isStoryOrWallpaper) h * 0.25f + discRadius else geom.topSafe + discRadius
+    val maxRightX = if (isStoryOrWallpaper) w * 0.86f - discRadius else w - geom.margin - discRadius
+    val minLeftX = geom.margin + discRadius
+    val maxRidgeY = h * 0.72f - discRadius
+
+    if (textBounds == null) {
+        val defaultX = (w * light.discX).coerceIn(minLeftX, maxRightX)
+        val defaultY = (h * light.discY).coerceIn(minTopY, maxRidgeY)
+        return Offset(defaultX, defaultY)
+    }
+
+    val blockedRect = RectF(
+        textBounds.left - marginClear,
+        textBounds.top - marginClear,
+        textBounds.right + marginClear,
+        textBounds.bottom + marginClear
+    )
+
+    fun isClear(cx: Float, cy: Float): Boolean {
+        if (cx - discRadius < minLeftX - discRadius || cx + discRadius > maxRightX + discRadius) return false
+        if (cy - discRadius < minTopY - discRadius || cy + discRadius > maxRidgeY + discRadius) return false
+        val intersects = !(cx + discRadius < blockedRect.left || cx - discRadius > blockedRect.right || cy + discRadius < blockedRect.top || cy - discRadius > blockedRect.bottom)
+        return !intersects
+    }
+
+    val naturalX = (w * light.discX).coerceIn(minLeftX, maxRightX)
+    val naturalY = (h * light.discY).coerceIn(minTopY, maxRidgeY)
+    if (isClear(naturalX, naturalY)) {
+        return Offset(naturalX, naturalY)
+    }
+
+    if (geom.isLandscapeX) {
+        val candX = (w * 0.74f).coerceIn(minLeftX, maxRightX)
+        val candY = (h * 0.45f).coerceIn(minTopY, maxRidgeY)
+        return Offset(candX, candY)
+    }
+
+    val spaceBelow = maxRidgeY - (blockedRect.bottom + discRadius)
+    val spaceAbove = (blockedRect.top - discRadius) - minTopY
+    val spaceRight = maxRightX - (blockedRect.right + discRadius)
+    val spaceLeft = (blockedRect.left - discRadius) - minLeftX
+
+    val candidates = mutableListOf<Offset>()
+
+    // Priority 1: below text (between text block and ridges)
+    if (spaceBelow > discRadius * 1.2f) {
+        val cy = (blockedRect.bottom + discRadius + marginClear).coerceIn(minTopY, maxRidgeY)
+        val cx = naturalX.coerceIn(minLeftX, maxRightX)
+        candidates.add(Offset(cx, cy))
+    }
+
+    // Priority 2: above text (if text is lower down and clears top 25%)
+    if (spaceAbove > discRadius * 1.2f) {
+        val cy = (blockedRect.top - discRadius - marginClear).coerceIn(minTopY, maxRidgeY)
+        val cx = naturalX.coerceIn(minLeftX, maxRightX)
+        candidates.add(Offset(cx, cy))
+    }
+
+    // Priority 3: to the right of text
+    if (spaceRight > discRadius * 1.2f) {
+        val cx = (blockedRect.right + discRadius + marginClear).coerceIn(minLeftX, maxRightX)
+        val cy = naturalY.coerceIn(minTopY, maxRidgeY)
+        candidates.add(Offset(cx, cy))
+    }
+
+    // Priority 4: to the left of text
+    if (spaceLeft > discRadius * 1.2f) {
+        val cx = (blockedRect.left - discRadius - marginClear).coerceIn(minLeftX, maxRightX)
+        val cy = naturalY.coerceIn(minTopY, maxRidgeY)
+        candidates.add(Offset(cx, cy))
+    }
+
+    val best = candidates.firstOrNull { isClear(it.x, it.y) }
+    if (best != null) return best
+
+    val safeY = (blockedRect.bottom + discRadius + marginClear).coerceIn(minTopY, maxRidgeY)
+    val safeX = (w * 0.5f).coerceIn(minLeftX, maxRightX)
+    return Offset(safeX, safeY)
 }
 
 /**
@@ -228,12 +434,12 @@ fun drawAdaptivePairing(
     }
 
     var declPx = declarationSizeSp * s
-    val minDeclPx = 16f * s
+    val minDeclPx = 14f * s
     var dl = if (includeDeclaration) makeLayout(spec.declaration, Typeface.create(newsreader, Typeface.BOLD), declPx, if (centerAlign) Layout.Alignment.ALIGN_CENTER else Layout.Alignment.ALIGN_NORMAL) else null
 
-    // Autofit declaration lines
-    while (dl != null && dl.height > geom.height * 0.38f && declPx > minDeclPx) {
-        declPx -= 1.5f * s
+    // Autofit declaration lines down in 2% increments
+    while (dl != null && (dl.height > geom.height * 0.40f || dl.width > textWidth) && declPx > minDeclPx) {
+        declPx *= 0.98f
         dl = makeLayout(spec.declaration, Typeface.create(newsreader, Typeface.BOLD), declPx, if (centerAlign) Layout.Alignment.ALIGN_CENTER else Layout.Alignment.ALIGN_NORMAL)
     }
 
@@ -263,7 +469,7 @@ fun drawAdaptivePairing(
     var showVerse = vl != null
     val availableH = geom.bottomSafe - geom.topSafe
     while (showVerse && totalHeight(true) > availableH && vPx > minVPx) {
-        vPx -= 1f * s
+        vPx *= 0.98f
         vl = makeLayout(verseText, Typeface.create(newsreaderItalic, Typeface.ITALIC), vPx, if (centerAlign) Layout.Alignment.ALIGN_CENTER else Layout.Alignment.ALIGN_NORMAL)
     }
     if (totalHeight(true) > availableH && dl != null) {
@@ -373,7 +579,9 @@ abstract class BaseStyle(override val id: String, override val displayName: Stri
 // ---------------------------------------------------------------------------
 object PairingStyle : BaseStyle("pairing", "Pairing") {
     override fun drawArt(scope: DrawScope, geom: LayoutGeometry, light: Light, spec: StyleSpec) {
-        scope.drawLight(light, Size(geom.width, geom.height))
+        val textBounds = measurePairingBounds(geom, light, spec, declarationSizeSp = 34f, verseSizeSp = 17f)
+        val safeDiscPos = computeSafeDiscPosition(geom, light, textBounds)
+        scope.drawLight(light, Size(geom.width, geom.height), discPos = safeDiscPos)
     }
 
     override fun drawTypography(canvas: AndroidCanvas, bitmap: Bitmap, geom: LayoutGeometry, light: Light, spec: StyleSpec) {
@@ -516,38 +724,94 @@ object NumeralsStyle : BaseStyle("numerals", "Numerals") {
         val type = StyleTypefaces.getNewsreader()
 
         scope.drawIntoCanvas { c ->
+            val nativeCanvas = c.nativeCanvas
+            // 1. Outline extraction at modest size (200px) - avoids FreeType/Skia glyph rasterisation clipping
+            val baseSize = 200f
             val numPaint = AndroidPaint(AndroidPaint.ANTI_ALIAS_FLAG).apply {
                 typeface = Typeface.create(type, Typeface.BOLD)
-                textSize = (if (geom.isLandscapeX) 260f else if (geom.isSquare) 280f else 380f) * s
-                textAlign = AndroidPaint.Align.CENTER
+                textSize = baseSize
+                textAlign = AndroidPaint.Align.LEFT
             }
-            val numX = if (geom.isLandscapeX) w * 0.74f else w * 0.5f
-            val numY = if (geom.isLandscapeX) h * 0.62f else if (geom.isSquare) h * 0.72f else h * 0.51f
+            val basePath = AndroidPath()
+            numPaint.getTextPath(chapter, 0, chapter.length, 0f, 0f, basePath)
 
-            val path = AndroidPath()
-            numPaint.getTextPath(chapter, 0, chapter.length, numX, numY, path)
+            val bounds = RectF()
+            basePath.computeBounds(bounds, true)
 
-            c.nativeCanvas.save()
-            c.nativeCanvas.clipPath(path)
+            // Desired height: 380sp * scale
+            val targetHeight = (if (geom.isLandscapeX) 240f else if (geom.isSquare) 260f else 360f) * s
+            val maxWidth = if (geom.isLandscapeX) w * 0.40f else w * 0.80f
+            val rawScale = if (bounds.height() > 0f) targetHeight / bounds.height() else (targetHeight / baseSize)
+            // Constrain width so 3-digit numerals (119, 150) or combined chapter:verse never bleed outside safe margins
+            val scaleFactor = if (bounds.width() * rawScale > maxWidth && bounds.width() > 0f) {
+                maxWidth / bounds.width()
+            } else {
+                rawScale
+            }
+
+            val targetCenterX = if (geom.isLandscapeX) w * 0.74f else w * 0.5f
+            val targetCenterY = if (geom.isLandscapeX) h * 0.52f else if (geom.isSquare) h * 0.68f else h * 0.44f
+
+            // 2. Scale up using Matrix
+            val matrix = AndroidMatrix().apply {
+                postTranslate(-bounds.centerX(), -bounds.centerY())
+                postScale(scaleFactor, scaleFactor)
+                postTranslate(targetCenterX, targetCenterY)
+            }
+
+            val numeralPath = AndroidPath()
+            basePath.transform(matrix, numeralPath)
+
+            val scaledW = bounds.width() * scaleFactor
+            val scaledH = bounds.height() * scaleFactor
+
+            // 3. Clip strictly to the numeral path - NO glow outside the numeral!
+            nativeCanvas.save()
+            nativeCanvas.clipPath(numeralPath)
 
             // Mini sunset landscape inside the clipped numeral
-            val gradPaint = AndroidPaint().apply {
-                shader = LinearGradient(0f, numY - 300f * s, 0f, numY + 100f * s, Color(0xFFFBE3C4).toArgb(), Color(0xFF6B2E1E).toArgb(), Shader.TileMode.CLAMP)
+            val gradPaint = AndroidPaint(AndroidPaint.ANTI_ALIAS_FLAG or AndroidPaint.DITHER_FLAG).apply {
+                shader = LinearGradient(
+                    0f, targetCenterY - scaledH * 0.55f,
+                    0f, targetCenterY + scaledH * 0.55f,
+                    Color(0xFFFBE3C4).toArgb(),
+                    Color(0xFF6B2E1E).toArgb(),
+                    Shader.TileMode.CLAMP
+                )
             }
-            c.nativeCanvas.drawPaint(gradPaint)
-            c.nativeCanvas.drawCircle(numX + 70f * s, numY - 60f * s, 40f * s, AndroidPaint().apply { color = Color(0xFFFFD9A8).toArgb() })
+            nativeCanvas.drawPaint(gradPaint)
 
-            // Mini ridges
-            scope.drawRidgePath(w, h, numY + 10f * s, 14f * s, 3, Color(0xFF6B2E1E))
-            scope.drawRidgePath(w, h, numY + 45f * s, 12f * s, 5, Color(0xFF432017))
+            // Sun disc and glow inside the numeral clip ONLY
+            val sunRadius = (28f * s).coerceAtLeast(14f)
+            val sunX = targetCenterX + scaledW * 0.18f
+            val sunY = targetCenterY - scaledH * 0.16f
 
-            c.nativeCanvas.restore()
+            val glowPaint = AndroidPaint(AndroidPaint.ANTI_ALIAS_FLAG).apply {
+                shader = RadialGradient(
+                    sunX, sunY, sunRadius * 2.8f,
+                    intArrayOf(Color(0x99FFE8C2).toArgb(), Color(0x00FFE8C2).toArgb()),
+                    floatArrayOf(0f, 1f),
+                    Shader.TileMode.CLAMP
+                )
+            }
+            nativeCanvas.drawCircle(sunX, sunY, sunRadius * 2.8f, glowPaint)
+
+            val sunPaint = AndroidPaint(AndroidPaint.ANTI_ALIAS_FLAG).apply {
+                color = Color(0xFFFFD9A8).toArgb()
+            }
+            nativeCanvas.drawCircle(sunX, sunY, sunRadius, sunPaint)
+
+            // Mini sunset ridges inside clipped numeral
+            scope.drawRidgePath(w, h, targetCenterY + scaledH * 0.12f, 12f * s, 3, Color(0xFF6B2E1E))
+            scope.drawRidgePath(w, h, targetCenterY + scaledH * 0.36f, 10f * s, 5, Color(0xFF432017))
+
+            nativeCanvas.restore()
         }
         scope.drawGrainOverlay(Light.Midday, Size(w, h))
     }
 
     override fun drawTypography(canvas: AndroidCanvas, bitmap: Bitmap, geom: LayoutGeometry, light: Light, spec: StyleSpec) {
-        val top = if (geom.isSquare) geom.topSafe else if (geom.isLandscapeX) geom.topSafe else geom.height * 0.56f
+        val top = if (geom.isSquare) geom.topSafe else if (geom.isLandscapeX) geom.topSafe else geom.height * 0.58f
         drawAdaptivePairing(canvas, bitmap, geom, Light.Midday, spec, declarationSizeSp = 28f, verseSizeSp = 15f, topOverride = top, centerAlign = !geom.isLandscapeX)
     }
 }
@@ -563,9 +827,11 @@ object PaperStyle : BaseStyle("paper", "Paper") {
 
         scope.drawRect(Color(0xFFE5EEF0), size = Size(w, h))
 
-        // Pale sun in sky
-        val sunX = if (geom.isLandscapeX) w * 0.78f else w * 0.35f
-        val sunY = if (geom.isSquare) h * 0.35f else h * 0.38f
+        // Pale sun in sky positioned safely away from text and safe zones
+        val textBounds = measurePairingBounds(geom, Light.Rain, spec, declarationSizeSp = 30f, verseSizeSp = 15f)
+        val safeSun = computeSafeDiscPosition(geom, Light.Rain, textBounds)
+        val sunX = safeSun.x
+        val sunY = safeSun.y
         scope.drawCircle(Color(0x33FFFFFF), 48f * s, Offset(sunX, sunY))
         scope.drawCircle(Color(0xFFEEF3F4), 28f * s, Offset(sunX, sunY))
 
@@ -1088,8 +1354,10 @@ object TideStyle : BaseStyle("tide", "Tide") {
 
         scope.drawLight(Light.Mist, Size(w, h), grain = false)
 
-        val sunX = if (geom.isLandscapeX) w * 0.74f else w * 0.5f
-        val sunY = if (geom.isSquare) h * 0.32f else h * 0.30f
+        val textBounds = measurePairingBounds(geom, Light.Mist, spec, declarationSizeSp = 30f, verseSizeSp = 16f)
+        val safeSun = computeSafeDiscPosition(geom, Light.Mist, textBounds)
+        val sunX = safeSun.x
+        val sunY = safeSun.y
 
         // Sun with vertical reflection column
         scope.drawCircle(Color(0xFFF6F8F1), 32f * s, Offset(sunX, sunY))

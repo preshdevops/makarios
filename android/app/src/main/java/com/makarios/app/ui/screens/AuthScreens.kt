@@ -75,6 +75,7 @@ fun AuthFlowHost(
     onBack: (() -> Unit)? = null
 ) {
     var currentStep by remember { mutableStateOf(initialStep) }
+    SystemBarsController(Light.Dawn)
 
     Box(modifier = modifier.fillMaxSize()) {
         AnimatedContent(
