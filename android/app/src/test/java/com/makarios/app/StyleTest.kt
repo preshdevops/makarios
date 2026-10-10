@@ -11,9 +11,10 @@ class StyleTest {
 
     @Test
     fun twelveStylesAreRegisteredAndAvailable() {
-        val all = StyleRegistry.all
-        assertEquals(12, all.size)
+        val essentials = StyleRegistry.essentials
+        assertEquals(12, essentials.size)
         assertEquals(12, Style.values().size)
+        assertEquals(21, StyleRegistry.all.size)
 
         val expectedIds = listOf(
             "pairing", "windows", "rays", "numerals",
@@ -170,7 +171,7 @@ class StyleTest {
     @Test
     fun goldenMatrixValidation72Configurations() {
         // 12 styles x 3 Lights (Dawn, Midday, Night) x 2 formats (Story, Square) = 72 configurations
-        val matrixStyles = StyleRegistry.all
+        val matrixStyles = StyleRegistry.essentials
         val matrixLights = listOf(Light.Dawn, Light.Midday, Light.Night)
         val matrixFormats = listOf(ExportFormat.Story, ExportFormat.Square)
 

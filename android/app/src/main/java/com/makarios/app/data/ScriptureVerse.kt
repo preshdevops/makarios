@@ -12,7 +12,7 @@ package com.makarios.app.data
 data class ScriptureVerse(
     val reference: String,
     val text: String,
-    val themes: Set<String>,
-    val toneAffinity: AffirmationTone,
-    val keywords: Set<String>
+    val themes: Set<String> = emptySet(),
+    val toneAffinity: AffirmationTone = AffirmationTone.STILL,
+    val keywords: Set<String> = emptySet()
 )

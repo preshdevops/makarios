@@ -206,16 +206,10 @@ private fun OnboardingWelcomeScreen(
         ) {
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Wordmark: "makarios" Newsreader italic 22 centred at top (y=80)
-            Text(
-                text = "makarios",
-                style = TextStyle(
-                    fontFamily = NewsreaderFontFamily,
-                    fontStyle = FontStyle.Italic,
-                    fontWeight = FontWeight.Normal,
-                    fontSize = 22.sp
-                ),
-                color = Color(0xFFFFF4E4),
+            // Wordmark: mark + "makarios" Newsreader italic 22 centred at top (y=80)
+            com.makarios.app.ui.components.MakariosWordmark(
+                markSize = 22.dp,
+                textColor = Color(0xFFFFF4E4),
                 modifier = Modifier.semantics { heading() }
             )
 

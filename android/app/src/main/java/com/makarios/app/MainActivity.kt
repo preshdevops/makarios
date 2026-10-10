@@ -6,6 +6,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.ui.platform.LocalContext
@@ -43,6 +44,10 @@ import com.makarios.app.ui.screens.ExploreScreen
 import com.makarios.app.ui.screens.OnboardingScreen
 import com.makarios.app.ui.screens.ProfileScreen
 import com.makarios.app.ui.screens.SavedScreen
+import com.makarios.app.ui.screens.TopicDetailScreen
+import com.makarios.app.ui.screens.bible.BiblePickerScreen
+import com.makarios.app.ui.screens.bible.BibleReaderScreen
+import com.makarios.app.ui.screens.bible.ChapterVersePickerScreen
 import com.makarios.app.ui.theme.*
 import com.makarios.app.ui.wallpaper.WallpaperGallery
 import com.makarios.app.util.ReminderManager
@@ -51,6 +56,7 @@ class MainActivity : ComponentActivity() {
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge(
             statusBarStyle = androidx.activity.SystemBarStyle.auto(
@@ -91,6 +97,14 @@ fun MainAppScaffold(initialAffirmationId: String? = null) {
     var selectedTab by remember { mutableStateOf(0) }
     var activeAffirmationIdForCreate by remember { mutableStateOf<String?>(null) }
     var showWallpaper by remember { mutableStateOf(false) }
+
+    // Sub-navigation states
+    var activeTopic by remember { mutableStateOf<String?>(null) }
+    var activeReaderTarget by remember { mutableStateOf<Triple<String, Int, Int?>?>(null) }
+    var activeBiblePicker by remember { mutableStateOf(false) }
+    var activeChapterVersePickerTarget by remember { mutableStateOf<Pair<String, Int>?>(null) }
+    var createInitialState by remember { mutableStateOf<Triple<String?, String?, String?>?>(null) }
+
     var showOnboarding by remember {
         mutableStateOf(
             !com.makarios.app.data.OnboardingStore.isOnboardingDone(context) &&
@@ -148,6 +162,24 @@ fun MainAppScaffold(initialAffirmationId: String? = null) {
         return
     }
 
+    // Back handling for sub-flows and tabs
+    if (activeChapterVersePickerTarget != null) {
+        BackHandler { activeChapterVersePickerTarget = null }
+    } else if (activeReaderTarget != null) {
+        BackHandler { activeReaderTarget = null }
+    } else if (activeBiblePicker) {
+        BackHandler { activeBiblePicker = false }
+    } else if (activeTopic != null) {
+        BackHandler { activeTopic = null }
+    } else if (selectedTab != 0) {
+        BackHandler {
+            if (selectedTab == 2) {
+                createInitialState = null
+            }
+            selectedTab = 0
+        }
+    }
+
     var activeLight by remember { mutableStateOf(getCurrentLightForTime()) }
     SystemBarsController(activeLight)
 
@@ -169,13 +201,15 @@ fun MainAppScaffold(initialAffirmationId: String? = null) {
         TabItem("You", Icons.Filled.Person, Icons.Outlined.Person)
     )
 
+    val isSubScreenOpen = activeChapterVersePickerTarget != null || activeReaderTarget != null || activeBiblePicker || activeTopic != null
+
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = Color.Transparent,
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         bottomBar = {
-            // The bar hides inside the Declare flow (selectedTab == 2)
-            if (selectedTab != 2) {
+            // The bar hides inside the Declare flow (selectedTab == 2) and full-screen sub-flows
+            if (selectedTab != 2 && !isSubScreenOpen) {
                 Surface(
                     color = activeLight.bottom,
                     tonalElevation = 0.dp,
@@ -199,6 +233,7 @@ fun MainAppScaffold(initialAffirmationId: String? = null) {
                                     .clickable(onClick = {
                                         if (index == 2 && selectedTab != 2) {
                                             activeAffirmationIdForCreate = null
+                                            createInitialState = null
                                         }
                                         selectedTab = index
                                     }),
@@ -226,33 +261,113 @@ fun MainAppScaffold(initialAffirmationId: String? = null) {
             }
         }
     ) { _ ->
-        when (selectedTab) {
-            0 -> HomeScreen(
-                modifier = Modifier.fillMaxSize(),
-                initialAffirmationId = initialAffirmationId,
-                onLightChanged = { activeLight = it }
-            )
-            1 -> ExploreScreen(
-                onNavigateToTopic = { _, _ -> },
-                onNavigateToCreate = { selectedTab = 2 },
-                modifier = Modifier.fillMaxSize()
-            )
-            2 -> CreateScreen(
-                onNavigateBack = { selectedTab = 0 },
-                modifier = Modifier.fillMaxSize()
-            )
-            3 -> SavedScreen(
-                onNavigateToCreate = { selectedTab = 2 },
-                modifier = Modifier.fillMaxSize()
-            )
-            4 -> ProfileScreen(
-                onSignOut = {
-                    // Sign out callbacks if any
+        if (activeChapterVersePickerTarget != null) {
+            val target = activeChapterVersePickerTarget!!
+            ChapterVersePickerScreen(
+                bookName = target.first,
+                initialChapter = target.second,
+                onNavigateBack = { activeChapterVersePickerTarget = null },
+                onVerseSelected = { selection ->
+                    activeChapterVersePickerTarget = null
+                    activeBiblePicker = false
+                    createInitialState = Triple(null, selection.text, selection.reference)
+                    selectedTab = 2
                 },
-                onOpenWallpapers = { showWallpaper = true },
-                onResetOnboarding = { showOnboarding = true },
                 modifier = Modifier.fillMaxSize()
             )
+        } else if (activeReaderTarget != null) {
+            val target = activeReaderTarget!!
+            BibleReaderScreen(
+                bookName = target.first,
+                chapterNumber = target.second,
+                initialVerse = target.third,
+                onNavigateBack = { activeReaderTarget = null },
+                onDeclareThis = { selection ->
+                    activeReaderTarget = null
+                    createInitialState = Triple(null, selection.text, selection.reference)
+                    selectedTab = 2
+                },
+                modifier = Modifier.fillMaxSize()
+            )
+        } else if (activeBiblePicker) {
+            BiblePickerScreen(
+                onNavigateBack = { activeBiblePicker = false },
+                onSelectBookChapter = { book, chapter ->
+                    activeChapterVersePickerTarget = Pair(book, chapter)
+                },
+                onVerseSelected = { selection ->
+                    activeBiblePicker = false
+                    createInitialState = Triple(null, selection.text, selection.reference)
+                    selectedTab = 2
+                },
+                modifier = Modifier.fillMaxSize()
+            )
+        } else {
+            when (selectedTab) {
+                0 -> HomeScreen(
+                    modifier = Modifier.fillMaxSize(),
+                    initialAffirmationId = initialAffirmationId,
+                    onLightChanged = { activeLight = it },
+                    onNavigateToReader = { book, chapter, verse ->
+                        activeReaderTarget = Triple(book, chapter, verse)
+                    }
+                )
+                1 -> {
+                    if (activeTopic != null) {
+                        TopicDetailScreen(
+                            topicName = activeTopic!!,
+                            onNavigateBack = { activeTopic = null },
+                            onDeclareThis = { declaration, verseText, reference ->
+                                activeTopic = null
+                                createInitialState = Triple(declaration, verseText, reference)
+                                selectedTab = 2
+                            },
+                            onReadChapter = { book, chapter, verse ->
+                                activeReaderTarget = Triple(book, chapter, verse)
+                            },
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    } else {
+                        ExploreScreen(
+                            onNavigateToTopic = { topic, _ -> activeTopic = topic },
+                            onNavigateToBiblePicker = { activeBiblePicker = true },
+                            onNavigateToReader = { book, chapter, verse ->
+                                activeReaderTarget = Triple(book, chapter, verse)
+                            },
+                            onNavigateToDeclare = { declaration, verse, reference ->
+                                createInitialState = Triple(declaration, verse, reference)
+                                selectedTab = 2
+                            },
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    }
+                }
+                2 -> key(createInitialState) {
+                    CreateScreen(
+                        onNavigateBack = {
+                            createInitialState = null
+                            selectedTab = 0
+                        },
+                        initialDeclaration = createInitialState?.first,
+                        initialVerseText = createInitialState?.second,
+                        initialReference = createInitialState?.third,
+                        initialStep = if (createInitialState?.first != null) 3 else 1,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+                3 -> SavedScreen(
+                    onNavigateToCreate = { selectedTab = 2 },
+                    modifier = Modifier.fillMaxSize()
+                )
+                4 -> ProfileScreen(
+                    onSignOut = {
+                        // Sign out callbacks if any
+                    },
+                    onOpenWallpapers = { showWallpaper = true },
+                    onResetOnboarding = { showOnboarding = true },
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
         }
     }
 }

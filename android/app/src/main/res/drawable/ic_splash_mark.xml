@@ -1,16 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="24dp"
-    android:height="24dp"
+    android:width="96dp"
+    android:height="96dp"
     android:viewportWidth="100"
     android:viewportHeight="100">
+    <!-- Sun -->
     <path
-        android:fillColor="#FFFFFFFF"
+        android:fillColor="#FFB5532B"
         android:pathData="M32,82a18,18 0 0,1 36,0Z" />
+
+    <!-- Arch -->
     <path
-        android:strokeColor="#FFFFFFFF"
-        android:strokeWidth="6"
+        android:strokeColor="#FF2A1B14"
+        android:strokeWidth="4.5"
         android:strokeLineCap="round"
         android:strokeLineJoin="round"
         android:pathData="M27,82V46a23,23 0 0,1 46,0v36" />
+
+    <!-- Ground line -->
+    <path
+        android:strokeColor="#FF2A1B14"
+        android:strokeWidth="4.5"
+        android:strokeLineCap="round"
+        android:pathData="M18,82h64" />
 </vector>

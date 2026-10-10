@@ -166,16 +166,10 @@ fun AuthChooseScreen(
         ) {
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Wordmark: "makarios" (Newsreader italic 22)
-            Text(
-                text = "makarios",
-                style = TextStyle(
-                    fontFamily = NewsreaderFontFamily,
-                    fontStyle = FontStyle.Italic,
-                    fontWeight = FontWeight.Normal,
-                    fontSize = 22.sp
-                ),
-                color = Ink,
+            // Wordmark: mark + "makarios" (Newsreader italic 22)
+            com.makarios.app.ui.components.MakariosWordmark(
+                markSize = 22.dp,
+                textColor = Ink,
                 modifier = Modifier.semantics { heading() }
             )
 

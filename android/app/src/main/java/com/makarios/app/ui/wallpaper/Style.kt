@@ -26,7 +26,13 @@ data class StyleSpec(
     val reference: String? = null,
     val chapterNumber: String? = null,
     val shortText: String = declaration.take(40),
-    val seed: Int = 23
+    val seed: Int = 23,
+    val recipientName: String? = null,
+    val isPronounRewritten: Boolean = false,
+    val milestoneDays: Int? = null,
+    val hourFormatted: String? = null,
+    val timestampFormatted: String? = null,
+    val recapDeclarations: List<StyleSpec>? = null
 ) {
     /** Resolved chapter number: uses explicit value, extracts from reference, or defaults to 23. */
     val resolvedChapter: String
@@ -148,13 +154,24 @@ interface Style {
 
         val TEXT: Style get() = PAIRING
 
-        fun values(): Array<Style> = StyleRegistry.all.toTypedArray()
+        val FOR_YOU: Style get() = StyleRegistry.FOR_YOU
+        val POSTCARD: Style get() = StyleRegistry.POSTCARD
+        val STREAK: Style get() = StyleRegistry.STREAK
+        val STICKER: Style get() = StyleRegistry.STICKER
+        val POLAROID: Style get() = StyleRegistry.POLAROID
+        val VERSE_FIRST: Style get() = StyleRegistry.VERSE_FIRST
+        val THE_HOUR: Style get() = StyleRegistry.THE_HOUR
+        val CAROUSEL_RECAP: Style get() = StyleRegistry.CAROUSEL_RECAP
+        val UNDERLINED: Style get() = StyleRegistry.UNDERLINED
+
+        fun values(): Array<Style> = StyleRegistry.essentials.toTypedArray()
+        fun allValues(): Array<Style> = StyleRegistry.all.toTypedArray()
         fun valueOf(id: String): Style = StyleRegistry[id]
             ?: error("Style not found for id: $id. Available: ${StyleRegistry.all.map { it.id }}")
     }
 }
 
-/** Registry of the 12 canonical Makarios styles. */
+/** Registry of the 21 Makarios styles: 12 Essentials + 9 More. */
 object StyleRegistry {
     val PAIRING: Style = PairingStyle
     val WINDOWS: Style = WindowsStyle
@@ -169,11 +186,29 @@ object StyleRegistry {
     val PATH: Style = PathStyle
     val TIDE: Style = TideStyle
 
-    val all: List<Style> = listOf(
+    // 9 new templates from Prompt 13
+    val FOR_YOU: Style = ForYouStyle
+    val POSTCARD: Style = PostcardStyle
+    val STREAK: Style = StreakStyle
+    val STICKER: Style = StickerStyle
+    val POLAROID: Style = PolaroidStyle
+    val VERSE_FIRST: Style = VerseFirstStyle
+    val THE_HOUR: Style = TheHourStyle
+    val CAROUSEL_RECAP: Style = CarouselRecapStyle
+    val UNDERLINED: Style = UnderlinedStyle
+
+    val essentials: List<Style> = listOf(
         PAIRING, WINDOWS, RAYS, NUMERALS,
         PAPER, CONSTELLATION, WORD, PAGE,
         EIGHT_LIGHTS, CROSS, PATH, TIDE
     )
+
+    val more: List<Style> = listOf(
+        FOR_YOU, POSTCARD, STREAK, STICKER,
+        POLAROID, VERSE_FIRST, THE_HOUR, CAROUSEL_RECAP, UNDERLINED
+    )
+
+    val all: List<Style> = essentials + more
 
     private val byId: Map<String, Style> = all.associateBy { it.id.lowercase() }
 

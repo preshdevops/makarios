@@ -57,28 +57,48 @@ import com.makarios.app.ui.wallpaper.StyleRegistry
 import com.makarios.app.ui.wallpaper.StyleSpec
 import com.makarios.app.util.ExportFormat
 import com.makarios.app.util.LightCanvas
-import com.makarios.app.util.ShareHelper
+import com.makarios.app.data.ShareRepository
+import com.makarios.app.data.ShareRequest
+import com.makarios.app.data.ShareResult
+import com.makarios.app.data.ShareTarget
+import com.makarios.app.data.bible.VerseSelection
+import com.makarios.app.ui.screens.bible.BiblePickerScreen
+import com.makarios.app.ui.screens.bible.ChapterVersePickerScreen
+import com.makarios.app.util.PronounRewriter
+import kotlinx.coroutines.launch
 import java.io.File
 
 @Composable
 fun CreateScreen(
     onNavigateBack: () -> Unit,
+    initialDeclaration: String? = null,
+    initialVerseText: String? = null,
+    initialReference: String? = null,
+    initialStep: Int = 1,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
 
-    var step by remember { mutableStateOf(1) }
-    var declarationText by remember { mutableStateOf("") }
+    var step by remember(initialStep) { mutableStateOf(initialStep) }
+    var declarationText by remember(initialDeclaration) { mutableStateOf(initialDeclaration ?: "") }
     var tone by remember { mutableStateOf("Still") }
     var selectedLight by remember { mutableStateOf(Light.forNow()) }
     var selectedStyle by remember { mutableStateOf<Style>(StyleRegistry.PAIRING) }
     var formatName by remember { mutableStateOf("Story") }
     var selectedPhotoUrl by remember { mutableStateOf<String?>(null) }
-    var showBibleReader by remember { mutableStateOf(false) }
+    var showBiblePicker by remember { mutableStateOf(false) }
     var showNotificationAsk by remember { mutableStateOf(false) }
+    var isSharingInProgress by remember { mutableStateOf(false) }
 
     // Verses matched for the declaration
-    var matchedVerses by remember { mutableStateOf<List<ScriptureVerse>>(emptyList()) }
+    var matchedVerses by remember(initialVerseText, initialReference) {
+        mutableStateOf(
+            if (initialVerseText != null) {
+                listOf(ScriptureVerse(text = initialVerseText, reference = initialReference ?: "Romans 8:28"))
+            } else emptyList()
+        )
+    }
     var currentVerseIndex by remember { mutableStateOf(0) }
     var savedAffirmation by remember { mutableStateOf<Affirmation?>(null) }
 
@@ -247,7 +267,7 @@ fun CreateScreen(
                             matchedVerses = matchedVerses,
                             selectedVerseIndex = currentVerseIndex,
                             onSelectVerseIndex = { currentVerseIndex = it },
-                            onSearchBible = { showBibleReader = true },
+                            onSearchBible = { showBiblePicker = true },
                             onEditDeclaration = { step = 1 },
                             onUseThisVerse = {
                                 selectedStyle = AutoStyleSelector.pickStyle(
@@ -269,17 +289,21 @@ fun CreateScreen(
                             onStyleChanged = { selectedStyle = it },
                             format = formatName,
                             onFormatChanged = { formatName = it },
+                            isSharingInProgress = isSharingInProgress,
                             onShare = {
                                 val aff = getOrCreateSavedAffirmation()
                                 showNotificationAsk = true
                                 val exportFmt = ExportFormat.from(formatName)
-                                ShareHelper.shareGeneric(
-                                    context = context,
-                                    affirmation = aff,
-                                    light = selectedLight,
-                                    format = exportFmt,
-                                    style = selectedStyle
+                                val spec = StyleSpec(
+                                    declaration = aff.declaration,
+                                    verse = aff.scriptureText,
+                                    reference = aff.reference
                                 )
+                                coroutineScope.launch {
+                                    isSharingInProgress = true
+                                    ShareRepository.share(context, ShareRequest(spec, selectedLight, exportFmt, selectedStyle, ShareTarget.Chooser))
+                                    isSharingInProgress = false
+                                }
                             },
                             onDone = {
                                 getOrCreateSavedAffirmation()
@@ -290,43 +314,51 @@ fun CreateScreen(
                                 val aff = getOrCreateSavedAffirmation()
                                 showNotificationAsk = true
                                 val exportFmt = ExportFormat.from(formatName)
-                                val saved = ShareHelper.saveToPhotos(context, aff, selectedLight, exportFmt, style = selectedStyle)
-                                Toast.makeText(context, if (saved != null) "Saved to Pictures/Makarios (2x)" else "Could not save image", Toast.LENGTH_SHORT).show()
+                                val spec = StyleSpec(declaration = aff.declaration, verse = aff.scriptureText, reference = aff.reference)
+                                coroutineScope.launch {
+                                    val res = ShareRepository.share(context, ShareRequest(spec, selectedLight, exportFmt, selectedStyle, ShareTarget.SaveToPhotos))
+                                    if (res is ShareResult.Success) {
+                                        Toast.makeText(context, "Saved to Pictures/Makarios", Toast.LENGTH_SHORT).show()
+                                    }
+                                }
                             },
                             onSetWallpaper = {
                                 val aff = getOrCreateSavedAffirmation()
                                 showNotificationAsk = true
-                                try {
-                                    val wm = WallpaperManager.getInstance(context)
-                                    val renderer = LightCanvas(context)
-                                    val file = File(context.cacheDir, "custom_wallpaper_${System.currentTimeMillis()}.png")
-                                    renderer.render(
-                                        declaration = aff.declaration,
-                                        verseText = aff.scriptureText,
-                                        verseReference = aff.reference,
-                                        light = selectedLight,
-                                        format = ExportFormat.Wallpaper,
-                                        style = selectedStyle,
-                                        outputFile = file
-                                    )
-                                    val bitmap = BitmapFactory.decodeFile(file.absolutePath)
-                                    wm.setBitmap(bitmap)
-                                    Toast.makeText(context, "Wallpaper updated & saved to Kept!", Toast.LENGTH_SHORT).show()
-                                } catch (e: Exception) {
-                                    Toast.makeText(context, "Could not set wallpaper", Toast.LENGTH_SHORT).show()
+                                val spec = StyleSpec(declaration = aff.declaration, verse = aff.scriptureText, reference = aff.reference)
+                                coroutineScope.launch {
+                                    val res = ShareRepository.share(context, ShareRequest(spec, selectedLight, ExportFormat.Wallpaper, selectedStyle, ShareTarget.SetWallpaper))
+                                    if (res is ShareResult.Success) {
+                                        Toast.makeText(context, "Wallpaper updated & saved to Kept!", Toast.LENGTH_SHORT).show()
+                                    }
                                 }
                             },
                             onShareAsFile = {
                                 val aff = getOrCreateSavedAffirmation()
                                 showNotificationAsk = true
                                 val exportFmt = ExportFormat.from(formatName)
-                                ShareHelper.shareAsFile(
-                                    context = context,
-                                    affirmation = aff,
-                                    light = selectedLight,
-                                    format = exportFmt,
-                                    style = selectedStyle
-                                )
+                                val spec = StyleSpec(declaration = aff.declaration, verse = aff.scriptureText, reference = aff.reference)
+                                coroutineScope.launch {
+                                    ShareRepository.share(context, ShareRequest(spec, selectedLight, exportFmt, selectedStyle, ShareTarget.ShareAsFile))
+                                }
+                            },
+                            onShareToInstagram = {
+                                val aff = getOrCreateSavedAffirmation()
+                                showNotificationAsk = true
+                                val exportFmt = ExportFormat.from(formatName)
+                                val spec = StyleSpec(declaration = aff.declaration, verse = aff.scriptureText, reference = aff.reference)
+                                coroutineScope.launch {
+                                    ShareRepository.share(context, ShareRequest(spec, selectedLight, exportFmt, selectedStyle, ShareTarget.InstagramStories))
+                                }
+                            },
+                            onShareToWhatsApp = {
+                                val aff = getOrCreateSavedAffirmation()
+                                showNotificationAsk = true
+                                val exportFmt = ExportFormat.from(formatName)
+                                val spec = StyleSpec(declaration = aff.declaration, verse = aff.scriptureText, reference = aff.reference)
+                                coroutineScope.launch {
+                                    ShareRepository.share(context, ShareRequest(spec, selectedLight, exportFmt, selectedStyle, ShareTarget.WhatsAppStatus))
+                                }
                             }
                         )
                     }
@@ -339,10 +371,36 @@ fun CreateScreen(
         NotificationSoftAsk { showNotificationAsk = false }
     }
 
-    if (showBibleReader) {
-        BibleReaderSheet(
-            onDismiss = { showBibleReader = false }
-        )
+    if (showBiblePicker) {
+        var pickerBook by remember { mutableStateOf<String?>(null) }
+        var pickerChapter by remember { mutableStateOf(1) }
+
+        if (pickerBook != null) {
+            ChapterVersePickerScreen(
+                bookName = pickerBook!!,
+                initialChapter = pickerChapter,
+                onNavigateBack = { pickerBook = null },
+                onVerseSelected = { selection ->
+                    matchedVerses = listOf(ScriptureVerse(text = selection.text, reference = selection.reference)) + matchedVerses
+                    currentVerseIndex = 0
+                    pickerBook = null
+                    showBiblePicker = false
+                }
+            )
+        } else {
+            BiblePickerScreen(
+                onNavigateBack = { showBiblePicker = false },
+                onSelectBookChapter = { b, ch ->
+                    pickerBook = b
+                    pickerChapter = ch
+                },
+                onVerseSelected = { selection ->
+                    matchedVerses = listOf(ScriptureVerse(text = selection.text, reference = selection.reference)) + matchedVerses
+                    currentVerseIndex = 0
+                    showBiblePicker = false
+                }
+            )
+        }
     }
 }
 
@@ -842,16 +900,39 @@ fun LookStep(
     onStyleChanged: (Style) -> Unit,
     format: String,
     onFormatChanged: (String) -> Unit,
+    isSharingInProgress: Boolean = false,
     onShare: () -> Unit,
     onDone: () -> Unit,
     onSavePhotos: () -> Unit,
     onSetWallpaper: () -> Unit,
-    onShareAsFile: () -> Unit
+    onShareAsFile: () -> Unit,
+    onShareToInstagram: () -> Unit = {},
+    onShareToWhatsApp: () -> Unit = {}
 ) {
+    val context = LocalContext.current
     val exportFormat = remember(format) { ExportFormat.from(format) }
-    val spec = remember(declarationText, verseText, verseReference) {
-        StyleSpec(declaration = declarationText, verse = verseText, reference = verseReference)
+
+    var activeCategory by remember { mutableStateOf("Essentials") }
+    var recipientName by remember { mutableStateOf("") }
+    var rewrittenText by remember(declarationText) { mutableStateOf(PronounRewriter.rewrite(declarationText)) }
+    var selectedMilestone by remember { mutableStateOf(30) }
+
+    val spec = remember(
+        declarationText, verseText, verseReference,
+        selectedStyle.id, recipientName, rewrittenText, selectedMilestone
+    ) {
+        StyleSpec(
+            declaration = if (selectedStyle.id == StyleRegistry.FOR_YOU.id) rewrittenText else declarationText,
+            verse = verseText,
+            reference = verseReference,
+            recipientName = recipientName.takeIf { it.isNotBlank() },
+            isPronounRewritten = selectedStyle.id == StyleRegistry.FOR_YOU.id,
+            milestoneDays = selectedMilestone
+        )
     }
+
+    val isIgInstalled = remember { ShareRepository.isInstagramInstalled(context) }
+    val isWaInstalled = remember { ShareRepository.isWhatsAppInstalled(context) }
 
     // Auto-fallback if Numerals is currently selected but chapter is 1-digit and ineligible
     LaunchedEffect(spec.isNumeralsEligible) {
@@ -866,11 +947,13 @@ fun LookStep(
         selectedStyle.id,
         selectedLight.name,
         format,
-        declarationText,
-        verseText
+        spec.declaration,
+        verseText,
+        spec.recipientName,
+        spec.milestoneDays
     ) {
         value = withContext(Dispatchers.Default) {
-            val key = "${selectedStyle.id}:${selectedLight.name}:${exportFormat.name}:200x433:${declarationText.hashCode()}:${verseText.hashCode()}"
+            val key = "${selectedStyle.id}:${selectedLight.name}:${exportFormat.name}:200x433:${spec.declaration.hashCode()}:${verseText.hashCode()}:${spec.recipientName.hashCode()}"
             previewBitmapCache.getOrPut(key) {
                 // Render at exact preview aspect ratio (200 x 433)
                 val (w, h) = when (exportFormat) {
@@ -915,11 +998,104 @@ fun LookStep(
 
         Spacer(Modifier.height(24.dp))
 
-        // 2. Style row: 12 thumbnails (56x121, horizontally scrollable, selected = 2dp outline with 3dp offset)
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start) {
+        // Extra controls for For you (gift) style
+        if (selectedStyle.id == StyleRegistry.FOR_YOU.id) {
+            Card(
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = selectedLight.text.copy(alpha = 0.06f)),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(Modifier.padding(16.dp)) {
+                    Text("For you (Gift)", style = MakariosTypography.labelMedium, color = selectedLight.text)
+                    Spacer(Modifier.height(8.dp))
+                    BasicTextField(
+                        value = recipientName,
+                        onValueChange = { recipientName = it },
+                        singleLine = true,
+                        textStyle = MakariosTypography.bodyMedium.copy(color = selectedLight.text),
+                        decorationBox = { inner ->
+                            if (recipientName.isEmpty()) Text("Recipient's name (e.g. Ada)", color = selectedLight.text.copy(alpha = 0.45f), style = MakariosTypography.bodyMedium)
+                            inner()
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(selectedLight.text.copy(alpha = 0.08f))
+                            .padding(horizontal = 12.dp, vertical = 10.dp)
+                    )
+                    Spacer(Modifier.height(10.dp))
+                    Text("Declaration for them (editable)", style = MakariosTypography.labelSmall, color = selectedLight.text.copy(alpha = 0.7f))
+                    Spacer(Modifier.height(4.dp))
+                    BasicTextField(
+                        value = rewrittenText,
+                        onValueChange = { rewrittenText = it },
+                        textStyle = MakariosTypography.bodyMedium.copy(color = selectedLight.text),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(selectedLight.text.copy(alpha = 0.08f))
+                            .padding(horizontal = 12.dp, vertical = 10.dp)
+                    )
+                }
+            }
+            Spacer(Modifier.height(16.dp))
+        }
+
+        // Extra controls for Streak style
+        if (selectedStyle.id == StyleRegistry.STREAK.id) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState()),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("Milestone:", style = MakariosTypography.labelSmall, color = selectedLight.text.copy(alpha = 0.7f))
+                listOf(7, 14, 21, 30, 50, 100, 365).forEach { ms ->
+                    val isMsSel = selectedMilestone == ms
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(if (isMsSel) selectedLight.text else selectedLight.text.copy(alpha = 0.08f))
+                            .clickable { selectedMilestone = ms }
+                            .padding(horizontal = 12.dp, vertical = 6.dp)
+                    ) {
+                        Text("$ms days", style = MakariosTypography.labelSmall, color = if (isMsSel) selectedLight.top else selectedLight.text)
+                    }
+                }
+            }
+            Spacer(Modifier.height(16.dp))
+        }
+
+        // 2. Style row: Grouped into Essentials (12) and More (9)
+        Row(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Text("Style", style = MakariosTypography.labelMedium, color = selectedLight.text.copy(alpha = 0.8f))
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                listOf("Essentials", "More").forEach { cat ->
+                    val isCatActive = activeCategory == cat
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(if (isCatActive) selectedLight.text else selectedLight.text.copy(alpha = 0.08f))
+                            .clickable { activeCategory = cat }
+                            .padding(horizontal = 10.dp, vertical = 4.dp)
+                    ) {
+                        Text(
+                            text = cat,
+                            style = MakariosTypography.labelSmall,
+                            color = if (isCatActive) selectedLight.top else selectedLight.text
+                        )
+                    }
+                }
+            }
         }
         Spacer(Modifier.height(8.dp))
+
+        val stylesToDisplay = if (activeCategory == "Essentials") StyleRegistry.essentials else StyleRegistry.more
         Row(
             Modifier
                 .fillMaxWidth()
@@ -927,7 +1103,7 @@ fun LookStep(
             horizontalArrangement = Arrangement.spacedBy(10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            StyleRegistry.all.forEach { style ->
+            stylesToDisplay.forEach { style ->
                 val isNumerals = style.id == StyleRegistry.NUMERALS.id
                 val isEligible = !isNumerals || spec.isNumeralsEligible
                 val isSelected = style.id == selectedStyle.id
@@ -1077,6 +1253,7 @@ fun LookStep(
         ) {
             OutlinedButton(
                 onClick = onShare,
+                enabled = !isSharingInProgress,
                 modifier = Modifier
                     .weight(1f)
                     .height(56.dp),
@@ -1087,9 +1264,17 @@ fun LookStep(
                     contentColor = selectedLight.text
                 )
             ) {
-                Icon(Icons.Outlined.Share, contentDescription = null, tint = selectedLight.text, modifier = Modifier.size(18.dp))
-                Spacer(Modifier.width(8.dp))
-                Text("Share", style = MakariosTypography.labelLarge, color = selectedLight.text)
+                if (isSharingInProgress) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        strokeWidth = 2.dp,
+                        color = selectedLight.text
+                    )
+                } else {
+                    Icon(Icons.Outlined.Share, contentDescription = null, tint = selectedLight.text, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text("Share", style = MakariosTypography.labelLarge, color = selectedLight.text)
+                }
             }
 
             Button(
@@ -1108,6 +1293,36 @@ fun LookStep(
         }
 
         Spacer(Modifier.height(12.dp))
+
+        // Instagram Stories & WhatsApp Status direct buttons (if apps are installed)
+        if (isIgInstalled || isWaInstalled) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                if (isIgInstalled) {
+                    OutlinedButton(
+                        onClick = onShareToInstagram,
+                        modifier = Modifier.weight(1f).height(46.dp),
+                        shape = RoundedCornerShape(23.dp),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, selectedLight.text.copy(alpha = 0.4f))
+                    ) {
+                        Text("Instagram Story", color = selectedLight.text, style = MakariosTypography.labelMedium)
+                    }
+                }
+                if (isWaInstalled) {
+                    OutlinedButton(
+                        onClick = onShareToWhatsApp,
+                        modifier = Modifier.weight(1f).height(46.dp),
+                        shape = RoundedCornerShape(23.dp),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, selectedLight.text.copy(alpha = 0.4f))
+                    ) {
+                        Text("WhatsApp Status", color = selectedLight.text, style = MakariosTypography.labelMedium)
+                    }
+                }
+            }
+            Spacer(Modifier.height(10.dp))
+        }
 
         // 6. Text buttons: "Save to photos", "Set as wallpaper", "Share as file"
         Row(

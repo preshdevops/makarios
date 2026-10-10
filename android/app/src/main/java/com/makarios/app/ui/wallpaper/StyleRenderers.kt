@@ -35,6 +35,8 @@ import com.makarios.app.util.ExportFormat
 import kotlin.math.*
 import kotlin.random.Random
 
+typealias AndroidRectF = android.graphics.RectF
+
 /** Global Typeface cache with safe JVM / Android fallbacks. */
 object StyleTypefaces {
     @Volatile private var newsreader: Typeface? = null
@@ -168,7 +170,7 @@ fun DrawScope.drawRidgePath(w: Float, h: Float, y0: Float, amp: Float, seed: Int
     drawPath(path, color)
 }
 
-/** Helper to draw the subtle liturgical wordmark at the bottom. */
+/** Helper to draw the subtle liturgical wordmark at the bottom left with the mark. */
 fun drawWordmark(
     canvas: AndroidCanvas,
     geom: LayoutGeometry,
@@ -176,16 +178,59 @@ fun drawWordmark(
     include: Boolean = true
 ) {
     if (!include) return
-    val paint = AndroidPaint(AndroidPaint.ANTI_ALIAS_FLAG or AndroidPaint.DITHER_FLAG).apply {
-        color = light.text.copy(alpha = 0.72f).toArgb()
+    val alpha = 0.70f
+    val scale = geom.scale
+    val markSize = 16f * scale
+    val x = geom.margin
+    val y = geom.height * 0.94f
+
+    // Draw logo mark (open doorway arch + half sun)
+    val strokeWidth = 4.5f * (markSize / 100f)
+    val archPaint = AndroidPaint(AndroidPaint.ANTI_ALIAS_FLAG).apply {
+        color = light.text.copy(alpha = alpha).toArgb()
+        style = AndroidPaint.Style.STROKE
+        this.strokeWidth = strokeWidth
+        strokeCap = AndroidPaint.Cap.ROUND
+        strokeJoin = AndroidPaint.Join.ROUND
+    }
+    val sunPaint = AndroidPaint(AndroidPaint.ANTI_ALIAS_FLAG).apply {
+        color = (if (light.isDark) Color(0xFFE8A860) else Color(0xFFB5532B)).copy(alpha = alpha).toArgb()
+        style = AndroidPaint.Style.FILL
+    }
+
+    val s = markSize / 100f
+    val mx = x
+    val my = y - markSize * 0.85f
+
+    // Sun: M32 82 a18 18 0 0 1 36 0 Z
+    val sunPath = AndroidPath().apply {
+        moveTo(mx + 32f * s, my + 82f * s)
+        arcTo(AndroidRectF(mx + 32f * s, my + 64f * s, mx + 68f * s, my + 100f * s), 180f, 180f)
+        close()
+    }
+    canvas.drawPath(sunPath, sunPaint)
+
+    // Arch: M27 82 V46 a23 23 0 0 1 46 0 v36
+    val archPath = AndroidPath().apply {
+        moveTo(mx + 27f * s, my + 82f * s)
+        lineTo(mx + 27f * s, my + 46f * s)
+        arcTo(AndroidRectF(mx + 27f * s, my + 23f * s, mx + 73f * s, my + 69f * s), 180f, 180f)
+        lineTo(mx + 73f * s, my + 82f * s)
+    }
+    canvas.drawPath(archPath, archPaint)
+
+    // Ground: M18 82 h64
+    canvas.drawLine(mx + 18f * s, my + 82f * s, mx + 82f * s, my + 82f * s, archPaint)
+
+    // Text: "makarios" Newsreader Italic 500
+    val textPaint = AndroidPaint(AndroidPaint.ANTI_ALIAS_FLAG or AndroidPaint.DITHER_FLAG).apply {
+        color = light.text.copy(alpha = alpha).toArgb()
         typeface = StyleTypefaces.getNewsreaderItalic()
-        textSize = 15f * geom.scale
-        textAlign = if (geom.isLandscapeX) AndroidPaint.Align.LEFT else AndroidPaint.Align.CENTER
+        textSize = 15f * scale
+        letterSpacing = -0.01f
         isSubpixelText = true
     }
-    val x = if (geom.isLandscapeX) geom.margin else geom.width / 2f
-    val y = geom.height * 0.94f
-    canvas.drawText("makarios", x, y, paint)
+    canvas.drawText("makarios", mx + markSize + 6f * scale, y, textPaint)
 }
 
 /**
@@ -1397,3 +1442,788 @@ object TideStyle : BaseStyle("tide", "Tide") {
         drawAdaptivePairing(canvas, bitmap, geom, Light.Mist, spec, declarationSizeSp = 30f, verseSizeSp = 15f, topOverride = top)
     }
 }
+
+// ---------------------------------------------------------------------------
+// 13. FOR YOU (GIFT) STYLE
+// ---------------------------------------------------------------------------
+object ForYouStyle : BaseStyle("for_you", "For you") {
+    override fun drawArt(scope: DrawScope, geom: LayoutGeometry, light: Light, spec: StyleSpec) {
+        val rewrittenDecl = if (spec.isPronounRewritten) spec.declaration else com.makarios.app.util.PronounRewriter.rewrite(spec.declaration)
+        val giftSpec = spec.copy(declaration = rewrittenDecl)
+        val textBounds = measurePairingBounds(geom, light, giftSpec, declarationSizeSp = 30f, verseSizeSp = 15f)
+        val safeDiscPos = computeSafeDiscPosition(geom, light, textBounds)
+        scope.drawLight(light, Size(geom.width, geom.height), discPos = safeDiscPos)
+    }
+
+    override fun drawTypography(canvas: AndroidCanvas, bitmap: Bitmap, geom: LayoutGeometry, light: Light, spec: StyleSpec) {
+        val s = geom.scale
+        val textWidth = (if (geom.isLandscapeX) (geom.width * 0.55f - geom.margin * 2f) else (geom.width - geom.margin * 2f)).coerceAtLeast(100f)
+        val startX = geom.margin
+        var curY = geom.topSafe + 12f * s
+
+        val hanken = StyleTypefaces.getHankenGrotesk()
+        val newsreaderItalic = StyleTypefaces.getNewsreaderItalic()
+
+        // Eyebrow: "I DECLARED THIS OVER YOU"
+        val eyebrowPaint = TextPaint(AndroidPaint.ANTI_ALIAS_FLAG or AndroidPaint.DITHER_FLAG).apply {
+            typeface = hanken
+            textSize = 11f * s
+            color = light.anchorRule.toArgb()
+            letterSpacing = 0.12f
+            isSubpixelText = true
+        }
+        val eyebrowLayout = runCatching {
+            StaticLayout.Builder.obtain("I DECLARED THIS OVER YOU", 0, 24, eyebrowPaint, textWidth.toInt())
+                .setIncludePad(false).build()
+        }.getOrNull()
+
+        eyebrowLayout?.let {
+            canvas.save()
+            canvas.translate(startX, curY)
+            it.draw(canvas)
+            canvas.restore()
+            curY += it.height + 6f * s
+        }
+
+        // Recipient line: "For Ada" or "For you"
+        val recipientText = if (!spec.recipientName.isNullOrBlank()) "For ${spec.recipientName.trim()}" else "For you"
+        val recipientPaint = TextPaint(AndroidPaint.ANTI_ALIAS_FLAG or AndroidPaint.DITHER_FLAG).apply {
+            typeface = newsreaderItalic
+            textSize = 22f * s
+            color = light.text.toArgb()
+            isSubpixelText = true
+        }
+        val recipientLayout = runCatching {
+            StaticLayout.Builder.obtain(recipientText, 0, recipientText.length, recipientPaint, textWidth.toInt())
+                .setIncludePad(false).build()
+        }.getOrNull()
+
+        recipientLayout?.let {
+            canvas.save()
+            canvas.translate(startX, curY)
+            it.draw(canvas)
+            canvas.restore()
+            curY += it.height + 16f * s
+        }
+
+        val rewrittenDecl = if (spec.isPronounRewritten) spec.declaration else com.makarios.app.util.PronounRewriter.rewrite(spec.declaration)
+        val giftSpec = spec.copy(declaration = rewrittenDecl)
+        drawAdaptivePairing(canvas, bitmap, geom, light, giftSpec, declarationSizeSp = 30f, verseSizeSp = 15f, topOverride = curY)
+    }
+}
+
+// ---------------------------------------------------------------------------
+// 14. POSTCARD STYLE
+// ---------------------------------------------------------------------------
+object PostcardStyle : BaseStyle("postcard", "Postcard") {
+    override fun drawArt(scope: DrawScope, geom: LayoutGeometry, light: Light, spec: StyleSpec) {
+        val w = geom.width
+        val h = geom.height
+        val s = geom.scale
+
+        // Background paper tone
+        scope.drawRect(if (light.dark) Color(0xFF141C1B) else Color(0xFFFAF7F2), size = Size(w, h))
+
+        // Inset border 1.5px
+        val inset = 18f * s
+        scope.drawRect(
+            color = light.text.copy(alpha = 0.20f),
+            topLeft = Offset(inset, inset),
+            size = Size(w - inset * 2f, h - inset * 2f),
+            style = androidx.compose.ui.graphics.drawscope.Stroke(width = 1.5f * s)
+        )
+
+        // Bottom landscape scene (lower 36%)
+        val sceneTop = h * 0.64f
+        val sceneHeight = h - sceneTop - inset
+        scope.drawRect(
+            brush = Brush.verticalGradient(
+                colors = listOf(light.top.copy(alpha = 0.45f), light.bottom.copy(alpha = 0.90f)),
+                startY = sceneTop,
+                endY = h - inset
+            ),
+            topLeft = Offset(inset, sceneTop),
+            size = Size(w - inset * 2f, sceneHeight)
+        )
+
+        // Mountain ridge inside bottom scene
+        scope.drawRidgePath(w - inset * 2f, h - inset, sceneTop + sceneHeight * 0.5f, 22f * s, spec.seed, light.ridge1.copy(alpha = 0.85f))
+
+        // Sun in bottom scene
+        scope.drawCircle(light.disc, 26f * s, Offset(w * 0.72f, sceneTop + 32f * s))
+
+        scope.drawGrainOverlay(light, Size(w, h))
+    }
+
+    override fun drawTypography(canvas: AndroidCanvas, bitmap: Bitmap, geom: LayoutGeometry, light: Light, spec: StyleSpec) {
+        val w = geom.width
+        val s = geom.scale
+        val inset = 18f * s
+
+        // Dashed stamp box top right holding the mark
+        val stampW = 46f * s
+        val stampH = 56f * s
+        val stampX = w - inset - stampW - 12f * s
+        val stampY = inset + 12f * s
+
+        val stampPaint = AndroidPaint(AndroidPaint.ANTI_ALIAS_FLAG).apply {
+            color = light.text.copy(alpha = 0.35f).toArgb()
+            style = AndroidPaint.Style.STROKE
+            strokeWidth = 1.2f * s
+            pathEffect = DashPathEffect(floatArrayOf(4f * s, 3f * s), 0f)
+        }
+        canvas.drawRect(stampX, stampY, stampX + stampW, stampY + stampH, stampPaint)
+
+        // Mark centered inside stamp
+        val markPaint = AndroidPaint(AndroidPaint.ANTI_ALIAS_FLAG).apply {
+            color = light.anchorRule.toArgb()
+            style = AndroidPaint.Style.STROKE
+            strokeWidth = 1.5f * s
+            strokeCap = AndroidPaint.Cap.ROUND
+        }
+        val cx = stampX + stampW / 2f
+        val cy = stampY + stampH * 0.55f
+        val ms = stampW * 0.45f
+        canvas.drawLine(cx - ms / 2f, cy + ms * 0.35f, cx + ms / 2f, cy + ms * 0.35f, markPaint)
+        val archPath = AndroidPath().apply {
+            moveTo(cx - ms * 0.35f, cy + ms * 0.35f)
+            lineTo(cx - ms * 0.35f, cy - ms * 0.1f)
+            arcTo(AndroidRectF(cx - ms * 0.35f, cy - ms * 0.45f, cx + ms * 0.35f, cy + ms * 0.25f), 180f, 180f)
+            lineTo(cx + ms * 0.35f, cy + ms * 0.35f)
+        }
+        canvas.drawPath(archPath, markPaint)
+
+        // Text in upper-middle area (between stamp and bottom scene)
+        val textTop = inset + 40f * s
+        drawAdaptivePairing(canvas, bitmap, geom, light, spec, declarationSizeSp = 28f, verseSizeSp = 14f, topOverride = textTop)
+    }
+}
+
+// ---------------------------------------------------------------------------
+// 15. STREAK STYLE
+// ---------------------------------------------------------------------------
+object StreakStyle : BaseStyle("streak", "Streak") {
+    override fun drawArt(scope: DrawScope, geom: LayoutGeometry, light: Light, spec: StyleSpec) {
+        scope.drawLight(light, Size(geom.width, geom.height))
+    }
+
+    override fun drawTypography(canvas: AndroidCanvas, bitmap: Bitmap, geom: LayoutGeometry, light: Light, spec: StyleSpec) {
+        val w = geom.width
+        val s = geom.scale
+        val textWidth = (if (geom.isLandscapeX) (w * 0.55f - geom.margin * 2f) else (w - geom.margin * 2f)).coerceAtLeast(100f)
+        val startX = geom.margin
+        var curY = geom.topSafe + 16f * s
+
+        val newsreader = StyleTypefaces.getNewsreader()
+        val hanken = StyleTypefaces.getHankenGrotesk()
+
+        // Giant milestone numeral (e.g. 30, 100, 365)
+        val milestoneNumber = (spec.milestoneDays ?: 30).toString()
+        val numeralSizePx = min(w * 0.32f, 130f * s)
+        val numeralPaint = TextPaint(AndroidPaint.ANTI_ALIAS_FLAG or AndroidPaint.DITHER_FLAG).apply {
+            typeface = Typeface.create(newsreader, Typeface.BOLD)
+            textSize = numeralSizePx
+            color = light.anchorRule.toArgb()
+            isSubpixelText = true
+        }
+        val numeralLayout = runCatching {
+            StaticLayout.Builder.obtain(milestoneNumber, 0, milestoneNumber.length, numeralPaint, textWidth.toInt())
+                .setIncludePad(false).build()
+        }.getOrNull()
+
+        numeralLayout?.let {
+            canvas.save()
+            canvas.translate(startX, curY)
+            it.draw(canvas)
+            canvas.restore()
+            curY += it.height + 4f * s
+        }
+
+        // Caption: "DAYS OF DECLARING"
+        val captionPaint = TextPaint(AndroidPaint.ANTI_ALIAS_FLAG or AndroidPaint.DITHER_FLAG).apply {
+            typeface = hanken
+            textSize = 12f * s
+            color = light.text.copy(alpha = 0.85f).toArgb()
+            letterSpacing = 0.16f
+            isSubpixelText = true
+        }
+        val captionLayout = runCatching {
+            StaticLayout.Builder.obtain("DAYS OF DECLARING", 0, 17, captionPaint, textWidth.toInt())
+                .setIncludePad(false).build()
+        }.getOrNull()
+
+        captionLayout?.let {
+            canvas.save()
+            canvas.translate(startX, curY)
+            it.draw(canvas)
+            canvas.restore()
+            curY += it.height + 16f * s
+        }
+
+        // 28x2dp rule
+        val rulePaint = AndroidPaint(AndroidPaint.ANTI_ALIAS_FLAG).apply { color = light.anchorRule.toArgb() }
+        canvas.drawRect(startX, curY, startX + 28f * s, curY + 2f * s, rulePaint)
+        curY += 2f * s + 18f * s
+
+        // Declaration & reference
+        drawAdaptivePairing(canvas, bitmap, geom, light, spec, declarationSizeSp = 30f, verseSizeSp = 15f, topOverride = curY)
+    }
+}
+
+// ---------------------------------------------------------------------------
+// 16. STICKER STYLE (Transparent ARGB PNG with rounded cream card)
+// ---------------------------------------------------------------------------
+object StickerStyle : BaseStyle("sticker", "Sticker") {
+    override fun drawArt(scope: DrawScope, geom: LayoutGeometry, light: Light, spec: StyleSpec) {
+        // Outer canvas is completely transparent for Instagram Stories sticker overlay!
+        val w = geom.width
+        val h = geom.height
+        val s = geom.scale
+
+        val cardMargin = w * 0.08f
+        val cardWidth = w - cardMargin * 2f
+        val cardHeight = min(h * 0.65f, 520f * s)
+        val cardTop = (h - cardHeight) / 2f
+        val radius = 26f * s
+
+        // Cream rounded card
+        val cardColor = if (light.dark) Color(0xFF1E2827) else Color(0xFFFFF6E9)
+        scope.drawRoundRect(
+            color = cardColor,
+            topLeft = Offset(cardMargin, cardTop),
+            size = Size(cardWidth, cardHeight),
+            cornerRadius = androidx.compose.ui.geometry.CornerRadius(radius, radius)
+        )
+
+        // Subtle 1.5dp inner border
+        scope.drawRoundRect(
+            color = light.text.copy(alpha = 0.12f),
+            topLeft = Offset(cardMargin, cardTop),
+            size = Size(cardWidth, cardHeight),
+            cornerRadius = androidx.compose.ui.geometry.CornerRadius(radius, radius),
+            style = androidx.compose.ui.graphics.drawscope.Stroke(1.5f * s)
+        )
+
+        // Mini horizon landscape band inside card at bottom
+        val miniSceneH = cardHeight * 0.28f
+        val miniSceneTop = cardTop + cardHeight - miniSceneH
+        scope.drawRoundRect(
+            brush = Brush.verticalGradient(listOf(light.top.copy(alpha = 0.35f), light.bottom.copy(alpha = 0.65f))),
+            topLeft = Offset(cardMargin + 2f * s, miniSceneTop),
+            size = Size(cardWidth - 4f * s, miniSceneH - 2f * s),
+            cornerRadius = androidx.compose.ui.geometry.CornerRadius(radius * 0.8f, radius * 0.8f)
+        )
+    }
+
+    override fun drawTypography(canvas: AndroidCanvas, bitmap: Bitmap, geom: LayoutGeometry, light: Light, spec: StyleSpec) {
+        val w = geom.width
+        val h = geom.height
+        val s = geom.scale
+
+        val cardMargin = w * 0.08f
+        val cardWidth = w - cardMargin * 2f
+        val cardHeight = min(h * 0.65f, 520f * s)
+        val cardTop = (h - cardHeight) / 2f
+
+        val innerPadding = 24f * s
+        val textWidth = cardWidth - innerPadding * 2f
+        val startX = cardMargin + innerPadding
+        val startY = cardTop + innerPadding
+
+        drawAdaptivePairing(
+            canvas, bitmap, geom, light, spec,
+            declarationSizeSp = 28f,
+            verseSizeSp = 14f,
+            topOverride = startY,
+            textWidthOverride = textWidth
+        )
+    }
+}
+
+// ---------------------------------------------------------------------------
+// 17. POLAROID STYLE (Tilted -2deg off-white frame)
+// ---------------------------------------------------------------------------
+object PolaroidStyle : BaseStyle("polaroid", "Polaroid") {
+    override fun drawArt(scope: DrawScope, geom: LayoutGeometry, light: Light, spec: StyleSpec) {
+        val w = geom.width
+        val h = geom.height
+        val s = geom.scale
+
+        // Off-white paper background
+        scope.drawRect(Color(0xFFF4EFEA), size = Size(w, h))
+        scope.drawGrainOverlay(Light.Dawn, Size(w, h))
+
+        // Center coordinates for rotated frame
+        val cx = w / 2f
+        val cy = h / 2f
+        val cardW = w * 0.82f
+        val cardH = min(h * 0.74f, 600f * s)
+        val photoPadding = 18f * s
+        val photoW = cardW - photoPadding * 2f
+        val photoH = photoW * 0.95f
+
+        scope.drawIntoCanvas { c ->
+            val ac = c.nativeCanvas
+            ac.save()
+            ac.rotate(-2f, cx, cy)
+
+            // Polaroid shadow & white card
+            val left = cx - cardW / 2f
+            val top = cy - cardH / 2f
+            val cardPaint = AndroidPaint(AndroidPaint.ANTI_ALIAS_FLAG).apply {
+                color = AndroidColor.WHITE
+                setShadowLayer(14f * s, 0f, 6f * s, AndroidColor.argb(45, 30, 20, 15))
+            }
+            ac.drawRoundRect(AndroidRectF(left, top, left + cardW, top + cardH), 12f * s, 12f * s, cardPaint)
+
+            // Inner photo window
+            val photoLeft = left + photoPadding
+            val photoTop = top + photoPadding
+            val photoRect = AndroidRectF(photoLeft, photoTop, photoLeft + photoW, photoTop + photoH)
+            ac.save()
+            ac.clipRect(photoRect)
+
+            // Render mini Light landscape into the photo cutout
+            val photoBmp = Bitmap.createBitmap(photoW.toInt().coerceAtLeast(10), photoH.toInt().coerceAtLeast(10), Bitmap.Config.ARGB_8888)
+            val photoCanvas = AndroidCanvas(photoBmp)
+            val miniGeom = LayoutGeometry.compute(IntSize(photoW.toInt(), photoH.toInt()))
+            val miniScope = CanvasDrawScope()
+            miniScope.draw(Density(1f), LayoutDirection.Ltr, androidx.compose.ui.graphics.Canvas(photoCanvas), Size(photoW, photoH)) {
+                drawLight(light, Size(photoW, photoH))
+            }
+            ac.drawBitmap(photoBmp, photoLeft, photoTop, null)
+            photoBmp.recycle()
+            ac.restore()
+
+            // Photo frame inner border
+            val photoBorderPaint = AndroidPaint(AndroidPaint.ANTI_ALIAS_FLAG).apply {
+                color = AndroidColor.argb(25, 0, 0, 0)
+                style = AndroidPaint.Style.STROKE
+                strokeWidth = 1f * s
+            }
+            ac.drawRect(photoRect, photoBorderPaint)
+
+            ac.restore()
+        }
+    }
+
+    override fun drawTypography(canvas: AndroidCanvas, bitmap: Bitmap, geom: LayoutGeometry, light: Light, spec: StyleSpec) {
+        val w = geom.width
+        val h = geom.height
+        val s = geom.scale
+
+        val cx = w / 2f
+        val cy = h / 2f
+        val cardW = w * 0.82f
+        val cardH = min(h * 0.74f, 600f * s)
+        val photoPadding = 18f * s
+        val photoW = cardW - photoPadding * 2f
+        val photoH = photoW * 0.95f
+
+        val left = cx - cardW / 2f
+        val top = cy - cardH / 2f
+        val captionTop = top + photoPadding + photoH + 16f * s
+        val textWidth = (cardW - photoPadding * 2f).toInt()
+
+        val newsreaderItalic = StyleTypefaces.getNewsreaderItalic()
+        val hanken = StyleTypefaces.getHankenGrotesk()
+
+        canvas.save()
+        canvas.rotate(-2f, cx, cy)
+
+        // Declaration as polaroid bottom caption
+        val captionPaint = TextPaint(AndroidPaint.ANTI_ALIAS_FLAG or AndroidPaint.DITHER_FLAG).apply {
+            typeface = newsreaderItalic
+            textSize = 21f * s
+            color = AndroidColor.rgb(38, 26, 20)
+            isSubpixelText = true
+        }
+        val captionLayout = runCatching {
+            StaticLayout.Builder.obtain(spec.declaration, 0, spec.declaration.length, captionPaint, textWidth)
+                .setIncludePad(false).build()
+        }.getOrNull()
+
+        var currentY = captionTop
+        captionLayout?.let {
+            canvas.save()
+            canvas.translate(left + photoPadding, currentY)
+            it.draw(canvas)
+            canvas.restore()
+            currentY += it.height + 6f * s
+        }
+
+        // Reference
+        val refText = (spec.reference ?: "").uppercase()
+        if (refText.isNotBlank()) {
+            val refPaint = TextPaint(AndroidPaint.ANTI_ALIAS_FLAG or AndroidPaint.DITHER_FLAG).apply {
+                typeface = hanken
+                textSize = 10f * s
+                color = AndroidColor.argb(170, 70, 50, 40)
+                letterSpacing = 0.10f
+                isSubpixelText = true
+            }
+            val refLayout = runCatching {
+                StaticLayout.Builder.obtain(refText, 0, refText.length, refPaint, textWidth)
+                    .setIncludePad(false).build()
+            }.getOrNull()
+            refLayout?.let {
+                canvas.save()
+                canvas.translate(left + photoPadding, currentY)
+                it.draw(canvas)
+                canvas.restore()
+            }
+        }
+
+        canvas.restore()
+    }
+}
+
+// ---------------------------------------------------------------------------
+// 18. VERSE FIRST STYLE (Scripture leads in large italic, then "AND I SAY")
+// ---------------------------------------------------------------------------
+object VerseFirstStyle : BaseStyle("verse_first", "Verse first") {
+    override fun drawArt(scope: DrawScope, geom: LayoutGeometry, light: Light, spec: StyleSpec) {
+        val textBounds = measurePairingBounds(geom, light, spec, declarationSizeSp = 30f, verseSizeSp = 28f)
+        val safeDiscPos = computeSafeDiscPosition(geom, light, textBounds)
+        scope.drawLight(light, Size(geom.width, geom.height), discPos = safeDiscPos)
+    }
+
+    override fun drawTypography(canvas: AndroidCanvas, bitmap: Bitmap, geom: LayoutGeometry, light: Light, spec: StyleSpec) {
+        val s = geom.scale
+        val textWidth = (if (geom.isLandscapeX) (geom.width * 0.55f - geom.margin * 2f) else (geom.width - geom.margin * 2f)).coerceAtLeast(100f)
+        val startX = geom.margin
+        var curY = geom.topSafe + 16f * s
+
+        val newsreader = StyleTypefaces.getNewsreader()
+        val newsreaderItalic = StyleTypefaces.getNewsreaderItalic()
+        val hanken = StyleTypefaces.getHankenGrotesk()
+
+        // 1. Scripture verse leads in prominent italic
+        val verseText = spec.verse ?: "The Lord is my light and my salvation; whom shall I fear?"
+        val versePaint = TextPaint(AndroidPaint.ANTI_ALIAS_FLAG or AndroidPaint.DITHER_FLAG).apply {
+            typeface = newsreaderItalic
+            textSize = 28f * s
+            color = light.text.toArgb()
+            isSubpixelText = true
+        }
+        val verseLayout = runCatching {
+            StaticLayout.Builder.obtain("“$verseText”", 0, verseText.length + 2, versePaint, textWidth.toInt())
+                .setIncludePad(false).build()
+        }.getOrNull()
+
+        verseLayout?.let {
+            canvas.save()
+            canvas.translate(startX, curY)
+            it.draw(canvas)
+            canvas.restore()
+            curY += it.height + 8f * s
+        }
+
+        // Reference
+        val refText = (spec.reference ?: "").uppercase()
+        if (refText.isNotBlank()) {
+            val refPaint = TextPaint(AndroidPaint.ANTI_ALIAS_FLAG or AndroidPaint.DITHER_FLAG).apply {
+                typeface = hanken
+                textSize = 11f * s
+                color = light.anchorRule.toArgb()
+                letterSpacing = 0.12f
+                isSubpixelText = true
+            }
+            val refLayout = runCatching {
+                StaticLayout.Builder.obtain(refText, 0, refText.length, refPaint, textWidth.toInt())
+                    .setIncludePad(false).build()
+            }.getOrNull()
+            refLayout?.let {
+                canvas.save()
+                canvas.translate(startX, curY)
+                it.draw(canvas)
+                canvas.restore()
+                curY += it.height + 20f * s
+            }
+        }
+
+        // 2. Transition label: "AND I SAY"
+        val labelPaint = TextPaint(AndroidPaint.ANTI_ALIAS_FLAG or AndroidPaint.DITHER_FLAG).apply {
+            typeface = hanken
+            textSize = 12f * s
+            color = light.anchorRule.toArgb()
+            letterSpacing = 0.16f
+            isSubpixelText = true
+        }
+        val labelLayout = runCatching {
+            StaticLayout.Builder.obtain("AND I SAY", 0, 9, labelPaint, textWidth.toInt())
+                .setIncludePad(false).build()
+        }.getOrNull()
+
+        labelLayout?.let {
+            canvas.save()
+            canvas.translate(startX, curY)
+            it.draw(canvas)
+            canvas.restore()
+            curY += it.height + 8f * s
+        }
+
+        // 3. Declaration beneath
+        val declPaint = TextPaint(AndroidPaint.ANTI_ALIAS_FLAG or AndroidPaint.DITHER_FLAG).apply {
+            typeface = Typeface.create(newsreader, Typeface.BOLD)
+            textSize = 28f * s
+            color = light.text.toArgb()
+            isSubpixelText = true
+        }
+        val declLayout = runCatching {
+            StaticLayout.Builder.obtain(spec.declaration, 0, spec.declaration.length, declPaint, textWidth.toInt())
+                .setIncludePad(false).build()
+        }.getOrNull()
+
+        declLayout?.let {
+            canvas.save()
+            canvas.translate(startX, curY)
+            it.draw(canvas)
+            canvas.restore()
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// 19. THE HOUR STYLE (Large timestamp + date stamp + pairing)
+// ---------------------------------------------------------------------------
+object TheHourStyle : BaseStyle("the_hour", "The hour") {
+    override fun drawArt(scope: DrawScope, geom: LayoutGeometry, light: Light, spec: StyleSpec) {
+        scope.drawLight(light, Size(geom.width, geom.height))
+    }
+
+    override fun drawTypography(canvas: AndroidCanvas, bitmap: Bitmap, geom: LayoutGeometry, light: Light, spec: StyleSpec) {
+        val s = geom.scale
+        val textWidth = (if (geom.isLandscapeX) (geom.width * 0.55f - geom.margin * 2f) else (geom.width - geom.margin * 2f)).coerceAtLeast(100f)
+        val startX = geom.margin
+        var curY = geom.topSafe + 14f * s
+
+        val newsreader = StyleTypefaces.getNewsreader()
+        val hanken = StyleTypefaces.getHankenGrotesk()
+
+        // 1. Large time ("6:02")
+        val timeString = spec.hourFormatted ?: "6:02"
+        val timePaint = TextPaint(AndroidPaint.ANTI_ALIAS_FLAG or AndroidPaint.DITHER_FLAG).apply {
+            typeface = Typeface.create(newsreader, Typeface.BOLD)
+            textSize = 58f * s
+            color = light.text.toArgb()
+            isSubpixelText = true
+        }
+        val timeLayout = runCatching {
+            StaticLayout.Builder.obtain(timeString, 0, timeString.length, timePaint, textWidth.toInt())
+                .setIncludePad(false).build()
+        }.getOrNull()
+
+        timeLayout?.let {
+            canvas.save()
+            canvas.translate(startX, curY)
+            it.draw(canvas)
+            canvas.restore()
+            curY += it.height + 4f * s
+        }
+
+        // 2. Date / Light stamp ("DAWN, SAT 10 OCT")
+        val stampString = "${light.name.uppercase()}, ${spec.timestampFormatted ?: "SAT 10 OCT"}"
+        val stampPaint = TextPaint(AndroidPaint.ANTI_ALIAS_FLAG or AndroidPaint.DITHER_FLAG).apply {
+            typeface = hanken
+            textSize = 12f * s
+            color = light.anchorRule.toArgb()
+            letterSpacing = 0.14f
+            isSubpixelText = true
+        }
+        val stampLayout = runCatching {
+            StaticLayout.Builder.obtain(stampString, 0, stampString.length, stampPaint, textWidth.toInt())
+                .setIncludePad(false).build()
+        }.getOrNull()
+
+        stampLayout?.let {
+            canvas.save()
+            canvas.translate(startX, curY)
+            it.draw(canvas)
+            canvas.restore()
+            curY += it.height + 14f * s
+        }
+
+        // 3. 28x2dp rule
+        val rulePaint = AndroidPaint(AndroidPaint.ANTI_ALIAS_FLAG).apply { color = light.anchorRule.toArgb() }
+        canvas.drawRect(startX, curY, startX + 28f * s, curY + 2f * s, rulePaint)
+        curY += 2f * s + 18f * s
+
+        // 4. Pairing beneath
+        drawAdaptivePairing(canvas, bitmap, geom, light, spec, declarationSizeSp = 30f, verseSizeSp = 15f, topOverride = curY)
+    }
+}
+
+// ---------------------------------------------------------------------------
+// 20. CAROUSEL RECAP STYLE (Multi-card weekly recap cover)
+// ---------------------------------------------------------------------------
+object CarouselRecapStyle : BaseStyle("carousel_recap", "Carousel (recap)") {
+    override fun drawArt(scope: DrawScope, geom: LayoutGeometry, light: Light, spec: StyleSpec) {
+        val w = geom.width
+        val h = geom.height
+        val s = geom.scale
+
+        scope.drawLight(light, Size(w, h))
+
+        // Three mini framed cards side-by-side or cascading in the lower half
+        val cardW = (w - geom.margin * 2f - 24f * s) / 3f
+        val cardH = cardW * 1.5f
+        val cardTop = h * 0.58f
+
+        for (i in 0 until 3) {
+            val cardLeft = geom.margin + i * (cardW + 12f * s)
+            // Mini card background
+            scope.drawRoundRect(
+                color = light.bottom.copy(alpha = 0.85f),
+                topLeft = Offset(cardLeft, cardTop),
+                size = Size(cardW, cardH),
+                cornerRadius = androidx.compose.ui.geometry.CornerRadius(12f * s, 12f * s)
+            )
+            // Mini card border
+            scope.drawRoundRect(
+                color = light.text.copy(alpha = 0.18f),
+                topLeft = Offset(cardLeft, cardTop),
+                size = Size(cardW, cardH),
+                cornerRadius = androidx.compose.ui.geometry.CornerRadius(12f * s, 12f * s),
+                style = androidx.compose.ui.graphics.drawscope.Stroke(1.2f * s)
+            )
+            // Mini sun inside each card
+            scope.drawCircle(
+                color = light.disc.copy(alpha = 0.70f),
+                radius = 8f * s,
+                center = Offset(cardLeft + cardW * 0.5f, cardTop + 24f * s)
+            )
+        }
+    }
+
+    override fun drawTypography(canvas: AndroidCanvas, bitmap: Bitmap, geom: LayoutGeometry, light: Light, spec: StyleSpec) {
+        val s = geom.scale
+        val textWidth = (if (geom.isLandscapeX) (geom.width * 0.55f - geom.margin * 2f) else (geom.width - geom.margin * 2f)).coerceAtLeast(100f)
+        val startX = geom.margin
+        var curY = geom.topSafe + 16f * s
+
+        val newsreader = StyleTypefaces.getNewsreader()
+        val hanken = StyleTypefaces.getHankenGrotesk()
+
+        // Eyebrow: "WEEKLY RECAP"
+        val eyebrowPaint = TextPaint(AndroidPaint.ANTI_ALIAS_FLAG or AndroidPaint.DITHER_FLAG).apply {
+            typeface = hanken
+            textSize = 11f * s
+            color = light.anchorRule.toArgb()
+            letterSpacing = 0.14f
+            isSubpixelText = true
+        }
+        val eyebrowLayout = runCatching {
+            StaticLayout.Builder.obtain("WEEKLY RECAP", 0, 12, eyebrowPaint, textWidth.toInt())
+                .setIncludePad(false).build()
+        }.getOrNull()
+
+        eyebrowLayout?.let {
+            canvas.save()
+            canvas.translate(startX, curY)
+            it.draw(canvas)
+            canvas.restore()
+            curY += it.height + 8f * s
+        }
+
+        // Heading: "Three things I declared this week"
+        val count = spec.recapDeclarations?.size ?: 3
+        val headingTitle = "$count things I declared this week"
+        val headingPaint = TextPaint(AndroidPaint.ANTI_ALIAS_FLAG or AndroidPaint.DITHER_FLAG).apply {
+            typeface = Typeface.create(newsreader, Typeface.BOLD)
+            textSize = 34f * s
+            color = light.text.toArgb()
+            isSubpixelText = true
+        }
+        val headingLayout = runCatching {
+            StaticLayout.Builder.obtain(headingTitle, 0, headingTitle.length, headingPaint, textWidth.toInt())
+                .setIncludePad(false).build()
+        }.getOrNull()
+
+        headingLayout?.let {
+            canvas.save()
+            canvas.translate(startX, curY)
+            it.draw(canvas)
+            canvas.restore()
+            curY += it.height + 16f * s
+        }
+
+        // Subtitle declaration
+        drawAdaptivePairing(canvas, bitmap, geom, light, spec, declarationSizeSp = 24f, verseSizeSp = 14f, topOverride = curY)
+    }
+}
+
+// ---------------------------------------------------------------------------
+// 21. UNDERLINED STYLE (Huge declaration + hand-drawn cubic Bezier stroke)
+// ---------------------------------------------------------------------------
+object UnderlinedStyle : BaseStyle("underlined", "Underlined") {
+    override fun drawArt(scope: DrawScope, geom: LayoutGeometry, light: Light, spec: StyleSpec) {
+        val textBounds = measurePairingBounds(geom, light, spec, declarationSizeSp = 38f, verseSizeSp = 16f)
+        val safeDiscPos = computeSafeDiscPosition(geom, light, textBounds)
+        scope.drawLight(light, Size(geom.width, geom.height), discPos = safeDiscPos)
+    }
+
+    override fun drawTypography(canvas: AndroidCanvas, bitmap: Bitmap, geom: LayoutGeometry, light: Light, spec: StyleSpec) {
+        val s = geom.scale
+        val textWidth = (if (geom.isLandscapeX) (geom.width * 0.55f - geom.margin * 2f) else (geom.width - geom.margin * 2f)).coerceAtLeast(100f)
+        val startX = geom.margin
+        var curY = geom.topSafe + 16f * s
+
+        val newsreader = StyleTypefaces.getNewsreader()
+
+        // 1. Huge declaration
+        val declPaint = TextPaint(AndroidPaint.ANTI_ALIAS_FLAG or AndroidPaint.DITHER_FLAG).apply {
+            typeface = Typeface.create(newsreader, Typeface.BOLD)
+            textSize = 38f * s
+            color = light.text.toArgb()
+            isSubpixelText = true
+        }
+        val declLayout = runCatching {
+            StaticLayout.Builder.obtain(spec.declaration, 0, spec.declaration.length, declPaint, textWidth.toInt())
+                .setIncludePad(false).build()
+        }.getOrNull()
+
+        var declW = textWidth
+        declLayout?.let {
+            canvas.save()
+            canvas.translate(startX, curY)
+            it.draw(canvas)
+            canvas.restore()
+            curY += it.height + 8f * s
+            declW = min(textWidth, it.getLineWidth(0) + 12f * s)
+        }
+
+        // 2. Hand-drawn cubic Bezier stroke in sun colour
+        val rng = Random(spec.seed)
+        val wave1 = (rng.nextFloat() * 4f - 2f) * s
+        val wave2 = (rng.nextFloat() * 4f - 2f) * s
+        val wave3 = (rng.nextFloat() * 3f - 1.5f) * s
+
+        val strokePaint = AndroidPaint(AndroidPaint.ANTI_ALIAS_FLAG).apply {
+            color = light.anchorRule.toArgb()
+            style = AndroidPaint.Style.STROKE
+            strokeWidth = 3.6f * s
+            strokeCap = AndroidPaint.Cap.ROUND
+        }
+        val strokePath = AndroidPath().apply {
+            moveTo(startX, curY)
+            cubicTo(
+                startX + declW * 0.35f, curY + 4f * s + wave1,
+                startX + declW * 0.65f, curY - 3f * s + wave2,
+                startX + declW, curY + 2f * s + wave3
+            )
+        }
+        canvas.drawPath(strokePath, strokePaint)
+        curY += 24f * s
+
+        // 3. Verse and reference beneath
+        drawAdaptivePairing(
+            canvas, bitmap, geom, light, spec,
+            declarationSizeSp = 30f,
+            verseSizeSp = 16f,
+            topOverride = curY,
+            includeDeclaration = false
+        )
+    }
+}
+

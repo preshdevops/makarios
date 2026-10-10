@@ -19,6 +19,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.makarios.app.data.Affirmation
 import com.makarios.app.data.AffirmationRepository
+import com.makarios.app.data.CuratedTopicRepository
 import com.makarios.app.ui.components.Pairing
 import com.makarios.app.ui.theme.*
 import com.makarios.app.util.ShareHelper
@@ -35,7 +36,7 @@ fun SavedScreen(onNavigateToCreate: () -> Unit = {}, modifier: Modifier = Modifi
         else LazyColumn(contentPadding = PaddingValues(start = 24.dp, end = 24.dp, bottom = 100.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) { items(list, key = { it.id }) { KeptCard(it, lightFor(it), context) } }
     }
 }
-private fun lightFor(affirmation: Affirmation): Light = TopicBands.firstOrNull { it.name.equals(affirmation.category, true) }?.light ?: Light.Grove
+private fun lightFor(affirmation: Affirmation): Light = CuratedTopicRepository.TOPIC_METAS.firstOrNull { it.name.equals(affirmation.category, true) }?.light ?: Light.Grove
 @Composable private fun KeptCard(affirmation: Affirmation, light: Light, context: android.content.Context) {
     Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).drawBehind { drawLight(light, size, horizon = HorizonSpec(.72f, .80f, .88f)) }.padding(20.dp)) {
         Pairing(affirmation.declaration, affirmation.scriptureText, affirmation.reference, light)

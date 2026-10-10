@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <group
+        android:scaleX="0.70"
+        android:scaleY="0.70"
+        android:translateX="19"
+        android:translateY="17">
+        <!-- Sun: monochrome fill -->
+        <path
+            android:fillColor="#FFFFFFFF"
+            android:pathData="M32,82a18,18 0 0,1 36,0Z" />
+
+        <!-- Arch: stroke -->
+        <path
+            android:strokeColor="#FFFFFFFF"
+            android:strokeWidth="4.5"
+            android:strokeLineCap="round"
+            android:strokeLineJoin="round"
+            android:pathData="M27,82V46a23,23 0 0,1 46,0v36" />
+
+        <!-- Ground line -->
+        <path
+            android:strokeColor="#FFFFFFFF"
+            android:strokeWidth="4.5"
+            android:strokeLineCap="round"
+            android:pathData="M18,82h64" />
+    </group>
+</vector>

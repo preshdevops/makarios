@@ -4,9 +4,12 @@
     android:height="24dp"
     android:viewportWidth="100"
     android:viewportHeight="100">
+    <!-- Sun: flat white fill -->
     <path
         android:fillColor="#FFFFFFFF"
         android:pathData="M32,82a18,18 0 0,1 36,0Z" />
+
+    <!-- Arch: flat white stroke thickened to 6 for 24dp legibility -->
     <path
         android:strokeColor="#FFFFFFFF"
         android:strokeWidth="6"

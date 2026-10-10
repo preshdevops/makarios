@@ -14,6 +14,7 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Lightbulb
+import androidx.compose.material.icons.outlined.MenuBook
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -39,7 +40,8 @@ import kotlin.math.sin
 fun HomeScreen(
     modifier: Modifier = Modifier,
     initialAffirmationId: String? = null,
-    onLightChanged: (Light) -> Unit = {}
+    onLightChanged: (Light) -> Unit = {},
+    onNavigateToReader: ((book: String, chapter: Int, verse: Int?) -> Unit)? = null
 ) {
     val context = LocalContext.current; val haptic = LocalHapticFeedback.current
     var light by remember { mutableStateOf(Light.forNow()) }
@@ -98,6 +100,14 @@ fun HomeScreen(
                         kept = !kept
                         if (kept) ProfileActivityLog.recordKept(context)
                         Toast.makeText(context, if (kept) "Saved to Kept" else "Removed from Kept", Toast.LENGTH_SHORT).show()
+                    }
+                    if (onNavigateToReader != null) {
+                        IconRailButton(Icons.Outlined.MenuBook, "Read chapter", light) {
+                            val parsed = com.makarios.app.data.bible.BibleReferenceParser.parse(affirmation.reference)
+                            if (parsed != null) {
+                                onNavigateToReader(parsed.book, parsed.chapter, parsed.fromVerse)
+                            }
+                        }
                     }
                     IconRailButton(Icons.Outlined.Lightbulb, "Change Light", light) { picker = true }
                 }

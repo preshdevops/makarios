@@ -1,4 +1,4 @@
-﻿package com.makarios.app.data
+package com.makarios.app.data
 
 enum class AffirmationTone {
     STILL,
@@ -15,7 +15,7 @@ data class Affirmation(
     val context: String,
     val category: String,
     val tone: AffirmationTone,
-    val imageUrl: String,
+    val imageUrl: String = "",
     val isFavorite: Boolean = false,
     val personalDeclaration: String? = null
 )
