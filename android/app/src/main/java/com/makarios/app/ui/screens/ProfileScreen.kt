@@ -1,4 +1,4 @@
-package com.makarios.app.ui.screens
+﻿package com.makarios.app.ui.screens
 
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -41,6 +41,7 @@ import com.makarios.app.util.ReminderManager
 @Composable
 fun ProfileScreen(
     onSignOut: () -> Unit,
+    onOpenWallpapers: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -189,7 +190,7 @@ fun ProfileScreen(
                 .padding(horizontal = 16.dp, vertical = 10.dp)
         ) {
             Text(
-                text = "$keptCount kept  ·  $writtenCount written  ·  $totalCount in library",
+                text = "$keptCount kept  Â·  $writtenCount written  Â·  $totalCount in library",
                 style = MakariosTypography.bodyMedium.copy(fontWeight = FontWeight.Medium),
                 color = Ink
             )
@@ -480,3 +481,5 @@ fun ProfileScreen(
         )
     }
 }
+
+

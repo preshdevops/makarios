@@ -1,4 +1,4 @@
-package com.makarios.app.ui.screens
+﻿package com.makarios.app.ui.screens
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -26,6 +26,7 @@ import com.makarios.app.ui.theme.lightBackground
 @Composable
 fun OnboardingScreen(
     onComplete: () -> Unit,
+    onOpenWallpapers: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val pagerState = rememberPagerState(pageCount = { 3 })
@@ -93,6 +94,9 @@ fun OnboardingScreen(
                 Spacer(modifier = Modifier.weight(1f))
                 
                 if (page == 2) {
+                    androidx.compose.material3.TextButton(onClick = onOpenWallpapers) {
+                        Text("Set as wallpaper", color = screen.first.text)
+                    }
                     Button(
                         onClick = onComplete,
                         modifier = Modifier.fillMaxWidth().height(56.dp),
@@ -127,3 +131,5 @@ fun OnboardingScreen(
         }
     }
 }
+
+

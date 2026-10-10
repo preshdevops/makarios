@@ -1,4 +1,4 @@
-package com.makarios.app
+﻿package com.makarios.app
 
 import android.Manifest
 import android.content.Context
@@ -46,6 +46,7 @@ import com.makarios.app.ui.screens.OnboardingScreen
 import com.makarios.app.ui.screens.ProfileScreen
 import com.makarios.app.ui.screens.SavedScreen
 import com.makarios.app.ui.theme.*
+import com.makarios.app.ui.wallpaper.WallpaperGallery
 import com.makarios.app.util.ReminderManager
 
 class MainActivity : ComponentActivity() {
@@ -92,6 +93,7 @@ fun MainAppScaffold() {
     val prefs = remember { context.getSharedPreferences("makarios_prefs", Context.MODE_PRIVATE) }
     var selectedTab by remember { mutableStateOf(0) }
     var activeAffirmationIdForCreate by remember { mutableStateOf<String?>(null) }
+    var showWallpaper by remember { mutableStateOf(false) }
     var showOnboarding by remember {
         mutableStateOf(!prefs.getBoolean("onboarding_completed", false))
     }
@@ -106,11 +108,17 @@ fun MainAppScaffold() {
             onComplete = {
                 prefs.edit().putBoolean("onboarding_completed", true).apply()
                 showOnboarding = false
-            }
+            },
+            onOpenWallpapers = { showWallpaper = true }
         )
         return
     }
 
+
+    if (showWallpaper) {
+        WallpaperGallery(onBack = { showWallpaper = false })
+        return
+    }
 
     val currentLight = remember { getCurrentLightForTime() }
 
@@ -197,8 +205,15 @@ fun MainAppScaffold() {
                 onSignOut = {
                     // Sign out callbacks if any
                 },
+                onOpenWallpapers = { showWallpaper = true },
                 modifier = Modifier.padding(innerPadding)
             )
         }
     }
 }
+
+
+
+
+
+
