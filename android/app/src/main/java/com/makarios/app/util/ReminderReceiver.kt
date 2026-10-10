@@ -1,4 +1,4 @@
-package com.makarios.app.util
+﻿package com.makarios.app.util
 
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -22,6 +22,8 @@ class ReminderReceiver : BroadcastReceiver() {
             Intent.ACTION_MY_PACKAGE_REPLACED -> {
                 // Reschedule all active reminders on system boot
                 ReminderManager.rescheduleAll(context)
+                com.makarios.app.widget.WidgetScheduling.schedule(context)
+                com.makarios.app.widget.WidgetScheduling.refreshNow(context)
             }
 
             ReminderManager.ACTION_DAWN -> {
@@ -30,7 +32,7 @@ class ReminderReceiver : BroadcastReceiver() {
                 ReminderManager.showSacredNotification(
                     context = context,
                     notificationId = ReminderManager.REQ_DAWN,
-                    title = "Good morning · Makarios",
+                    title = "Good morning Â· Makarios",
                     declaration = affirmation.declaration,
                     scripture = affirmation.scriptureText,
                     reference = affirmation.reference
@@ -45,7 +47,7 @@ class ReminderReceiver : BroadcastReceiver() {
                 ReminderManager.showSacredNotification(
                     context = context,
                     notificationId = ReminderManager.REQ_MIDDAY,
-                    title = "Your midday declaration · Makarios",
+                    title = "Your midday declaration Â· Makarios",
                     declaration = affirmation.declaration,
                     scripture = affirmation.scriptureText,
                     reference = affirmation.reference
@@ -60,7 +62,7 @@ class ReminderReceiver : BroadcastReceiver() {
                 ReminderManager.showSacredNotification(
                     context = context,
                     notificationId = ReminderManager.REQ_EVENING,
-                    title = "Your evening declaration · Makarios",
+                    title = "Your evening declaration Â· Makarios",
                     declaration = affirmation.declaration,
                     scripture = affirmation.scriptureText,
                     reference = affirmation.reference
@@ -76,7 +78,7 @@ class ReminderReceiver : BroadcastReceiver() {
                     ReminderManager.showSacredNotification(
                         context = context,
                         notificationId = ReminderManager.REQ_HOURLY,
-                        title = "Declaration reminder · Makarios",
+                        title = "Declaration reminder Â· Makarios",
                         declaration = affirmation.declaration,
                         scripture = affirmation.scriptureText,
                         reference = affirmation.reference
@@ -88,3 +90,5 @@ class ReminderReceiver : BroadcastReceiver() {
         }
     }
 }
+
+

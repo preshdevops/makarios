@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.INTERNET" />
@@ -30,17 +30,11 @@
             </intent-filter>
         </activity>
 
-        <!-- Glance Home Screen Widget Receiver -->
-        <receiver
-            android:name=".widget.MakariosGlanceWidgetReceiver"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-            </intent-filter>
-            <meta-data
-                android:name="android.appwidget.provider"
-                android:resource="@xml/makarios_widget_info" />
-        </receiver>
+        <!-- Light-engine Glance widgets -->
+        <receiver android:name=".widget.MakariosSmallReceiver" android:exported="true"><intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter><meta-data android:name="android.appwidget.provider" android:resource="@xml/makarios_widget_small_info" /></receiver>
+        <receiver android:name=".widget.MakariosMediumReceiver" android:exported="true"><intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter><meta-data android:name="android.appwidget.provider" android:resource="@xml/makarios_widget_medium_info" /></receiver>
+        <receiver android:name=".widget.MakariosLargeReceiver" android:exported="true"><intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter><meta-data android:name="android.appwidget.provider" android:resource="@xml/makarios_widget_large_info" /></receiver>
+        <activity android:name=".widget.WidgetConfigureActivity" android:exported="true" />
 
         <!-- Reminder Alarm & Notification Receiver -->
         <receiver
@@ -70,3 +64,4 @@
     </application>
 
 </manifest>
+

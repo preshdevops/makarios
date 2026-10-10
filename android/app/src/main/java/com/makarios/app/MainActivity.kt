@@ -63,6 +63,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         ReminderManager.init(this)
+        com.makarios.app.widget.WidgetScheduling.schedule(this)
         requestNotificationPermission()
 
         setContent {
@@ -211,6 +212,7 @@ fun MainAppScaffold() {
         }
     }
 }
+
 
 
 

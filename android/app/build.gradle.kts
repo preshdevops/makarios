@@ -1,4 +1,4 @@
-plugins {
+﻿plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
@@ -75,6 +75,7 @@ dependencies {
     // Jetpack Glance (Native Home Screen Widgets)
     implementation(libs.androidx.glance.appwidget)
     implementation(libs.androidx.glance.material3)
+    implementation(libs.androidx.work.runtime.ktx)
 
     // Coil for modern async image loading
     implementation(libs.coil.compose)
@@ -96,3 +97,4 @@ dependencies {
     // JVM unit tests
     testImplementation("junit:junit:4.13.2")
 }
+

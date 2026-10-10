@@ -35,6 +35,7 @@ import com.makarios.app.ui.components.AuthDialog
 import com.makarios.app.ui.components.FindFriendsDialog
 import com.makarios.app.ui.components.SacredTimePickerDialog
 import com.makarios.app.ui.theme.*
+import com.makarios.app.widget.WidgetStore
 import com.makarios.app.util.ReminderManager
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -46,6 +47,7 @@ fun ProfileScreen(
 ) {
     val context = LocalContext.current
     val currentLight = remember { getCurrentLightForTime() }
+    var widgetLight by remember { mutableStateOf(WidgetStore.fixedLight(context)) }
 
     // Dialog visibility states
     var showAuthDialog by remember { mutableStateOf(false) }
@@ -422,6 +424,16 @@ fun ProfileScreen(
 
         Spacer(modifier = Modifier.height(36.dp))
 
+        Text("Widget Light", style = MakariosTypography.bodyLarge.copy(fontWeight = FontWeight.SemiBold), color = Ink)
+        Text("Auto follows time of day, or fix a Light for your widgets", style = MakariosTypography.labelSmall, color = Ink.copy(alpha = 0.6f))
+        Spacer(modifier = Modifier.height(10.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            Box(Modifier.size(28.dp).clip(RoundedCornerShape(7.dp)).background(Ink).clickable { widgetLight = "AUTO"; WidgetStore.setLight(context, "AUTO"); com.makarios.app.widget.WidgetScheduling.refreshNow(context) })
+            Light.values().forEach { candidate -> Box(Modifier.size(28.dp).clip(RoundedCornerShape(7.dp)).background(candidate.top).clickable { widgetLight = candidate.name; WidgetStore.setLight(context, candidate.name); com.makarios.app.widget.WidgetScheduling.refreshNow(context) }) }
+        }
+
+        Spacer(modifier = Modifier.height(36.dp))
+
         // Account status
         Text("Account & Storage", style = MakariosTypography.bodyLarge.copy(fontWeight = FontWeight.SemiBold), color = Ink)
         Spacer(modifier = Modifier.height(8.dp))
@@ -481,5 +493,8 @@ fun ProfileScreen(
         )
     }
 }
+
+
+
 
 

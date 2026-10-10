@@ -1,4 +1,4 @@
-package com.makarios.app.util
+﻿package com.makarios.app.util
 
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
@@ -9,8 +9,10 @@ import androidx.glance.appwidget.updateAll
 import com.makarios.app.data.Affirmation
 import com.makarios.app.data.AffirmationRepository
 import com.makarios.app.ui.theme.Light
-import com.makarios.app.widget.MakariosGlanceWidget
-import com.makarios.app.widget.MakariosGlanceWidgetReceiver
+import com.makarios.app.widget.MakariosSmallWidget
+import com.makarios.app.widget.MakariosMediumWidget
+import com.makarios.app.widget.MakariosLargeWidget
+import com.makarios.app.widget.MakariosMediumReceiver
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -35,7 +37,7 @@ object WidgetHelper {
 
     fun pinWidgetToHomeScreen(context: Context) {
         val appWidgetManager = AppWidgetManager.getInstance(context)
-        val provider = ComponentName(context, MakariosGlanceWidgetReceiver::class.java)
+        val provider = ComponentName(context, MakariosMediumReceiver::class.java)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && appWidgetManager.isRequestPinAppWidgetSupported) {
             appWidgetManager.requestPinAppWidget(provider, null, null)
@@ -50,7 +52,7 @@ object WidgetHelper {
 
     fun pinWidgetToLockScreen(context: Context) {
         val appWidgetManager = AppWidgetManager.getInstance(context)
-        val provider = ComponentName(context, MakariosGlanceWidgetReceiver::class.java)
+        val provider = ComponentName(context, MakariosMediumReceiver::class.java)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && appWidgetManager.isRequestPinAppWidgetSupported) {
             appWidgetManager.requestPinAppWidget(provider, null, null)
@@ -135,8 +137,12 @@ object WidgetHelper {
     private fun refreshGlanceWidgets(context: Context) {
         CoroutineScope(Dispatchers.IO).launch {
             runCatching {
-                MakariosGlanceWidget().updateAll(context)
+                MakariosSmallWidget().updateAll(context)
+            MakariosMediumWidget().updateAll(context)
+            MakariosLargeWidget().updateAll(context)
             }
         }
     }
 }
+
+
