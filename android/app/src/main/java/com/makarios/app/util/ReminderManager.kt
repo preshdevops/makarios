@@ -82,7 +82,8 @@ object ReminderManager {
         val recent = NotificationStore.recentIds(context)
         val kept = AffirmationRepository.getSaved().filterNot { it.id in recent }
         val pool = if (kept.isNotEmpty()) kept else AffirmationRepository.getAll().filterNot { it.id in recent }
-        return (pool.ifEmpty { AffirmationRepository.getAll() }).firstOrNull() ?: AffirmationRepository.affirmationOfTheDay
+        val finalPool = pool.ifEmpty { AffirmationRepository.getAll() }
+        return com.makarios.app.data.OnboardingStore.getWeightedAffirmation(context, finalPool)
     }
     fun deliveryLight(): Light = Light.forNow()
     fun resolveAffirmationForReminder(c: Context) = chooseMorningAffirmation(c)

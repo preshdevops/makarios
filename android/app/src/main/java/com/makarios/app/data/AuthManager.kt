@@ -93,23 +93,35 @@ object AuthManager {
 
     /**
      * Register a new account with email and password.
-     * If currently an anonymous guest, links the credential to preserve existing declarations.
+     * Optionally takes a preferred display name.
      */
     fun signUpWithEmail(
+        name: String? = null,
         email: String,
         password: String,
         onSuccess: () -> Unit,
         onError: (String) -> Unit
     ) {
-        if (email.isBlank() || password.length < 6) {
-            onError("Please enter a valid email and a password of at least 6 characters")
+        if (email.isBlank() || password.length < 8) {
+            onError("Use 8 or more characters. A phrase you can remember works well.")
             return
         }
 
         try {
             auth.createUserWithEmailAndPassword(email.trim(), password)
-                .addOnSuccessListener {
-                    currentUser = it.user
+                .addOnSuccessListener { result ->
+                    val user = result.user
+                    currentUser = user
+                    if (user != null) {
+                        if (!name.isNullOrBlank()) {
+                            val profileUpdates = com.google.firebase.auth.UserProfileChangeRequest.Builder()
+                                .setDisplayName(name.trim())
+                                .build()
+                            user.updateProfile(profileUpdates)
+                        }
+                        // Send verification email in background without blocking flow
+                        user.sendEmailVerification()
+                    }
                     onSuccess()
                 }
                 .addOnFailureListener { e ->
@@ -130,7 +142,7 @@ object AuthManager {
         onError: (String) -> Unit
     ) {
         if (email.isBlank() || password.isBlank()) {
-            onError("Please enter both email and password")
+            onError("Please enter both email and password.")
             return
         }
 
@@ -138,6 +150,56 @@ object AuthManager {
             auth.signInWithEmailAndPassword(email.trim(), password)
                 .addOnSuccessListener {
                     currentUser = it.user
+                    onSuccess()
+                }
+                .addOnFailureListener { e ->
+                    onError(friendlyAuthError(e))
+                }
+        } catch (e: Exception) {
+            onError(friendlyAuthError(e))
+        }
+    }
+
+    /**
+     * Send email verification to the current logged in user.
+     */
+    fun sendEmailVerification(
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit
+    ) {
+        val user = currentUser
+        if (user == null) {
+            onError("Please sign in first.")
+            return
+        }
+
+        try {
+            user.sendEmailVerification()
+                .addOnSuccessListener { onSuccess() }
+                .addOnFailureListener { e -> onError(friendlyAuthError(e)) }
+        } catch (e: Exception) {
+            onError(friendlyAuthError(e))
+        }
+    }
+
+    /**
+     * Delete the current user account (Google Play compliance).
+     */
+    fun deleteAccount(
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit
+    ) {
+        val user = currentUser
+        if (user == null) {
+            onError("No active account found.")
+            return
+        }
+
+        try {
+            user.delete()
+                .addOnSuccessListener {
+                    currentUser = null
+                    signOut()
                     onSuccess()
                 }
                 .addOnFailureListener { e ->
@@ -157,7 +219,7 @@ object AuthManager {
         onError: (String) -> Unit
     ) {
         if (email.isBlank()) {
-            onError("Please enter your email address")
+            onError("Please enter your email address.")
             return
         }
 
@@ -234,7 +296,7 @@ object AuthManager {
                 onError("Could not complete sign in with Google. Please use email instead.")
             }
         } catch (e: GetCredentialCancellationException) {
-            // User dismissed or tapped outside Google account picker — silently return
+            // User dismissed or tapped outside Google account picker: silently return
         } catch (e: GetCredentialException) {
             val msg = e.message.orEmpty()
             if (msg.contains("10", ignoreCase = true) || msg.contains("DEVELOPER_ERROR", ignoreCase = true)) {
@@ -262,17 +324,26 @@ object AuthManager {
     private fun friendlyAuthError(e: Exception): String {
         val msg = e.message.orEmpty()
         return when {
-            msg.contains("The email address is already in use", ignoreCase = true) ->
-                "An account with this email already exists. Please sign in instead."
-            msg.contains("The email address is badly formatted", ignoreCase = true) ->
+            msg.contains("The email address is already in use", ignoreCase = true) ||
+            msg.contains("email-already-in-use", ignoreCase = true) ->
+                "That email already has an account. Sign in instead."
+            msg.contains("The email address is badly formatted", ignoreCase = true) ||
+            msg.contains("invalid-email", ignoreCase = true) ->
                 "Please enter a valid email address."
-            msg.contains("Password should be at least 6 characters", ignoreCase = true) ->
-                "Password must be at least 6 characters."
-            msg.contains("There is no user record", ignoreCase = true) || msg.contains("invalid-credential", ignoreCase = true) ->
-                "Incorrect email or password. Please try again."
-            msg.contains("network error", ignoreCase = true) ->
-                "Network connection issue. Please check your internet."
-            msg.contains("ERROR_OPERATION_NOT_ALLOWED", ignoreCase = true) || msg.contains("disabled for this project", ignoreCase = true) ->
+            msg.contains("Password should be at least", ignoreCase = true) ||
+            msg.contains("weak-password", ignoreCase = true) ->
+                "Use 8 or more characters. A phrase you can remember works well."
+            msg.contains("There is no user record", ignoreCase = true) ||
+            msg.contains("invalid-credential", ignoreCase = true) ||
+            msg.contains("wrong-password", ignoreCase = true) ||
+            msg.contains("user-not-found", ignoreCase = true) ->
+                "That email and password do not match."
+            msg.contains("network error", ignoreCase = true) ||
+            msg.contains("offline", ignoreCase = true) ||
+            msg.contains("network", ignoreCase = true) ->
+                "You are offline. You can continue as a guest."
+            msg.contains("ERROR_OPERATION_NOT_ALLOWED", ignoreCase = true) ||
+            msg.contains("disabled for this project", ignoreCase = true) ->
                 "This sign-in method is temporarily unavailable. Please sign in with email."
             msg.contains("firebase", ignoreCase = true) ->
                 "Service is currently unavailable. Please try again shortly."

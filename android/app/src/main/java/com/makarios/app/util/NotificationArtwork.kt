@@ -11,6 +11,7 @@ import android.graphics.Typeface
 import android.text.TextPaint
 import androidx.core.content.res.ResourcesCompat
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
 import com.makarios.app.R
 import com.makarios.app.data.Affirmation

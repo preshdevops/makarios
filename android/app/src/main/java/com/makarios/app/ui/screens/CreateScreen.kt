@@ -24,6 +24,7 @@ import androidx.compose.material.icons.outlined.Wallpaper
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.Dispatchers
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -33,12 +34,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.makarios.app.data.*
 import com.makarios.app.ui.components.BibleReaderSheet
 import com.makarios.app.ui.components.Pairing
 import com.makarios.app.ui.theme.*
+import com.makarios.app.ui.wallpaper.AutoStyleSelector
+import com.makarios.app.ui.wallpaper.Style
+import com.makarios.app.ui.wallpaper.StyleRegistry
+import com.makarios.app.ui.wallpaper.StyleSpec
 import com.makarios.app.util.ExportFormat
 import com.makarios.app.util.LightCanvas
 import com.makarios.app.util.ShareHelper
@@ -55,6 +61,7 @@ fun CreateScreen(
     var declarationText by remember { mutableStateOf("") }
     var tone by remember { mutableStateOf("Still") }
     var selectedLight by remember { mutableStateOf(Light.Dawn) }
+    var selectedStyle by remember { mutableStateOf<Style>(StyleRegistry.PAIRING) }
     var formatName by remember { mutableStateOf("Story") }
     var selectedPhotoUrl by remember { mutableStateOf<String?>(null) }
     var showBibleReader by remember { mutableStateOf(false) }
@@ -124,7 +131,7 @@ fun CreateScreen(
                 text = when (step) {
                     1 -> "1. Write Truth"
                     2 -> "2. Anchor in Scripture"
-                    else -> "3. Format & Meditate"
+                    else -> "3. Look (styles)"
                 },
                 style = MakariosTypography.labelLarge,
                 color = Ink
@@ -198,7 +205,15 @@ fun CreateScreen(
                     },
                     onSearchBible = { showBibleReader = true },
                     onEditDeclaration = { step = 1 },
-                    onUseThisVerse = { step = 3 }
+                    onUseThisVerse = {
+                        selectedStyle = AutoStyleSelector.pickStyle(
+                            declaration = declarationText,
+                            verse = currentVerse?.text,
+                            reference = currentVerse?.reference,
+                            light = selectedLight
+                        )
+                        step = 3
+                    }
                 )
                 3 -> LookStep(
                     declarationText = declarationText,
@@ -206,32 +221,28 @@ fun CreateScreen(
                     verseReference = currentVerse?.reference ?: "Psalm 28:7",
                     selectedLight = selectedLight,
                     onLightChanged = { selectedLight = it },
+                    selectedStyle = selectedStyle,
+                    onStyleChanged = { selectedStyle = it },
                     format = formatName,
                     onFormatChanged = { formatName = it },
-                    selectedPhotoUrl = selectedPhotoUrl,
-                    onPhotoSelected = { selectedPhotoUrl = it },
                     onShare = {
                         val aff = saveCreatedAffirmation()
                         showNotificationAsk = true
-                        val exportFmt = when (formatName) {
-                            "WhatsApp", "Status", "Story" -> ExportFormat.Story
-                            "Square" -> ExportFormat.Square
-                            "X" -> ExportFormat.X
-                            else -> ExportFormat.Portrait
-                        }
+                        val exportFmt = ExportFormat.from(formatName)
                         ShareHelper.shareGeneric(
                             context = context,
                             affirmation = aff,
                             light = selectedLight,
-                            format = exportFmt
+                            format = exportFmt,
+                            style = selectedStyle
                         )
                         Toast.makeText(context, "Saved to your Kept collection!", Toast.LENGTH_SHORT).show()
                     },
                     onSavePhotos = {
                         val aff = saveCreatedAffirmation()
                         showNotificationAsk = true
-                        val exportFmt = when (formatName) { "Story", "Status" -> ExportFormat.Story; "Square" -> ExportFormat.Square; "X" -> ExportFormat.X; else -> ExportFormat.Portrait }
-                        val saved = ShareHelper.saveToPhotos(context, aff, selectedLight, exportFmt)
+                        val exportFmt = ExportFormat.from(formatName)
+                        val saved = ShareHelper.saveToPhotos(context, aff, selectedLight, exportFmt, style = selectedStyle)
                         Toast.makeText(context, if (saved != null) "Saved to Pictures/Makarios" else "Could not save image", Toast.LENGTH_SHORT).show()
                     },
                     onSetWallpaper = {
@@ -247,6 +258,7 @@ fun CreateScreen(
                                 verseReference = aff.reference,
                                 light = selectedLight,
                                 format = ExportFormat.Wallpaper,
+                                style = selectedStyle,
                                 outputFile = file
                             )
                             val bitmap = BitmapFactory.decodeFile(file.absolutePath)
@@ -515,26 +527,263 @@ fun VerseStep(
     }
 }
 
+/** Cache for offscreen preview bitmaps keyed by (styleId, lightName, formatName, size, textHash) */
+private val previewBitmapCache = mutableMapOf<String, android.graphics.Bitmap>()
+
 @Composable
 fun LookStep(
-    declarationText:String, verseText:String, verseReference:String, selectedLight:Light,
-    onLightChanged:(Light)->Unit, format:String, onFormatChanged:(String)->Unit,
-    selectedPhotoUrl:String?, onPhotoSelected:(String?)->Unit, onShare:()->Unit,
-    onSavePhotos:()->Unit, onSetWallpaper:()->Unit
-){
-    val context=LocalContext.current
-    val exportFormat=when(format){"Story","Status"->ExportFormat.Story;"Square"->ExportFormat.Square;"X"->ExportFormat.X;else->ExportFormat.Portrait}
-    val previewBitmap by produceState<android.graphics.Bitmap?>(null, declarationText,verseText,verseReference,selectedLight,format){
-        value=withContext(kotlinx.coroutines.Dispatchers.Default){val f=File(context.cacheDir,"preview_${exportFormat.name}.png");val rendered=LightCanvas(context).render(declarationText,verseText,verseReference,selectedLight,exportFormat,outputFile=f);BitmapFactory.decodeFile(rendered.absolutePath)}
+    declarationText: String,
+    verseText: String,
+    verseReference: String,
+    selectedLight: Light,
+    onLightChanged: (Light) -> Unit,
+    selectedStyle: Style,
+    onStyleChanged: (Style) -> Unit,
+    format: String,
+    onFormatChanged: (String) -> Unit,
+    onShare: () -> Unit,
+    onSavePhotos: () -> Unit,
+    onSetWallpaper: () -> Unit
+) {
+    val exportFormat = remember(format) { ExportFormat.from(format) }
+    val spec = remember(declarationText, verseText, verseReference) {
+        StyleSpec(declaration = declarationText, verse = verseText, reference = verseReference)
     }
-    Column(Modifier.fillMaxSize().padding(24.dp).verticalScroll(rememberScrollState())){
-        Box(Modifier.fillMaxWidth().height(280.dp).clip(RoundedCornerShape(24.dp)).background(selectedLight.bottom),contentAlignment=Alignment.Center){previewBitmap?.let{androidx.compose.foundation.Image(it.asImageBitmap(),"Share preview",Modifier.fillMaxSize(),contentScale=ContentScale.Fit)}}
-        Spacer(Modifier.height(20.dp));Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),horizontalArrangement=Arrangement.spacedBy(8.dp)){listOf("WhatsApp","Story","Square","X").forEach{f->TextButton(onClick={onFormatChanged(f)},modifier=Modifier.clip(RoundedCornerShape(20.dp)).background(if(format==f)Ink else Ink.copy(alpha=.06f))){Text(f,color=if(format==f)Cream else Ink)}}}
-        Spacer(Modifier.height(18.dp));Text("Light",style=MakariosTypography.labelMedium,color=Ink.copy(alpha=.8f));Spacer(Modifier.height(8.dp));Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),horizontalArrangement=Arrangement.spacedBy(9.dp)){
-            listOf<Light?>(null,Light.Dawn,Light.Midday,Light.Dusk,Light.Night,Light.Mist,Light.Rain,Light.Ember,Light.Grove).forEach{candidate->val selected=candidate==selectedLight;if(candidate==null){Box(Modifier.size(50.dp).clip(RoundedCornerShape(12.dp)).background(Ink.copy(alpha=.08f)).border(if(selected)2.dp else 1.dp,if(selected)Ink else Ink.copy(alpha=.15f),RoundedCornerShape(12.dp)).clickable{onLightChanged(Light.forNow())},contentAlignment=Alignment.Center){Text("Auto",style=MakariosTypography.labelSmall,color=Ink)}}else{Box(Modifier.size(50.dp).clip(RoundedCornerShape(12.dp)).background(candidate.top).border(if(selected)2.dp else 0.dp,if(selected)Ink else Color.Transparent,RoundedCornerShape(12.dp)).clickable{onLightChanged(candidate)}){}}}
+
+    // Performance: render 200x433 preview in background coroutine at 1/4 scale with cache
+    val previewBitmap by produceState<android.graphics.Bitmap?>(
+        initialValue = null,
+        selectedStyle.id,
+        selectedLight.name,
+        format,
+        declarationText,
+        verseText
+    ) {
+        value = withContext(Dispatchers.Default) {
+            val key = "${selectedStyle.id}:${selectedLight.name}:${exportFormat.name}:200x433:${declarationText.hashCode()}:${verseText.hashCode()}"
+            previewBitmapCache.getOrPut(key) {
+                // Render at exact preview aspect ratio (200 x 433)
+                val (w, h) = when (exportFormat) {
+                    ExportFormat.Square -> 200 to 200
+                    ExportFormat.Portrait -> 200 to 250
+                    ExportFormat.X -> 320 to 180
+                    ExportFormat.Story, ExportFormat.Wallpaper -> 200 to 433
+                }
+                selectedStyle.render(spec, selectedLight, IntSize(w, h))
+            }
         }
-        Spacer(Modifier.height(28.dp));Button(onClick=onShare,modifier=Modifier.fillMaxWidth().height(56.dp),colors=ButtonDefaults.buttonColors(containerColor=Ink,contentColor=Cream),shape=RoundedCornerShape(28.dp)){Text("Share declaration",style=MakariosTypography.labelLarge)}
-        Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween){TextButton(onClick=onSavePhotos){Icon(Icons.Outlined.Image,null,tint=Ink);Spacer(Modifier.width(6.dp));Text("Save to photos",color=Ink)};TextButton(onClick=onSetWallpaper){Icon(Icons.Outlined.Wallpaper,null,tint=Ink);Spacer(Modifier.width(6.dp));Text("Set as wallpaper",color=Ink)}};Spacer(Modifier.height(40.dp))
+    }
+
+    Column(
+        Modifier
+            .fillMaxSize()
+            .padding(horizontal = 24.dp)
+            .verticalScroll(rememberScrollState()),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Spacer(Modifier.height(12.dp))
+
+        // 1. Live preview: 200x433 (the same renderer scaled)
+        Box(
+            Modifier
+                .width(200.dp)
+                .height(433.dp)
+                .clip(RoundedCornerShape(22.dp))
+                .background(selectedLight.bottom)
+                .border(1.dp, Ink.copy(alpha = 0.12f), RoundedCornerShape(22.dp)),
+            contentAlignment = Alignment.Center
+        ) {
+            previewBitmap?.let { bmp ->
+                androidx.compose.foundation.Image(
+                    bitmap = bmp.asImageBitmap(),
+                    contentDescription = "Live style preview",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Fit
+                )
+            } ?: CircularProgressIndicator(color = selectedLight.text, modifier = Modifier.size(28.dp))
+        }
+
+        Spacer(Modifier.height(24.dp))
+
+        // 2. Style row: 12 thumbnails (56x121, horizontally scrollable, selected = 2dp ink outline with 3dp offset)
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start) {
+            Text("Style", style = MakariosTypography.labelMedium, color = Ink.copy(alpha = 0.8f))
+        }
+        Spacer(Modifier.height(8.dp))
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            StyleRegistry.all.forEach { style ->
+                val isSelected = style.id == selectedStyle.id
+                val thumbBitmap by produceState<android.graphics.Bitmap?>(null, style.id, selectedLight.name) {
+                    value = withContext(Dispatchers.Default) {
+                        val thumbKey = "${style.id}:${selectedLight.name}:thumb:56x121:${spec.shortText.hashCode()}"
+                        previewBitmapCache.getOrPut(thumbKey) {
+                            style.render(spec, selectedLight, IntSize(56, 121))
+                        }
+                    }
+                }
+
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.clickable {
+                        onStyleChanged(style)
+                        if (!style.supports(exportFormat)) {
+                            onFormatChanged("Story")
+                        }
+                    }
+                ) {
+                    // Outer box providing 2dp ink outline with 3dp offset when selected
+                    Box(
+                        Modifier
+                            .then(
+                                if (isSelected) {
+                                    Modifier
+                                        .border(2.dp, Ink, RoundedCornerShape(14.dp))
+                                        .padding(3.dp)
+                                } else {
+                                    Modifier.padding(5.dp)
+                                }
+                            )
+                            .size(width = 56.dp, height = 121.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(selectedLight.top),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        thumbBitmap?.let {
+                            androidx.compose.foundation.Image(
+                                bitmap = it.asImageBitmap(),
+                                contentDescription = style.displayName,
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop
+                            )
+                        }
+                    }
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        text = style.displayName,
+                        style = MakariosTypography.labelSmall.copy(fontSize = 11.sp),
+                        color = if (isSelected) Ink else Ink.copy(alpha = 0.65f),
+                        fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
+                    )
+                }
+            }
+        }
+
+        Spacer(Modifier.height(20.dp))
+
+        // 3. Light row: Auto + 8 swatches (40dp)
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start) {
+            Text("Light", style = MakariosTypography.labelMedium, color = Ink.copy(alpha = 0.8f))
+        }
+        Spacer(Modifier.height(8.dp))
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Auto swatch
+            val isAuto = selectedLight == Light.forNow()
+            Box(
+                Modifier
+                    .size(40.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(Ink.copy(alpha = 0.08f))
+                    .border(if (isAuto) 2.dp else 1.dp, if (isAuto) Ink else Ink.copy(alpha = 0.15f), RoundedCornerShape(10.dp))
+                    .clickable { onLightChanged(Light.forNow()) },
+                contentAlignment = Alignment.Center
+            ) {
+                Text("Auto", style = MakariosTypography.labelSmall.copy(fontSize = 11.sp), color = Ink)
+            }
+
+            // 8 Lights swatches
+            Light.values().forEach { lightOption ->
+                val isSelected = lightOption == selectedLight
+                Box(
+                    Modifier
+                        .size(40.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(lightOption.top)
+                        .border(if (isSelected) 2.dp else 0.dp, if (isSelected) Ink else Color.Transparent, RoundedCornerShape(10.dp))
+                        .clickable { onLightChanged(lightOption) }
+                )
+            }
+        }
+
+        Spacer(Modifier.height(20.dp))
+
+        // 4. Format row: Story, Square, Portrait, X, Wallpaper
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Start) {
+            Text("Format", style = MakariosTypography.labelMedium, color = Ink.copy(alpha = 0.8f))
+        }
+        Spacer(Modifier.height(8.dp))
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            listOf("Story", "Square", "Portrait", "X", "Wallpaper").forEach { fmt ->
+                val isSelected = format.equals(fmt, ignoreCase = true)
+                val isSupported = selectedStyle.supports(fmt)
+
+                Box(
+                    Modifier
+                        .clip(RoundedCornerShape(18.dp))
+                        .background(if (isSelected) Ink else Ink.copy(alpha = if (isSupported) 0.06f else 0.02f))
+                        .clickable(enabled = isSupported) { onFormatChanged(fmt) }
+                        .padding(horizontal = 16.dp, vertical = 9.dp)
+                ) {
+                    Text(
+                        text = fmt,
+                        style = MakariosTypography.labelMedium,
+                        color = if (isSelected) Cream else if (isSupported) Ink else Ink.copy(alpha = 0.3f)
+                    )
+                }
+            }
+        }
+
+        Spacer(Modifier.height(28.dp))
+
+        // 5. Ink "Share" pill
+        Button(
+            onClick = onShare,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = Ink, contentColor = Cream),
+            shape = RoundedCornerShape(28.dp)
+        ) {
+            Text("Share", style = MakariosTypography.labelLarge)
+        }
+
+        Spacer(Modifier.height(10.dp))
+
+        // 6. Text buttons: "Save to photos" and "Set as wallpaper"
+        Row(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            TextButton(onClick = onSavePhotos) {
+                Icon(Icons.Outlined.Image, contentDescription = null, tint = Ink, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(6.dp))
+                Text("Save to photos", color = Ink, style = MakariosTypography.labelLarge)
+            }
+
+            TextButton(onClick = onSetWallpaper) {
+                Icon(Icons.Outlined.Wallpaper, contentDescription = null, tint = Ink, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(6.dp))
+                Text("Set as wallpaper", color = Ink, style = MakariosTypography.labelLarge)
+            }
+        }
+
+        Spacer(Modifier.height(36.dp))
     }
 }
-

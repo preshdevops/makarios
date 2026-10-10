@@ -1,4 +1,4 @@
-﻿package com.makarios.app.ui.theme
+package com.makarios.app.ui.theme
 
 import androidx.compose.ui.graphics.Color
 import java.time.Clock
@@ -22,7 +22,7 @@ enum class Light(
     val buttonFill get()=if(dark) Cream else Ink
     val buttonText get()=if(dark) Ink else Cream
     companion object {
-        fun forNow(clock: Clock=Clock.systemDefaultZone()): Light { val t=LocalTime.now(clock); return when { t>=LocalTime.of(5,30)&&t<LocalTime.of(9)->Dawn; t>=LocalTime.of(9)&&t<LocalTime.of(16,30)->Midday; t>=LocalTime.of(16,30)&&t<LocalTime.of(19,30)->Dusk; else->Night } }
+        fun forNow(clock: Clock=Clock.systemDefaultZone()): Light { val t=LocalTime.now(clock); return when { t>=LocalTime.of(5,30)&&t<LocalTime.of(9,0)->Dawn; t>=LocalTime.of(9,0)&&t<LocalTime.of(16,30)->Midday; t>=LocalTime.of(16,30)&&t<LocalTime.of(19,30)->Dusk; else->Night } }
         fun forTopic(topic:String)=when(topic.lowercase()) { "identity"->Dawn;"peace"->Mist;"strength"->Ember;"purpose"->Rain;"courage"->Dusk;"joy"->Midday;"rest"->Grove;else->Dawn }
     }
 }

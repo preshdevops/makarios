@@ -122,7 +122,7 @@ object AffirmationRepository {
         context = "Victory is not merely surviving difficulty, but emerging deepened in God's love.",
         category = "Strength",
         tone = AffirmationTone.RESOLUTE,
-        imageUrl = ""
+        imageUrl = "",
         isFavorite = true
     )
 
@@ -134,7 +134,7 @@ object AffirmationRepository {
         context = "Spiritual joy is not superficial optimism; it is the deep, immovable wellspring of God's delight.",
         category = "Joy",
         tone = AffirmationTone.GENTLE,
-        imageUrl = ""
+        imageUrl = "",
         isFavorite = true
     )
 
@@ -239,7 +239,7 @@ object AffirmationRepository {
             context = "Written for seasons of transition and unexpected decisions.",
             category = "Peace",
             tone = AffirmationTone.STILL,
-            imageUrl = ""
+            imageUrl = "",
             isFavorite = true,
             personalDeclaration = "I release the need to control the outcome. My steps are ordered by the Lord."
         )

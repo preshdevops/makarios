@@ -1,4 +1,4 @@
-﻿package com.makarios.app.widget
+package com.makarios.app.widget
 
 import android.content.Context
 import androidx.compose.runtime.Composable
@@ -7,6 +7,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.*
 import androidx.glance.action.actionStartActivity
+import androidx.glance.action.clickable
 import androidx.glance.appwidget.*
 import androidx.glance.appwidget.provideContent
 import androidx.glance.layout.*
@@ -23,7 +24,7 @@ import com.makarios.app.ui.theme.renderLightBitmap
 import com.makarios.app.util.WidgetHelper
 import java.time.LocalDate
 
-private enum class WidgetSize { SMALL, MEDIUM, LARGE }
+enum class WidgetSize { SMALL, MEDIUM, LARGE }
 enum class WidgetSource { KEPT, DAILY, PICK_ONE }
 
 object WidgetStore {
@@ -36,10 +37,20 @@ object WidgetStore {
     fun source(context:Context):WidgetSource = runCatching{WidgetSource.valueOf(context.getSharedPreferences(PREFS,0).getString(SOURCE,WidgetSource.KEPT.name)!!)}.getOrDefault(WidgetSource.KEPT)
     fun setLight(context:Context,light:String){context.getSharedPreferences(PREFS,0).edit().putString(LIGHT,light).apply();WidgetScheduling.refreshNow(context)}
     fun set(context:Context,light:String,source:WidgetSource,pickId:String?){context.getSharedPreferences(PREFS,0).edit().putString(LIGHT,light).putString(SOURCE,source.name).putString(PICK,pickId).apply()}
-    fun affirmation(context:Context):Affirmation { val repo=AffirmationRepository;return when(source(context)){WidgetSource.KEPT->repo.getSaved().firstOrNull();WidgetSource.PICK_ONE->repo.getById(context.getSharedPreferences(PREFS,0).getString(PICK,"")?:"");WidgetSource.DAILY->null} ?: repo.getAll().filter{it.id!=""}.let{if(it.isEmpty())repo.affirmationOfTheDay else it[LocalDate.now().dayOfYear%it.size]}}
+    fun affirmation(context:Context):Affirmation {
+        val repo=AffirmationRepository
+        val specific = when(source(context)){
+            WidgetSource.KEPT->repo.getSaved().firstOrNull()
+            WidgetSource.PICK_ONE->repo.getById(context.getSharedPreferences(PREFS,0).getString(PICK,"")?:"")
+            WidgetSource.DAILY->null
+        }
+        if (specific != null) return specific
+        val pool = repo.getAll().filter{it.id!=""}.ifEmpty { listOf(repo.affirmationOfTheDay) }
+        return com.makarios.app.data.OnboardingStore.getWeightedAffirmation(context, pool, kotlin.random.Random(LocalDate.now().dayOfYear))
+    }
 }
 
-private abstract class MakariosWidget(private val size:WidgetSize):GlanceAppWidget(){
+abstract class MakariosWidget(private val size:WidgetSize):GlanceAppWidget(){
     override suspend fun provideGlance(context:Context,id:GlanceId){
         val dp=when(size){WidgetSize.SMALL->DpSize(163.dp,163.dp);WidgetSize.MEDIUM->DpSize(342.dp,163.dp);WidgetSize.LARGE->DpSize(342.dp,342.dp)}
         val density=context.resources.displayMetrics.density
@@ -72,6 +83,3 @@ class MakariosMediumReceiver:GlanceAppWidgetReceiver(){override val glanceAppWid
 class MakariosLargeReceiver:GlanceAppWidgetReceiver(){override val glanceAppWidget=MakariosLargeWidget()}
 
 class ShuffleActionCallback:androidx.glance.appwidget.action.ActionCallback{override suspend fun onAction(context:Context,glanceId:GlanceId,parameters:androidx.glance.action.ActionParameters){WidgetHelper.shuffleWidget(context)}}
-
-
-

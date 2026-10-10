@@ -80,21 +80,23 @@ fun MainAppScaffold(initialAffirmationId: String? = null) {
     var activeAffirmationIdForCreate by remember { mutableStateOf<String?>(null) }
     var showWallpaper by remember { mutableStateOf(false) }
     var showOnboarding by remember {
-        mutableStateOf(!prefs.getBoolean("onboarding_completed", false))
+        mutableStateOf(
+            !com.makarios.app.data.OnboardingStore.isOnboardingDone(context) &&
+            !(com.makarios.app.data.AuthManager.isLoggedIn && !com.makarios.app.data.AuthManager.isAnonymous)
+        )
     }
 
     // If Onboarding is opened
     if (showOnboarding) {
         BackHandler {
-            prefs.edit().putBoolean("onboarding_completed", true).apply()
+            com.makarios.app.data.OnboardingStore.setOnboardingDone(context, true)
             showOnboarding = false
         }
         OnboardingScreen(
             onComplete = {
-                prefs.edit().putBoolean("onboarding_completed", true).apply()
+                com.makarios.app.data.OnboardingStore.setOnboardingDone(context, true)
                 showOnboarding = false
-            },
-            onOpenWallpapers = { showWallpaper = true }
+            }
         )
         return
     }
@@ -191,6 +193,7 @@ fun MainAppScaffold(initialAffirmationId: String? = null) {
                     // Sign out callbacks if any
                 },
                 onOpenWallpapers = { showWallpaper = true },
+                onResetOnboarding = { showOnboarding = true },
                 modifier = Modifier.padding(innerPadding)
             )
         }

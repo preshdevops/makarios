@@ -1,4 +1,4 @@
-﻿package com.makarios.app.ui.theme
+package com.makarios.app.ui.theme
 
 import android.graphics.Bitmap
 import androidx.compose.foundation.layout.Box
@@ -17,12 +17,12 @@ import kotlin.math.sin
 import kotlin.random.Random
 
  data class HorizonSpec(val far:Float=.72f,val mid:Float=.80f,val front:Float=.88f)
-private val grainTile by lazy { Bitmap.createBitmap(256,256,Bitmap.Config.ARGB_8888).apply { val p=IntArray(256*256); val r=Random(0x4D414B); for(i in p.indices){val n=r.nextInt(256);p[i]=Color.argb(n,n,n,n).toArgb()}; setPixels(p,0,256,0,0,256,256) }.asImageBitmap() }
+private val grainTile by lazy { Bitmap.createBitmap(256,256,Bitmap.Config.ARGB_8888).apply { val p=IntArray(256*256); val r=Random(0x4D414B); for(i in p.indices){val n=r.nextInt(256);p[i]=android.graphics.Color.argb(n,n,n,n)}; setPixels(p,0,256,0,0,256,256) }.asImageBitmap() }
 
 fun DrawScope.drawLight(light:Light,size:Size=this.size,horizon:HorizonSpec=HorizonSpec(),discPos:Offset?=null,discScale:Float=1f,grain:Boolean=true) {
  drawRect(Brush.verticalGradient(listOf(light.top,light.bottom),0f,size.height),size=size)
  val p=discPos?:Offset(size.width*light.discX,size.height*light.discY); val r=light.discR*discScale
- drawCircle(Brush.radialGradient(listOf(light.glow.copy(alpha=.55f),light.glow.copy(alpha=0f)),r*4f,p),r*4f,p); drawCircle(light.disc.copy(alpha=light.discAlpha),r,p)
+ drawCircle(Brush.radialGradient(colors = listOf(light.glow.copy(alpha=.55f),light.glow.copy(alpha=0f)), center = p, radius = r*4f),r*4f,p); drawCircle(light.disc.copy(alpha=light.discAlpha),r,p)
  if(light==Light.Night){val n=(size.width*size.height/9000f).toInt();val q=Random(8);repeat(n){drawCircle(Color.White.copy(alpha=.35f+q.nextFloat()*.35f),.7f+q.nextFloat()*.5f,Offset(q.nextFloat()*size.width,size.height*(.45f+q.nextFloat()*(horizon.far-.45f))))}}
  ridge(light.ridge1,size,size.height*horizon.far,size.height*.018f,3);ridge(light.ridge2,size,size.height*horizon.mid,size.height*.0162f,5);ridge(light.bottom,size,size.height*horizon.front,size.height*.0126f,9)
  if(grain)drawIntoCanvas{c->c.drawRect(0f,0f,size.width,size.height,Paint().apply{shader=ImageShader(grainTile,TileMode.Repeated,TileMode.Repeated);alpha=.07f;blendMode=if(light.isLight)BlendMode.Multiply else BlendMode.Screen})}
@@ -30,7 +30,7 @@ fun DrawScope.drawLight(light:Light,size:Size=this.size,horizon:HorizonSpec=Hori
 private fun DrawScope.ridge(color:Color,s:Size,y0:Float,amp:Float,seed:Int){val r=Random(seed);val p=(0..6).map{i->Offset(s.width*i/6f,y0+amp*sin(i*1.3f+seed)+(r.nextFloat()-.5f)*.8f*amp)};val path=Path().apply{moveTo(0f,s.height);lineTo(p[0].x,p[0].y);for(i in 0 until 6){val m=Offset((p[i].x+p[i+1].x)/2,(p[i].y+p[i+1].y)/2);quadraticBezierTo(p[i].x,p[i].y,m.x,m.y)};lineTo(p.last().x,p.last().y);lineTo(s.width,s.height);close()};drawPath(path,color)}
 
 fun renderLightBitmap(light:Light,widthPx:Int,heightPx:Int,content:DrawScope.()->Unit={}):Bitmap { require(widthPx>0&&heightPx>0);val b=Bitmap.createBitmap(widthPx,heightPx,Bitmap.Config.ARGB_8888);CanvasDrawScope().draw(Density(1f),LayoutDirection.Ltr,Canvas(android.graphics.Canvas(b)),Size(widthPx.toFloat(),heightPx.toFloat())){drawLight(light);content()};return b }
-@Composable fun LightBackground(light:Light,modifier:Modifier=Modifier,content:@Composable()->Unit={}){Box(modifier.drawBehind{drawLight(light)}){content()}}
+@Composable fun LightBackground(light: Light, modifier: Modifier = Modifier, content: @Composable () -> Unit = {}) { Box(modifier.drawBehind { drawLight(light) }) { content() } }
 fun Modifier.lightBackground(light:Light)=drawBehind{drawLight(light)}
 
 /** Pixel-stable pairing renderer for share cards and other non-Compose surfaces. */

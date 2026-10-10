@@ -1,0 +1,488 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: /users/{userId}
+    // Document ID: Firebase Auth UID
+    // Fields:
+    //   - userId: string (required, 1..128 chars, immutable, matches auth.uid)
+    //   - displayName: string (required, 1..80 chars)
+    //   - username: string (required, 2..30 chars, alphanumeric + underscores/dots)
+    //   - email: string (optional, 0..120 chars, valid email format if non-empty)
+    //   - friendCode: string (required, 4..16 chars, e.g. MK-7A4B)
+    //   - photoUrl: string | null (optional, valid http/https URL, max 500 chars)
+    //   - bio: string (optional, max 300 chars)
+    //   - createdAt: int | number | timestamp (required, positive, immutable on update)
+    //
+    // Subcollection: /users/{userId}/declarations/{declarationId}
+    // Document ID: Unique declaration identifier
+    // Fields:
+    //   - id: string (optional, 1..128 chars, matches declarationId if present)
+    //   - declaration: string (required, 1..1000 chars)
+    //   - shortText: string (optional, max 200 chars)
+    //   - scriptureText: string (optional, max 2000 chars)
+    //   - reference: string (optional, max 100 chars)
+    //   - context: string (optional, max 500 chars)
+    //   - category: string (optional, max 50 chars)
+    //   - tone: string (optional, max 30 chars, e.g. STILL, RESOLUTE, GENTLE)
+    //   - imageUrl: string (optional, max 500 chars)
+    //   - isFavorite: bool (optional)
+    //   - personalDeclaration: string | null (optional, max 1000 chars)
+    //   - createdAt: int | number | timestamp (optional, positive, immutable on update)
+    //   - updatedAt: int | number | timestamp (optional, positive)
+    //   - userId: string (optional, matches auth.uid if present)
+    //
+    // Subcollection: /users/{userId}/kept/{keptId}
+    // Document ID: Unique kept affirmation identifier
+    // Fields:
+    //   - id: string (optional, 1..128 chars, matches keptId if present)
+    //   - affirmationId: string (optional, max 128 chars)
+    //   - declaration: string (optional, max 1000 chars)
+    //   - shortText: string (optional, max 200 chars)
+    //   - scriptureText: string (optional, max 2000 chars)
+    //   - reference: string (optional, max 100 chars)
+    //   - context: string (optional, max 500 chars)
+    //   - category: string (optional, max 50 chars)
+    //   - tone: string (optional, max 30 chars)
+    //   - imageUrl: string (optional, max 500 chars)
+    //   - isFavorite: bool (optional)
+    //   - kept: bool (optional)
+    //   - personalDeclaration: string | null (optional, max 1000 chars)
+    //   - savedAt: int | number | timestamp (optional, positive)
+    //   - createdAt: int | number | timestamp (optional, positive)
+    //   - updatedAt: int | number | timestamp (optional, positive)
+    //   - userId: string (optional, matches auth.uid if present)
+    //
+    // Subcollection: /users/{userId}/settings/{settingId}
+    // Document ID: Setting group identifier (e.g. widget, reader, reminders)
+    // Fields:
+    //   - id / settingId / key: string (optional, max 64 chars)
+    //   - light / source / translation / theme: string (optional, max 32 chars)
+    //   - pickId: string (optional, max 128 chars)
+    //   - fontSize: number (optional, 8..48)
+    //   - highlights: list of strings (optional, max 500 items)
+    //   - morningEnabled / eveningEnabled / silent / completed: bool (optional)
+    //   - morningTime / eveningTime: string (optional, max 10 chars)
+    //   - focusAreas: list of strings (optional, max 20 items)
+    //   - value: string | number | bool | list | map (optional)
+    //   - updatedAt: int | number | timestamp (optional, positive)
+    //   - userId: string (optional, matches auth.uid if present)
+    //
+    // Subcollection: /users/{userId}/friends/{friendId}
+    // Document ID: User ID of the connected friend
+    // Fields:
+    //   - UserProfile representation of friend (userId, displayName, username, friendCode, etc.)
+    //
+    // Collection: /public_declarations/{declarationId}
+    // Document ID: Unique declaration UUID
+    // Fields:
+    //   - id: string (required, 1..128 chars, matches declarationId)
+    //   - authorId: string (required, 1..128 chars, matches auth.uid on create, immutable)
+    //   - authorName: string (required, 1..80 chars)
+    //   - authorUsername: string (optional, max 40 chars)
+    //   - declaration: string (required, 1..1000 chars)
+    //   - scriptureText: string (optional, max 2000 chars)
+    //   - reference: string (optional, max 100 chars)
+    //   - category: string (required, 1..50 chars)
+    //   - imageUrl: string | null (optional, max 500 chars)
+    //   - amenCount: int (required, >= 0)
+    //   - amenedBy: list of strings (required, max 5000 items)
+    //   - saveCount: int (optional, >= 0)
+    //   - createdAt: int | number | timestamp (required, positive, immutable on update)
+    //
+    // ===============================================================
+
+    // Default deny all access at root
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // ===============================================================
+    // Core Helper Functions
+    // ===============================================================
+
+    // Check if the request is from an authenticated user
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Check if the authenticated user owns this resource path
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Check if value is a valid timestamp or epoch millisecond count
+    function isValidTimestampOrEpoch(val) {
+      return (val is int && val > 0) ||
+             (val is number && val > 0) ||
+             (val is timestamp);
+    }
+
+    // Validate optional email string format
+    function isValidOptionalEmail(data) {
+      return !('email' in data) ||
+        data.email == '' ||
+        (data.email is string &&
+         data.email.size() <= 120 &&
+         data.email.matches('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$'));
+    }
+
+    // Validate optional http/https URL format
+    function isValidOptionalUrl(data, field) {
+      return !(field in data) ||
+        data[field] == null ||
+        (data[field] is string &&
+         data[field].size() <= 500 &&
+         (data[field].matches('^https://.*') || data[field].matches('^http://.*')));
+    }
+
+    // Validate optional bio string length
+    function isValidOptionalBio(data) {
+      return !('bio' in data) ||
+        (data.bio is string && data.bio.size() <= 300);
+    }
+
+    // ===============================================================
+    // Domain Validator: User Profile
+    // ===============================================================
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['userId', 'displayName', 'username', 'friendCode', 'createdAt']) &&
+        data.keys().hasOnly(['userId', 'displayName', 'username', 'email', 'friendCode', 'photoUrl', 'bio', 'createdAt']) &&
+        data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128 &&
+        data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 80 &&
+        data.username is string && data.username.size() >= 2 && data.username.size() <= 30 &&
+        data.username.matches('^[a-zA-Z0-9_.]+$') &&
+        data.friendCode is string && data.friendCode.size() >= 4 && data.friendCode.size() <= 16 &&
+        isValidTimestampOrEpoch(data.createdAt) &&
+        isValidOptionalEmail(data) &&
+        isValidOptionalUrl(data, 'photoUrl') &&
+        isValidOptionalBio(data);
+    }
+
+    function areUserImmutableFieldsUnchanged() {
+      return request.resource.data.userId == resource.data.userId &&
+        (!('createdAt' in resource.data) || request.resource.data.createdAt == resource.data.createdAt);
+    }
+
+    // ===============================================================
+    // Domain Validator: Friend Connection Profile
+    // ===============================================================
+
+    function isValidFriendProfile(data, friendId) {
+      return data.keys().hasAll(['userId', 'displayName', 'username', 'friendCode']) &&
+        data.keys().hasOnly(['userId', 'displayName', 'username', 'email', 'friendCode', 'photoUrl', 'bio', 'createdAt']) &&
+        data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128 &&
+        (data.userId == friendId || data.userId == request.auth.uid) &&
+        data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 80 &&
+        data.username is string && data.username.size() >= 2 && data.username.size() <= 30 &&
+        data.friendCode is string && data.friendCode.size() >= 4 && data.friendCode.size() <= 16 &&
+        isValidOptionalEmail(data) &&
+        isValidOptionalUrl(data, 'photoUrl') &&
+        isValidOptionalBio(data) &&
+        (!('createdAt' in data) || isValidTimestampOrEpoch(data.createdAt));
+    }
+
+    // ===============================================================
+    // Domain Validator: Personal Declarations (Device Sync)
+    // ===============================================================
+
+    function isValidPersonalDeclaration(data, declarationId) {
+      return data.keys().hasAll(['declaration']) &&
+        data.keys().hasOnly([
+          'id', 'declaration', 'shortText', 'scriptureText', 'reference',
+          'context', 'category', 'tone', 'imageUrl', 'isFavorite',
+          'personalDeclaration', 'createdAt', 'updatedAt', 'userId'
+        ]) &&
+        (!('id' in data) || (data.id is string && data.id.size() <= 128 && data.id == declarationId)) &&
+        data.declaration is string && data.declaration.size() >= 1 && data.declaration.size() <= 1000 &&
+        (!('shortText' in data) || (data.shortText is string && data.shortText.size() <= 200)) &&
+        (!('scriptureText' in data) || (data.scriptureText is string && data.scriptureText.size() <= 2000)) &&
+        (!('reference' in data) || (data.reference is string && data.reference.size() <= 100)) &&
+        (!('context' in data) || (data.context is string && data.context.size() <= 500)) &&
+        (!('category' in data) || (data.category is string && data.category.size() <= 50)) &&
+        (!('tone' in data) || (data.tone is string && data.tone.size() <= 30)) &&
+        (!('imageUrl' in data) || (data.imageUrl is string && data.imageUrl.size() <= 500)) &&
+        (!('isFavorite' in data) || (data.isFavorite is bool)) &&
+        (!('personalDeclaration' in data) || data.personalDeclaration == null || (data.personalDeclaration is string && data.personalDeclaration.size() <= 1000)) &&
+        (!('userId' in data) || (data.userId is string && data.userId == request.auth.uid)) &&
+        (!('createdAt' in data) || isValidTimestampOrEpoch(data.createdAt)) &&
+        (!('updatedAt' in data) || isValidTimestampOrEpoch(data.updatedAt));
+    }
+
+    function areDeclarationImmutableFieldsUnchanged() {
+      return (!('createdAt' in resource.data) || !('createdAt' in request.resource.data) || request.resource.data.createdAt == resource.data.createdAt) &&
+        (!('userId' in resource.data) || !('userId' in request.resource.data) || request.resource.data.userId == resource.data.userId) &&
+        (!('id' in resource.data) || !('id' in request.resource.data) || request.resource.data.id == resource.data.id);
+    }
+
+    // ===============================================================
+    // Domain Validator: Kept / Saved Affirmations
+    // ===============================================================
+
+    function isValidKeptItem(data, keptId) {
+      return data.keys().hasOnly([
+          'id', 'affirmationId', 'declaration', 'shortText', 'scriptureText',
+          'reference', 'context', 'category', 'tone', 'imageUrl', 'isFavorite',
+          'personalDeclaration', 'savedAt', 'createdAt', 'updatedAt', 'userId', 'kept'
+        ]) &&
+        (!('id' in data) || (data.id is string && data.id.size() <= 128 && data.id == keptId)) &&
+        (!('affirmationId' in data) || (data.affirmationId is string && data.affirmationId.size() <= 128)) &&
+        (!('declaration' in data) || (data.declaration is string && data.declaration.size() <= 1000)) &&
+        (!('shortText' in data) || (data.shortText is string && data.shortText.size() <= 200)) &&
+        (!('scriptureText' in data) || (data.scriptureText is string && data.scriptureText.size() <= 2000)) &&
+        (!('reference' in data) || (data.reference is string && data.reference.size() <= 100)) &&
+        (!('context' in data) || (data.context is string && data.context.size() <= 500)) &&
+        (!('category' in data) || (data.category is string && data.category.size() <= 50)) &&
+        (!('tone' in data) || (data.tone is string && data.tone.size() <= 30)) &&
+        (!('imageUrl' in data) || (data.imageUrl is string && data.imageUrl.size() <= 500)) &&
+        (!('isFavorite' in data) || (data.isFavorite is bool)) &&
+        (!('kept' in data) || (data.kept is bool)) &&
+        (!('personalDeclaration' in data) || data.personalDeclaration == null || (data.personalDeclaration is string && data.personalDeclaration.size() <= 1000)) &&
+        (!('userId' in data) || (data.userId is string && data.userId == request.auth.uid)) &&
+        (!('savedAt' in data) || isValidTimestampOrEpoch(data.savedAt)) &&
+        (!('createdAt' in data) || isValidTimestampOrEpoch(data.createdAt)) &&
+        (!('updatedAt' in data) || isValidTimestampOrEpoch(data.updatedAt));
+    }
+
+    function areKeptImmutableFieldsUnchanged() {
+      return (!('createdAt' in resource.data) || !('createdAt' in request.resource.data) || request.resource.data.createdAt == resource.data.createdAt) &&
+        (!('savedAt' in resource.data) || !('savedAt' in request.resource.data) || request.resource.data.savedAt == resource.data.savedAt) &&
+        (!('id' in resource.data) || !('id' in request.resource.data) || request.resource.data.id == resource.data.id);
+    }
+
+    // ===============================================================
+    // Domain Validator: App Settings Sync
+    // ===============================================================
+
+    function isValidSetting(data) {
+      return data.keys().size() <= 30 &&
+        data.keys().hasOnly([
+          'id', 'settingId', 'key', 'value', 'light', 'source', 'pickId',
+          'translation', 'fontSize', 'theme', 'highlights', 'morningEnabled',
+          'morningTime', 'eveningEnabled', 'eveningTime', 'silent', 'focusAreas',
+          'completed', 'updatedAt', 'userId'
+        ]) &&
+        (!('id' in data) || (data.id is string && data.id.size() <= 64)) &&
+        (!('settingId' in data) || (data.settingId is string && data.settingId.size() <= 64)) &&
+        (!('key' in data) || (data.key is string && data.key.size() <= 64)) &&
+        (!('light' in data) || (data.light is string && data.light.size() <= 32)) &&
+        (!('source' in data) || (data.source is string && data.source.size() <= 32)) &&
+        (!('pickId' in data) || (data.pickId is string && data.pickId.size() <= 128)) &&
+        (!('translation' in data) || (data.translation is string && data.translation.size() <= 32)) &&
+        (!('fontSize' in data) || (data.fontSize is number && data.fontSize >= 8 && data.fontSize <= 48)) &&
+        (!('theme' in data) || (data.theme is string && data.theme.size() <= 32)) &&
+        (!('highlights' in data) || (data.highlights is list && data.highlights.size() <= 500)) &&
+        (!('morningEnabled' in data) || (data.morningEnabled is bool)) &&
+        (!('morningTime' in data) || (data.morningTime is string && data.morningTime.size() <= 10)) &&
+        (!('eveningEnabled' in data) || (data.eveningEnabled is bool)) &&
+        (!('eveningTime' in data) || (data.eveningTime is string && data.eveningTime.size() <= 10)) &&
+        (!('silent' in data) || (data.silent is bool)) &&
+        (!('focusAreas' in data) || (data.focusAreas is list && data.focusAreas.size() <= 20)) &&
+        (!('completed' in data) || (data.completed is bool)) &&
+        (!('userId' in data) || (data.userId is string && data.userId == request.auth.uid)) &&
+        (!('updatedAt' in data) || isValidTimestampOrEpoch(data.updatedAt));
+    }
+
+    // ===============================================================
+    // Domain Validator: Public Community Declarations
+    // ===============================================================
+
+    function isValidPublicDeclaration(data) {
+      return data.keys().hasAll([
+          'id', 'authorId', 'authorName', 'declaration',
+          'category', 'amenCount', 'amenedBy', 'createdAt'
+        ]) &&
+        data.keys().hasOnly([
+          'id', 'authorId', 'authorName', 'authorUsername', 'declaration',
+          'scriptureText', 'reference', 'category', 'imageUrl',
+          'amenCount', 'amenedBy', 'saveCount', 'createdAt'
+        ]) &&
+        data.id is string && data.id.size() >= 1 && data.id.size() <= 128 &&
+        data.authorId is string && data.authorId.size() >= 1 && data.authorId.size() <= 128 &&
+        data.authorName is string && data.authorName.size() >= 1 && data.authorName.size() <= 80 &&
+        (!('authorUsername' in data) || (data.authorUsername is string && data.authorUsername.size() <= 40)) &&
+        data.declaration is string && data.declaration.size() >= 1 && data.declaration.size() <= 1000 &&
+        (!('scriptureText' in data) || (data.scriptureText is string && data.scriptureText.size() <= 2000)) &&
+        (!('reference' in data) || (data.reference is string && data.reference.size() <= 100)) &&
+        data.category is string && data.category.size() >= 1 && data.category.size() <= 50 &&
+        isValidOptionalUrl(data, 'imageUrl') &&
+        data.amenCount is int && data.amenCount >= 0 &&
+        data.amenedBy is list && data.amenedBy.size() <= 5000 &&
+        (!('saveCount' in data) || (data.saveCount is int && data.saveCount >= 0)) &&
+        isValidTimestampOrEpoch(data.createdAt);
+    }
+
+    // Validates isolated atomic interactions (Amen reaction toggle and bookmark counters)
+    function isValidPublicDeclarationInteraction() {
+      return (
+        // Case A: Amen reaction toggle
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['amenCount', 'amenedBy']) &&
+        request.resource.data.amenCount is int &&
+        request.resource.data.amenCount >= 0 &&
+        request.resource.data.amenedBy is list &&
+        request.resource.data.amenedBy.size() <= 5000 &&
+        (
+          // Increment Amen: add caller to amenedBy
+          (
+            request.resource.data.amenCount == resource.data.amenCount + 1 &&
+            request.resource.data.amenedBy.size() == resource.data.amenedBy.size() + 1 &&
+            request.auth.uid in request.resource.data.amenedBy &&
+            !(request.auth.uid in resource.data.amenedBy)
+          ) ||
+          // Decrement Amen: remove caller from amenedBy
+          (
+            request.resource.data.amenCount == resource.data.amenCount - 1 &&
+            request.resource.data.amenedBy.size() == resource.data.amenedBy.size() - 1 &&
+            !(request.auth.uid in request.resource.data.amenedBy) &&
+            request.auth.uid in resource.data.amenedBy
+          )
+        )
+      ) || (
+        // Case B: Save bookmark counter update
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['saveCount']) &&
+        request.resource.data.saveCount is int &&
+        request.resource.data.saveCount >= 0 &&
+        (
+          request.resource.data.saveCount == resource.data.saveCount + 1 ||
+          request.resource.data.saveCount == resource.data.saveCount - 1
+        )
+      );
+    }
+
+    // ===============================================================
+    // Rules: Users & User-Scoped Subcollections
+    // ===============================================================
+
+    match /users/{userId} {
+      // User Profile Document
+      // Read access: Authenticated users can read profiles to support friend discovery
+      // by username, friend code, or email.
+      allow get: if isAuthenticated();
+      allow list: if isAuthenticated();
+
+      // Write access: Only the document owner can write their own profile
+      allow create: if isOwner(userId) &&
+        request.resource.data.userId == request.auth.uid &&
+        isValidUser(request.resource.data);
+
+      allow update: if isOwner(userId) &&
+        isValidUser(request.resource.data) &&
+        areUserImmutableFieldsUnchanged();
+
+      allow delete: if isOwner(userId);
+
+      // ─────────────────────────────────────────────────────────────
+      // Subcollection: Personal Declarations (Device Sync)
+      // Strictly private to the document owner
+      // ─────────────────────────────────────────────────────────────
+      match /declarations/{declarationId} {
+        allow read: if isOwner(userId);
+
+        allow create: if isOwner(userId) &&
+          isValidPersonalDeclaration(request.resource.data, declarationId);
+
+        allow update: if isOwner(userId) &&
+          isValidPersonalDeclaration(request.resource.data, declarationId) &&
+          areDeclarationImmutableFieldsUnchanged();
+
+        allow delete: if isOwner(userId);
+      }
+
+      // ─────────────────────────────────────────────────────────────
+      // Subcollection: Kept / Saved Affirmations
+      // Strictly private to the document owner
+      // ─────────────────────────────────────────────────────────────
+      match /kept/{keptId} {
+        allow read: if isOwner(userId);
+
+        allow create: if isOwner(userId) &&
+          isValidKeptItem(request.resource.data, keptId);
+
+        allow update: if isOwner(userId) &&
+          isValidKeptItem(request.resource.data, keptId) &&
+          areKeptImmutableFieldsUnchanged();
+
+        allow delete: if isOwner(userId);
+      }
+
+      // ─────────────────────────────────────────────────────────────
+      // Subcollection: Synced App Settings
+      // Strictly private to the document owner
+      // ─────────────────────────────────────────────────────────────
+      match /settings/{settingId} {
+        allow read: if isOwner(userId);
+
+        allow create: if isOwner(userId) &&
+          isValidSetting(request.resource.data);
+
+        allow update: if isOwner(userId) &&
+          isValidSetting(request.resource.data);
+
+        allow delete: if isOwner(userId);
+      }
+
+      // ─────────────────────────────────────────────────────────────
+      // Subcollection: Friends List
+      // Owner can read their friends list.
+      // Owner can add friends.
+      // Reciprocal friendship writing is supported when friendId matches auth.uid.
+      // ─────────────────────────────────────────────────────────────
+      match /friends/{friendId} {
+        allow read: if isOwner(userId);
+
+        allow create: if isAuthenticated() &&
+          isValidFriendProfile(request.resource.data, friendId) &&
+          (isOwner(userId) || (friendId == request.auth.uid && request.resource.data.userId == request.auth.uid));
+
+        allow update: if isAuthenticated() &&
+          isValidFriendProfile(request.resource.data, friendId) &&
+          (isOwner(userId) || (friendId == request.auth.uid && request.resource.data.userId == request.auth.uid));
+
+        allow delete: if isAuthenticated() &&
+          (isOwner(userId) || friendId == request.auth.uid);
+      }
+    }
+
+    // ===============================================================
+    // Rules: Public Community Declarations
+    // ===============================================================
+
+    match /public_declarations/{declarationId} {
+      // Community declarations shared publicly are readable by all users
+      allow read: if true;
+
+      // Only the authenticated author can create a new declaration
+      allow create: if isAuthenticated() &&
+        request.resource.data.authorId == request.auth.uid &&
+        request.resource.data.id == declarationId &&
+        request.resource.data.amenCount == 0 &&
+        request.resource.data.amenedBy.size() == 0 &&
+        isValidPublicDeclaration(request.resource.data);
+
+      // Updates: Either the author edits declaration content, or community members toggle reactions
+      allow update: if isAuthenticated() && (
+        // Author editing content
+        (
+          resource.data.authorId == request.auth.uid &&
+          request.resource.data.authorId == resource.data.authorId &&
+          request.resource.data.id == resource.data.id &&
+          request.resource.data.createdAt == resource.data.createdAt &&
+          isValidPublicDeclaration(request.resource.data)
+        ) ||
+        // Atomic community interactions (Amen toggle or save counter)
+        (
+          isValidPublicDeclarationInteraction()
+        )
+      );
+
+      // Only the authenticated author can delete their declaration
+      allow delete: if isAuthenticated() &&
+        resource.data.authorId == request.auth.uid;
+    }
+  }
+}

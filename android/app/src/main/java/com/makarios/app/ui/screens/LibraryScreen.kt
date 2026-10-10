@@ -41,7 +41,7 @@ fun ExploreScreen(onNavigateToTopic: (String, Light) -> Unit = { _, _ -> }, onNa
             BasicTextField(query, { query = it }, Modifier.weight(1f), singleLine = true, textStyle = MakariosTypography.bodyMedium.copy(color = Ink), decorationBox = { field -> if (query.isEmpty()) Text("Search promises and scriptures", color = Ink.copy(alpha = .5f)); field() })
         }
         Spacer(Modifier.height(20.dp))
-        LazyColumn(contentPadding = PaddingValues(horizontal = 24.dp, bottom = 100.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) { items(bands, key = { it.name }) { topic ->
+        LazyColumn(contentPadding = PaddingValues(start = 24.dp, end = 24.dp, bottom = 100.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) { items(bands, key = { it.name }) { topic ->
             val count = all.count { it.category.equals(topic.searchCategory, true) }
             Box(Modifier.fillMaxWidth().height(112.dp).clip(RoundedCornerShape(20.dp)).drawBehind { drawLight(topic.light, size, horizon = HorizonSpec(.72f, .80f, .88f)) }.clickable { onNavigateToTopic(topic.name, topic.light) }.padding(16.dp)) {
                 Text(topic.name, color = topic.light.text, style = MakariosTypography.displaySmall)

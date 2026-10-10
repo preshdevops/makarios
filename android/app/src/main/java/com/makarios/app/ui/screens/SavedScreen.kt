@@ -29,7 +29,7 @@ fun SavedScreen(onNavigateToCreate: () -> Unit = {}, modifier: Modifier = Modifi
         Text("Kept", style = MakariosTypography.displayLarge, color = Ink, modifier = Modifier.padding(horizontal = 24.dp))
         Row(Modifier.padding(horizontal = 24.dp, vertical = 20.dp), horizontalArrangement = Arrangement.spacedBy(24.dp)) { KeptTab("Declarations", saved.size, tab == "Declarations") { tab = "Declarations" }; KeptTab("Mine", mine.size, tab == "Mine") { tab = "Mine" } }
         if (list.isEmpty()) Text(if (tab == "Mine") "Your written declarations will appear here." else "Nothing kept yet.", color = Ink.copy(alpha = .65f), modifier = Modifier.padding(32.dp))
-        else LazyColumn(contentPadding = PaddingValues(horizontal = 24.dp, bottom = 100.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) { items(list, key = { it.id }) { KeptCard(it, lightFor(it), context) } }
+        else LazyColumn(contentPadding = PaddingValues(start = 24.dp, end = 24.dp, bottom = 100.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) { items(list, key = { it.id }) { KeptCard(it, lightFor(it), context) } }
     }
 }
 private fun lightFor(affirmation: Affirmation): Light = TopicBands.firstOrNull { it.name.equals(affirmation.category, true) }?.light ?: Light.Grove
