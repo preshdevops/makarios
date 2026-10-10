@@ -13,13 +13,26 @@ package com.makarios.app.data
 object ScriptureDatabase {
 
     val verses: List<ScriptureVerse> = listOf(
-
-        // ╔══════════════════════════════════════════════════════════╗
-        // ║  PEACE  (~15 verses)                                    ║
-        // ╚══════════════════════════════════════════════════════════╝
+        ScriptureVerse(
+            reference = "Deuteronomy 28:13",
+            text = "The Lord will make you the head, not the tail. You will always be at the top, never at the bottom.",
+            themes = setOf("identity", "provision", "strength"),
+            toneAffinity = AffirmationTone.RESOLUTE,
+            keywords = setOf("head", "tail", "above", "top", "blessing", "lead", "success")
+        ),
+        ScriptureVerse(
+            reference = "1 John 1:9",
+            text = "If we confess our sins, he is faithful and just and will forgive us our sins and purify us from all unrighteousness.",
+            themes = setOf("forgiveness", "identity", "hope"),
+            toneAffinity = AffirmationTone.GENTLE,
+            keywords = setOf("forgive", "confess", "sin", "clean", "shame", "purify", "free")
+        ),
+        // â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—
+        // â•‘  PEACE  (~15 verses)                                    â•‘
+        // â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
         ScriptureVerse(
-            reference = "Philippians 4:6–7",
+            reference = "Philippians 4:6â€“7",
             text = "Do not be anxious about anything, but in every situation, by prayer and petition, with thanksgiving, present your requests to God. And the peace of God, which transcends all understanding, will guard your hearts and your minds in Christ Jesus.",
             themes = setOf("peace", "anxiety"),
             toneAffinity = AffirmationTone.STILL,
@@ -54,21 +67,21 @@ object ScriptureDatabase {
             keywords = setOf("peace", "sleep", "rest", "safety", "safe", "night", "calm", "lie", "dwell", "quiet", "insomnia", "exhausted", "tired")
         ),
         ScriptureVerse(
-            reference = "Matthew 11:28–30",
+            reference = "Matthew 11:28â€“30",
             text = "Come to me, all you who are weary and burdened, and I will give you rest. Take my yoke upon you and learn from me, for I am gentle and humble in heart, and you will find rest for your souls.",
             themes = setOf("peace", "strength"),
             toneAffinity = AffirmationTone.GENTLE,
             keywords = setOf("weary", "burdened", "rest", "tired", "exhausted", "heavy", "load", "gentle", "humble", "soul", "burnout", "overwhelm", "carry", "weight")
         ),
         ScriptureVerse(
-            reference = "Psalm 23:1–3",
+            reference = "Psalm 23:1â€“3",
             text = "The Lord is my shepherd, I lack nothing. He makes me lie down in green pastures, he leads me beside quiet waters, he refreshes my soul.",
             themes = setOf("peace", "provision"),
             toneAffinity = AffirmationTone.STILL,
             keywords = setOf("shepherd", "lack", "green", "quiet", "waters", "refresh", "soul", "pasture", "lead", "rest", "provide", "enough", "sufficient", "content")
         ),
         ScriptureVerse(
-            reference = "Psalm 91:1–2",
+            reference = "Psalm 91:1â€“2",
             text = "Whoever dwells in the shelter of the Most High will rest in the shadow of the Almighty. I will say of the Lord, 'He is my refuge and my fortress, my God, in whom I trust.'",
             themes = setOf("peace", "trust"),
             toneAffinity = AffirmationTone.STILL,
@@ -110,16 +123,16 @@ object ScriptureDatabase {
             keywords = setOf("strength", "bless", "peace", "people", "give", "strong", "blessed")
         ),
         ScriptureVerse(
-            reference = "Numbers 6:24–26",
+            reference = "Numbers 6:24â€“26",
             text = "The Lord bless you and keep you; the Lord make his face shine on you and be gracious to you; the Lord turn his face toward you and give you peace.",
             themes = setOf("peace"),
             toneAffinity = AffirmationTone.GENTLE,
             keywords = setOf("bless", "keep", "shine", "gracious", "face", "peace", "favor", "grace", "blessing", "light")
         ),
 
-        // ╔══════════════════════════════════════════════════════════╗
-        // ║  STRENGTH  (~15 verses)                                 ║
-        // ╚══════════════════════════════════════════════════════════╝
+        // â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—
+        // â•‘  STRENGTH  (~15 verses)                                 â•‘
+        // â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
         ScriptureVerse(
             reference = "2 Corinthians 12:9",
@@ -185,7 +198,7 @@ object ScriptureDatabase {
             keywords = setOf("sovereign", "strength", "feet", "deer", "heights", "climb", "overcome", "rise", "ascend", "above", "victorious")
         ),
         ScriptureVerse(
-            reference = "Psalm 18:32–33",
+            reference = "Psalm 18:32â€“33",
             text = "It is God who arms me with strength and keeps my way secure. He makes my feet like the feet of a deer; he causes me to stand on the heights.",
             themes = setOf("strength", "confidence"),
             toneAffinity = AffirmationTone.RESOLUTE,
@@ -214,15 +227,15 @@ object ScriptureDatabase {
         ),
         ScriptureVerse(
             reference = "Psalm 27:1",
-            text = "The Lord is my light and my salvation — whom shall I fear? The Lord is the stronghold of my life — of whom shall I be afraid?",
+            text = "The Lord is my light and my salvation â€” whom shall I fear? The Lord is the stronghold of my life â€” of whom shall I be afraid?",
             themes = setOf("strength", "fear", "courage"),
             toneAffinity = AffirmationTone.RESOLUTE,
             keywords = setOf("light", "salvation", "fear", "stronghold", "afraid", "life", "safe", "defend", "protect", "refuge", "darkness")
         ),
 
-        // ╔══════════════════════════════════════════════════════════╗
-        // ║  IDENTITY  (~15 verses)                                 ║
-        // ╚══════════════════════════════════════════════════════════╝
+        // â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—
+        // â•‘  IDENTITY  (~15 verses)                                 â•‘
+        // â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
         ScriptureVerse(
             reference = "2 Corinthians 5:17",
@@ -295,7 +308,7 @@ object ScriptureDatabase {
             keywords = setOf("died", "life", "hidden", "christ", "god", "secure", "identity", "found", "rooted", "anchored", "established")
         ),
         ScriptureVerse(
-            reference = "Ephesians 1:4–5",
+            reference = "Ephesians 1:4â€“5",
             text = "For he chose us in him before the creation of the world to be holy and blameless in his sight. In love he predestined us for adoption to sonship through Jesus Christ.",
             themes = setOf("identity"),
             toneAffinity = AffirmationTone.GENTLE,
@@ -316,16 +329,16 @@ object ScriptureDatabase {
             keywords = setOf("fear", "redeemed", "name", "mine", "belong", "called", "known", "precious", "claimed", "owned", "loved", "valued")
         ),
         ScriptureVerse(
-            reference = "Psalm 139:1–3",
+            reference = "Psalm 139:1-3",
             text = "You have searched me, Lord, and you know me. You know when I sit and when I rise; you perceive my thoughts from afar. You discern my going out and my lying down; you are familiar with all my ways.",
             themes = setOf("identity"),
             toneAffinity = AffirmationTone.STILL,
             keywords = setOf("searched", "know", "known", "thoughts", "perceive", "familiar", "ways", "seen", "understood", "intimate", "close")
         ),
 
-        // ╔══════════════════════════════════════════════════════════╗
-        // ║  PURPOSE  (~12 verses)                                  ║
-        // ╚══════════════════════════════════════════════════════════╝
+        // â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—
+        // â•‘  PURPOSE  (~12 verses)                                  â•‘
+        // â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
         ScriptureVerse(
             reference = "Jeremiah 29:11",
@@ -335,7 +348,7 @@ object ScriptureDatabase {
             keywords = setOf("plans", "plan", "purpose", "prosper", "hope", "future", "destiny", "direction", "path", "way", "next", "season", "chapter", "calling")
         ),
         ScriptureVerse(
-            reference = "Proverbs 3:5–6",
+            reference = "Proverbs 3:5â€“6",
             text = "Trust in the Lord with all your heart and lean not on your own understanding; in all your ways submit to him, and he will make your paths straight.",
             themes = setOf("purpose", "trust"),
             toneAffinity = AffirmationTone.STILL,
@@ -378,7 +391,7 @@ object ScriptureDatabase {
         ),
         ScriptureVerse(
             reference = "Psalm 138:8",
-            text = "The Lord will vindicate me; your love, Lord, endures forever — do not abandon the works of your hands.",
+            text = "The Lord will vindicate me; your love, Lord, endures forever â€” do not abandon the works of your hands.",
             themes = setOf("purpose"),
             toneAffinity = AffirmationTone.RESOLUTE,
             keywords = setOf("vindicate", "love", "endure", "forever", "abandon", "hands", "works", "complete", "finish", "faithful", "fulfill")
@@ -398,7 +411,7 @@ object ScriptureDatabase {
             keywords = setOf("able", "immeasurably", "more", "ask", "imagine", "power", "work", "within", "beyond", "exceed", "dream", "vision", "impossible", "bigger")
         ),
         ScriptureVerse(
-            reference = "Isaiah 55:8–9",
+            reference = "Isaiah 55:8â€“9",
             text = "For my thoughts are not your thoughts, neither are your ways my ways, declares the Lord. As the heavens are higher than the earth, so are my ways higher than your ways and my thoughts than your thoughts.",
             themes = setOf("purpose", "trust"),
             toneAffinity = AffirmationTone.STILL,
@@ -412,9 +425,9 @@ object ScriptureDatabase {
             keywords = setOf("good", "require", "justly", "justice", "mercy", "humbly", "humble", "walk", "obey", "obedience", "righteous", "faithful")
         ),
 
-        // ╔══════════════════════════════════════════════════════════╗
-        // ║  COURAGE  (~12 verses)                                  ║
-        // ╚══════════════════════════════════════════════════════════╝
+        // â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—
+        // â•‘  COURAGE  (~12 verses)                                  â•‘
+        // â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
         ScriptureVerse(
             reference = "Joshua 1:9",
@@ -424,8 +437,8 @@ object ScriptureDatabase {
             keywords = setOf("strong", "courageous", "afraid", "discouraged", "bold", "brave", "go", "forward", "wherever", "command", "fear", "timid")
         ),
         ScriptureVerse(
-            reference = "Psalm 56:3–4",
-            text = "When I am afraid, I put my trust in you. In God, whose word I praise — in God I trust and am not afraid. What can mere mortals do to me?",
+            reference = "Psalm 56:3â€“4",
+            text = "When I am afraid, I put my trust in you. In God, whose word I praise â€” in God I trust and am not afraid. What can mere mortals do to me?",
             themes = setOf("courage", "trust"),
             toneAffinity = AffirmationTone.RESOLUTE,
             keywords = setOf("afraid", "trust", "praise", "mortals", "fear", "people", "man", "human", "opinion", "judgment", "rejection", "intimidate")
@@ -494,9 +507,9 @@ object ScriptureDatabase {
             keywords = setOf("fight", "battle", "stand", "firm", "deliverance", "deliver", "position", "watch", "see", "wait", "trust")
         ),
 
-        // ╔══════════════════════════════════════════════════════════╗
-        // ║  JOY  (~10 verses)                                      ║
-        // ╚══════════════════════════════════════════════════════════╝
+        // â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—
+        // â•‘  JOY  (~10 verses)                                      â•‘
+        // â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
         ScriptureVerse(
             reference = "Psalm 16:11",
@@ -506,7 +519,7 @@ object ScriptureDatabase {
             keywords = setOf("path", "life", "joy", "presence", "eternal", "pleasure", "fill", "full", "delight", "happy", "satisfied")
         ),
         ScriptureVerse(
-            reference = "James 1:2–3",
+            reference = "James 1:2â€“3",
             text = "Consider it pure joy, my brothers and sisters, whenever you face trials of many kinds, because you know that the testing of your faith produces perseverance.",
             themes = setOf("joy", "strength"),
             toneAffinity = AffirmationTone.RESOLUTE,
@@ -548,7 +561,7 @@ object ScriptureDatabase {
             keywords = setOf("joy", "complete", "full", "remain", "abide", "inside", "within", "whole", "satisfied", "content")
         ),
         ScriptureVerse(
-            reference = "Psalm 100:1–2",
+            reference = "Psalm 100:1â€“2",
             text = "Shout for joy to the Lord, all the earth. Worship the Lord with gladness; come before him with joyful songs.",
             themes = setOf("joy"),
             toneAffinity = AffirmationTone.RESOLUTE,
@@ -569,9 +582,9 @@ object ScriptureDatabase {
             keywords = setOf("beauty", "ashes", "joy", "mourning", "praise", "despair", "crown", "exchange", "replace", "instead", "new", "restore", "grief", "loss")
         ),
 
-        // ╔══════════════════════════════════════════════════════════╗
-        // ║  PROVISION  (~10 verses)                                ║
-        // ╚══════════════════════════════════════════════════════════╝
+        // â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—
+        // â•‘  PROVISION  (~10 verses)                                â•‘
+        // â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
         ScriptureVerse(
             reference = "Philippians 4:19",
@@ -581,7 +594,7 @@ object ScriptureDatabase {
             keywords = setOf("god", "meet", "needs", "need", "riches", "glory", "provide", "supply", "enough", "sufficient", "provision", "lack", "want", "money", "financial")
         ),
         ScriptureVerse(
-            reference = "Matthew 6:31–33",
+            reference = "Matthew 6:31â€“33",
             text = "So do not worry, saying, 'What shall we eat?' or 'What shall we drink?' or 'What shall we wear?' But seek first his kingdom and his righteousness, and all these things will be given to you as well.",
             themes = setOf("provision", "trust"),
             toneAffinity = AffirmationTone.STILL,
@@ -644,9 +657,9 @@ object ScriptureDatabase {
             keywords = setOf("blessing", "lord", "wealth", "toil", "painful", "easy", "prosper", "rich", "income", "earn", "labor", "work", "effortless")
         ),
 
-        // ╔══════════════════════════════════════════════════════════╗
-        // ║  CONFIDENCE  (~10 verses)                               ║
-        // ╚══════════════════════════════════════════════════════════╝
+        // â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—
+        // â•‘  CONFIDENCE  (~10 verses)                               â•‘
+        // â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
         ScriptureVerse(
             reference = "Hebrews 4:16",
@@ -670,7 +683,7 @@ object ScriptureDatabase {
             keywords = setOf("repentance", "rest", "salvation", "quietness", "trust", "strength", "quiet", "calm", "confident", "assurance", "secure")
         ),
         ScriptureVerse(
-            reference = "Psalm 62:5–6",
+            reference = "Psalm 62:5â€“6",
             text = "Yes, my soul, find rest in God; my hope comes from him. Truly he is my rock and my salvation; he is my fortress, I will not be shaken.",
             themes = setOf("confidence", "peace"),
             toneAffinity = AffirmationTone.RESOLUTE,
@@ -712,19 +725,19 @@ object ScriptureDatabase {
             keywords = setOf("fears", "lord", "secure", "fortress", "children", "refuge", "safe", "protect", "family", "legacy", "foundation")
         ),
 
-        // ╔══════════════════════════════════════════════════════════╗
-        // ║  RELATIONSHIPS  (~10 verses)                            ║
-        // ╚══════════════════════════════════════════════════════════╝
+        // â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—
+        // â•‘  RELATIONSHIPS  (~10 verses)                            â•‘
+        // â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
         ScriptureVerse(
-            reference = "Ephesians 4:2–3",
+            reference = "Ephesians 4:2â€“3",
             text = "Be completely humble and gentle; be patient, bearing with one another in love. Make every effort to keep the unity of the Spirit through the bond of peace.",
             themes = setOf("relationships"),
             toneAffinity = AffirmationTone.GENTLE,
             keywords = setOf("humble", "gentle", "patient", "patience", "bearing", "love", "unity", "spirit", "bond", "peace", "together", "marriage", "friend", "community")
         ),
         ScriptureVerse(
-            reference = "1 Corinthians 13:4–7",
+            reference = "1 Corinthians 13:4â€“7",
             text = "Love is patient, love is kind. It does not envy, it does not boast, it is not proud. It does not dishonor others, it is not self-seeking, it is not easily angered, it keeps no record of wrongs. Love does not delight in evil but rejoices with the truth. It always protects, always trusts, always hopes, always perseveres.",
             themes = setOf("relationships"),
             toneAffinity = AffirmationTone.GENTLE,
@@ -759,7 +772,7 @@ object ScriptureDatabase {
             keywords = setOf("love", "deeply", "covers", "sins", "deep", "forgive", "grace", "mercy", "compassion", "heart")
         ),
         ScriptureVerse(
-            reference = "Ecclesiastes 4:9–10",
+            reference = "Ecclesiastes 4:9â€“10",
             text = "Two are better than one, because they have a good return for their labor: If either of them falls down, one can help the other up.",
             themes = setOf("relationships"),
             toneAffinity = AffirmationTone.GENTLE,
@@ -773,7 +786,7 @@ object ScriptureDatabase {
             keywords = setOf("two", "three", "gather", "name", "with", "together", "community", "church", "fellowship", "presence", "meeting")
         ),
         ScriptureVerse(
-            reference = "Philippians 2:3–4",
+            reference = "Philippians 2:3â€“4",
             text = "Do nothing out of selfish ambition or vain conceit. Rather, in humility value others above yourselves, not looking to your own interests, but each of you to the interests of the others.",
             themes = setOf("relationships", "discipline"),
             toneAffinity = AffirmationTone.GENTLE,
@@ -787,13 +800,13 @@ object ScriptureDatabase {
             keywords = setOf("possible", "depends", "peace", "everyone", "conflict", "reconcile", "harmony", "neighbor", "enemy", "disagree", "argument", "fight")
         ),
 
-        // ╔══════════════════════════════════════════════════════════╗
-        // ║  DISCIPLINE  (~10 verses)                               ║
-        // ╚══════════════════════════════════════════════════════════╝
+        // â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—
+        // â•‘  DISCIPLINE  (~10 verses)                               â•‘
+        // â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
         ScriptureVerse(
             reference = "Romans 12:2",
-            text = "Do not conform to the pattern of this world, but be transformed by the renewing of your mind. Then you will be able to test and approve what God's will is — his good, pleasing and perfect will.",
+            text = "Do not conform to the pattern of this world, but be transformed by the renewing of your mind. Then you will be able to test and approve what God's will is â€” his good, pleasing and perfect will.",
             themes = setOf("discipline", "identity"),
             toneAffinity = AffirmationTone.RESOLUTE,
             keywords = setOf("conform", "pattern", "world", "transformed", "renewing", "mind", "test", "approve", "will", "good", "pleasing", "perfect", "think", "thoughts", "mindset", "change")
@@ -827,7 +840,7 @@ object ScriptureDatabase {
             keywords = setOf("weary", "good", "proper", "time", "reap", "harvest", "give", "up", "quit", "persevere", "persist", "continue", "keep", "going", "tired", "burnout")
         ),
         ScriptureVerse(
-            reference = "Philippians 3:13–14",
+            reference = "Philippians 3:13â€“14",
             text = "Brothers and sisters, I do not consider myself yet to have taken hold of it. But one thing I do: Forgetting what is behind and straining toward what is ahead, I press on toward the goal to win the prize.",
             themes = setOf("discipline", "purpose"),
             toneAffinity = AffirmationTone.RESOLUTE,
@@ -862,9 +875,9 @@ object ScriptureDatabase {
             keywords = setOf("book", "law", "lips", "meditate", "day", "night", "careful", "written", "prosperous", "successful", "word", "scripture", "bible", "read", "study", "devotion")
         ),
 
-        // ╔══════════════════════════════════════════════════════════╗
-        // ║  HEALING / RESTORATION  (cross-category)                ║
-        // ╚══════════════════════════════════════════════════════════╝
+        // â•”â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•—
+        // â•‘  HEALING / RESTORATION  (cross-category)                â•‘
+        // â•šâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
         ScriptureVerse(
             reference = "Psalm 147:3",
@@ -882,20 +895,20 @@ object ScriptureDatabase {
         ),
         ScriptureVerse(
             reference = "Joel 2:25",
-            text = "I will repay you for the years the locusts have eaten — the great locust and the young locust, the other locusts and the locust swarm.",
+            text = "I will repay you for the years the locusts have eaten â€” the great locust and the young locust, the other locusts and the locust swarm.",
             themes = setOf("provision"),
             toneAffinity = AffirmationTone.RESOLUTE,
             keywords = setOf("repay", "years", "locusts", "eaten", "restore", "lost", "time", "wasted", "stolen", "back", "redeem", "recover", "make up")
         ),
         ScriptureVerse(
-            reference = "Isaiah 61:1–2",
+            reference = "Isaiah 61:1â€“2",
             text = "The Spirit of the Sovereign Lord is on me, because the Lord has anointed me to proclaim good news to the poor. He has sent me to bind up the brokenhearted, to proclaim freedom for the captives and release from darkness for the prisoners.",
             themes = setOf("identity", "courage"),
             toneAffinity = AffirmationTone.RESOLUTE,
             keywords = setOf("spirit", "sovereign", "anointed", "good news", "poor", "brokenhearted", "freedom", "captives", "release", "darkness", "prisoners", "free", "liberate", "chains", "bound")
         ),
         ScriptureVerse(
-            reference = "Lamentations 3:22–23",
+            reference = "Lamentations 3:22â€“23",
             text = "Because of the Lord's great love we are not consumed, for his compassions never fail. They are new every morning; great is your faithfulness.",
             themes = setOf("identity", "joy"),
             toneAffinity = AffirmationTone.GENTLE,

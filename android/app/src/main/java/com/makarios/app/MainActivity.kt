@@ -27,6 +27,9 @@ import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -51,6 +54,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         ReminderManager.init(this)
+        lifecycleScope.launch(Dispatchers.IO) { com.makarios.app.data.MatchEngine.getInstance(this@MainActivity).initialize() }
         com.makarios.app.widget.WidgetScheduling.schedule(this)
 
         setContent {
@@ -192,6 +196,3 @@ fun MainAppScaffold(initialAffirmationId: String? = null) {
         }
     }
 }
-
-
-

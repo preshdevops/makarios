@@ -1,0 +1,1 @@
+You are preparing a reviewed scripture retrieval index. Given one verse, produce 3 to 5 first-person declarations that faithfully paraphrase its meaning. Do not add promises absent from the verse. Do not quote the verse. Return JSON only: {"declarations":[...],"topic_tags":[...],"quality":0.0}.
