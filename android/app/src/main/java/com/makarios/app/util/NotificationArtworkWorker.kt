@@ -12,4 +12,3 @@ class NotificationArtworkWorker(context: Context, params: WorkerParameters) : Co
         return runCatching { File(applicationContext.cacheDir, "notification_${affirmation.id}_${light.name}.png").outputStream().use { output -> NotificationArtwork.bigPicture(applicationContext, affirmation, light).compress(android.graphics.Bitmap.CompressFormat.PNG, 100, output) }; Result.success() }.getOrElse { Result.retry() }
     }
 }
-

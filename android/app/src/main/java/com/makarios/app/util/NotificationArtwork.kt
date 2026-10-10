@@ -43,13 +43,3 @@ object NotificationArtwork {
     }
     fun cacheFile(context: Context, affirmation: Affirmation, light: Light): File = File(context.cacheDir, "notification_${affirmation.id}_${light.name}.png")
 }
-
-
-
-
-
-
-
-
-
-

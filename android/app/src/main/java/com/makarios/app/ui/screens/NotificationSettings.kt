@@ -79,6 +79,3 @@ fun NotificationSoftAsk(onDismiss: () -> Unit) {
     var time by remember { mutableStateOf(NotificationStore.morningTime(context)) }
     AlertDialog(onDismissRequest = { NotificationStore.markAsked(context); onDismiss() }, title = { Text("Let it find you each morning.", style = MakariosTypography.displaySmall, color = Ink) }, text = { Column { Text("One declaration, at the hour you choose. Nothing else. No streak guilt, no marketing.", color = Ink.copy(alpha = .72f)); Spacer(Modifier.height(16.dp)); Text("What time?", style = MakariosTypography.labelLarge, color = Ink); NotificationTimeChips(time, { time = it; NotificationStore.setMorningTime(context, it.first, it.second) }) {}; Spacer(Modifier.height(12.dp)); NotificationPreview() } }, confirmButton = { Button(onClick = { NotificationStore.markAsked(context); if (android.os.Build.VERSION.SDK_INT >= 33) launcher.launch(Manifest.permission.POST_NOTIFICATIONS) else ReminderManager.setDailyReminderEnabled(context, true); onDismiss() }, colors = ButtonDefaults.buttonColors(containerColor = Ink, contentColor = Cream), shape = RoundedCornerShape(22.dp)) { Text("Turn on") } }, dismissButton = { TextButton(onClick = { NotificationStore.markAsked(context); onDismiss() }) { Text("Not now", color = Ink) } }, containerColor = Color(0xFFFFF4D6))
 }
-
-
-
