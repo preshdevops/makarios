@@ -1,4 +1,4 @@
-package com.makarios.app.ui.screens
+﻿package com.makarios.app.ui.screens
 
 import android.app.WallpaperManager
 import android.graphics.BitmapFactory
@@ -23,10 +23,12 @@ import androidx.compose.material.icons.outlined.MenuBook
 import androidx.compose.material.icons.outlined.Wallpaper
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import kotlinx.coroutines.withContext
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -211,7 +213,7 @@ fun CreateScreen(
                     onShare = {
                         val aff = saveCreatedAffirmation()
                         val exportFmt = when (formatName) {
-                            "Status", "Story" -> ExportFormat.Story
+                            "WhatsApp", "Status", "Story" -> ExportFormat.Story
                             "Square" -> ExportFormat.Square
                             "X" -> ExportFormat.X
                             else -> ExportFormat.Portrait
@@ -226,21 +228,9 @@ fun CreateScreen(
                     },
                     onSavePhotos = {
                         val aff = saveCreatedAffirmation()
-                        try {
-                            val renderer = LightCanvas(context)
-                            val cacheFile = File(context.cacheDir, "declaration_${System.currentTimeMillis()}.png")
-                            renderer.render(
-                                declaration = aff.declaration,
-                                verseText = aff.scriptureText,
-                                verseReference = aff.reference,
-                                light = selectedLight,
-                                format = ExportFormat.Story,
-                                outputFile = cacheFile
-                            )
-                            Toast.makeText(context, "Saved to device & Kept library!", Toast.LENGTH_SHORT).show()
-                        } catch (e: Exception) {
-                            Toast.makeText(context, "Saved to Kept collection", Toast.LENGTH_SHORT).show()
-                        }
+                        val exportFmt = when (formatName) { "Story", "Status" -> ExportFormat.Story; "Square" -> ExportFormat.Square; "X" -> ExportFormat.X; else -> ExportFormat.Portrait }
+                        val saved = ShareHelper.saveToPhotos(context, aff, selectedLight, exportFmt)
+                        Toast.makeText(context, if (saved != null) "Saved to Pictures/Makarios" else "Could not save image", Toast.LENGTH_SHORT).show()
                     },
                     onSetWallpaper = {
                         val aff = saveCreatedAffirmation()
@@ -393,7 +383,7 @@ fun WriteStep(
                         .padding(horizontal = 16.dp, vertical = 12.dp)
                 ) {
                     Text(
-                        text = "“$starter”",
+                        text = "â€œ$starterâ€",
                         style = MakariosTypography.bodyMedium,
                         color = Ink
                     )
@@ -520,226 +510,25 @@ fun VerseStep(
 
 @Composable
 fun LookStep(
-    declarationText: String,
-    verseText: String,
-    verseReference: String,
-    selectedLight: Light,
-    onLightChanged: (Light) -> Unit,
-    format: String,
-    onFormatChanged: (String) -> Unit,
-    selectedPhotoUrl: String?,
-    onPhotoSelected: (String?) -> Unit,
-    onShare: () -> Unit,
-    onSavePhotos: () -> Unit,
-    onSetWallpaper: () -> Unit
-) {
-    val createPhotos = remember { PhotoLibrary.getCreateBackgrounds() }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp)
-            .verticalScroll(rememberScrollState())
-    ) {
-        // Live Visual Preview Card
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(280.dp)
-                .clip(RoundedCornerShape(24.dp))
-                .lightBackground(selectedLight)
-        ) {
-            if (selectedPhotoUrl != null) {
-                AsyncImage(
-                    model = selectedPhotoUrl,
-                    contentDescription = null,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop,
-                    colorFilter = WarmPhotoGrade
-                )
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(
-                            Brush.verticalGradient(
-                                0.0f to selectedLight.top.copy(alpha = 0.82f),
-                                1.0f to selectedLight.bottom.copy(alpha = 0.94f)
-                            )
-                        )
-                )
-            }
-
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(24.dp),
-                verticalArrangement = Arrangement.Center
-            ) {
-                Pairing(
-                    declaration = declarationText,
-                    verseText = verseText,
-                    verseReference = verseReference,
-                    light = selectedLight,
-                    isCompact = true
-                )
-            }
+    declarationText:String, verseText:String, verseReference:String, selectedLight:Light,
+    onLightChanged:(Light)->Unit, format:String, onFormatChanged:(String)->Unit,
+    selectedPhotoUrl:String?, onPhotoSelected:(String?)->Unit, onShare:()->Unit,
+    onSavePhotos:()->Unit, onSetWallpaper:()->Unit
+){
+    val context=LocalContext.current
+    val exportFormat=when(format){"Story","Status"->ExportFormat.Story;"Square"->ExportFormat.Square;"X"->ExportFormat.X;else->ExportFormat.Portrait}
+    val previewBitmap by produceState<android.graphics.Bitmap?>(null, declarationText,verseText,verseReference,selectedLight,format){
+        value=withContext(kotlinx.coroutines.Dispatchers.Default){val f=File(context.cacheDir,"preview_${exportFormat.name}.png");val rendered=LightCanvas(context).render(declarationText,verseText,verseReference,selectedLight,exportFormat,outputFile=f);BitmapFactory.decodeFile(rendered.absolutePath)}
+    }
+    Column(Modifier.fillMaxSize().padding(24.dp).verticalScroll(rememberScrollState())){
+        Box(Modifier.fillMaxWidth().height(280.dp).clip(RoundedCornerShape(24.dp)).background(selectedLight.bottom),contentAlignment=Alignment.Center){previewBitmap?.let{androidx.compose.foundation.Image(it.asImageBitmap(),"Share preview",Modifier.fillMaxSize(),contentScale=ContentScale.Fit)}}
+        Spacer(Modifier.height(20.dp));Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),horizontalArrangement=Arrangement.spacedBy(8.dp)){listOf("WhatsApp","Story","Square","X").forEach{f->TextButton(onClick={onFormatChanged(f)},modifier=Modifier.clip(RoundedCornerShape(20.dp)).background(if(format==f)Ink else Ink.copy(alpha=.06f))){Text(f,color=if(format==f)Cream else Ink)}}}
+        Spacer(Modifier.height(18.dp));Text("Light",style=MakariosTypography.labelMedium,color=Ink.copy(alpha=.8f));Spacer(Modifier.height(8.dp));Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),horizontalArrangement=Arrangement.spacedBy(9.dp)){
+            listOf<Light?>(null,Light.Dawn,Light.Midday,Light.Dusk,Light.Night,Light.Mist,Light.Rain,Light.Ember,Light.Grove).forEach{candidate->val selected=candidate==selectedLight;if(candidate==null){Box(Modifier.size(50.dp).clip(RoundedCornerShape(12.dp)).background(Ink.copy(alpha=.08f)).border(if(selected)2.dp else 1.dp,if(selected)Ink else Ink.copy(alpha=.15f),RoundedCornerShape(12.dp)).clickable{onLightChanged(Light.forNow())},contentAlignment=Alignment.Center){Text("Auto",style=MakariosTypography.labelSmall,color=Ink)}}else{Box(Modifier.size(50.dp).clip(RoundedCornerShape(12.dp)).background(candidate.top).border(if(selected)2.dp else 0.dp,if(selected)Ink else Color.Transparent,RoundedCornerShape(12.dp)).clickable{onLightChanged(candidate)}){}}}
         }
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-        // Format Selector
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(40.dp)
-                .clip(RoundedCornerShape(20.dp))
-                .border(1.dp, Ink.copy(alpha = 0.15f), RoundedCornerShape(20.dp)),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            listOf("Story", "Square", "Status", "X").forEach { f ->
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight()
-                        .clip(RoundedCornerShape(20.dp))
-                        .background(if (format == f) Ink else Color.Transparent)
-                        .clickable { onFormatChanged(f) },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = f,
-                        style = MakariosTypography.labelSmall,
-                        color = if (format == f) Cream else Ink
-                    )
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // 8 Light Swatches
-        Text("Light Palette", style = MakariosTypography.labelMedium, color = Ink.copy(alpha = 0.8f))
-        Spacer(modifier = Modifier.height(10.dp))
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .horizontalScroll(rememberScrollState()),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            Light.values().forEach { l ->
-                val isSelected = selectedLight == l
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.clickable { onLightChanged(l) }
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(50.dp)
-                            .clip(CircleShape)
-                            .lightBackground(l)
-                            .border(
-                                width = if (isSelected) 2.5.dp else 0.dp,
-                                color = if (isSelected) Ink else Color.Transparent,
-                                shape = CircleShape
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        if (isSelected) {
-                            Icon(Icons.Filled.Check, contentDescription = null, tint = l.text, modifier = Modifier.size(16.dp))
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(l.name, style = MakariosTypography.labelSmall.copy(fontSize = 11.sp), color = Ink)
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // Photo backgrounds row
-        Text("Photography Layer", style = MakariosTypography.labelMedium, color = Ink.copy(alpha = 0.8f))
-        Spacer(modifier = Modifier.height(10.dp))
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .horizontalScroll(rememberScrollState()),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            // None / Pure Gradient option
-            Box(
-                modifier = Modifier
-                    .size(54.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .border(
-                        width = if (selectedPhotoUrl == null) 2.dp else 1.dp,
-                        color = if (selectedPhotoUrl == null) Ink else Ink.copy(alpha = 0.15f),
-                        shape = RoundedCornerShape(12.dp)
-                    )
-                    .clickable { onPhotoSelected(null) },
-                contentAlignment = Alignment.Center
-            ) {
-                Text("None", style = MakariosTypography.labelSmall, color = Ink)
-            }
-
-            // Create background photos
-            createPhotos.forEach { entry ->
-                val isSel = selectedPhotoUrl == entry.url(width = 800)
-                Box(
-                    modifier = Modifier
-                        .size(54.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .border(
-                            width = if (isSel) 2.dp else 0.dp,
-                            color = if (isSel) Ink else Color.Transparent,
-                            shape = RoundedCornerShape(12.dp)
-                        )
-                        .clickable { onPhotoSelected(entry.url(width = 800)) }
-                ) {
-                    AsyncImage(
-                        model = entry.url(width = 300),
-                        contentDescription = null,
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop,
-                        colorFilter = WarmPhotoGrade
-                    )
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        // Main Share Button
-        Button(
-            onClick = onShare,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Ink, contentColor = Cream),
-            shape = RoundedCornerShape(28.dp)
-        ) {
-            Text("Share Declaration", style = MakariosTypography.labelLarge)
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Actions: Save to Photos & Set as Wallpaper
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            TextButton(onClick = onSavePhotos) {
-                Icon(Icons.Outlined.Image, contentDescription = null, modifier = Modifier.size(18.dp), tint = Ink)
-                Spacer(modifier = Modifier.width(6.dp))
-                Text("Save to photos", style = MakariosTypography.labelLarge, color = Ink)
-            }
-
-            TextButton(onClick = onSetWallpaper) {
-                Icon(Icons.Outlined.Wallpaper, contentDescription = null, modifier = Modifier.size(18.dp), tint = Ink)
-                Spacer(modifier = Modifier.width(6.dp))
-                Text("Set as wallpaper", style = MakariosTypography.labelLarge, color = Ink)
-            }
-        }
-
-        Spacer(modifier = Modifier.height(48.dp))
+        Spacer(Modifier.height(28.dp));Button(onClick=onShare,modifier=Modifier.fillMaxWidth().height(56.dp),colors=ButtonDefaults.buttonColors(containerColor=Ink,contentColor=Cream),shape=RoundedCornerShape(28.dp)){Text("Share declaration",style=MakariosTypography.labelLarge)}
+        Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceBetween){TextButton(onClick=onSavePhotos){Icon(Icons.Outlined.Image,null,tint=Ink);Spacer(Modifier.width(6.dp));Text("Save to photos",color=Ink)};TextButton(onClick=onSetWallpaper){Icon(Icons.Outlined.Wallpaper,null,tint=Ink);Spacer(Modifier.width(6.dp));Text("Set as wallpaper",color=Ink)}};Spacer(Modifier.height(40.dp))
     }
 }
+
+

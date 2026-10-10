@@ -103,7 +103,6 @@ object WidgetHelper {
                     format = ExportFormat.Wallpaper,
                     deviceWidth = metrics.widthPixels,
                     deviceHeight = metrics.heightPixels,
-                    userPhotoUri = photoUri,
                     outputFile = out
                 )
                 
@@ -144,5 +143,6 @@ object WidgetHelper {
         }
     }
 }
+
 
 

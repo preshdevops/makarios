@@ -1,236 +1,67 @@
-package com.makarios.app.util
+﻿package com.makarios.app.util
 
 import android.content.Context
-import android.graphics.*
-import android.net.Uri
-import android.os.Build
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.Typeface
 import android.text.Layout
 import android.text.StaticLayout
 import android.text.TextPaint
 import androidx.core.content.res.ResourcesCompat
 import com.makarios.app.R
+import com.makarios.app.data.Affirmation
+import com.makarios.app.ui.theme.HorizonSpec
 import com.makarios.app.ui.theme.Light
+import com.makarios.app.ui.theme.drawLight
+import com.makarios.app.ui.theme.renderLightBitmap
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import java.io.File
 import java.io.FileOutputStream
 import kotlin.math.max
 
-enum class ExportFormat(val width: Int, val height: Int) {
-    Square(1080, 1080),
-    Portrait(1080, 1350),
-    Story(1080, 1920), // 9:16
-    X(1600, 900),
-    Wallpaper(-1, -1) // Native resolution resolved at runtime
+/** Canonical exact-pixel share formats. */
+enum class ExportFormat(val width:Int,val height:Int){
+    Square(1080,1080), Portrait(1080,1350), Story(1080,1920), X(1600,900), Wallpaper(-1,-1)
 }
 
-class LightCanvas(private val context: Context) {
-
-    fun render(
-        declaration: String,
-        verseText: String,
-        verseReference: String,
-        light: Light,
-        format: ExportFormat,
-        deviceWidth: Int = 1080,
-        deviceHeight: Int = 1920,
-        userPhotoUri: Uri? = null,
-        outputFile: File
-    ): File {
-        val w = if (format == ExportFormat.Wallpaper) deviceWidth else format.width
-        val h = if (format == ExportFormat.Wallpaper) deviceHeight else format.height
-
-        val bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
-        val canvas = Canvas(bitmap)
-
-        // 1. Draw Photo (Optional) or Base Gradient
-        if (userPhotoUri != null) {
-            drawUserPhoto(canvas, w, h, userPhotoUri)
-        } else {
-            drawLightGradient(canvas, w, h, light)
+class LightCanvas(private val context:Context){
+    fun render(declaration:String,verseText:String,verseReference:String,light:Light,format:ExportFormat,deviceWidth:Int=1080,deviceHeight:Int=1920,outputFile:File):File {
+        val width=if(format==ExportFormat.Wallpaper)deviceWidth else format.width
+        val height=if(format==ExportFormat.Wallpaper)deviceHeight else format.height
+        val bitmap=renderLightBitmap(light,width,height){
+            drawLight(light,size=size,horizon=if(format==ExportFormat.X) HorizonSpec(.76f,.81f,.86f) else HorizonSpec(),discPos=if(format==ExportFormat.X) androidx.compose.ui.geometry.Offset(size.width*.78f,size.height*.42f) else null,grain=false)
+            drawSharePairing(this,width,height,declaration,verseText,verseReference,light,format)
         }
-
-        // 2. Draw Text and Anchor
-        drawPairing(canvas, w, h, declaration, verseText, verseReference, light, format)
-
-        // 3. Save
-        FileOutputStream(outputFile).use { out ->
-            bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
-        }
-        
-        // If > 8MB, compress as JPEG
-        if (outputFile.length() > 8 * 1024 * 1024) {
-            FileOutputStream(outputFile).use { out ->
-                bitmap.compress(Bitmap.CompressFormat.JPEG, 92, out)
-            }
-        }
-        
-        bitmap.recycle()
-        return outputFile
+        val png=if(outputFile.extension.lowercase()=="png")outputFile else File(outputFile.parentFile,outputFile.nameWithoutExtension+".png")
+        FileOutputStream(png).use{bitmap.compress(Bitmap.CompressFormat.PNG,100,it)}
+        if(png.length()>8L*1024L*1024L){val jpg=File(png.parentFile,png.nameWithoutExtension+".jpg");FileOutputStream(jpg).use{bitmap.compress(Bitmap.CompressFormat.JPEG,92,it)};png.delete();bitmap.recycle();return jpg}
+        bitmap.recycle();return png
     }
 
-    private fun drawLightGradient(canvas: Canvas, w: Int, h: Int, light: Light) {
-        val paint = Paint()
-        paint.shader = LinearGradient(
-            0f, 0f, 0f, h.toFloat(),
-            light.top.value.toInt() or 0xFF000000.toInt(),
-            light.bottom.value.toInt() or 0xFF000000.toInt(),
-            Shader.TileMode.CLAMP
-        )
-        canvas.drawRect(0f, 0f, w.toFloat(), h.toFloat(), paint)
-
-        // Grain
-        val grainBitmap = BitmapFactory.decodeResource(context.resources, R.drawable.grain_tile)
-        val grainPaint = Paint().apply {
-            shader = BitmapShader(grainBitmap, Shader.TileMode.REPEAT, Shader.TileMode.REPEAT)
+    private fun drawSharePairing(scope:DrawScope,w:Int,h:Int,declaration:String,verse:String,reference:String,light:Light,format:ExportFormat){
+        scope.drawIntoCanvas{canvas->
+            val native=canvas.nativeCanvas;val margin=w*.08f;val textWidth=if(format==ExportFormat.X)w*.55f-margin else w-margin*2
+            val scale=w/1080f;val news=ResourcesCompat.getFont(context,R.font.newsreader)?:Typeface.SERIF;val italic=ResourcesCompat.getFont(context,R.font.newsreader_italic)?:Typeface.SERIF;val hanken=ResourcesCompat.getFont(context,R.font.hanken_grotesk)?:Typeface.SANS_SERIF
+            fun make(text:String,typeface:Typeface,size:Float,spacing:Float=1.18f)=StaticLayout.Builder.obtain(text,0,text.length,TextPaint(Paint.ANTI_ALIAS_FLAG).apply{this.typeface=typeface;textSize=size;color=light.text.toArgb();isSubpixelText=true;fontFeatureSettings="lnum, tnum"},textWidth.toInt()).setAlignment(Layout.Alignment.ALIGN_NORMAL).setLineSpacing(0f,spacing).setIncludePad(false).setEllipsize(null).setMaxLines(Int.MAX_VALUE).build()
+            var declarationSize=64f*scale;val declarationMin=32f*scale;var dl=make(declaration,Typeface.create(news,Typeface.BOLD),declarationSize)
+            while(declarationSize>declarationMin && dl.height>h*.34f){declarationSize-=1f*scale;dl=make(declaration,Typeface.create(news,Typeface.BOLD),declarationSize)}
+            var verseSize=36f*scale;val verseMin=24f*scale;var vl=make(verse,Typeface.create(italic,Typeface.ITALIC),verseSize,1.24f)
+            val ref=make(reference,Typeface.create(hanken,Typeface.NORMAL),16f*scale,1f)
+            val anchorH=2f*scale;val anchorW=28f*scale;val gap1=26f*scale;val gap2=20f*scale;val gap3=12f*scale
+            val topSafe=if(format==ExportFormat.Story)h*.14f else h*.10f;val bottomSafe=if(format==ExportFormat.Story)h*.86f else if(format==ExportFormat.X)h*.92f else h*.76f
+            fun total(includeVerse:Boolean)=dl.height+gap1+anchorH+gap2+(if(includeVerse)vl.height+gap3 else 0f)+ref.height
+            var includeVerse=true
+            while(verseSize>verseMin && topSafe+total(true)>bottomSafe){verseSize-=1f*scale;vl=make(verse,Typeface.create(italic,Typeface.ITALIC),verseSize,1.24f)}
+            if(topSafe+total(true)>bottomSafe)includeVerse=false
+            val contentH=total(includeVerse);val start=if(format==ExportFormat.Story)topSafe+(bottomSafe-topSafe-contentH)*.38f else if(format==ExportFormat.X)(h-contentH)*.38f else topSafe
+            native.save();native.translate(margin,start);dl.draw(native);var y=dl.height+gap1;val rule=Paint(Paint.ANTI_ALIAS_FLAG).apply{color=light.anchorRule.toArgb()};native.drawRect(0f,y,anchorW,y+anchorH,rule);y+=anchorH+gap2
+            if(includeVerse){native.save();native.translate(0f,y);vl.draw(native);native.restore();y+=vl.height+gap3};native.save();native.translate(0f,y);ref.draw(native);native.restore();native.restore()
+            val word=Paint(Paint.ANTI_ALIAS_FLAG).apply{color=light.text.copy(alpha=.82f).toArgb();typeface=Typeface.create(italic,Typeface.ITALIC);textSize=16f*scale;textAlign=Paint.Align.CENTER};native.drawText("makarios",w/2f,h*.94f,word)
         }
-        canvas.drawRect(0f, 0f, w.toFloat(), h.toFloat(), grainPaint)
-        grainBitmap.recycle()
-    }
-
-    private fun drawUserPhoto(canvas: Canvas, w: Int, h: Int, uri: Uri) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            val source = ImageDecoder.createSource(context.contentResolver, uri)
-            val decoded = ImageDecoder.decodeBitmap(source) { decoder, info, _ ->
-                decoder.setTargetSampleSize(calculateInSampleSize(info.size.width, info.size.height, w, h))
-                decoder.isMutableRequired = true
-            }
-            // Scale center crop
-            val scale = max(w.toFloat() / decoded.width, h.toFloat() / decoded.height)
-            val matrix = Matrix()
-            matrix.postScale(scale, scale)
-            matrix.postTranslate((w - decoded.width * scale) / 2f, (h - decoded.height * scale) / 2f)
-            canvas.drawBitmap(decoded, matrix, null)
-            decoded.recycle()
-        } else {
-            // Fallback for pre-P could use BitmapFactory
-            val inputStream = context.contentResolver.openInputStream(uri)
-            val decoded = BitmapFactory.decodeStream(inputStream)
-            inputStream?.close()
-            if (decoded != null) {
-                val scale = max(w.toFloat() / decoded.width, h.toFloat() / decoded.height)
-                val matrix = Matrix()
-                matrix.postScale(scale, scale)
-                matrix.postTranslate((w - decoded.width * scale) / 2f, (h - decoded.height * scale) / 2f)
-                canvas.drawBitmap(decoded, matrix, null)
-                decoded.recycle()
-            }
-        }
-        
-        // 35% dark overlay
-        val overlayPaint = Paint().apply { color = Color.argb((255 * 0.35f).toInt(), 0, 0, 0) }
-        canvas.drawRect(0f, 0f, w.toFloat(), h.toFloat(), overlayPaint)
-    }
-    
-    private fun calculateInSampleSize(srcWidth: Int, srcHeight: Int, reqWidth: Int, reqHeight: Int): Int {
-        var inSampleSize = 1
-        if (srcHeight > reqHeight || srcWidth > reqWidth) {
-            val halfHeight = srcHeight / 2
-            val halfWidth = srcWidth / 2
-            while (halfHeight / inSampleSize >= reqHeight && halfWidth / inSampleSize >= reqWidth) {
-                inSampleSize *= 2
-            }
-        }
-        return inSampleSize
-    }
-
-    private fun drawPairing(
-        canvas: Canvas, w: Int, h: Int,
-        declaration: String, verseText: String, verseReference: String,
-        light: Light, format: ExportFormat
-    ) {
-        // Safe margins 8% on sides, 14% top/bottom
-        val marginX = (w * 0.08f).toInt()
-        val marginY = (h * 0.14f).toInt()
-        val usableWidth = w - marginX * 2
-
-        // Fonts
-        val newsreader = ResourcesCompat.getFont(context, R.font.newsreader)
-        val newsreaderItalic = ResourcesCompat.getFont(context, R.font.newsreader_italic)
-        val hanken = ResourcesCompat.getFont(context, R.font.hanken_grotesk)
-
-        // Type sizes relative to canvas width
-        // Reference: Today declaration 34sp on ~412dp screen (~8.25% of width). 
-        // We'll scale proportionally, but have a floor of 5% of width.
-        var declTextSize = w * 0.0825f
-        if (declTextSize < w * 0.05f) declTextSize = w * 0.05f
-
-        val declPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
-            typeface = Typeface.create(newsreader, Typeface.NORMAL)
-            textSize = declTextSize
-            color = light.text.value.toInt() or 0xFF000000.toInt()
-            fontFeatureSettings = "lnum, tnum"
-        }
-
-        val versePaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
-            typeface = Typeface.create(newsreaderItalic, Typeface.ITALIC)
-            textSize = w * 0.04f // approx 17sp relative
-            color = light.text.value.toInt() or 0xFF000000.toInt()
-            fontFeatureSettings = "lnum, tnum"
-        }
-
-        val refPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
-            typeface = Typeface.create(hanken, Typeface.NORMAL) // Should be 500 weight, assume variable handles or use default
-            textSize = w * 0.031f // approx 13sp relative
-            color = (light.text.copy(alpha = light.secondaryAlpha)).value.toInt() or 0xFF000000.toInt()
-            fontFeatureSettings = "lnum, tnum"
-        }
-
-        // Layouts
-        val declLayout = StaticLayout.Builder.obtain(declaration, 0, declaration.length, declPaint, usableWidth)
-            .setAlignment(Layout.Alignment.ALIGN_NORMAL)
-            .setLineSpacing(0f, 1.2f)
-            .setIncludePad(false)
-            .build()
-            
-        val verseLayout = StaticLayout.Builder.obtain(verseText, 0, verseText.length, versePaint, usableWidth)
-            .setAlignment(Layout.Alignment.ALIGN_NORMAL)
-            .setLineSpacing(0f, 1.3f)
-            .setIncludePad(false)
-            .build()
-            
-        val refLayout = StaticLayout.Builder.obtain(verseReference, 0, verseReference.length, refPaint, usableWidth)
-            .setAlignment(Layout.Alignment.ALIGN_NORMAL)
-            .setLineSpacing(0f, 1.0f)
-            .setIncludePad(false)
-            .build()
-
-        val anchorHeight = w * 0.005f
-        val anchorWidth = w * 0.07f
-        val gap1 = w * 0.06f // between decl and anchor
-        val gap2 = w * 0.04f // between anchor and verse
-        val gap3 = w * 0.02f // between verse and ref
-
-        val totalHeight = declLayout.height + gap1 + anchorHeight + gap2 + verseLayout.height + gap3 + refLayout.height
-
-        // Y Positioning
-        var startY = (h - totalHeight) * 0.4f // optically centered around 40% height
-        
-        if (format == ExportFormat.Wallpaper) {
-            // keep top 32% clear, put pairing between 45% and 75%
-            startY = h * 0.45f
-        } else {
-            // Clamp to safe margins
-            if (startY < marginY) startY = marginY.toFloat()
-        }
-
-        // Draw
-        canvas.save()
-        canvas.translate(marginX.toFloat(), startY)
-        
-        declLayout.draw(canvas)
-        canvas.translate(0f, declLayout.height + gap1)
-        
-        // Draw Anchor
-        val anchorPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = light.anchorRule.value.toInt() or 0xFF000000.toInt()
-        }
-        canvas.drawRect(0f, 0f, anchorWidth, anchorHeight, anchorPaint)
-        
-        canvas.translate(0f, anchorHeight + gap2)
-        verseLayout.draw(canvas)
-        
-        canvas.translate(0f, verseLayout.height + gap3)
-        refLayout.draw(canvas)
-        
-        canvas.restore()
     }
 }
+
+

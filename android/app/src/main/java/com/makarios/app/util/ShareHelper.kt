@@ -1,4 +1,4 @@
-package com.makarios.app.util
+﻿package com.makarios.app.util
 
 import android.content.Context
 import android.content.Intent
@@ -37,7 +37,6 @@ object ShareHelper {
         affirmation: Affirmation,
         light: Light,
         platform: SocialPlatform,
-        userPhotoUri: Uri? = null
     ) {
         val cacheDir = File(context.cacheDir, "images").apply { mkdirs() }
         val outputFile = File(cacheDir, "share_${System.currentTimeMillis()}.png")
@@ -49,7 +48,6 @@ object ShareHelper {
             verseReference = affirmation.reference,
             light = light,
             format = platform.defaultFormat,
-            userPhotoUri = userPhotoUri,
             outputFile = outputFile
         )
 
@@ -77,7 +75,6 @@ object ShareHelper {
         affirmation: Affirmation,
         light: Light,
         format: ExportFormat = ExportFormat.Portrait,
-        userPhotoUri: Uri? = null
     ) {
         val cacheDir = File(context.cacheDir, "images").apply { mkdirs() }
         val outputFile = File(cacheDir, "share_${System.currentTimeMillis()}.png")
@@ -89,7 +86,6 @@ object ShareHelper {
             verseReference = affirmation.reference,
             light = light,
             format = format,
-            userPhotoUri = userPhotoUri,
             outputFile = outputFile
         )
 
@@ -106,6 +102,25 @@ object ShareHelper {
         context.startActivity(chooser)
     }
 
+    fun saveToPhotos(context: Context, affirmation: Affirmation, light: Light, format: ExportFormat = ExportFormat.Portrait): Uri? {
+        val values = android.content.ContentValues().apply {
+            put(android.provider.MediaStore.Images.Media.DISPLAY_NAME, "makarios_${System.currentTimeMillis()}.png")
+            put(android.provider.MediaStore.Images.Media.MIME_TYPE, "image/png")
+            put(android.provider.MediaStore.Images.Media.RELATIVE_PATH, "Pictures/Makarios")
+            put(android.provider.MediaStore.Images.Media.IS_PENDING, 1)
+        }
+        val resolver = context.contentResolver
+        val uri = resolver.insert(android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values) ?: return null
+        return runCatching {
+            resolver.openOutputStream(uri)?.use { out ->
+                val file = File(context.cacheDir, "media_${System.currentTimeMillis()}.png")
+                val rendered = LightCanvas(context).render(affirmation.declaration, affirmation.scriptureText, affirmation.reference, light, format, outputFile = file)
+                rendered.inputStream().use { it.copyTo(out) }; rendered.delete()
+            }
+            resolver.update(uri, android.content.ContentValues().apply { put(android.provider.MediaStore.Images.Media.IS_PENDING, 0) }, null, null)
+            uri
+        }.getOrElse { resolver.delete(uri, null, null); null }
+    }
     private fun isAppInstalled(context: Context, packageName: String): Boolean {
         return try {
             context.packageManager.getPackageInfo(packageName, PackageManager.GET_ACTIVITIES)
@@ -115,3 +130,6 @@ object ShareHelper {
         }
     }
 }
+
+
+
