@@ -8,7 +8,7 @@ data class BankEntry(
 )
 
 object DeclarationBankData {
-    val entries: List<BankEntry> = listOf(
+    val entries: List<BankEntry> = SeedDeclarations.asBankEntries() + listOf(
         BankEntry("I can do all things", listOf("I can do anything", "I can literally do anything", "I can do all things through Christ", "I am capable of all things"), listOf("Philippians 4:13"), "strength"),
         BankEntry("I find strength when I am weak", listOf("When I am weak then I am strong", "His strength is made perfect in my weakness", "God is my strength in weakness"), listOf("2 Corinthians 12:9"), "strength"),
         BankEntry("I am strong in the Lord", listOf("I am strong in the power of His might", "God gives me mighty strength"), listOf("Ephesians 6:10"), "strength"),

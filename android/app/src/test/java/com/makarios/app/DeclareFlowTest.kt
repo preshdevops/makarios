@@ -21,7 +21,7 @@ class DeclareFlowTest {
     @Test
     fun testDeclareVerseMatchingAndSelection() {
         val userDeclaration = "I walk in perfect peace because God guards my heart"
-        val matched = ScriptureMatcher.match(userDeclaration, AffirmationTone.STILL, limit = 15)
+        val matched = ScriptureMatcher.match(userDeclaration, limit = 15)
         assertTrue("Expected non-empty matched verses for peaceful declaration", matched.isNotEmpty())
 
         val bestMatch = matched[0].verse

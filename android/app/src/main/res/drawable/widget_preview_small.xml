@@ -1,0 +1,41 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="160dp"
+    android:height="160dp"
+    android:viewportWidth="160"
+    android:viewportHeight="160">
+    <path
+        android:pathData="M24,0 L136,0 A24,24 0 0,1 160,24 L160,136 A24,24 0 0,1 136,160 L24,160 A24,24 0 0,1 0,136 L0,24 A24,24 0 0,1 24,0 Z"
+        android:fillColor="#F4ECE1"/>
+    <!-- Doorway arch mark at top -->
+    <path
+        android:pathData="M24,36 L24,26 A5,5 0 0,1 34,26 L34,36"
+        android:strokeColor="#2C2724"
+        android:strokeWidth="1.8"
+        android:fillColor="#00000000"/>
+    <path
+        android:pathData="M26.5,26 A2.5,2.5 0 0,1 31.5,26 Z"
+        android:fillColor="#B5532B"/>
+    <!-- Declaration lines -->
+    <path
+        android:pathData="M24,60 L136,60"
+        android:strokeColor="#2C2724"
+        android:strokeWidth="4"
+        android:strokeLineCap="round"/>
+    <path
+        android:pathData="M24,76 L110,76"
+        android:strokeColor="#2C2724"
+        android:strokeWidth="4"
+        android:strokeLineCap="round"/>
+    <!-- Anchor rule -->
+    <path
+        android:pathData="M24,98 L48,98"
+        android:strokeColor="#B5532B"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"/>
+    <!-- Reference line -->
+    <path
+        android:pathData="M24,120 L84,120"
+        android:strokeColor="#786F66"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"/>
+</vector>

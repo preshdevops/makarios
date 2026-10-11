@@ -30,21 +30,23 @@ class BertTokenizer private constructor(private val vocab: Map<String, Long>) {
             }
         }
 
-        private fun loadFromAssets(context: Context): BertTokenizer {
+        fun loadFromStream(inputStream: java.io.InputStream): BertTokenizer {
             val vocabMap = mutableMapOf<String, Long>()
-            context.assets.open("vocab.txt").use { inputStream ->
-                BufferedReader(InputStreamReader(inputStream, Charsets.UTF_8)).useLines { lines ->
-                    var idx = 0L
-                    lines.forEach { line ->
-                        val token = line.trim()
-                        if (token.isNotEmpty()) {
-                            vocabMap[token] = idx
-                        }
-                        idx++
+            BufferedReader(InputStreamReader(inputStream, Charsets.UTF_8)).useLines { lines ->
+                var idx = 0L
+                lines.forEach { line ->
+                    val token = line.trim()
+                    if (token.isNotEmpty()) {
+                        vocabMap[token] = idx
                     }
+                    idx++
                 }
             }
             return BertTokenizer(vocabMap)
+        }
+
+        private fun loadFromAssets(context: Context): BertTokenizer {
+            return context.assets.open("vocab.txt").use { loadFromStream(it) }
         }
     }
 

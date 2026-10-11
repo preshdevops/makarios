@@ -55,7 +55,7 @@ fun TopicDetailScreen(
     }
 
     var selectedFilter by rememberSaveable { mutableStateOf("Declarations") } // Declarations, Verses, Saved
-    val savedIds = remember { mutableStateListOf<String>() }
+    val keptIds by com.makarios.app.data.local.KeptRepository.getAllIdsFlow().collectAsState(initial = emptyList())
 
     // Preload verse texts for pairing rows
     val verseTexts = remember { mutableStateMapOf<String, String>() }
@@ -69,9 +69,9 @@ fun TopicDetailScreen(
         }
     }
 
-    val displayPairs = remember(pairs, selectedFilter, savedIds.toList()) {
+    val displayPairs = remember(pairs, selectedFilter, keptIds) {
         when (selectedFilter) {
-            "Saved" -> pairs.filter { savedIds.contains(it.id) }
+            "Saved" -> pairs.filter { keptIds.contains(it.id) || keptIds.contains("topic-kept-${it.id}") }
             else -> pairs
         }
     }
@@ -126,12 +126,6 @@ fun TopicDetailScreen(
                     style = MakariosTypography.bodyLarge.copy(fontStyle = FontStyle.Italic, fontSize = 17.sp),
                     color = light.text.copy(alpha = 0.88f)
                 )
-                Spacer(Modifier.height(4.dp))
-                Text(
-                    text = "${pairs.size} promises",
-                    style = MakariosTypography.labelSmall,
-                    color = light.text.copy(alpha = 0.70f)
-                )
             }
         }
 
@@ -183,7 +177,7 @@ fun TopicDetailScreen(
             ) {
                 items(displayPairs, key = { it.id }) { pair ->
                     val vText = verseTexts[pair.id] ?: "The Word of the Lord stands forever."
-                    val isSaved = savedIds.contains(pair.id)
+                    val isSaved = keptIds.contains(pair.id) || keptIds.contains("topic-kept-${pair.id}")
 
                     Column(
                         modifier = Modifier
@@ -261,23 +255,26 @@ fun TopicDetailScreen(
                             // Bookmark toggle (saves to Kept)
                             IconButton(
                                 onClick = {
-                                    if (isSaved) {
-                                        savedIds.remove(pair.id)
-                                        Toast.makeText(context, "Removed from Kept", Toast.LENGTH_SHORT).show()
-                                    } else {
-                                        savedIds.add(pair.id)
-                                        val aff = Affirmation(
-                                            id = "topic-kept-${pair.id}",
-                                            declaration = pair.declaration,
-                                            scriptureText = vText,
-                                            reference = pair.reference,
-                                            context = "Saved from Explore: $topicName",
-                                            category = topicName,
-                                            tone = AffirmationTone.RESOLUTE,
-                                            isFavorite = true
-                                        )
-                                        AffirmationRepository.addPersonalAffirmation(aff)
-                                        Toast.makeText(context, "Saved to Kept", Toast.LENGTH_SHORT).show()
+                                    scope.launch {
+                                        if (isSaved) {
+                                            com.makarios.app.data.local.KeptRepository.deleteById(pair.id)
+                                            com.makarios.app.data.local.KeptRepository.deleteById("topic-kept-${pair.id}")
+                                            Toast.makeText(context, "Removed from Kept", Toast.LENGTH_SHORT).show()
+                                        } else {
+                                            val entity = com.makarios.app.data.local.KeptEntity(
+                                                id = "topic-kept-${pair.id}",
+                                                declaration = pair.declaration,
+                                                verseText = vText,
+                                                reference = pair.reference,
+                                                lightName = light.name,
+                                                styleId = "pairing",
+                                                createdAt = System.currentTimeMillis(),
+                                                isFavorite = true,
+                                                sourceType = "bank"
+                                            )
+                                            com.makarios.app.data.local.KeptRepository.save(entity)
+                                            Toast.makeText(context, "Saved to Kept", Toast.LENGTH_SHORT).show()
+                                        }
                                     }
                                 }
                             ) {

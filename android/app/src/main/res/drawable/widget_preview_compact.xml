@@ -1,0 +1,30 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="260dp"
+    android:height="60dp"
+    android:viewportWidth="260"
+    android:viewportHeight="60">
+    <path
+        android:pathData="M16,0 L244,0 A16,16 0 0,1 260,16 L260,44 A16,16 0 0,1 244,60 L16,60 A16,16 0 0,1 0,44 L0,16 A16,16 0 0,1 16,0 Z"
+        android:fillColor="#F4ECE1"/>
+    <!-- Doorway arch mark -->
+    <path
+        android:pathData="M24,38 L24,24 A6,6 0 0,1 36,24 L36,38"
+        android:strokeColor="#2C2724"
+        android:strokeWidth="2"
+        android:fillColor="#00000000"/>
+    <path
+        android:pathData="M27,24 A3,3 0 0,1 33,24 Z"
+        android:fillColor="#B5532B"/>
+    <!-- Declaration line -->
+    <path
+        android:pathData="M48,26 L220,26"
+        android:strokeColor="#2C2724"
+        android:strokeWidth="3.5"
+        android:strokeLineCap="round"/>
+    <!-- Reference line -->
+    <path
+        android:pathData="M48,36 L110,36"
+        android:strokeColor="#786F66"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"/>
+</vector>

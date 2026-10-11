@@ -28,6 +28,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -94,10 +95,13 @@ fun BibleReaderScreen(
     var chapterVerses by remember { mutableStateOf<List<BibleVerse>>(emptyList()) }
     val listState = rememberLazyListState()
 
+    val coroutineScope = rememberCoroutineScope()
+    val bibleState by BibleRepository.state.collectAsState()
+
     // Load chapter
     LaunchedEffect(currentBook, currentChapter) {
         BibleRepository.initialize(context)
-        chapterVerses = BibleRepository.getChapter(context, currentBook, currentChapter)
+        chapterVerses = BibleRepository.getChapter(currentBook, currentChapter).getOrElse { emptyList() }
     }
 
     // Selected verse range
@@ -266,13 +270,54 @@ fun BibleReaderScreen(
                 }
             }
 
-            // Full Chapter LazyColumn
-            LazyColumn(
-                state = listState,
-                contentPadding = PaddingValues(start = 24.dp, end = 24.dp, top = 12.dp, bottom = 120.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.fillMaxSize()
-            ) {
+            if (bibleState is BibleState.Loading && chapterVerses.isEmpty()) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(color = activeLight.text)
+                }
+            } else if (bibleState is BibleState.Failed && chapterVerses.isEmpty()) {
+                val err = (bibleState as BibleState.Failed).error
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text("Could not load Bible", style = MakariosTypography.headlineSmall, color = activeLight.text)
+                    Spacer(Modifier.height(8.dp))
+                    Text(err.localizedMessage ?: "Unknown error", style = MakariosTypography.bodyMedium, color = activeLight.text.copy(alpha = 0.7f))
+                    Spacer(Modifier.height(16.dp))
+                    Button(onClick = { coroutineScope.launch { BibleRepository.initialize(context) } }) {
+                        Text("Retry")
+                    }
+                }
+            } else if (chapterVerses.isEmpty()) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(32.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = "That chapter is not in this translation",
+                        style = MakariosTypography.titleMedium,
+                        color = activeLight.text,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    )
+                    Spacer(Modifier.height(16.dp))
+                    OutlinedButton(onClick = onNavigateBack) {
+                        Text("Go back", color = activeLight.text)
+                    }
+                }
+            } else {
+                // Full Chapter LazyColumn
+                LazyColumn(
+                    state = listState,
+                    contentPadding = PaddingValues(start = 24.dp, end = 24.dp, top = 12.dp, bottom = 120.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxSize()
+                ) {
                 items(chapterVerses, key = { "${it.chapter}:${it.verse}" }) { verse ->
                     val isSelected = selectedRange != null && verse.verse in selectedRange
 
@@ -333,6 +378,7 @@ fun BibleReaderScreen(
                         )
                     }
                 }
+            }
             }
         }
 
@@ -444,18 +490,21 @@ fun BibleReaderScreen(
                             Text("Share as text")
                         }
                         TextButton(onClick = {
-                            val aff = Affirmation(
-                                id = "kept-${System.currentTimeMillis()}",
-                                declaration = "I stand on this Word: ${v.text.take(45)}...",
-                                scriptureText = v.text,
-                                reference = vRef,
-                                context = "Saved from Bible Reader",
-                                category = "Kept",
-                                tone = AffirmationTone.STILL,
-                                isFavorite = true
-                            )
-                            AffirmationRepository.addPersonalAffirmation(aff)
-                            Toast.makeText(context, "Added $vRef to Kept", Toast.LENGTH_SHORT).show()
+                            coroutineScope.launch {
+                                val entity = com.makarios.app.data.local.KeptEntity(
+                                    id = "kept-${System.currentTimeMillis()}",
+                                    declaration = v.text,
+                                    verseText = v.text,
+                                    reference = vRef,
+                                    lightName = "Midday",
+                                    styleId = "pairing",
+                                    createdAt = System.currentTimeMillis(),
+                                    isFavorite = true,
+                                    sourceType = "bible"
+                                )
+                                com.makarios.app.data.local.KeptRepository.save(entity)
+                                Toast.makeText(context, "Added $vRef to Kept", Toast.LENGTH_SHORT).show()
+                            }
                             longPressedVerse = null
                         }) {
                             Text("Add to Kept")

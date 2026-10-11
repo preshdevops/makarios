@@ -97,7 +97,7 @@ fun ProfileScreen(
     val guest = AuthManager.isAnonymous || user == null
     val name = AuthManager.displayName
     val currentLight = remember { Light.forNow() }
-    var widgetLight by remember { mutableStateOf(WidgetStore.fixedLight(context)) }
+    var widgetLight by remember { mutableStateOf<String>(WidgetStore.fixedLight(context)) }
 
     var showAuth by remember { mutableStateOf(false) }
     var authInitialStep by remember { mutableStateOf(AuthFlowStep.CHOOSE) }

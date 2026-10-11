@@ -35,18 +35,22 @@ import com.makarios.app.data.bible.*
 import com.makarios.app.ui.theme.Ink
 import com.makarios.app.ui.theme.MakariosTypography
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @Composable
 fun BiblePickerScreen(
     onNavigateBack: () -> Unit,
     onSelectBookChapter: (book: String, chapter: Int) -> Unit,
     onVerseSelected: (VerseSelection) -> Unit,
+    initialQuery: String = "",
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    var query by remember { mutableStateOf("") }
+    val coroutineScope = rememberCoroutineScope()
+    var query by remember(initialQuery) { mutableStateOf(initialQuery) }
     var selectedTestament by remember { mutableStateOf(Testament.OT) }
     val recents = remember { RecentVersesStore.getRecents(context) }
+    val bibleState by BibleRepository.state.collectAsState()
 
     // Initialize BibleRepository
     LaunchedEffect(Unit) {
@@ -362,48 +366,68 @@ fun BiblePickerScreen(
 
                 Spacer(Modifier.height(12.dp))
 
-                // Book List with chapter counts
                 val activeBooks = BibleRepository.books.filter { it.testament == selectedTestament }
                 val activeListState = if (selectedTestament == Testament.OT) otListState else ntListState
 
-                LazyColumn(
-                    state = activeListState,
-                    contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    items(activeBooks, key = { it.name }) { book ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(56.dp)
-                                .clip(RoundedCornerShape(14.dp))
-                                .background(Color.White)
-                                .clickable {
-                                    onSelectBookChapter(book.name, 1)
-                                }
-                                .padding(horizontal = 18.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(
-                                text = book.name,
-                                style = MakariosTypography.titleMedium,
-                                color = Ink
-                            )
-                            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (bibleState is BibleState.Loading && activeBooks.isEmpty()) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(color = Ink)
+                    }
+                } else if (bibleState is BibleState.Failed && activeBooks.isEmpty()) {
+                    val err = (bibleState as BibleState.Failed).error
+                    Column(
+                        modifier = Modifier.fillMaxSize().padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Text("Unable to load Bible data", style = MakariosTypography.headlineSmall, color = Ink)
+                        Spacer(Modifier.height(8.dp))
+                        Text(err.localizedMessage ?: "Unknown error", style = MakariosTypography.bodyMedium, color = Ink.copy(alpha = 0.7f))
+                        Spacer(Modifier.height(16.dp))
+                        Button(onClick = { coroutineScope.launch { BibleRepository.initialize(context) } }) {
+                            Text("Retry")
+                        }
+                    }
+                } else {
+                    LazyColumn(
+                        state = activeListState,
+                        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        items(activeBooks, key = { it.name }) { book ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(56.dp)
+                                    .clip(RoundedCornerShape(14.dp))
+                                    .background(Color.White)
+                                    .clickable {
+                                        onSelectBookChapter(book.name, 1)
+                                    }
+                                    .padding(horizontal = 18.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
                                 Text(
-                                    text = "${book.chapterCount} chapters",
-                                    style = MakariosTypography.bodyMedium,
-                                    color = Ink.copy(alpha = 0.55f)
+                                    text = book.name,
+                                    style = MakariosTypography.titleMedium,
+                                    color = Ink
                                 )
-                                Spacer(Modifier.width(6.dp))
-                                Icon(
-                                    imageVector = Icons.Outlined.ChevronRight,
-                                    contentDescription = "Open ${book.name}",
-                                    tint = Ink.copy(alpha = 0.4f),
-                                    modifier = Modifier.size(18.dp)
-                                )
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        text = "${book.chapterCount} chapters",
+                                        style = MakariosTypography.bodyMedium,
+                                        color = Ink.copy(alpha = 0.55f)
+                                    )
+                                    Spacer(Modifier.width(6.dp))
+                                    Icon(
+                                        imageVector = Icons.Outlined.ChevronRight,
+                                        contentDescription = "Open ${book.name}",
+                                        tint = Ink.copy(alpha = 0.4f),
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
                             }
                         }
                     }

@@ -1,0 +1,7048 @@
+[
+  {
+    "query": "I am experiencing relief from fear and judgement.",
+    "expected_top1": "1 John 4:18",
+    "expected_top3": [
+      "1 John 4:18",
+      "Romans 8:1",
+      "Psalm 34:4"
+    ],
+    "category": "user_seeds",
+    "should_match": true
+  },
+  {
+    "query": "I am surrounded by greatness, God's love.",
+    "expected_top1": "Psalm 32:10",
+    "expected_top3": [
+      "Psalm 32:10",
+      "Romans 8:39",
+      "Psalm 139:5"
+    ],
+    "category": "user_seeds",
+    "should_match": true
+  },
+  {
+    "query": "I am perfectly safe in His hands.",
+    "expected_top1": "John 10:28",
+    "expected_top3": [
+      "John 10:28",
+      "Isaiah 49:16",
+      "Psalm 91:1"
+    ],
+    "category": "user_seeds",
+    "should_match": true
+  },
+  {
+    "query": "God is giving me the best of care this season.",
+    "expected_top1": "Psalm 23:1",
+    "expected_top3": [
+      "Psalm 23:1",
+      "1 Peter 5:7",
+      "Philippians 4:19"
+    ],
+    "category": "user_seeds",
+    "should_match": true
+  },
+  {
+    "query": "I am set for life.",
+    "expected_top1": "2 Peter 1:3",
+    "expected_top3": [
+      "2 Peter 1:3",
+      "Philippians 4:19",
+      "Psalm 23:1"
+    ],
+    "category": "user_seeds",
+    "should_match": true
+  },
+  {
+    "query": "I am becoming a refuge for people.",
+    "expected_top1": "Isaiah 32:2",
+    "expected_top3": [
+      "Isaiah 32:2",
+      "2 Corinthians 1:4",
+      "Psalm 46:1"
+    ],
+    "category": "user_seeds",
+    "should_match": true
+  },
+  {
+    "query": "Great grace is resting upon me.",
+    "expected_top1": "Acts 4:33",
+    "expected_top3": [
+      "Acts 4:33",
+      "2 Corinthians 12:9",
+      "2 Corinthians 9:8"
+    ],
+    "category": "user_seeds",
+    "should_match": true
+  },
+  {
+    "query": "I have the excellent spirit of God on my inside.",
+    "expected_top1": "Daniel 6:3",
+    "expected_top3": [
+      "Daniel 6:3",
+      "Colossians 1:27",
+      "1 John 4:4"
+    ],
+    "category": "user_seeds",
+    "should_match": true
+  },
+  {
+    "query": "God is on my inside, so I can do anything.",
+    "expected_top1": "Colossians 1:27",
+    "expected_top3": [
+      "Colossians 1:27",
+      "1 John 4:4",
+      "Philippians 4:13"
+    ],
+    "category": "user_seeds",
+    "should_match": true
+  },
+  {
+    "query": "God is just starting with me.",
+    "expected_top1": "Philippians 1:6",
+    "expected_top3": [
+      "Philippians 1:6",
+      "Isaiah 43:19",
+      "Jeremiah 29:11"
+    ],
+    "category": "user_seeds",
+    "should_match": true
+  },
+  {
+    "query": "I am not permitted to feel like a failure. I have grace.",
+    "expected_top1": "Romans 8:37",
+    "expected_top3": [
+      "Romans 8:37",
+      "2 Corinthians 12:9",
+      "Romans 8:1"
+    ],
+    "category": "user_seeds",
+    "should_match": true
+  },
+  {
+    "query": "Grace strengthens me.",
+    "expected_top1": "2 Timothy 2:1",
+    "expected_top3": [
+      "2 Timothy 2:1",
+      "2 Corinthians 12:9",
+      "2 Corinthians 9:8"
+    ],
+    "category": "user_seeds",
+    "should_match": true
+  },
+  {
+    "query": "Every single detail of my life is worked into something good.",
+    "expected_top1": "Romans 8:28",
+    "expected_top3": [
+      "Romans 8:28",
+      "Genesis 50:20",
+      "Jeremiah 29:11"
+    ],
+    "category": "user_seeds",
+    "should_match": true
+  },
+  {
+    "query": "I am never afraid, because I trust God all the time.",
+    "expected_top1": "Psalm 56:3",
+    "expected_top3": [
+      "Psalm 56:3",
+      "Isaiah 41:10",
+      "Psalm 27:1"
+    ],
+    "category": "user_seeds",
+    "should_match": true
+  },
+  {
+    "query": "God's strength is my strength.",
+    "expected_top1": "Psalm 28:7",
+    "expected_top3": [
+      "Psalm 28:7",
+      "Nehemiah 8:10",
+      "Isaiah 40:31"
+    ],
+    "category": "user_seeds",
+    "should_match": true
+  },
+  {
+    "query": "God is all I need. I depend on Him, I trust Him, I hope in His love.",
+    "expected_top1": "Psalm 33:18",
+    "expected_top3": [
+      "Psalm 33:18",
+      "Psalm 73:26",
+      "Psalm 62:5"
+    ],
+    "category": "user_seeds",
+    "should_match": true
+  },
+  {
+    "query": "I have grace gifts, and I receive endless energy to use them.",
+    "expected_top1": "1 Peter 4:10",
+    "expected_top3": [
+      "1 Peter 4:10",
+      "Colossians 1:29",
+      "Isaiah 40:29"
+    ],
+    "category": "user_seeds",
+    "should_match": true
+  },
+  {
+    "query": "I can do anything.",
+    "expected_top1": "Philippians 4:13",
+    "expected_top3": [
+      "Philippians 4:13",
+      "1 Corinthians 15:10",
+      "Mark 9:23"
+    ],
+    "category": "user_seeds",
+    "should_match": true
+  },
+  {
+    "query": "I live like God, and I watch myself do anything.",
+    "expected_top1": "Ephesians 5:1",
+    "expected_top3": [
+      "Ephesians 5:1",
+      "1 John 4:17",
+      "Philippians 4:13"
+    ],
+    "category": "user_seeds",
+    "should_match": true
+  },
+  {
+    "query": "I do His work fearlessly and boldly.",
+    "expected_top1": "Acts 4:31",
+    "expected_top3": [
+      "Acts 4:31",
+      "2 Timothy 1:7",
+      "Joshua 1:9"
+    ],
+    "category": "user_seeds",
+    "should_match": true
+  },
+  {
+    "query": "This is my season of uplifting.",
+    "expected_top1": "1 Peter 5:6",
+    "expected_top3": [
+      "1 Peter 5:6",
+      "Psalm 3:3",
+      "Psalm 30:1"
+    ],
+    "category": "user_seeds",
+    "should_match": true
+  },
+  {
+    "query": "I am conscious of my blessedness.",
+    "expected_top1": "Romans 4:7",
+    "expected_top3": [
+      "Romans 4:7",
+      "Ephesians 1:3",
+      "Psalm 1:1"
+    ],
+    "category": "user_seeds",
+    "should_match": true
+  },
+  {
+    "query": "I am saved by grace through faith.",
+    "expected_top1": "Ephesians 2:8",
+    "expected_top3": [
+      "Ephesians 2:8",
+      "Ephesians 2:9",
+      "Titus 2:11"
+    ],
+    "category": "user_seeds",
+    "should_match": true
+  },
+  {
+    "query": "I am original, and my journey is my own.",
+    "expected_top1": "Psalm 139:14",
+    "expected_top3": [
+      "Psalm 139:14",
+      "Ephesians 2:10",
+      "Galatians 6:4"
+    ],
+    "category": "user_seeds",
+    "should_match": true
+  },
+  {
+    "query": "I trust in God, so I am fruitful.",
+    "expected_top1": "Jeremiah 17:7",
+    "expected_top3": [
+      "Jeremiah 17:7",
+      "Psalm 1:3",
+      "John 15:5"
+    ],
+    "category": "user_seeds",
+    "should_match": true
+  },
+  {
+    "query": "I wait on God, and He decides my steps.",
+    "expected_top1": "Proverbs 16:9",
+    "expected_top3": [
+      "Proverbs 16:9",
+      "Psalm 37:23",
+      "Proverbs 3:5"
+    ],
+    "category": "user_seeds",
+    "should_match": true
+  },
+  {
+    "query": "I find real rest in God.",
+    "expected_top1": "Hebrews 4:9",
+    "expected_top3": [
+      "Hebrews 4:9",
+      "Matthew 11:28",
+      "Psalm 62:1"
+    ],
+    "category": "user_seeds",
+    "should_match": true
+  },
+  {
+    "query": "I am hiding in God, and I am safe.",
+    "expected_top1": "Colossians 3:3",
+    "expected_top3": [
+      "Colossians 3:3",
+      "Psalm 91:1",
+      "Psalm 32:7"
+    ],
+    "category": "user_seeds",
+    "should_match": true
+  },
+  {
+    "query": "I can do all things",
+    "expected_top1": "Philippians 4:13",
+    "expected_top3": [
+      "Philippians 4:13"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "I can do anything",
+    "expected_top1": "Philippians 4:13",
+    "expected_top3": [
+      "Philippians 4:13"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I can literally do anything",
+    "expected_top1": "Philippians 4:13",
+    "expected_top3": [
+      "Philippians 4:13"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I find strength when I am weak",
+    "expected_top1": "2 Corinthians 12:9",
+    "expected_top3": [
+      "2 Corinthians 12:9"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "When I am weak then I am strong",
+    "expected_top1": "2 Corinthians 12:9",
+    "expected_top3": [
+      "2 Corinthians 12:9"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "His strength is made perfect in my weakness",
+    "expected_top1": "2 Corinthians 12:9",
+    "expected_top3": [
+      "2 Corinthians 12:9"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I am strong in the Lord",
+    "expected_top1": "Ephesians 6:10",
+    "expected_top3": [
+      "Ephesians 6:10"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "I am strong in the power of His might",
+    "expected_top1": "Ephesians 6:10",
+    "expected_top3": [
+      "Ephesians 6:10"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "God gives me mighty strength",
+    "expected_top1": "Ephesians 6:10",
+    "expected_top3": [
+      "Ephesians 6:10"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "My strength is renewed like eagles",
+    "expected_top1": "Isaiah 40:31",
+    "expected_top3": [
+      "Isaiah 40:31"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "I will run and not grow weary",
+    "expected_top1": "Isaiah 40:31",
+    "expected_top3": [
+      "Isaiah 40:31"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Those who hope in the Lord renew their strength",
+    "expected_top1": "Isaiah 40:31",
+    "expected_top3": [
+      "Isaiah 40:31"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "God is my refuge and strength",
+    "expected_top1": "Psalm 46:1-2",
+    "expected_top3": [
+      "Psalm 46:1-2",
+      "Psalm 46:10"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "A very present help in trouble",
+    "expected_top1": "Psalm 46:1-2",
+    "expected_top3": [
+      "Psalm 46:1-2",
+      "Psalm 46:10"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "God is my fortress",
+    "expected_top1": "Psalm 46:1-2",
+    "expected_top3": [
+      "Psalm 46:1-2",
+      "Psalm 46:10"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "The Lord is my strength and my shield",
+    "expected_top1": "Psalm 28:7",
+    "expected_top3": [
+      "Psalm 28:7"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "My heart trusts in Him and He helps me",
+    "expected_top1": "Psalm 28:7",
+    "expected_top3": [
+      "Psalm 28:7"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "My shield and defender",
+    "expected_top1": "Psalm 28:7",
+    "expected_top3": [
+      "Psalm 28:7"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I will not grow weary in doing good",
+    "expected_top1": "Galatians 6:9",
+    "expected_top3": [
+      "Galatians 6:9"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "At the proper time I will reap a harvest",
+    "expected_top1": "Galatians 6:9",
+    "expected_top3": [
+      "Galatians 6:9"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I do not lose heart",
+    "expected_top1": "Galatians 6:9",
+    "expected_top3": [
+      "Galatians 6:9"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "God arms me with strength",
+    "expected_top1": "Psalm 18:32-33",
+    "expected_top3": [
+      "Psalm 18:32-33"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "He makes my way perfect",
+    "expected_top1": "Psalm 18:32-33",
+    "expected_top3": [
+      "Psalm 18:32-33"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "He makes my feet like the feet of a deer",
+    "expected_top1": "Psalm 18:32-33",
+    "expected_top3": [
+      "Psalm 18:32-33"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "The joy of the Lord is my strength",
+    "expected_top1": "Nehemiah 8:10",
+    "expected_top3": [
+      "Nehemiah 8:10"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "God gives me joy that strengthens me",
+    "expected_top1": "Nehemiah 8:10",
+    "expected_top3": [
+      "Nehemiah 8:10"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I have strength through joy",
+    "expected_top1": "Nehemiah 8:10",
+    "expected_top3": [
+      "Nehemiah 8:10"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "My flesh and my heart may fail but God is my strength",
+    "expected_top1": "Psalm 73:26",
+    "expected_top3": [
+      "Psalm 73:26"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "God is the strength of my heart forever",
+    "expected_top1": "Psalm 73:26",
+    "expected_top3": [
+      "Psalm 73:26"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "God is my portion",
+    "expected_top1": "Psalm 73:26",
+    "expected_top3": [
+      "Psalm 73:26"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I can endure all things",
+    "expected_top1": "Philippians 4:13",
+    "expected_top3": [
+      "Philippians 4:13"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "I have perseverance",
+    "expected_top1": "Philippians 4:13",
+    "expected_top3": [
+      "Philippians 4:13"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I endure with joy",
+    "expected_top1": "Philippians 4:13",
+    "expected_top3": [
+      "Philippians 4:13"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I am more than a conqueror",
+    "expected_top1": "Romans 8:37",
+    "expected_top3": [
+      "Romans 8:37"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "Through Him who loved me I conquer",
+    "expected_top1": "Romans 8:37",
+    "expected_top3": [
+      "Romans 8:37"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I have total victory in Christ",
+    "expected_top1": "Romans 8:37",
+    "expected_top3": [
+      "Romans 8:37"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I overcome by faith",
+    "expected_top1": "1 John 5:4",
+    "expected_top3": [
+      "1 John 5:4",
+      "1 John 4:4"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "This is the victory that overcomes the world",
+    "expected_top1": "1 John 5:4",
+    "expected_top3": [
+      "1 John 5:4",
+      "1 John 4:4"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "My faith conquers",
+    "expected_top1": "1 John 5:4",
+    "expected_top3": [
+      "1 John 5:4",
+      "1 John 4:4"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Greater is He that is in me",
+    "expected_top1": "1 John 4:4",
+    "expected_top3": [
+      "1 John 4:4"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "Greater is He in me than he that is in the world",
+    "expected_top1": "1 John 4:4",
+    "expected_top3": [
+      "1 John 4:4"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "The Spirit in me is greater",
+    "expected_top1": "1 John 4:4",
+    "expected_top3": [
+      "1 John 4:4"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "The Lord makes my feet like deer's feet",
+    "expected_top1": "Habakkuk 3:19",
+    "expected_top3": [
+      "Habakkuk 3:19"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "He enables me to tread on the heights",
+    "expected_top1": "Habakkuk 3:19",
+    "expected_top3": [
+      "Habakkuk 3:19"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I walk on high places",
+    "expected_top1": "Habakkuk 3:19",
+    "expected_top3": [
+      "Habakkuk 3:19"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I will stand firm in the Lord",
+    "expected_top1": "1 Corinthians 16:13",
+    "expected_top3": [
+      "1 Corinthians 16:13",
+      "Ephesians 6:10"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "I am steadfast and unmovable",
+    "expected_top1": "1 Corinthians 16:13",
+    "expected_top3": [
+      "1 Corinthians 16:13",
+      "Ephesians 6:10"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I stand courageous",
+    "expected_top1": "1 Corinthians 16:13",
+    "expected_top3": [
+      "1 Corinthians 16:13",
+      "Ephesians 6:10"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "The Lord fights for me",
+    "expected_top1": "2 Chronicles 20:15",
+    "expected_top3": [
+      "2 Chronicles 20:15",
+      "2 Chronicles 20:17"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "The battle belongs to the Lord",
+    "expected_top1": "2 Chronicles 20:15",
+    "expected_top3": [
+      "2 Chronicles 20:15",
+      "2 Chronicles 20:17"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "The battle is not mine but God's",
+    "expected_top1": "2 Chronicles 20:15",
+    "expected_top3": [
+      "2 Chronicles 20:15",
+      "2 Chronicles 20:17"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I am strengthened with all power",
+    "expected_top1": "Colossians 1:11",
+    "expected_top3": [
+      "Colossians 1:11",
+      "Ephesians 3:16"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "Strengthened according to His glorious might",
+    "expected_top1": "Colossians 1:11",
+    "expected_top3": [
+      "Colossians 1:11",
+      "Ephesians 3:16"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Empowered by His Spirit",
+    "expected_top1": "Colossians 1:11",
+    "expected_top3": [
+      "Colossians 1:11",
+      "Ephesians 3:16"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I am resilient through Christ",
+    "expected_top1": "Proverbs 24:16",
+    "expected_top3": [
+      "Proverbs 24:16",
+      "Micah 7:8"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "Though I fall I will rise again",
+    "expected_top1": "Proverbs 24:16",
+    "expected_top3": [
+      "Proverbs 24:16",
+      "Micah 7:8"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I keep moving forward",
+    "expected_top1": "Proverbs 24:16",
+    "expected_top3": [
+      "Proverbs 24:16",
+      "Micah 7:8"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I am bold in the Lord",
+    "expected_top1": "Proverbs 28:1",
+    "expected_top3": [
+      "Proverbs 28:1"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "The righteous are as bold as a lion",
+    "expected_top1": "Proverbs 28:1",
+    "expected_top3": [
+      "Proverbs 28:1"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I do not shrink back",
+    "expected_top1": "Proverbs 28:1",
+    "expected_top3": [
+      "Proverbs 28:1"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I am loved",
+    "expected_top1": "Romans 8:38-39",
+    "expected_top3": [
+      "Romans 8:38-39",
+      "Romans 8:37"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "I am deeply loved",
+    "expected_top1": "Romans 8:38-39",
+    "expected_top3": [
+      "Romans 8:38-39",
+      "Romans 8:37"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Nothing can separate me from God's love",
+    "expected_top1": "Romans 8:38-39",
+    "expected_top3": [
+      "Romans 8:38-39",
+      "Romans 8:37"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I am a child of God",
+    "expected_top1": "1 John 3:1",
+    "expected_top3": [
+      "1 John 3:1",
+      "John 1:12"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "God calls me His child",
+    "expected_top1": "1 John 3:1",
+    "expected_top3": [
+      "1 John 3:1",
+      "John 1:12"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I belong to God's family",
+    "expected_top1": "1 John 3:1",
+    "expected_top3": [
+      "1 John 3:1",
+      "John 1:12"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I am fully known and deeply loved",
+    "expected_top1": "Psalm 139:1-3",
+    "expected_top3": [
+      "Psalm 139:1-3"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "I am fully known",
+    "expected_top1": "Psalm 139:1-3",
+    "expected_top3": [
+      "Psalm 139:1-3"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "God knows everything about me and loves me",
+    "expected_top1": "Psalm 139:1-3",
+    "expected_top3": [
+      "Psalm 139:1-3"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I am fearfully and wonderfully made",
+    "expected_top1": "Psalm 139:14",
+    "expected_top3": [
+      "Psalm 139:14"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "I am wonderfully created",
+    "expected_top1": "Psalm 139:14",
+    "expected_top3": [
+      "Psalm 139:14"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "God made me with intention",
+    "expected_top1": "Psalm 139:14",
+    "expected_top3": [
+      "Psalm 139:14"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I am a new creation",
+    "expected_top1": "2 Corinthians 5:17",
+    "expected_top3": [
+      "2 Corinthians 5:17"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "The old has passed away",
+    "expected_top1": "2 Corinthians 5:17",
+    "expected_top3": [
+      "2 Corinthians 5:17"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "All things have become new",
+    "expected_top1": "2 Corinthians 5:17",
+    "expected_top3": [
+      "2 Corinthians 5:17"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I am chosen",
+    "expected_top1": "Ephesians 1:4-5",
+    "expected_top3": [
+      "Ephesians 1:4-5",
+      "1 Peter 2:9"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "Chosen and not forsaken",
+    "expected_top1": "Ephesians 1:4-5",
+    "expected_top3": [
+      "Ephesians 1:4-5",
+      "1 Peter 2:9"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "God chose me before the creation of the world",
+    "expected_top1": "Ephesians 1:4-5",
+    "expected_top3": [
+      "Ephesians 1:4-5",
+      "1 Peter 2:9"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I am a royal priesthood",
+    "expected_top1": "1 Peter 2:9",
+    "expected_top3": [
+      "1 Peter 2:9"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "A holy nation God's special possession",
+    "expected_top1": "1 Peter 2:9",
+    "expected_top3": [
+      "1 Peter 2:9"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Chosen people of God",
+    "expected_top1": "1 Peter 2:9",
+    "expected_top3": [
+      "1 Peter 2:9"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I am the head and not the tail",
+    "expected_top1": "Deuteronomy 28:13",
+    "expected_top3": [
+      "Deuteronomy 28:13"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "I am above only and not beneath",
+    "expected_top1": "Deuteronomy 28:13",
+    "expected_top3": [
+      "Deuteronomy 28:13"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "The Lord makes me the head",
+    "expected_top1": "Deuteronomy 28:13",
+    "expected_top3": [
+      "Deuteronomy 28:13"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I am God's masterpiece",
+    "expected_top1": "Ephesians 2:10",
+    "expected_top3": [
+      "Ephesians 2:10"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "I am His workmanship",
+    "expected_top1": "Ephesians 2:10",
+    "expected_top3": [
+      "Ephesians 2:10"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Created in Christ Jesus for good works",
+    "expected_top1": "Ephesians 2:10",
+    "expected_top3": [
+      "Ephesians 2:10"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I am the righteousness of God in Christ",
+    "expected_top1": "2 Corinthians 5:21",
+    "expected_top3": [
+      "2 Corinthians 5:21"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "Righteous in Christ Jesus",
+    "expected_top1": "2 Corinthians 5:21",
+    "expected_top3": [
+      "2 Corinthians 5:21"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Made righteous through Him",
+    "expected_top1": "2 Corinthians 5:21",
+    "expected_top3": [
+      "2 Corinthians 5:21"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I am accepted in the Beloved",
+    "expected_top1": "Ephesians 1:6",
+    "expected_top3": [
+      "Ephesians 1:6",
+      "Romans 15:7"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "I am welcomed by God",
+    "expected_top1": "Ephesians 1:6",
+    "expected_top3": [
+      "Ephesians 1:6",
+      "Romans 15:7"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I have belonging in God",
+    "expected_top1": "Ephesians 1:6",
+    "expected_top3": [
+      "Ephesians 1:6",
+      "Romans 15:7"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "My life is hidden with Christ in God",
+    "expected_top1": "Colossians 3:3",
+    "expected_top3": [
+      "Colossians 3:3"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "I am secure in Christ",
+    "expected_top1": "Colossians 3:3",
+    "expected_top3": [
+      "Colossians 3:3"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Christ is my life",
+    "expected_top1": "Colossians 3:3",
+    "expected_top3": [
+      "Colossians 3:3"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I have been crucified with Christ",
+    "expected_top1": "Galatians 2:20",
+    "expected_top3": [
+      "Galatians 2:20"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "It is no longer I who live but Christ lives in me",
+    "expected_top1": "Galatians 2:20",
+    "expected_top3": [
+      "Galatians 2:20"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I live by faith in the Son of God",
+    "expected_top1": "Galatians 2:20",
+    "expected_top3": [
+      "Galatians 2:20"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "God rejoices over me with singing",
+    "expected_top1": "Zephaniah 3:17",
+    "expected_top3": [
+      "Zephaniah 3:17"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "He calms me with His love",
+    "expected_top1": "Zephaniah 3:17",
+    "expected_top3": [
+      "Zephaniah 3:17"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "He delights in me",
+    "expected_top1": "Zephaniah 3:17",
+    "expected_top3": [
+      "Zephaniah 3:17"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I am precious in God's eyes",
+    "expected_top1": "Isaiah 43:4",
+    "expected_top3": [
+      "Isaiah 43:4",
+      "Isaiah 43:1"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "Honored and loved by God",
+    "expected_top1": "Isaiah 43:4",
+    "expected_top3": [
+      "Isaiah 43:4",
+      "Isaiah 43:1"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "God values me deeply",
+    "expected_top1": "Isaiah 43:4",
+    "expected_top3": [
+      "Isaiah 43:4",
+      "Isaiah 43:1"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I am called by name",
+    "expected_top1": "Isaiah 43:1",
+    "expected_top3": [
+      "Isaiah 43:1"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "Do not fear for I have redeemed you",
+    "expected_top1": "Isaiah 43:1",
+    "expected_top3": [
+      "Isaiah 43:1"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "You are mine says the Lord",
+    "expected_top1": "Isaiah 43:1",
+    "expected_top3": [
+      "Isaiah 43:1"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Before I was formed God knew me",
+    "expected_top1": "Jeremiah 1:5",
+    "expected_top3": [
+      "Jeremiah 1:5"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "God set me apart before birth",
+    "expected_top1": "Jeremiah 1:5",
+    "expected_top3": [
+      "Jeremiah 1:5"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Known before I was born",
+    "expected_top1": "Jeremiah 1:5",
+    "expected_top3": [
+      "Jeremiah 1:5"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I am an heir of God",
+    "expected_top1": "Romans 8:17",
+    "expected_top3": [
+      "Romans 8:17",
+      "Galatians 4:7"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "A co-heir with Christ",
+    "expected_top1": "Romans 8:17",
+    "expected_top3": [
+      "Romans 8:17",
+      "Galatians 4:7"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I inherit God's promises",
+    "expected_top1": "Romans 8:17",
+    "expected_top3": [
+      "Romans 8:17",
+      "Galatians 4:7"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I am sealed with the Holy Spirit",
+    "expected_top1": "Ephesians 1:13-14",
+    "expected_top3": [
+      "Ephesians 1:13-14"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "Marked with a seal",
+    "expected_top1": "Ephesians 1:13-14",
+    "expected_top3": [
+      "Ephesians 1:13-14"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "The Spirit is my guarantee",
+    "expected_top1": "Ephesians 1:13-14",
+    "expected_top3": [
+      "Ephesians 1:13-14"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I am the light of the world",
+    "expected_top1": "Matthew 5:14-16",
+    "expected_top3": [
+      "Matthew 5:14-16"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "A city on a hill",
+    "expected_top1": "Matthew 5:14-16",
+    "expected_top3": [
+      "Matthew 5:14-16"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Let your light shine",
+    "expected_top1": "Matthew 5:14-16",
+    "expected_top3": [
+      "Matthew 5:14-16"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I am the salt of the earth",
+    "expected_top1": "Matthew 5:13",
+    "expected_top3": [
+      "Matthew 5:13"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "Seasoned with grace",
+    "expected_top1": "Matthew 5:13",
+    "expected_top3": [
+      "Matthew 5:13"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Preserving goodness",
+    "expected_top1": "Matthew 5:13",
+    "expected_top3": [
+      "Matthew 5:13"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I am a friend of God",
+    "expected_top1": "John 15:15",
+    "expected_top3": [
+      "John 15:15"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "Jesus calls me friend",
+    "expected_top1": "John 15:15",
+    "expected_top3": [
+      "John 15:15"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I am in friendship with God",
+    "expected_top1": "John 15:15",
+    "expected_top3": [
+      "John 15:15"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I am complete in Christ",
+    "expected_top1": "Colossians 2:10",
+    "expected_top3": [
+      "Colossians 2:10"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "Lacking no good thing",
+    "expected_top1": "Colossians 2:10",
+    "expected_top3": [
+      "Colossians 2:10"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Made full in Him",
+    "expected_top1": "Colossians 2:10",
+    "expected_top3": [
+      "Colossians 2:10"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I am redeemed",
+    "expected_top1": "Colossians 1:13-14",
+    "expected_top3": [
+      "Colossians 1:13-14",
+      "Ephesians 1:7"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "Redeemed by the blood of Christ",
+    "expected_top1": "Colossians 1:13-14",
+    "expected_top3": [
+      "Colossians 1:13-14",
+      "Ephesians 1:7"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Rescued from darkness",
+    "expected_top1": "Colossians 1:13-14",
+    "expected_top3": [
+      "Colossians 1:13-14",
+      "Ephesians 1:7"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I am holy and blameless in His sight",
+    "expected_top1": "Ephesians 1:4",
+    "expected_top3": [
+      "Ephesians 1:4",
+      "Colossians 1:22"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "Presented without blemish",
+    "expected_top1": "Ephesians 1:4",
+    "expected_top3": [
+      "Ephesians 1:4",
+      "Colossians 1:22"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Pure before God",
+    "expected_top1": "Ephesians 1:4",
+    "expected_top3": [
+      "Ephesians 1:4",
+      "Colossians 1:22"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I have peace",
+    "expected_top1": "Philippians 4:6-7",
+    "expected_top3": [
+      "Philippians 4:6-7",
+      "John 14:27"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "I receive God's peace",
+    "expected_top1": "Philippians 4:6-7",
+    "expected_top3": [
+      "Philippians 4:6-7",
+      "John 14:27"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Peace that surpasses understanding",
+    "expected_top1": "Philippians 4:6-7",
+    "expected_top3": [
+      "Philippians 4:6-7",
+      "John 14:27"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I do not worry about tomorrow",
+    "expected_top1": "Philippians 4:6-7",
+    "expected_top3": [
+      "Philippians 4:6-7",
+      "Matthew 6:31-33"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "I am free from anxiety",
+    "expected_top1": "Philippians 4:6-7",
+    "expected_top3": [
+      "Philippians 4:6-7",
+      "Matthew 6:31-33"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I cast all my worries on Him",
+    "expected_top1": "Philippians 4:6-7",
+    "expected_top3": [
+      "Philippians 4:6-7",
+      "Matthew 6:31-33"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "The peace of God guards my heart and mind",
+    "expected_top1": "Philippians 4:6-7",
+    "expected_top3": [
+      "Philippians 4:6-7"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "Peace guards my thoughts",
+    "expected_top1": "Philippians 4:6-7",
+    "expected_top3": [
+      "Philippians 4:6-7"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Guarded in Christ Jesus",
+    "expected_top1": "Philippians 4:6-7",
+    "expected_top3": [
+      "Philippians 4:6-7"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "You will keep me in perfect peace",
+    "expected_top1": "Isaiah 26:3",
+    "expected_top3": [
+      "Isaiah 26:3"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "My mind is stayed on You",
+    "expected_top1": "Isaiah 26:3",
+    "expected_top3": [
+      "Isaiah 26:3"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Perfect peace because I trust in You",
+    "expected_top1": "Isaiah 26:3",
+    "expected_top3": [
+      "Isaiah 26:3"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Peace I leave with you my peace I give you",
+    "expected_top1": "John 14:27",
+    "expected_top3": [
+      "John 14:27"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "Not as the world gives",
+    "expected_top1": "John 14:27",
+    "expected_top3": [
+      "John 14:27"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Do not let your heart be troubled",
+    "expected_top1": "John 14:27",
+    "expected_top3": [
+      "John 14:27"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "In peace I will lie down and sleep",
+    "expected_top1": "Psalm 4:8",
+    "expected_top3": [
+      "Psalm 4:8"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "For You alone make me dwell in safety",
+    "expected_top1": "Psalm 4:8",
+    "expected_top3": [
+      "Psalm 4:8"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Sweet peaceful sleep",
+    "expected_top1": "Psalm 4:8",
+    "expected_top3": [
+      "Psalm 4:8"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "The Lord gives strength and blesses with peace",
+    "expected_top1": "Psalm 29:11",
+    "expected_top3": [
+      "Psalm 29:11"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "The Lord blesses His people with peace",
+    "expected_top1": "Psalm 29:11",
+    "expected_top3": [
+      "Psalm 29:11"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Blessed with peace",
+    "expected_top1": "Psalm 29:11",
+    "expected_top3": [
+      "Psalm 29:11"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Be still and know that I am God",
+    "expected_top1": "Psalm 46:10",
+    "expected_top3": [
+      "Psalm 46:10"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "I am still before God",
+    "expected_top1": "Psalm 46:10",
+    "expected_top3": [
+      "Psalm 46:10"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I rest in God's sovereignty",
+    "expected_top1": "Psalm 46:10",
+    "expected_top3": [
+      "Psalm 46:10"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Come to me all who are weary and I will give you rest",
+    "expected_top1": "Matthew 11:28-30",
+    "expected_top3": [
+      "Matthew 11:28-30"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "Take my yoke upon you",
+    "expected_top1": "Matthew 11:28-30",
+    "expected_top3": [
+      "Matthew 11:28-30"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Rest for your souls",
+    "expected_top1": "Matthew 11:28-30",
+    "expected_top3": [
+      "Matthew 11:28-30"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "My soul finds rest in God alone",
+    "expected_top1": "Psalm 62:5-6",
+    "expected_top3": [
+      "Psalm 62:5-6",
+      "Psalm 62:1-2"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "My salvation comes from Him",
+    "expected_top1": "Psalm 62:5-6",
+    "expected_top3": [
+      "Psalm 62:5-6",
+      "Psalm 62:1-2"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "He alone is my rock and defense",
+    "expected_top1": "Psalm 62:5-6",
+    "expected_top3": [
+      "Psalm 62:5-6",
+      "Psalm 62:1-2"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "The Lord of peace Himself gives me peace at all times",
+    "expected_top1": "2 Thessalonians 3:16",
+    "expected_top3": [
+      "2 Thessalonians 3:16"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "Peace at all times in every way",
+    "expected_top1": "2 Thessalonians 3:16",
+    "expected_top3": [
+      "2 Thessalonians 3:16"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "The Lord be with you all",
+    "expected_top1": "2 Thessalonians 3:16",
+    "expected_top3": [
+      "2 Thessalonians 3:16"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Let the peace of Christ rule in your hearts",
+    "expected_top1": "Colossians 3:15",
+    "expected_top3": [
+      "Colossians 3:15"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "Peace rules in my heart",
+    "expected_top1": "Colossians 3:15",
+    "expected_top3": [
+      "Colossians 3:15"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Called to peace in one body",
+    "expected_top1": "Colossians 3:15",
+    "expected_top3": [
+      "Colossians 3:15"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "The mind governed by the Spirit is life and peace",
+    "expected_top1": "Romans 8:6",
+    "expected_top3": [
+      "Romans 8:6"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "Life and peace in the Spirit",
+    "expected_top1": "Romans 8:6",
+    "expected_top3": [
+      "Romans 8:6"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "My thoughts are centered on the Spirit",
+    "expected_top1": "Romans 8:6",
+    "expected_top3": [
+      "Romans 8:6"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "In quietness and trust is my strength",
+    "expected_top1": "Isaiah 30:15",
+    "expected_top3": [
+      "Isaiah 30:15"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "In returning and rest you shall be saved",
+    "expected_top1": "Isaiah 30:15",
+    "expected_top3": [
+      "Isaiah 30:15"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Quiet confidence",
+    "expected_top1": "Isaiah 30:15",
+    "expected_top3": [
+      "Isaiah 30:15"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "The Lord bless you and keep you and give you peace",
+    "expected_top1": "Numbers 6:24-26",
+    "expected_top3": [
+      "Numbers 6:24-26"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "The priestly blessing",
+    "expected_top1": "Numbers 6:24-26",
+    "expected_top3": [
+      "Numbers 6:24-26"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "The Lord turn His face toward you",
+    "expected_top1": "Numbers 6:24-26",
+    "expected_top3": [
+      "Numbers 6:24-26"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "My heart is not troubled neither is it afraid",
+    "expected_top1": "John 14:27",
+    "expected_top3": [
+      "John 14:27"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "I refuse to panic",
+    "expected_top1": "John 14:27",
+    "expected_top3": [
+      "John 14:27"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I dwell in tranquility",
+    "expected_top1": "John 14:27",
+    "expected_top3": [
+      "John 14:27"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "He leads me beside quiet waters",
+    "expected_top1": "Psalm 23:1-3",
+    "expected_top3": [
+      "Psalm 23:1-3"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "He restores my soul",
+    "expected_top1": "Psalm 23:1-3",
+    "expected_top3": [
+      "Psalm 23:1-3"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Quiet resting places",
+    "expected_top1": "Psalm 23:1-3",
+    "expected_top3": [
+      "Psalm 23:1-3"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I cast all my care upon Him for He cares for me",
+    "expected_top1": "1 Peter 5:7",
+    "expected_top3": [
+      "1 Peter 5:7",
+      "Psalm 55:22"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "He cares for you",
+    "expected_top1": "1 Peter 5:7",
+    "expected_top3": [
+      "1 Peter 5:7",
+      "Psalm 55:22"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Casting every burden on the Lord",
+    "expected_top1": "1 Peter 5:7",
+    "expected_top3": [
+      "1 Peter 5:7",
+      "Psalm 55:22"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "God gives His beloved sleep",
+    "expected_top1": "Psalm 127:2",
+    "expected_top3": [
+      "Psalm 127:2",
+      "Proverbs 3:24"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "Sweet sleep from God",
+    "expected_top1": "Psalm 127:2",
+    "expected_top3": [
+      "Psalm 127:2",
+      "Proverbs 3:24"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I rest without turmoil",
+    "expected_top1": "Psalm 127:2",
+    "expected_top3": [
+      "Psalm 127:2",
+      "Proverbs 3:24"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "The Lord calms every storm in my life",
+    "expected_top1": "Mark 4:39",
+    "expected_top3": [
+      "Mark 4:39",
+      "Psalm 107:29"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "Peace be still",
+    "expected_top1": "Mark 4:39",
+    "expected_top3": [
+      "Mark 4:39",
+      "Psalm 107:29"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "He stills the raging waves",
+    "expected_top1": "Mark 4:39",
+    "expected_top3": [
+      "Mark 4:39",
+      "Psalm 107:29"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I live in peaceful habitations",
+    "expected_top1": "Isaiah 32:18",
+    "expected_top3": [
+      "Isaiah 32:18"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "Secure dwellings and quiet resting places",
+    "expected_top1": "Isaiah 32:18",
+    "expected_top3": [
+      "Isaiah 32:18"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Dwell in peace",
+    "expected_top1": "Isaiah 32:18",
+    "expected_top3": [
+      "Isaiah 32:18"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "My mind is anchored in Christ",
+    "expected_top1": "Hebrews 6:19",
+    "expected_top3": [
+      "Hebrews 6:19",
+      "Isaiah 26:3"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "Anchored in hope",
+    "expected_top1": "Hebrews 6:19",
+    "expected_top3": [
+      "Hebrews 6:19",
+      "Isaiah 26:3"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Steadfast thoughts",
+    "expected_top1": "Hebrews 6:19",
+    "expected_top3": [
+      "Hebrews 6:19",
+      "Isaiah 26:3"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I breathe in God's peace",
+    "expected_top1": "Philippians 4:7",
+    "expected_top3": [
+      "Philippians 4:7"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "I release all tension to God",
+    "expected_top1": "Philippians 4:7",
+    "expected_top3": [
+      "Philippians 4:7"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Full of tranquility",
+    "expected_top1": "Philippians 4:7",
+    "expected_top3": [
+      "Philippians 4:7"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "No turmoil can shake my peace in God",
+    "expected_top1": "Isaiah 54:10",
+    "expected_top3": [
+      "Isaiah 54:10",
+      "John 16:33"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "Unshakable peace",
+    "expected_top1": "Isaiah 54:10",
+    "expected_top3": [
+      "Isaiah 54:10",
+      "John 16:33"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Steady calm in God",
+    "expected_top1": "Isaiah 54:10",
+    "expected_top3": [
+      "Isaiah 54:10",
+      "John 16:33"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "In the world you will have trouble but take heart",
+    "expected_top1": "John 16:33",
+    "expected_top3": [
+      "John 16:33"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "I have overcome the world",
+    "expected_top1": "John 16:33",
+    "expected_top3": [
+      "John 16:33"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Peace in Christ despite the world",
+    "expected_top1": "John 16:33",
+    "expected_top3": [
+      "John 16:33"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I am not afraid",
+    "expected_top1": "Isaiah 41:10",
+    "expected_top3": [
+      "Isaiah 41:10"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "I will not fear",
+    "expected_top1": "Isaiah 41:10",
+    "expected_top3": [
+      "Isaiah 41:10"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "God is with me I will not be afraid",
+    "expected_top1": "Isaiah 41:10",
+    "expected_top3": [
+      "Isaiah 41:10"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "God has not given me a spirit of fear",
+    "expected_top1": "2 Timothy 1:7",
+    "expected_top3": [
+      "2 Timothy 1:7"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "A spirit of power love and self discipline",
+    "expected_top1": "2 Timothy 1:7",
+    "expected_top3": [
+      "2 Timothy 1:7"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Power love and a sound mind",
+    "expected_top1": "2 Timothy 1:7",
+    "expected_top3": [
+      "2 Timothy 1:7"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Be strong and courageous",
+    "expected_top1": "Joshua 1:9",
+    "expected_top3": [
+      "Joshua 1:9"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "Do not be terrified do not be discouraged",
+    "expected_top1": "Joshua 1:9",
+    "expected_top3": [
+      "Joshua 1:9"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "The Lord your God is with you wherever you go",
+    "expected_top1": "Joshua 1:9",
+    "expected_top3": [
+      "Joshua 1:9"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "The Lord is my light and my salvation whom shall I fear",
+    "expected_top1": "Psalm 27:1",
+    "expected_top3": [
+      "Psalm 27:1"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "The Lord is the stronghold of my life of whom shall I be afraid",
+    "expected_top1": "Psalm 27:1",
+    "expected_top3": [
+      "Psalm 27:1"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Whom shall I fear",
+    "expected_top1": "Psalm 27:1",
+    "expected_top3": [
+      "Psalm 27:1"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "When I am afraid I put my trust in You",
+    "expected_top1": "Psalm 56:3-4",
+    "expected_top3": [
+      "Psalm 56:3-4"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "In God whose word I praise I will not fear",
+    "expected_top1": "Psalm 56:3-4",
+    "expected_top3": [
+      "Psalm 56:3-4"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "What can mere mortals do to me",
+    "expected_top1": "Psalm 56:3-4",
+    "expected_top3": [
+      "Psalm 56:3-4"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "The Lord is on my side I will not fear",
+    "expected_top1": "Psalm 118:6",
+    "expected_top3": [
+      "Psalm 118:6",
+      "Hebrews 13:6"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "The Lord is with me I will not be afraid",
+    "expected_top1": "Psalm 118:6",
+    "expected_top3": [
+      "Psalm 118:6",
+      "Hebrews 13:6"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "What can man do to me",
+    "expected_top1": "Psalm 118:6",
+    "expected_top3": [
+      "Psalm 118:6",
+      "Hebrews 13:6"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I will fear no evil for You are with me",
+    "expected_top1": "Psalm 23:1-3",
+    "expected_top3": [
+      "Psalm 23:1-3"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "Even though I walk through the valley of the shadow of death",
+    "expected_top1": "Psalm 23:1-3",
+    "expected_top3": [
+      "Psalm 23:1-3"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Your rod and your staff they comfort me",
+    "expected_top1": "Psalm 23:1-3",
+    "expected_top3": [
+      "Psalm 23:1-3"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Fear not for I am with you be not dismayed",
+    "expected_top1": "Isaiah 41:10",
+    "expected_top3": [
+      "Isaiah 41:10"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "I will strengthen you and help you",
+    "expected_top1": "Isaiah 41:10",
+    "expected_top3": [
+      "Isaiah 41:10"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I will uphold you with my righteous right hand",
+    "expected_top1": "Isaiah 41:10",
+    "expected_top3": [
+      "Isaiah 41:10"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I have confidence in the Lord",
+    "expected_top1": "Proverbs 3:26",
+    "expected_top3": [
+      "Proverbs 3:26",
+      "Hebrews 10:35"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "The Lord will be your confidence",
+    "expected_top1": "Proverbs 3:26",
+    "expected_top3": [
+      "Proverbs 3:26",
+      "Hebrews 10:35"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "He keeps your foot from being snared",
+    "expected_top1": "Proverbs 3:26",
+    "expected_top3": [
+      "Proverbs 3:26",
+      "Hebrews 10:35"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Since God is for us who can be against us",
+    "expected_top1": "Romans 8:31",
+    "expected_top3": [
+      "Romans 8:31"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "Who can be against us",
+    "expected_top1": "Romans 8:31",
+    "expected_top3": [
+      "Romans 8:31"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "God is on our side",
+    "expected_top1": "Romans 8:31",
+    "expected_top3": [
+      "Romans 8:31"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I take courage in God's promises",
+    "expected_top1": "Psalm 31:24",
+    "expected_top3": [
+      "Psalm 31:24",
+      "Joshua 1:9"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "Courage in the Lord",
+    "expected_top1": "Psalm 31:24",
+    "expected_top3": [
+      "Psalm 31:24",
+      "Joshua 1:9"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Standing brave in faith",
+    "expected_top1": "Psalm 31:24",
+    "expected_top3": [
+      "Psalm 31:24",
+      "Joshua 1:9"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I am bold because of the hope I have",
+    "expected_top1": "2 Corinthians 3:12",
+    "expected_top3": [
+      "2 Corinthians 3:12"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "We use great boldness of speech",
+    "expected_top1": "2 Corinthians 3:12",
+    "expected_top3": [
+      "2 Corinthians 3:12"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Great boldness in Christ",
+    "expected_top1": "2 Corinthians 3:12",
+    "expected_top3": [
+      "2 Corinthians 3:12"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I approach the throne of grace with confidence",
+    "expected_top1": "Hebrews 4:16",
+    "expected_top3": [
+      "Hebrews 4:16"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "Confidence before God's throne",
+    "expected_top1": "Hebrews 4:16",
+    "expected_top3": [
+      "Hebrews 4:16"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "To receive mercy and find grace to help in time of need",
+    "expected_top1": "Hebrews 4:16",
+    "expected_top3": [
+      "Hebrews 4:16"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Perfect love drives out fear",
+    "expected_top1": "1 John 4:18",
+    "expected_top3": [
+      "1 John 4:18"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "There is no fear in love",
+    "expected_top1": "1 John 4:18",
+    "expected_top3": [
+      "1 John 4:18"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Fear has to do with punishment but love casts it out",
+    "expected_top1": "1 John 4:18",
+    "expected_top3": [
+      "1 John 4:18"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I am not intimidated by the enemy",
+    "expected_top1": "Philippians 1:28",
+    "expected_top3": [
+      "Philippians 1:28"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "Standing firm without fear",
+    "expected_top1": "Philippians 1:28",
+    "expected_top3": [
+      "Philippians 1:28"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Not frightened in anything",
+    "expected_top1": "Philippians 1:28",
+    "expected_top3": [
+      "Philippians 1:28"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "The Lord goes before me",
+    "expected_top1": "Deuteronomy 31:8",
+    "expected_top3": [
+      "Deuteronomy 31:8"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "He will never leave you nor forsake you do not be afraid",
+    "expected_top1": "Deuteronomy 31:8",
+    "expected_top3": [
+      "Deuteronomy 31:8"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "God leads the way",
+    "expected_top1": "Deuteronomy 31:8",
+    "expected_top3": [
+      "Deuteronomy 31:8"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I step out in faith without fear",
+    "expected_top1": "2 Corinthians 5:7",
+    "expected_top3": [
+      "2 Corinthians 5:7"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "Walking by faith bravely",
+    "expected_top1": "2 Corinthians 5:7",
+    "expected_top3": [
+      "2 Corinthians 5:7"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Bold faith steps",
+    "expected_top1": "2 Corinthians 5:7",
+    "expected_top3": [
+      "2 Corinthians 5:7"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "My heart is steadfast trusting in the Lord",
+    "expected_top1": "Psalm 112:7",
+    "expected_top3": [
+      "Psalm 112:7"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "They will have no fear of bad news",
+    "expected_top1": "Psalm 112:7",
+    "expected_top3": [
+      "Psalm 112:7"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Their hearts are steadfast",
+    "expected_top1": "Psalm 112:7",
+    "expected_top3": [
+      "Psalm 112:7"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I will not shrink back in fear",
+    "expected_top1": "Hebrews 10:39",
+    "expected_top3": [
+      "Hebrews 10:39"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "We are not of those who shrink back",
+    "expected_top1": "Hebrews 10:39",
+    "expected_top3": [
+      "Hebrews 10:39"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "We have faith and preserve our souls",
+    "expected_top1": "Hebrews 10:39",
+    "expected_top3": [
+      "Hebrews 10:39"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "The Lord delivers me from all my fears",
+    "expected_top1": "Psalm 34:4",
+    "expected_top3": [
+      "Psalm 34:4"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "I sought the Lord and He answered me",
+    "expected_top1": "Psalm 34:4",
+    "expected_top3": [
+      "Psalm 34:4"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Delivered from every fear",
+    "expected_top1": "Psalm 34:4",
+    "expected_top3": [
+      "Psalm 34:4"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I face the future without anxiety",
+    "expected_top1": "Proverbs 31:25",
+    "expected_top3": [
+      "Proverbs 31:25"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "She can laugh at the days to come",
+    "expected_top1": "Proverbs 31:25",
+    "expected_top3": [
+      "Proverbs 31:25"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Looking forward with confidence",
+    "expected_top1": "Proverbs 31:25",
+    "expected_top3": [
+      "Proverbs 31:25"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "God breaks every chain of fear",
+    "expected_top1": "Romans 8:15",
+    "expected_top3": [
+      "Romans 8:15",
+      "Psalm 107:14"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "Freedom from fear",
+    "expected_top1": "Romans 8:15",
+    "expected_top3": [
+      "Romans 8:15",
+      "Psalm 107:14"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Delivered into liberty",
+    "expected_top1": "Romans 8:15",
+    "expected_top3": [
+      "Romans 8:15",
+      "Psalm 107:14"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I stand fearless in the truth",
+    "expected_top1": "Ephesians 6:14",
+    "expected_top3": [
+      "Ephesians 6:14"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "Girded with truth",
+    "expected_top1": "Ephesians 6:14",
+    "expected_top3": [
+      "Ephesians 6:14"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Unwavering courage",
+    "expected_top1": "Ephesians 6:14",
+    "expected_top3": [
+      "Ephesians 6:14"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Courage rises within me today",
+    "expected_top1": "Psalm 27:14",
+    "expected_top3": [
+      "Psalm 27:14"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "Strengthen your heart",
+    "expected_top1": "Psalm 27:14",
+    "expected_top3": [
+      "Psalm 27:14"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Wait on the Lord and be courageous",
+    "expected_top1": "Psalm 27:14",
+    "expected_top3": [
+      "Psalm 27:14"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "The Lord makes my heart courageous",
+    "expected_top1": "Ephesians 3:16",
+    "expected_top3": [
+      "Ephesians 3:16"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "Strengthened with might in the inner man",
+    "expected_top1": "Ephesians 3:16",
+    "expected_top3": [
+      "Ephesians 3:16"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Inner courage",
+    "expected_top1": "Ephesians 3:16",
+    "expected_top3": [
+      "Ephesians 3:16"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I am never alone",
+    "expected_top1": "Deuteronomy 31:6",
+    "expected_top3": [
+      "Deuteronomy 31:6",
+      "Hebrews 13:5"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "God is always with me",
+    "expected_top1": "Deuteronomy 31:6",
+    "expected_top3": [
+      "Deuteronomy 31:6",
+      "Hebrews 13:5"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "The Lord will never leave me",
+    "expected_top1": "Deuteronomy 31:6",
+    "expected_top3": [
+      "Deuteronomy 31:6",
+      "Hebrews 13:5"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I am never stranded",
+    "expected_top1": "Deuteronomy 31:6",
+    "expected_top3": [
+      "Deuteronomy 31:6",
+      "Psalm 37:25",
+      "Psalm 23:1-3"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "I am never abandoned",
+    "expected_top1": "Deuteronomy 31:6",
+    "expected_top3": [
+      "Deuteronomy 31:6",
+      "Psalm 37:25",
+      "Psalm 23:1-3"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "God will not leave me stranded",
+    "expected_top1": "Deuteronomy 31:6",
+    "expected_top3": [
+      "Deuteronomy 31:6",
+      "Psalm 37:25",
+      "Psalm 23:1-3"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "The Lord will never leave you nor forsake you",
+    "expected_top1": "Deuteronomy 31:6",
+    "expected_top3": [
+      "Deuteronomy 31:6",
+      "Joshua 1:5"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "He will never abandon you",
+    "expected_top1": "Deuteronomy 31:6",
+    "expected_top3": [
+      "Deuteronomy 31:6",
+      "Joshua 1:5"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "He remains faithful forever",
+    "expected_top1": "Deuteronomy 31:6",
+    "expected_top3": [
+      "Deuteronomy 31:6",
+      "Joshua 1:5"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "The Lord is my shepherd",
+    "expected_top1": "Psalm 23:1-3",
+    "expected_top3": [
+      "Psalm 23:1-3"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "I lack nothing",
+    "expected_top1": "Psalm 23:1-3",
+    "expected_top3": [
+      "Psalm 23:1-3"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I shall not want",
+    "expected_top1": "Psalm 23:1-3",
+    "expected_top3": [
+      "Psalm 23:1-3"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Surely I am with you always to the very end of the age",
+    "expected_top1": "Matthew 28:20",
+    "expected_top3": [
+      "Matthew 28:20"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "Jesus is always with me",
+    "expected_top1": "Matthew 28:20",
+    "expected_top3": [
+      "Matthew 28:20"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Never alone to the end",
+    "expected_top1": "Matthew 28:20",
+    "expected_top3": [
+      "Matthew 28:20"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Where two or three gather in my name there am I with them",
+    "expected_top1": "Matthew 18:20",
+    "expected_top3": [
+      "Matthew 18:20"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "God in our midst",
+    "expected_top1": "Matthew 18:20",
+    "expected_top3": [
+      "Matthew 18:20"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Jesus with us together",
+    "expected_top1": "Matthew 18:20",
+    "expected_top3": [
+      "Matthew 18:20"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "When you pass through the waters I will be with you",
+    "expected_top1": "Isaiah 43:2",
+    "expected_top3": [
+      "Isaiah 43:2",
+      "Isaiah 43:1"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "The rivers will not sweep over you",
+    "expected_top1": "Isaiah 43:2",
+    "expected_top3": [
+      "Isaiah 43:2",
+      "Isaiah 43:1"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "When you walk through the fire you will not be burned",
+    "expected_top1": "Isaiah 43:2",
+    "expected_top3": [
+      "Isaiah 43:2",
+      "Isaiah 43:1"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "The Lord is near to all who call on Him",
+    "expected_top1": "Psalm 145:18",
+    "expected_top3": [
+      "Psalm 145:18"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "Near to those who call in truth",
+    "expected_top1": "Psalm 145:18",
+    "expected_top3": [
+      "Psalm 145:18"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "God is close to me",
+    "expected_top1": "Psalm 145:18",
+    "expected_top3": [
+      "Psalm 145:18"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "The Lord is close to the brokenhearted",
+    "expected_top1": "Psalm 34:18",
+    "expected_top3": [
+      "Psalm 34:18",
+      "Psalm 147:3"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "He saves those who are crushed in spirit",
+    "expected_top1": "Psalm 34:18",
+    "expected_top3": [
+      "Psalm 34:18",
+      "Psalm 147:3"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "He heals the broken in heart",
+    "expected_top1": "Psalm 34:18",
+    "expected_top3": [
+      "Psalm 34:18",
+      "Psalm 147:3"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I dwell in the shelter of the Most High",
+    "expected_top1": "Psalm 91:1-2",
+    "expected_top3": [
+      "Psalm 91:1-2"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "I rest in the shadow of the Almighty",
+    "expected_top1": "Psalm 91:1-2",
+    "expected_top3": [
+      "Psalm 91:1-2"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "He is my refuge and my fortress",
+    "expected_top1": "Psalm 91:1-2",
+    "expected_top3": [
+      "Psalm 91:1-2"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Goodness and mercy follow me all the days of my life",
+    "expected_top1": "Psalm 23:6",
+    "expected_top3": [
+      "Psalm 23:6",
+      "Psalm 23:1-3"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "Surely goodness and love will follow me",
+    "expected_top1": "Psalm 23:6",
+    "expected_top3": [
+      "Psalm 23:6",
+      "Psalm 23:1-3"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I will dwell in the house of the Lord forever",
+    "expected_top1": "Psalm 23:6",
+    "expected_top3": [
+      "Psalm 23:6",
+      "Psalm 23:1-3"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I am never forgotten by God",
+    "expected_top1": "Isaiah 49:15-16",
+    "expected_top3": [
+      "Isaiah 49:15-16"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "Engraved on the palms of His hands",
+    "expected_top1": "Isaiah 49:15-16",
+    "expected_top3": [
+      "Isaiah 49:15-16"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Can a mother forget her nursing child",
+    "expected_top1": "Isaiah 49:15-16",
+    "expected_top3": [
+      "Isaiah 49:15-16"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "God is in the midst of her she shall not be moved",
+    "expected_top1": "Psalm 46:5",
+    "expected_top3": [
+      "Psalm 46:5"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "God will help her at break of day",
+    "expected_top1": "Psalm 46:5",
+    "expected_top3": [
+      "Psalm 46:5"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "God is in my midst",
+    "expected_top1": "Psalm 46:5",
+    "expected_top3": [
+      "Psalm 46:5"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "He guides me along the right paths for His name's sake",
+    "expected_top1": "Psalm 23:3",
+    "expected_top3": [
+      "Psalm 23:3",
+      "Psalm 23:1-3"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "Paths of righteousness",
+    "expected_top1": "Psalm 23:3",
+    "expected_top3": [
+      "Psalm 23:3",
+      "Psalm 23:1-3"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Guided by the Good Shepherd",
+    "expected_top1": "Psalm 23:3",
+    "expected_top3": [
+      "Psalm 23:3",
+      "Psalm 23:1-3"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "You are with me Your rod and Your staff comfort me",
+    "expected_top1": "Psalm 23:4",
+    "expected_top3": [
+      "Psalm 23:4",
+      "Psalm 23:1-3"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "Comfort in God's presence",
+    "expected_top1": "Psalm 23:4",
+    "expected_top3": [
+      "Psalm 23:4",
+      "Psalm 23:1-3"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "His presence brings comfort",
+    "expected_top1": "Psalm 23:4",
+    "expected_top3": [
+      "Psalm 23:4",
+      "Psalm 23:1-3"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "You prepare a table before me in the presence of my enemies",
+    "expected_top1": "Psalm 23:5",
+    "expected_top3": [
+      "Psalm 23:5",
+      "Psalm 23:1-3"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "You anoint my head with oil my cup overflows",
+    "expected_top1": "Psalm 23:5",
+    "expected_top3": [
+      "Psalm 23:5",
+      "Psalm 23:1-3"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "My cup runs over",
+    "expected_top1": "Psalm 23:5",
+    "expected_top3": [
+      "Psalm 23:5",
+      "Psalm 23:1-3"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "God's presence goes with me and gives me rest",
+    "expected_top1": "Exodus 33:14",
+    "expected_top3": [
+      "Exodus 33:14"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "My presence will go with you and I will give you rest",
+    "expected_top1": "Exodus 33:14",
+    "expected_top3": [
+      "Exodus 33:14"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Rest in His presence",
+    "expected_top1": "Exodus 33:14",
+    "expected_top3": [
+      "Exodus 33:14"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I will never be forsaken",
+    "expected_top1": "Psalm 37:25",
+    "expected_top3": [
+      "Psalm 37:25"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "I have not seen the righteous forsaken",
+    "expected_top1": "Psalm 37:25",
+    "expected_top3": [
+      "Psalm 37:25"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Nor their children begging for bread",
+    "expected_top1": "Psalm 37:25",
+    "expected_top3": [
+      "Psalm 37:25"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "In Your presence is fullness of joy",
+    "expected_top1": "Psalm 16:11",
+    "expected_top3": [
+      "Psalm 16:11"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "At Your right hand are pleasures forevermore",
+    "expected_top1": "Psalm 16:11",
+    "expected_top3": [
+      "Psalm 16:11"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Joy in God's presence",
+    "expected_top1": "Psalm 16:11",
+    "expected_top3": [
+      "Psalm 16:11"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "The Lord watches over my coming and going",
+    "expected_top1": "Psalm 121:8",
+    "expected_top3": [
+      "Psalm 121:8",
+      "Psalm 121:5-8"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "Both now and forevermore",
+    "expected_top1": "Psalm 121:8",
+    "expected_top3": [
+      "Psalm 121:8",
+      "Psalm 121:5-8"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "He will keep your life",
+    "expected_top1": "Psalm 121:8",
+    "expected_top3": [
+      "Psalm 121:8",
+      "Psalm 121:5-8"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "He will cover you with His feathers",
+    "expected_top1": "Psalm 91:4",
+    "expected_top3": [
+      "Psalm 91:4",
+      "Psalm 91:1-2"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "Under His wings you will find refuge",
+    "expected_top1": "Psalm 91:4",
+    "expected_top3": [
+      "Psalm 91:4",
+      "Psalm 91:1-2"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "His faithfulness will be your shield",
+    "expected_top1": "Psalm 91:4",
+    "expected_top3": [
+      "Psalm 91:4",
+      "Psalm 91:1-2"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "No one can snatch me out of the Father's hand",
+    "expected_top1": "John 10:28-29",
+    "expected_top3": [
+      "John 10:28-29"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "Secure in God's hand",
+    "expected_top1": "John 10:28-29",
+    "expected_top3": [
+      "John 10:28-29"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Held fast by the Father",
+    "expected_top1": "John 10:28-29",
+    "expected_top3": [
+      "John 10:28-29"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "The Holy Spirit abides with me forever",
+    "expected_top1": "John 14:16-17",
+    "expected_top3": [
+      "John 14:16-17"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "The Counselor is with me",
+    "expected_top1": "John 14:16-17",
+    "expected_top3": [
+      "John 14:16-17"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "The Spirit of truth dwells with you",
+    "expected_top1": "John 14:16-17",
+    "expected_top3": [
+      "John 14:16-17"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I am surrounded by God's favor as with a shield",
+    "expected_top1": "Psalm 5:12",
+    "expected_top3": [
+      "Psalm 5:12"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "Surrounded by favor",
+    "expected_top1": "Psalm 5:12",
+    "expected_top3": [
+      "Psalm 5:12"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Shield of divine favor",
+    "expected_top1": "Psalm 5:12",
+    "expected_top3": [
+      "Psalm 5:12"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "The angel of the Lord encamps around those who fear Him",
+    "expected_top1": "Psalm 34:7",
+    "expected_top3": [
+      "Psalm 34:7"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "And delivers them",
+    "expected_top1": "Psalm 34:7",
+    "expected_top3": [
+      "Psalm 34:7"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Protected by God's angels",
+    "expected_top1": "Psalm 34:7",
+    "expected_top3": [
+      "Psalm 34:7"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I am healed",
+    "expected_top1": "Isaiah 53:5",
+    "expected_top3": [
+      "Isaiah 53:5",
+      "Jeremiah 17:14"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "By His wounds I am healed",
+    "expected_top1": "Isaiah 53:5",
+    "expected_top3": [
+      "Isaiah 53:5",
+      "Jeremiah 17:14"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Heal me Lord and I will be healed",
+    "expected_top1": "Isaiah 53:5",
+    "expected_top3": [
+      "Isaiah 53:5",
+      "Jeremiah 17:14"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "By His wounds you have been healed",
+    "expected_top1": "1 Peter 2:24",
+    "expected_top3": [
+      "1 Peter 2:24",
+      "Isaiah 53:5"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "He bore our sins in His body",
+    "expected_top1": "1 Peter 2:24",
+    "expected_top3": [
+      "1 Peter 2:24",
+      "Isaiah 53:5"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Healed by the stripes of Jesus",
+    "expected_top1": "1 Peter 2:24",
+    "expected_top3": [
+      "1 Peter 2:24",
+      "Isaiah 53:5"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "He heals the brokenhearted and binds up their wounds",
+    "expected_top1": "Psalm 147:3",
+    "expected_top3": [
+      "Psalm 147:3"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "He restores emotional pain",
+    "expected_top1": "Psalm 147:3",
+    "expected_top3": [
+      "Psalm 147:3"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Binds up every injury",
+    "expected_top1": "Psalm 147:3",
+    "expected_top3": [
+      "Psalm 147:3"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "The Lord restores my health and heals my wounds",
+    "expected_top1": "Jeremiah 30:17",
+    "expected_top3": [
+      "Jeremiah 30:17"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "I will restore health to you",
+    "expected_top1": "Jeremiah 30:17",
+    "expected_top3": [
+      "Jeremiah 30:17"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Heal you of your wounds says the Lord",
+    "expected_top1": "Jeremiah 30:17",
+    "expected_top3": [
+      "Jeremiah 30:17"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I will restore to you the years that the swarming locust has eaten",
+    "expected_top1": "Joel 2:25",
+    "expected_top3": [
+      "Joel 2:25"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "Years of restoration",
+    "expected_top1": "Joel 2:25",
+    "expected_top3": [
+      "Joel 2:25"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Restoration of lost time",
+    "expected_top1": "Joel 2:25",
+    "expected_top3": [
+      "Joel 2:25"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "He forgives all your sins and heals all your diseases",
+    "expected_top1": "Psalm 103:2-3",
+    "expected_top3": [
+      "Psalm 103:2-3"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "Praise the Lord O my soul",
+    "expected_top1": "Psalm 103:2-3",
+    "expected_top3": [
+      "Psalm 103:2-3"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Redeems your life from the pit",
+    "expected_top1": "Psalm 103:2-3",
+    "expected_top3": [
+      "Psalm 103:2-3"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "He sent out His word and healed them",
+    "expected_top1": "Psalm 107:20",
+    "expected_top3": [
+      "Psalm 107:20"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "Rescued from the grave",
+    "expected_top1": "Psalm 107:20",
+    "expected_top3": [
+      "Psalm 107:20"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "God's word brings healing",
+    "expected_top1": "Psalm 107:20",
+    "expected_top3": [
+      "Psalm 107:20"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "My youth is renewed like the eagle's",
+    "expected_top1": "Psalm 103:5",
+    "expected_top3": [
+      "Psalm 103:5"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "Satisfies your desires with good things",
+    "expected_top1": "Psalm 103:5",
+    "expected_top3": [
+      "Psalm 103:5"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Renewed vigor and strength",
+    "expected_top1": "Psalm 103:5",
+    "expected_top3": [
+      "Psalm 103:5"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "God turns my mourning into dancing",
+    "expected_top1": "Psalm 30:11-12",
+    "expected_top3": [
+      "Psalm 30:11-12",
+      "Psalm 30:5"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "Clothed with gladness",
+    "expected_top1": "Psalm 30:11-12",
+    "expected_top3": [
+      "Psalm 30:11-12",
+      "Psalm 30:5"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "You removed my sackcloth",
+    "expected_top1": "Psalm 30:11-12",
+    "expected_top3": [
+      "Psalm 30:11-12",
+      "Psalm 30:5"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Weeping may endure for a night but joy comes in the morning",
+    "expected_top1": "Psalm 30:5",
+    "expected_top3": [
+      "Psalm 30:5"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "Joy in the morning",
+    "expected_top1": "Psalm 30:5",
+    "expected_top3": [
+      "Psalm 30:5"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Morning brings joy",
+    "expected_top1": "Psalm 30:5",
+    "expected_top3": [
+      "Psalm 30:5"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "He gives a crown of beauty instead of ashes",
+    "expected_top1": "Isaiah 61:3",
+    "expected_top3": [
+      "Isaiah 61:3",
+      "Isaiah 61:1-2"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "The oil of joy instead of mourning",
+    "expected_top1": "Isaiah 61:3",
+    "expected_top3": [
+      "Isaiah 61:3",
+      "Isaiah 61:1-2"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "A garment of praise instead of a spirit of despair",
+    "expected_top1": "Isaiah 61:3",
+    "expected_top3": [
+      "Isaiah 61:3",
+      "Isaiah 61:1-2"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "God will wipe away every tear from their eyes",
+    "expected_top1": "Revelation 21:4",
+    "expected_top3": [
+      "Revelation 21:4"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "No more death or mourning or crying or pain",
+    "expected_top1": "Revelation 21:4",
+    "expected_top3": [
+      "Revelation 21:4"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "All sorrow removed",
+    "expected_top1": "Revelation 21:4",
+    "expected_top3": [
+      "Revelation 21:4"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "My mind and body are renewed day by day",
+    "expected_top1": "2 Corinthians 4:16",
+    "expected_top3": [
+      "2 Corinthians 4:16"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "Though our outer self is wasting away our inner self is being renewed",
+    "expected_top1": "2 Corinthians 4:16",
+    "expected_top3": [
+      "2 Corinthians 4:16"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Daily renewal",
+    "expected_top1": "2 Corinthians 4:16",
+    "expected_top3": [
+      "2 Corinthians 4:16"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "The prayer of faith will make the sick person well",
+    "expected_top1": "James 5:15",
+    "expected_top3": [
+      "James 5:15"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "The Lord will raise them up",
+    "expected_top1": "James 5:15",
+    "expected_top3": [
+      "James 5:15"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Healed through prayer of faith",
+    "expected_top1": "James 5:15",
+    "expected_top3": [
+      "James 5:15"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "He restores my soul",
+    "expected_top1": "Psalm 23:3",
+    "expected_top3": [
+      "Psalm 23:3",
+      "Psalm 23:1-3"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "Soul restoration",
+    "expected_top1": "Psalm 23:3",
+    "expected_top3": [
+      "Psalm 23:3",
+      "Psalm 23:1-3"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "He brings fresh life to my spirit",
+    "expected_top1": "Psalm 23:3",
+    "expected_top3": [
+      "Psalm 23:3",
+      "Psalm 23:1-3"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I am recovering and regaining wholeness",
+    "expected_top1": "Jeremiah 30:17",
+    "expected_top3": [
+      "Jeremiah 30:17",
+      "Psalm 147:3"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "Wholeness in Christ",
+    "expected_top1": "Jeremiah 30:17",
+    "expected_top3": [
+      "Jeremiah 30:17",
+      "Psalm 147:3"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Full recovery in God",
+    "expected_top1": "Jeremiah 30:17",
+    "expected_top3": [
+      "Jeremiah 30:17",
+      "Psalm 147:3"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "God's words are life to those who find them and health to all their body",
+    "expected_top1": "Proverbs 4:20-22",
+    "expected_top3": [
+      "Proverbs 4:20-22"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "Health to my whole body",
+    "expected_top1": "Proverbs 4:20-22",
+    "expected_top3": [
+      "Proverbs 4:20-22"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Life and health in scripture",
+    "expected_top1": "Proverbs 4:20-22",
+    "expected_top3": [
+      "Proverbs 4:20-22"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "A cheerful heart is good medicine",
+    "expected_top1": "Proverbs 17:22",
+    "expected_top3": [
+      "Proverbs 17:22"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "A crushed spirit dries up the bones",
+    "expected_top1": "Proverbs 17:22",
+    "expected_top3": [
+      "Proverbs 17:22"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Joy brings bodily health",
+    "expected_top1": "Proverbs 17:22",
+    "expected_top3": [
+      "Proverbs 17:22"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "The Sun of Righteousness rises with healing in His wings",
+    "expected_top1": "Malachi 4:2",
+    "expected_top3": [
+      "Malachi 4:2"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "Healing in His wings",
+    "expected_top1": "Malachi 4:2",
+    "expected_top3": [
+      "Malachi 4:2"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Joyful like calves released from the stall",
+    "expected_top1": "Malachi 4:2",
+    "expected_top3": [
+      "Malachi 4:2"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I walk in wholeness spirit soul and body",
+    "expected_top1": "1 Thessalonians 5:23",
+    "expected_top3": [
+      "1 Thessalonians 5:23"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "Entirely sanctified and kept sound",
+    "expected_top1": "1 Thessalonians 5:23",
+    "expected_top3": [
+      "1 Thessalonians 5:23"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Sound mind and sound body",
+    "expected_top1": "1 Thessalonians 5:23",
+    "expected_top3": [
+      "1 Thessalonians 5:23"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I am blessed",
+    "expected_top1": "Ephesians 1:3",
+    "expected_top3": [
+      "Ephesians 1:3",
+      "Deuteronomy 28:13",
+      "Proverbs 10:22"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "Blessed with every spiritual blessing",
+    "expected_top1": "Ephesians 1:3",
+    "expected_top3": [
+      "Ephesians 1:3",
+      "Deuteronomy 28:13",
+      "Proverbs 10:22"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Blessed coming in and blessed going out",
+    "expected_top1": "Ephesians 1:3",
+    "expected_top3": [
+      "Ephesians 1:3",
+      "Deuteronomy 28:13",
+      "Proverbs 10:22"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "My God will meet all your needs according to the riches of His glory",
+    "expected_top1": "Philippians 4:19",
+    "expected_top3": [
+      "Philippians 4:19"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "God provides all my needs",
+    "expected_top1": "Philippians 4:19",
+    "expected_top3": [
+      "Philippians 4:19"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "All needs supplied in Christ Jesus",
+    "expected_top1": "Philippians 4:19",
+    "expected_top3": [
+      "Philippians 4:19"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "The blessing of the Lord brings wealth without painful toil",
+    "expected_top1": "Proverbs 10:22",
+    "expected_top3": [
+      "Proverbs 10:22"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "Adds no sorrow with it",
+    "expected_top1": "Proverbs 10:22",
+    "expected_top3": [
+      "Proverbs 10:22"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Wealth without sorrow",
+    "expected_top1": "Proverbs 10:22",
+    "expected_top3": [
+      "Proverbs 10:22"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "God is able to bless you abundantly",
+    "expected_top1": "2 Corinthians 9:8",
+    "expected_top3": [
+      "2 Corinthians 9:8"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "In all things at all times having all that you need",
+    "expected_top1": "2 Corinthians 9:8",
+    "expected_top3": [
+      "2 Corinthians 9:8"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Abounding in every good work",
+    "expected_top1": "2 Corinthians 9:8",
+    "expected_top3": [
+      "2 Corinthians 9:8"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Remember the Lord your God for it is He who gives you the ability to produce wealth",
+    "expected_top1": "Deuteronomy 8:18",
+    "expected_top3": [
+      "Deuteronomy 8:18"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "Power to get wealth",
+    "expected_top1": "Deuteronomy 8:18",
+    "expected_top3": [
+      "Deuteronomy 8:18"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Ability to create wealth",
+    "expected_top1": "Deuteronomy 8:18",
+    "expected_top3": [
+      "Deuteronomy 8:18"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Test me in this says the Lord Almighty and see if I will not throw open the floodgates of heaven",
+    "expected_top1": "Malachi 3:10",
+    "expected_top3": [
+      "Malachi 3:10"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "Pour out so much blessing there will not be room enough to store it",
+    "expected_top1": "Malachi 3:10",
+    "expected_top3": [
+      "Malachi 3:10"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Open floodgates of heaven",
+    "expected_top1": "Malachi 3:10",
+    "expected_top3": [
+      "Malachi 3:10"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Look at the birds of the air they do not sow or reap yet your heavenly Father feeds them",
+    "expected_top1": "Luke 12:24",
+    "expected_top3": [
+      "Luke 12:24",
+      "Matthew 6:26"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "Are you not much more valuable than they",
+    "expected_top1": "Luke 12:24",
+    "expected_top3": [
+      "Luke 12:24",
+      "Matthew 6:26"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Consider the ravens",
+    "expected_top1": "Luke 12:24",
+    "expected_top3": [
+      "Luke 12:24",
+      "Matthew 6:26"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Seek first His kingdom and His righteousness and all these things will be given to you as well",
+    "expected_top1": "Matthew 6:31-33",
+    "expected_top3": [
+      "Matthew 6:31-33"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "Seek first the kingdom of God",
+    "expected_top1": "Matthew 6:31-33",
+    "expected_top3": [
+      "Matthew 6:31-33"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "All things added to you",
+    "expected_top1": "Matthew 6:31-33",
+    "expected_top3": [
+      "Matthew 6:31-33"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "The lions may grow weak and hungry but those who seek the Lord lack no good thing",
+    "expected_top1": "Psalm 34:10",
+    "expected_top3": [
+      "Psalm 34:10"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "Lack no good thing",
+    "expected_top1": "Psalm 34:10",
+    "expected_top3": [
+      "Psalm 34:10"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "I lack nothing good",
+    "expected_top1": "Psalm 34:10",
+    "expected_top3": [
+      "Psalm 34:10"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "He who did not spare His own Son will He not also graciously give us all things",
+    "expected_top1": "Romans 8:32",
+    "expected_top3": [
+      "Romans 8:32"
+    ],
+    "category": "bank_primary",
+    "should_match": true
+  },
+  {
+    "query": "Freely give us all things",
+    "expected_top1": "Romans 8:32",
+    "expected_top3": [
+      "Romans 8:32"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "Graciously gives all",
+    "expected_top1": "Romans 8:32",
+    "expected_top3": [
+      "Romans 8:32"
+    ],
+    "category": "bank_alias",
+    "should_match": true
+  },
+  {
+    "query": "God is on my inside",
+    "expected_top1": "Colossians 1:27",
+    "expected_top3": [
+      "Colossians 1:27",
+      "1 John 4:4",
+      "Philippians 4:13",
+      "Galatians 2:20"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, god is on my inside",
+    "expected_top1": "Colossians 1:27",
+    "expected_top3": [
+      "Colossians 1:27",
+      "1 John 4:4",
+      "Philippians 4:13",
+      "Galatians 2:20"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that god is on my inside",
+    "expected_top1": "Colossians 1:27",
+    "expected_top3": [
+      "Colossians 1:27",
+      "1 John 4:4",
+      "Philippians 4:13",
+      "Galatians 2:20"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Christ is on my inside",
+    "expected_top1": "Colossians 1:27",
+    "expected_top3": [
+      "Colossians 1:27",
+      "1 John 4:4",
+      "Galatians 2:20"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, christ is on my inside",
+    "expected_top1": "Colossians 1:27",
+    "expected_top3": [
+      "Colossians 1:27",
+      "1 John 4:4",
+      "Galatians 2:20"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that christ is on my inside",
+    "expected_top1": "Colossians 1:27",
+    "expected_top3": [
+      "Colossians 1:27",
+      "1 John 4:4",
+      "Galatians 2:20"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Greater is he that is in me",
+    "expected_top1": "1 John 4:4",
+    "expected_top3": [
+      "1 John 4:4",
+      "Colossians 1:27",
+      "Romans 8:37"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, greater is he that is in me",
+    "expected_top1": "1 John 4:4",
+    "expected_top3": [
+      "1 John 4:4",
+      "Colossians 1:27",
+      "Romans 8:37"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that greater is he that is in me",
+    "expected_top1": "1 John 4:4",
+    "expected_top3": [
+      "1 John 4:4",
+      "Colossians 1:27",
+      "Romans 8:37"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I have the spirit of God inside me",
+    "expected_top1": "1 John 4:4",
+    "expected_top3": [
+      "1 John 4:4",
+      "Colossians 1:27",
+      "Romans 8:11"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, i have the spirit of god inside me",
+    "expected_top1": "1 John 4:4",
+    "expected_top3": [
+      "1 John 4:4",
+      "Colossians 1:27",
+      "Romans 8:11"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that i have the spirit of god inside me",
+    "expected_top1": "1 John 4:4",
+    "expected_top3": [
+      "1 John 4:4",
+      "Colossians 1:27",
+      "Romans 8:11"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Christ in me the hope of glory",
+    "expected_top1": "Colossians 1:27",
+    "expected_top3": [
+      "Colossians 1:27",
+      "Galatians 2:20"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, christ in me the hope of glory",
+    "expected_top1": "Colossians 1:27",
+    "expected_top3": [
+      "Colossians 1:27",
+      "Galatians 2:20"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that christ in me the hope of glory",
+    "expected_top1": "Colossians 1:27",
+    "expected_top3": [
+      "Colossians 1:27",
+      "Galatians 2:20"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I am a temple of the Holy Spirit",
+    "expected_top1": "1 Corinthians 6:19",
+    "expected_top3": [
+      "1 Corinthians 6:19",
+      "2 Corinthians 6:16"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, i am a temple of the holy spirit",
+    "expected_top1": "1 Corinthians 6:19",
+    "expected_top3": [
+      "1 Corinthians 6:19",
+      "2 Corinthians 6:16"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that i am a temple of the holy spirit",
+    "expected_top1": "1 Corinthians 6:19",
+    "expected_top3": [
+      "1 Corinthians 6:19",
+      "2 Corinthians 6:16"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "God lives inside of me",
+    "expected_top1": "Colossians 1:27",
+    "expected_top3": [
+      "Colossians 1:27",
+      "1 John 4:4",
+      "Galatians 2:20"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, god lives inside of me",
+    "expected_top1": "Colossians 1:27",
+    "expected_top3": [
+      "Colossians 1:27",
+      "1 John 4:4",
+      "Galatians 2:20"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that god lives inside of me",
+    "expected_top1": "Colossians 1:27",
+    "expected_top3": [
+      "Colossians 1:27",
+      "1 John 4:4",
+      "Galatians 2:20"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I am fearfully and wonderfully made",
+    "expected_top1": "Psalm 139:14",
+    "expected_top3": [
+      "Psalm 139:14",
+      "Ephesians 2:10"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, i am fearfully and wonderfully made",
+    "expected_top1": "Psalm 139:14",
+    "expected_top3": [
+      "Psalm 139:14",
+      "Ephesians 2:10"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that i am fearfully and wonderfully made",
+    "expected_top1": "Psalm 139:14",
+    "expected_top3": [
+      "Psalm 139:14",
+      "Ephesians 2:10"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "God made me His masterpiece",
+    "expected_top1": "Ephesians 2:10",
+    "expected_top3": [
+      "Ephesians 2:10",
+      "Psalm 139:14"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, god made me his masterpiece",
+    "expected_top1": "Ephesians 2:10",
+    "expected_top3": [
+      "Ephesians 2:10",
+      "Psalm 139:14"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that god made me his masterpiece",
+    "expected_top1": "Ephesians 2:10",
+    "expected_top3": [
+      "Ephesians 2:10",
+      "Psalm 139:14"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I am the righteousness of God in Christ",
+    "expected_top1": "2 Corinthians 5:21",
+    "expected_top3": [
+      "2 Corinthians 5:21",
+      "Romans 8:1"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, i am the righteousness of god in christ",
+    "expected_top1": "2 Corinthians 5:21",
+    "expected_top3": [
+      "2 Corinthians 5:21",
+      "Romans 8:1"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that i am the righteousness of god in christ",
+    "expected_top1": "2 Corinthians 5:21",
+    "expected_top3": [
+      "2 Corinthians 5:21",
+      "Romans 8:1"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I am a new creation in Christ",
+    "expected_top1": "2 Corinthians 5:17",
+    "expected_top3": [
+      "2 Corinthians 5:17",
+      "Ephesians 4:24"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, i am a new creation in christ",
+    "expected_top1": "2 Corinthians 5:17",
+    "expected_top3": [
+      "2 Corinthians 5:17",
+      "Ephesians 4:24"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that i am a new creation in christ",
+    "expected_top1": "2 Corinthians 5:17",
+    "expected_top3": [
+      "2 Corinthians 5:17",
+      "Ephesians 4:24"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Old things have passed away",
+    "expected_top1": "2 Corinthians 5:17",
+    "expected_top3": [
+      "2 Corinthians 5:17",
+      "Isaiah 43:18"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, old things have passed away",
+    "expected_top1": "2 Corinthians 5:17",
+    "expected_top3": [
+      "2 Corinthians 5:17",
+      "Isaiah 43:18"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that old things have passed away",
+    "expected_top1": "2 Corinthians 5:17",
+    "expected_top3": [
+      "2 Corinthians 5:17",
+      "Isaiah 43:18"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I am chosen by God",
+    "expected_top1": "1 Peter 2:9",
+    "expected_top3": [
+      "1 Peter 2:9",
+      "Ephesians 1:4"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, i am chosen by god",
+    "expected_top1": "1 Peter 2:9",
+    "expected_top3": [
+      "1 Peter 2:9",
+      "Ephesians 1:4"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that i am chosen by god",
+    "expected_top1": "1 Peter 2:9",
+    "expected_top3": [
+      "1 Peter 2:9",
+      "Ephesians 1:4"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I am a child of God",
+    "expected_top1": "1 John 3:1",
+    "expected_top3": [
+      "1 John 3:1",
+      "John 1:12",
+      "Romans 8:16"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, i am a child of god",
+    "expected_top1": "1 John 3:1",
+    "expected_top3": [
+      "1 John 3:1",
+      "John 1:12",
+      "Romans 8:16"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that i am a child of god",
+    "expected_top1": "1 John 3:1",
+    "expected_top3": [
+      "1 John 3:1",
+      "John 1:12",
+      "Romans 8:16"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "God loves me with an everlasting love",
+    "expected_top1": "Jeremiah 31:3",
+    "expected_top3": [
+      "Jeremiah 31:3",
+      "Romans 8:39"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, god loves me with an everlasting love",
+    "expected_top1": "Jeremiah 31:3",
+    "expected_top3": [
+      "Jeremiah 31:3",
+      "Romans 8:39"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that god loves me with an everlasting love",
+    "expected_top1": "Jeremiah 31:3",
+    "expected_top3": [
+      "Jeremiah 31:3",
+      "Romans 8:39"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Nothing can separate me from the love of God",
+    "expected_top1": "Romans 8:39",
+    "expected_top3": [
+      "Romans 8:39",
+      "Romans 8:38"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, nothing can separate me from the love of god",
+    "expected_top1": "Romans 8:39",
+    "expected_top3": [
+      "Romans 8:39",
+      "Romans 8:38"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that nothing can separate me from the love of god",
+    "expected_top1": "Romans 8:39",
+    "expected_top3": [
+      "Romans 8:39",
+      "Romans 8:38"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "There is no condemnation for me",
+    "expected_top1": "Romans 8:1",
+    "expected_top3": [
+      "Romans 8:1",
+      "1 John 4:18"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, there is no condemnation for me",
+    "expected_top1": "Romans 8:1",
+    "expected_top3": [
+      "Romans 8:1",
+      "1 John 4:18"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that there is no condemnation for me",
+    "expected_top1": "Romans 8:1",
+    "expected_top3": [
+      "Romans 8:1",
+      "1 John 4:18"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I walk in freedom from shame",
+    "expected_top1": "Romans 8:1",
+    "expected_top3": [
+      "Romans 8:1",
+      "Isaiah 54:4"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, i walk in freedom from shame",
+    "expected_top1": "Romans 8:1",
+    "expected_top3": [
+      "Romans 8:1",
+      "Isaiah 54:4"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that i walk in freedom from shame",
+    "expected_top1": "Romans 8:1",
+    "expected_top3": [
+      "Romans 8:1",
+      "Isaiah 54:4"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I am forgiven of all my sins",
+    "expected_top1": "1 John 1:9",
+    "expected_top3": [
+      "1 John 1:9",
+      "Ephesians 1:7",
+      "Colossians 1:14"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, i am forgiven of all my sins",
+    "expected_top1": "1 John 1:9",
+    "expected_top3": [
+      "1 John 1:9",
+      "Ephesians 1:7",
+      "Colossians 1:14"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that i am forgiven of all my sins",
+    "expected_top1": "1 John 1:9",
+    "expected_top3": [
+      "1 John 1:9",
+      "Ephesians 1:7",
+      "Colossians 1:14"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "He who the Son sets free is free indeed",
+    "expected_top1": "John 8:36",
+    "expected_top3": [
+      "John 8:36",
+      "Galatians 5:1"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, he who the son sets free is free indeed",
+    "expected_top1": "John 8:36",
+    "expected_top3": [
+      "John 8:36",
+      "Galatians 5:1"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that he who the son sets free is free indeed",
+    "expected_top1": "John 8:36",
+    "expected_top3": [
+      "John 8:36",
+      "Galatians 5:1"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I can literally do anything",
+    "expected_top1": "Philippians 4:13",
+    "expected_top3": [
+      "Philippians 4:13",
+      "Mark 9:23",
+      "Romans 8:37"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, i can literally do anything",
+    "expected_top1": "Philippians 4:13",
+    "expected_top3": [
+      "Philippians 4:13",
+      "Mark 9:23",
+      "Romans 8:37"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that i can literally do anything",
+    "expected_top1": "Philippians 4:13",
+    "expected_top3": [
+      "Philippians 4:13",
+      "Mark 9:23",
+      "Romans 8:37"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I can do all things through Christ",
+    "expected_top1": "Philippians 4:13",
+    "expected_top3": [
+      "Philippians 4:13",
+      "2 Corinthians 12:9"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, i can do all things through christ",
+    "expected_top1": "Philippians 4:13",
+    "expected_top3": [
+      "Philippians 4:13",
+      "2 Corinthians 12:9"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that i can do all things through christ",
+    "expected_top1": "Philippians 4:13",
+    "expected_top3": [
+      "Philippians 4:13",
+      "2 Corinthians 12:9"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Nothing is impossible for me with God",
+    "expected_top1": "Luke 1:37",
+    "expected_top3": [
+      "Luke 1:37",
+      "Mark 9:23",
+      "Matthew 19:26"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, nothing is impossible for me with god",
+    "expected_top1": "Luke 1:37",
+    "expected_top3": [
+      "Luke 1:37",
+      "Mark 9:23",
+      "Matthew 19:26"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that nothing is impossible for me with god",
+    "expected_top1": "Luke 1:37",
+    "expected_top3": [
+      "Luke 1:37",
+      "Mark 9:23",
+      "Matthew 19:26"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "All things are possible to him that believes",
+    "expected_top1": "Mark 9:23",
+    "expected_top3": [
+      "Mark 9:23",
+      "Philippians 4:13"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, all things are possible to him that believes",
+    "expected_top1": "Mark 9:23",
+    "expected_top3": [
+      "Mark 9:23",
+      "Philippians 4:13"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that all things are possible to him that believes",
+    "expected_top1": "Mark 9:23",
+    "expected_top3": [
+      "Mark 9:23",
+      "Philippians 4:13"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "The Lord is my strength and shield",
+    "expected_top1": "Psalm 28:7",
+    "expected_top3": [
+      "Psalm 28:7",
+      "Psalm 18:2"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, the lord is my strength and shield",
+    "expected_top1": "Psalm 28:7",
+    "expected_top3": [
+      "Psalm 28:7",
+      "Psalm 18:2"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that the lord is my strength and shield",
+    "expected_top1": "Psalm 28:7",
+    "expected_top3": [
+      "Psalm 28:7",
+      "Psalm 18:2"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "When I am weak then I am strong",
+    "expected_top1": "2 Corinthians 12:9",
+    "expected_top3": [
+      "2 Corinthians 12:9",
+      "2 Corinthians 12:10"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, when i am weak then i am strong",
+    "expected_top1": "2 Corinthians 12:9",
+    "expected_top3": [
+      "2 Corinthians 12:9",
+      "2 Corinthians 12:10"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that when i am weak then i am strong",
+    "expected_top1": "2 Corinthians 12:9",
+    "expected_top3": [
+      "2 Corinthians 12:9",
+      "2 Corinthians 12:10"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "His grace is sufficient for me",
+    "expected_top1": "2 Corinthians 12:9",
+    "expected_top3": [
+      "2 Corinthians 12:9",
+      "2 Corinthians 9:8"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, his grace is sufficient for me",
+    "expected_top1": "2 Corinthians 12:9",
+    "expected_top3": [
+      "2 Corinthians 12:9",
+      "2 Corinthians 9:8"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that his grace is sufficient for me",
+    "expected_top1": "2 Corinthians 12:9",
+    "expected_top3": [
+      "2 Corinthians 12:9",
+      "2 Corinthians 9:8"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "God renews my strength like eagles",
+    "expected_top1": "Isaiah 40:31",
+    "expected_top3": [
+      "Isaiah 40:31",
+      "Psalm 103:5"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, god renews my strength like eagles",
+    "expected_top1": "Isaiah 40:31",
+    "expected_top3": [
+      "Isaiah 40:31",
+      "Psalm 103:5"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that god renews my strength like eagles",
+    "expected_top1": "Isaiah 40:31",
+    "expected_top3": [
+      "Isaiah 40:31",
+      "Psalm 103:5"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I shall run and not be weary",
+    "expected_top1": "Isaiah 40:31",
+    "expected_top3": [
+      "Isaiah 40:31",
+      "Galatians 6:9"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, i shall run and not be weary",
+    "expected_top1": "Isaiah 40:31",
+    "expected_top3": [
+      "Isaiah 40:31",
+      "Galatians 6:9"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that i shall run and not be weary",
+    "expected_top1": "Isaiah 40:31",
+    "expected_top3": [
+      "Isaiah 40:31",
+      "Galatians 6:9"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "The joy of the Lord is my strength",
+    "expected_top1": "Nehemiah 8:10",
+    "expected_top3": [
+      "Nehemiah 8:10",
+      "Psalm 28:7"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, the joy of the lord is my strength",
+    "expected_top1": "Nehemiah 8:10",
+    "expected_top3": [
+      "Nehemiah 8:10",
+      "Psalm 28:7"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that the joy of the lord is my strength",
+    "expected_top1": "Nehemiah 8:10",
+    "expected_top3": [
+      "Nehemiah 8:10",
+      "Psalm 28:7"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I am strong and courageous",
+    "expected_top1": "Joshua 1:9",
+    "expected_top3": [
+      "Joshua 1:9",
+      "Deuteronomy 31:6"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, i am strong and courageous",
+    "expected_top1": "Joshua 1:9",
+    "expected_top3": [
+      "Joshua 1:9",
+      "Deuteronomy 31:6"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that i am strong and courageous",
+    "expected_top1": "Joshua 1:9",
+    "expected_top3": [
+      "Joshua 1:9",
+      "Deuteronomy 31:6"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I will not fear what man can do to me",
+    "expected_top1": "Psalm 118:6",
+    "expected_top3": [
+      "Psalm 118:6",
+      "Hebrews 13:6"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, i will not fear what man can do to me",
+    "expected_top1": "Psalm 118:6",
+    "expected_top3": [
+      "Psalm 118:6",
+      "Hebrews 13:6"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that i will not fear what man can do to me",
+    "expected_top1": "Psalm 118:6",
+    "expected_top3": [
+      "Psalm 118:6",
+      "Hebrews 13:6"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I am never stranded",
+    "expected_top1": "Deuteronomy 31:6",
+    "expected_top3": [
+      "Deuteronomy 31:6",
+      "Hebrews 13:5",
+      "Psalm 37:25",
+      "Psalm 23:1"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, i am never stranded",
+    "expected_top1": "Deuteronomy 31:6",
+    "expected_top3": [
+      "Deuteronomy 31:6",
+      "Hebrews 13:5",
+      "Psalm 37:25",
+      "Psalm 23:1"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that i am never stranded",
+    "expected_top1": "Deuteronomy 31:6",
+    "expected_top3": [
+      "Deuteronomy 31:6",
+      "Hebrews 13:5",
+      "Psalm 37:25",
+      "Psalm 23:1"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I am not alone in this",
+    "expected_top1": "Deuteronomy 31:6",
+    "expected_top3": [
+      "Deuteronomy 31:6",
+      "Hebrews 13:5",
+      "Isaiah 41:10"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, i am not alone in this",
+    "expected_top1": "Deuteronomy 31:6",
+    "expected_top3": [
+      "Deuteronomy 31:6",
+      "Hebrews 13:5",
+      "Isaiah 41:10"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that i am not alone in this",
+    "expected_top1": "Deuteronomy 31:6",
+    "expected_top3": [
+      "Deuteronomy 31:6",
+      "Hebrews 13:5",
+      "Isaiah 41:10"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "The Lord will never leave me nor forsake me",
+    "expected_top1": "Deuteronomy 31:6",
+    "expected_top3": [
+      "Deuteronomy 31:6",
+      "Hebrews 13:5"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, the lord will never leave me nor forsake me",
+    "expected_top1": "Deuteronomy 31:6",
+    "expected_top3": [
+      "Deuteronomy 31:6",
+      "Hebrews 13:5"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that the lord will never leave me nor forsake me",
+    "expected_top1": "Deuteronomy 31:6",
+    "expected_top3": [
+      "Deuteronomy 31:6",
+      "Hebrews 13:5"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "God is with me everywhere I go",
+    "expected_top1": "Joshua 1:9",
+    "expected_top3": [
+      "Joshua 1:9",
+      "Psalm 139:7"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, god is with me everywhere i go",
+    "expected_top1": "Joshua 1:9",
+    "expected_top3": [
+      "Joshua 1:9",
+      "Psalm 139:7"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that god is with me everywhere i go",
+    "expected_top1": "Joshua 1:9",
+    "expected_top3": [
+      "Joshua 1:9",
+      "Psalm 139:7"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I dwell in the secret place of the Most High",
+    "expected_top1": "Psalm 91:1",
+    "expected_top3": [
+      "Psalm 91:1",
+      "Psalm 91:2"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, i dwell in the secret place of the most high",
+    "expected_top1": "Psalm 91:1",
+    "expected_top3": [
+      "Psalm 91:1",
+      "Psalm 91:2"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that i dwell in the secret place of the most high",
+    "expected_top1": "Psalm 91:1",
+    "expected_top3": [
+      "Psalm 91:1",
+      "Psalm 91:2"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Under His wings I take refuge",
+    "expected_top1": "Psalm 91:4",
+    "expected_top3": [
+      "Psalm 91:4",
+      "Psalm 61:4"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, under his wings i take refuge",
+    "expected_top1": "Psalm 91:4",
+    "expected_top3": [
+      "Psalm 91:4",
+      "Psalm 61:4"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that under his wings i take refuge",
+    "expected_top1": "Psalm 91:4",
+    "expected_top3": [
+      "Psalm 91:4",
+      "Psalm 61:4"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "No weapon formed against me will prosper",
+    "expected_top1": "Isaiah 54:17",
+    "expected_top3": [
+      "Isaiah 54:17",
+      "Romans 8:31"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, no weapon formed against me will prosper",
+    "expected_top1": "Isaiah 54:17",
+    "expected_top3": [
+      "Isaiah 54:17",
+      "Romans 8:31"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that no weapon formed against me will prosper",
+    "expected_top1": "Isaiah 54:17",
+    "expected_top3": [
+      "Isaiah 54:17",
+      "Romans 8:31"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "If God is for me who can be against me",
+    "expected_top1": "Romans 8:31",
+    "expected_top3": [
+      "Romans 8:31",
+      "Psalm 118:6"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, if god is for me who can be against me",
+    "expected_top1": "Romans 8:31",
+    "expected_top3": [
+      "Romans 8:31",
+      "Psalm 118:6"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that if god is for me who can be against me",
+    "expected_top1": "Romans 8:31",
+    "expected_top3": [
+      "Romans 8:31",
+      "Psalm 118:6"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "A thousand may fall at my side but it won't touch me",
+    "expected_top1": "Psalm 91:7",
+    "expected_top3": [
+      "Psalm 91:7",
+      "Psalm 91:1"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, a thousand may fall at my side but it won't touch me",
+    "expected_top1": "Psalm 91:7",
+    "expected_top3": [
+      "Psalm 91:7",
+      "Psalm 91:1"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that a thousand may fall at my side but it won't touch me",
+    "expected_top1": "Psalm 91:7",
+    "expected_top3": [
+      "Psalm 91:7",
+      "Psalm 91:1"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "God gives His angels charge over me",
+    "expected_top1": "Psalm 91:11",
+    "expected_top3": [
+      "Psalm 91:11",
+      "Hebrews 1:14"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, god gives his angels charge over me",
+    "expected_top1": "Psalm 91:11",
+    "expected_top3": [
+      "Psalm 91:11",
+      "Hebrews 1:14"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that god gives his angels charge over me",
+    "expected_top1": "Psalm 91:11",
+    "expected_top3": [
+      "Psalm 91:11",
+      "Hebrews 1:14"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "The Lord preserves my going out and coming in",
+    "expected_top1": "Psalm 121:8",
+    "expected_top3": [
+      "Psalm 121:8",
+      "Psalm 121:1"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, the lord preserves my going out and coming in",
+    "expected_top1": "Psalm 121:8",
+    "expected_top3": [
+      "Psalm 121:8",
+      "Psalm 121:1"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that the lord preserves my going out and coming in",
+    "expected_top1": "Psalm 121:8",
+    "expected_top3": [
+      "Psalm 121:8",
+      "Psalm 121:1"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "My help comes from the Lord maker of heaven and earth",
+    "expected_top1": "Psalm 121:2",
+    "expected_top3": [
+      "Psalm 121:2",
+      "Psalm 121:1"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, my help comes from the lord maker of heaven and earth",
+    "expected_top1": "Psalm 121:2",
+    "expected_top3": [
+      "Psalm 121:2",
+      "Psalm 121:1"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that my help comes from the lord maker of heaven and earth",
+    "expected_top1": "Psalm 121:2",
+    "expected_top3": [
+      "Psalm 121:2",
+      "Psalm 121:1"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "The Lord is my shepherd I shall not want",
+    "expected_top1": "Psalm 23:1",
+    "expected_top3": [
+      "Psalm 23:1",
+      "Philippians 4:19"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, the lord is my shepherd i shall not want",
+    "expected_top1": "Psalm 23:1",
+    "expected_top3": [
+      "Psalm 23:1",
+      "Philippians 4:19"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that the lord is my shepherd i shall not want",
+    "expected_top1": "Psalm 23:1",
+    "expected_top3": [
+      "Psalm 23:1",
+      "Philippians 4:19"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Surely goodness and mercy follow me all my days",
+    "expected_top1": "Psalm 23:6",
+    "expected_top3": [
+      "Psalm 23:6",
+      "Psalm 23:1"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, surely goodness and mercy follow me all my days",
+    "expected_top1": "Psalm 23:6",
+    "expected_top3": [
+      "Psalm 23:6",
+      "Psalm 23:1"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that surely goodness and mercy follow me all my days",
+    "expected_top1": "Psalm 23:6",
+    "expected_top3": [
+      "Psalm 23:6",
+      "Psalm 23:1"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "He leads me beside still waters",
+    "expected_top1": "Psalm 23:2",
+    "expected_top3": [
+      "Psalm 23:2",
+      "Psalm 23:3"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, he leads me beside still waters",
+    "expected_top1": "Psalm 23:2",
+    "expected_top3": [
+      "Psalm 23:2",
+      "Psalm 23:3"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that he leads me beside still waters",
+    "expected_top1": "Psalm 23:2",
+    "expected_top3": [
+      "Psalm 23:2",
+      "Psalm 23:3"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Even in the valley of shadow of death I fear no evil",
+    "expected_top1": "Psalm 23:4",
+    "expected_top3": [
+      "Psalm 23:4",
+      "Psalm 91:1"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, even in the valley of shadow of death i fear no evil",
+    "expected_top1": "Psalm 23:4",
+    "expected_top3": [
+      "Psalm 23:4",
+      "Psalm 91:1"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that even in the valley of shadow of death i fear no evil",
+    "expected_top1": "Psalm 23:4",
+    "expected_top3": [
+      "Psalm 23:4",
+      "Psalm 91:1"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Peace of God guards my heart and mind",
+    "expected_top1": "Philippians 4:7",
+    "expected_top3": [
+      "Philippians 4:7",
+      "Philippians 4:6"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, peace of god guards my heart and mind",
+    "expected_top1": "Philippians 4:7",
+    "expected_top3": [
+      "Philippians 4:7",
+      "Philippians 4:6"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that peace of god guards my heart and mind",
+    "expected_top1": "Philippians 4:7",
+    "expected_top3": [
+      "Philippians 4:7",
+      "Philippians 4:6"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I cast all my cares on Him because He cares for me",
+    "expected_top1": "1 Peter 5:7",
+    "expected_top3": [
+      "1 Peter 5:7",
+      "Psalm 55:22"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, i cast all my cares on him because he cares for me",
+    "expected_top1": "1 Peter 5:7",
+    "expected_top3": [
+      "1 Peter 5:7",
+      "Psalm 55:22"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that i cast all my cares on him because he cares for me",
+    "expected_top1": "1 Peter 5:7",
+    "expected_top3": [
+      "1 Peter 5:7",
+      "Psalm 55:22"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Do not be anxious about anything",
+    "expected_top1": "Philippians 4:6",
+    "expected_top3": [
+      "Philippians 4:6",
+      "Philippians 4:7"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, do not be anxious about anything",
+    "expected_top1": "Philippians 4:6",
+    "expected_top3": [
+      "Philippians 4:6",
+      "Philippians 4:7"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that do not be anxious about anything",
+    "expected_top1": "Philippians 4:6",
+    "expected_top3": [
+      "Philippians 4:6",
+      "Philippians 4:7"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "God keeps me in perfect peace",
+    "expected_top1": "Isaiah 26:3",
+    "expected_top3": [
+      "Isaiah 26:3",
+      "Philippians 4:7"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, god keeps me in perfect peace",
+    "expected_top1": "Isaiah 26:3",
+    "expected_top3": [
+      "Isaiah 26:3",
+      "Philippians 4:7"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that god keeps me in perfect peace",
+    "expected_top1": "Isaiah 26:3",
+    "expected_top3": [
+      "Isaiah 26:3",
+      "Philippians 4:7"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Come to me all who are weary and I will give you rest",
+    "expected_top1": "Matthew 11:28",
+    "expected_top3": [
+      "Matthew 11:28",
+      "Hebrews 4:9"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, come to me all who are weary and i will give you rest",
+    "expected_top1": "Matthew 11:28",
+    "expected_top3": [
+      "Matthew 11:28",
+      "Hebrews 4:9"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that come to me all who are weary and i will give you rest",
+    "expected_top1": "Matthew 11:28",
+    "expected_top3": [
+      "Matthew 11:28",
+      "Hebrews 4:9"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "My mind is fixed on Jesus",
+    "expected_top1": "Isaiah 26:3",
+    "expected_top3": [
+      "Isaiah 26:3",
+      "Hebrews 12:2"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, my mind is fixed on jesus",
+    "expected_top1": "Isaiah 26:3",
+    "expected_top3": [
+      "Isaiah 26:3",
+      "Hebrews 12:2"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that my mind is fixed on jesus",
+    "expected_top1": "Isaiah 26:3",
+    "expected_top3": [
+      "Isaiah 26:3",
+      "Hebrews 12:2"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Peace I leave with you, my peace I give to you",
+    "expected_top1": "John 14:27",
+    "expected_top3": [
+      "John 14:27",
+      "Philippians 4:7"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, peace i leave with you, my peace i give to you",
+    "expected_top1": "John 14:27",
+    "expected_top3": [
+      "John 14:27",
+      "Philippians 4:7"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that peace i leave with you, my peace i give to you",
+    "expected_top1": "John 14:27",
+    "expected_top3": [
+      "John 14:27",
+      "Philippians 4:7"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Let not your heart be troubled",
+    "expected_top1": "John 14:1",
+    "expected_top3": [
+      "John 14:1",
+      "John 14:27"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, let not your heart be troubled",
+    "expected_top1": "John 14:1",
+    "expected_top3": [
+      "John 14:1",
+      "John 14:27"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that let not your heart be troubled",
+    "expected_top1": "John 14:1",
+    "expected_top3": [
+      "John 14:1",
+      "John 14:27"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I sleep peacefully because God watches over me",
+    "expected_top1": "Psalm 4:8",
+    "expected_top3": [
+      "Psalm 4:8",
+      "Psalm 127:2"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, i sleep peacefully because god watches over me",
+    "expected_top1": "Psalm 4:8",
+    "expected_top3": [
+      "Psalm 4:8",
+      "Psalm 127:2"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that i sleep peacefully because god watches over me",
+    "expected_top1": "Psalm 4:8",
+    "expected_top3": [
+      "Psalm 4:8",
+      "Psalm 127:2"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "God has not given me a spirit of fear",
+    "expected_top1": "2 Timothy 1:7",
+    "expected_top3": [
+      "2 Timothy 1:7",
+      "Romans 8:15"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, god has not given me a spirit of fear",
+    "expected_top1": "2 Timothy 1:7",
+    "expected_top3": [
+      "2 Timothy 1:7",
+      "Romans 8:15"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that god has not given me a spirit of fear",
+    "expected_top1": "2 Timothy 1:7",
+    "expected_top3": [
+      "2 Timothy 1:7",
+      "Romans 8:15"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I have power, love, and a sound mind",
+    "expected_top1": "2 Timothy 1:7",
+    "expected_top3": [
+      "2 Timothy 1:7",
+      "Romans 8:15"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, i have power, love, and a sound mind",
+    "expected_top1": "2 Timothy 1:7",
+    "expected_top3": [
+      "2 Timothy 1:7",
+      "Romans 8:15"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that i have power, love, and a sound mind",
+    "expected_top1": "2 Timothy 1:7",
+    "expected_top3": [
+      "2 Timothy 1:7",
+      "Romans 8:15"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Perfect love casts out fear",
+    "expected_top1": "1 John 4:18",
+    "expected_top3": [
+      "1 John 4:18",
+      "2 Timothy 1:7"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, perfect love casts out fear",
+    "expected_top1": "1 John 4:18",
+    "expected_top3": [
+      "1 John 4:18",
+      "2 Timothy 1:7"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that perfect love casts out fear",
+    "expected_top1": "1 John 4:18",
+    "expected_top3": [
+      "1 John 4:18",
+      "2 Timothy 1:7"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "My God supplies all my needs according to His riches",
+    "expected_top1": "Philippians 4:19",
+    "expected_top3": [
+      "Philippians 4:19",
+      "Psalm 23:1"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, my god supplies all my needs according to his riches",
+    "expected_top1": "Philippians 4:19",
+    "expected_top3": [
+      "Philippians 4:19",
+      "Psalm 23:1"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that my god supplies all my needs according to his riches",
+    "expected_top1": "Philippians 4:19",
+    "expected_top3": [
+      "Philippians 4:19",
+      "Psalm 23:1"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "God is able to make all grace abound to me",
+    "expected_top1": "2 Corinthians 9:8",
+    "expected_top3": [
+      "2 Corinthians 9:8",
+      "Philippians 4:19"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, god is able to make all grace abound to me",
+    "expected_top1": "2 Corinthians 9:8",
+    "expected_top3": [
+      "2 Corinthians 9:8",
+      "Philippians 4:19"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that god is able to make all grace abound to me",
+    "expected_top1": "2 Corinthians 9:8",
+    "expected_top3": [
+      "2 Corinthians 9:8",
+      "Philippians 4:19"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I have all sufficiency in all things",
+    "expected_top1": "2 Corinthians 9:8",
+    "expected_top3": [
+      "2 Corinthians 9:8",
+      "Philippians 4:19"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, i have all sufficiency in all things",
+    "expected_top1": "2 Corinthians 9:8",
+    "expected_top3": [
+      "2 Corinthians 9:8",
+      "Philippians 4:19"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that i have all sufficiency in all things",
+    "expected_top1": "2 Corinthians 9:8",
+    "expected_top3": [
+      "2 Corinthians 9:8",
+      "Philippians 4:19"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "The blessing of the Lord makes rich and adds no sorrow",
+    "expected_top1": "Proverbs 10:22",
+    "expected_top3": [
+      "Proverbs 10:22",
+      "Deuteronomy 28:2"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, the blessing of the lord makes rich and adds no sorrow",
+    "expected_top1": "Proverbs 10:22",
+    "expected_top3": [
+      "Proverbs 10:22",
+      "Deuteronomy 28:2"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that the blessing of the lord makes rich and adds no sorrow",
+    "expected_top1": "Proverbs 10:22",
+    "expected_top3": [
+      "Proverbs 10:22",
+      "Deuteronomy 28:2"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I am blessed in the city and blessed in the country",
+    "expected_top1": "Deuteronomy 28:3",
+    "expected_top3": [
+      "Deuteronomy 28:3",
+      "Deuteronomy 28:13"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, i am blessed in the city and blessed in the country",
+    "expected_top1": "Deuteronomy 28:3",
+    "expected_top3": [
+      "Deuteronomy 28:3",
+      "Deuteronomy 28:13"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that i am blessed in the city and blessed in the country",
+    "expected_top1": "Deuteronomy 28:3",
+    "expected_top3": [
+      "Deuteronomy 28:3",
+      "Deuteronomy 28:13"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I am the head and not the tail",
+    "expected_top1": "Deuteronomy 28:13",
+    "expected_top3": [
+      "Deuteronomy 28:13",
+      "Deuteronomy 28:1"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, i am the head and not the tail",
+    "expected_top1": "Deuteronomy 28:13",
+    "expected_top3": [
+      "Deuteronomy 28:13",
+      "Deuteronomy 28:1"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that i am the head and not the tail",
+    "expected_top1": "Deuteronomy 28:13",
+    "expected_top3": [
+      "Deuteronomy 28:13",
+      "Deuteronomy 28:1"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Above only and never beneath",
+    "expected_top1": "Deuteronomy 28:13",
+    "expected_top3": [
+      "Deuteronomy 28:13",
+      "Deuteronomy 28:2"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, above only and never beneath",
+    "expected_top1": "Deuteronomy 28:13",
+    "expected_top3": [
+      "Deuteronomy 28:13",
+      "Deuteronomy 28:2"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that above only and never beneath",
+    "expected_top1": "Deuteronomy 28:13",
+    "expected_top3": [
+      "Deuteronomy 28:13",
+      "Deuteronomy 28:2"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "All things work together for my good",
+    "expected_top1": "Romans 8:28",
+    "expected_top3": [
+      "Romans 8:28",
+      "Genesis 50:20"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, all things work together for my good",
+    "expected_top1": "Romans 8:28",
+    "expected_top3": [
+      "Romans 8:28",
+      "Genesis 50:20"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that all things work together for my good",
+    "expected_top1": "Romans 8:28",
+    "expected_top3": [
+      "Romans 8:28",
+      "Genesis 50:20"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "God has plans to prosper me and give me hope",
+    "expected_top1": "Jeremiah 29:11",
+    "expected_top3": [
+      "Jeremiah 29:11",
+      "Romans 8:28"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, god has plans to prosper me and give me hope",
+    "expected_top1": "Jeremiah 29:11",
+    "expected_top3": [
+      "Jeremiah 29:11",
+      "Romans 8:28"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that god has plans to prosper me and give me hope",
+    "expected_top1": "Jeremiah 29:11",
+    "expected_top3": [
+      "Jeremiah 29:11",
+      "Romans 8:28"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I know the plans I have for you says the Lord",
+    "expected_top1": "Jeremiah 29:11",
+    "expected_top3": [
+      "Jeremiah 29:11",
+      "Romans 8:28"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, i know the plans i have for you says the lord",
+    "expected_top1": "Jeremiah 29:11",
+    "expected_top3": [
+      "Jeremiah 29:11",
+      "Romans 8:28"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that i know the plans i have for you says the lord",
+    "expected_top1": "Jeremiah 29:11",
+    "expected_top3": [
+      "Jeremiah 29:11",
+      "Romans 8:28"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "He who began a good work in me will complete it",
+    "expected_top1": "Philippians 1:6",
+    "expected_top3": [
+      "Philippians 1:6",
+      "Psalm 138:8"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, he who began a good work in me will complete it",
+    "expected_top1": "Philippians 1:6",
+    "expected_top3": [
+      "Philippians 1:6",
+      "Psalm 138:8"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that he who began a good work in me will complete it",
+    "expected_top1": "Philippians 1:6",
+    "expected_top3": [
+      "Philippians 1:6",
+      "Psalm 138:8"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "The Lord will perfect that which concerns me",
+    "expected_top1": "Psalm 138:8",
+    "expected_top3": [
+      "Psalm 138:8",
+      "Philippians 1:6"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, the lord will perfect that which concerns me",
+    "expected_top1": "Psalm 138:8",
+    "expected_top3": [
+      "Psalm 138:8",
+      "Philippians 1:6"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that the lord will perfect that which concerns me",
+    "expected_top1": "Psalm 138:8",
+    "expected_top3": [
+      "Psalm 138:8",
+      "Philippians 1:6"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Commit your way to the Lord and He will direct your paths",
+    "expected_top1": "Proverbs 3:5",
+    "expected_top3": [
+      "Proverbs 3:5",
+      "Proverbs 3:6",
+      "Proverbs 16:3"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, commit your way to the lord and he will direct your paths",
+    "expected_top1": "Proverbs 3:5",
+    "expected_top3": [
+      "Proverbs 3:5",
+      "Proverbs 3:6",
+      "Proverbs 16:3"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that commit your way to the lord and he will direct your paths",
+    "expected_top1": "Proverbs 3:5",
+    "expected_top3": [
+      "Proverbs 3:5",
+      "Proverbs 3:6",
+      "Proverbs 16:3"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Trust in the Lord with all your heart",
+    "expected_top1": "Proverbs 3:5",
+    "expected_top3": [
+      "Proverbs 3:5",
+      "Proverbs 3:6"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, trust in the lord with all your heart",
+    "expected_top1": "Proverbs 3:5",
+    "expected_top3": [
+      "Proverbs 3:5",
+      "Proverbs 3:6"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that trust in the lord with all your heart",
+    "expected_top1": "Proverbs 3:5",
+    "expected_top3": [
+      "Proverbs 3:5",
+      "Proverbs 3:6"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "By His stripes I am healed",
+    "expected_top1": "Isaiah 53:5",
+    "expected_top3": [
+      "Isaiah 53:5",
+      "1 Peter 2:24"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, by his stripes i am healed",
+    "expected_top1": "Isaiah 53:5",
+    "expected_top3": [
+      "Isaiah 53:5",
+      "1 Peter 2:24"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that by his stripes i am healed",
+    "expected_top1": "Isaiah 53:5",
+    "expected_top3": [
+      "Isaiah 53:5",
+      "1 Peter 2:24"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "He sent His word and healed them",
+    "expected_top1": "Psalm 107:20",
+    "expected_top3": [
+      "Psalm 107:20",
+      "Matthew 8:17"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, he sent his word and healed them",
+    "expected_top1": "Psalm 107:20",
+    "expected_top3": [
+      "Psalm 107:20",
+      "Matthew 8:17"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that he sent his word and healed them",
+    "expected_top1": "Psalm 107:20",
+    "expected_top3": [
+      "Psalm 107:20",
+      "Matthew 8:17"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "The Lord forgives all my iniquities and heals all my diseases",
+    "expected_top1": "Psalm 103:3",
+    "expected_top3": [
+      "Psalm 103:3",
+      "Psalm 103:1"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, the lord forgives all my iniquities and heals all my diseases",
+    "expected_top1": "Psalm 103:3",
+    "expected_top3": [
+      "Psalm 103:3",
+      "Psalm 103:1"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that the lord forgives all my iniquities and heals all my diseases",
+    "expected_top1": "Psalm 103:3",
+    "expected_top3": [
+      "Psalm 103:3",
+      "Psalm 103:1"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "He Himself took our infirmities",
+    "expected_top1": "Matthew 8:17",
+    "expected_top3": [
+      "Matthew 8:17",
+      "Isaiah 53:4"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, he himself took our infirmities",
+    "expected_top1": "Matthew 8:17",
+    "expected_top3": [
+      "Matthew 8:17",
+      "Isaiah 53:4"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that he himself took our infirmities",
+    "expected_top1": "Matthew 8:17",
+    "expected_top3": [
+      "Matthew 8:17",
+      "Isaiah 53:4"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I shall live and not die to declare the works of the Lord",
+    "expected_top1": "Psalm 118:17",
+    "expected_top3": [
+      "Psalm 118:17",
+      "Psalm 91:16"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, i shall live and not die to declare the works of the lord",
+    "expected_top1": "Psalm 118:17",
+    "expected_top3": [
+      "Psalm 118:17",
+      "Psalm 91:16"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that i shall live and not die to declare the works of the lord",
+    "expected_top1": "Psalm 118:17",
+    "expected_top3": [
+      "Psalm 118:17",
+      "Psalm 91:16"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "With long life will He satisfy me",
+    "expected_top1": "Psalm 91:16",
+    "expected_top3": [
+      "Psalm 91:16",
+      "Proverbs 3:2"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "Today, with long life will he satisfy me",
+    "expected_top1": "Psalm 91:16",
+    "expected_top3": [
+      "Psalm 91:16",
+      "Proverbs 3:2"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "I declare that with long life will he satisfy me",
+    "expected_top1": "Psalm 91:16",
+    "expected_top3": [
+      "Psalm 91:16",
+      "Proverbs 3:2"
+    ],
+    "category": "natural_phrasing",
+    "should_match": true
+  },
+  {
+    "query": "qzxv toaster 9911",
+    "expected_top1": "",
+    "expected_top3": [],
+    "category": "negative_ood",
+    "should_match": false
+  },
+  {
+    "query": "how to make scrambled eggs with cheese",
+    "expected_top1": "",
+    "expected_top3": [],
+    "category": "negative_ood",
+    "should_match": false
+  },
+  {
+    "query": "premier league football table and fixtures",
+    "expected_top1": "",
+    "expected_top3": [],
+    "category": "negative_ood",
+    "should_match": false
+  },
+  {
+    "query": "buy cheap airline tickets to London",
+    "expected_top1": "",
+    "expected_top3": [],
+    "category": "negative_ood",
+    "should_match": false
+  },
+  {
+    "query": "download latest nvidia graphic card drivers",
+    "expected_top1": "",
+    "expected_top3": [],
+    "category": "negative_ood",
+    "should_match": false
+  },
+  {
+    "query": "where is the nearest petrol station open right now",
+    "expected_top1": "",
+    "expected_top3": [],
+    "category": "negative_ood",
+    "should_match": false
+  },
+  {
+    "query": "python programming tutorial for beginners",
+    "expected_top1": "",
+    "expected_top3": [],
+    "category": "negative_ood",
+    "should_match": false
+  },
+  {
+    "query": "weather forecast for tomorrow afternoon",
+    "expected_top1": "",
+    "expected_top3": [],
+    "category": "negative_ood",
+    "should_match": false
+  },
+  {
+    "query": "replace car battery 2018 honda civic",
+    "expected_top1": "",
+    "expected_top3": [],
+    "category": "negative_ood",
+    "should_match": false
+  },
+  {
+    "query": "solve quadratic equation x squared minus four",
+    "expected_top1": "",
+    "expected_top3": [],
+    "category": "negative_ood",
+    "should_match": false
+  },
+  {
+    "query": "best chocolate chip cookie recipe easy",
+    "expected_top1": "",
+    "expected_top3": [],
+    "category": "negative_ood",
+    "should_match": false
+  },
+  {
+    "query": "fix wifi connection on windows 11",
+    "expected_top1": "",
+    "expected_top3": [],
+    "category": "negative_ood",
+    "should_match": false
+  },
+  {
+    "query": "stock market prices today apple tesla",
+    "expected_top1": "",
+    "expected_top3": [],
+    "category": "negative_ood",
+    "should_match": false
+  },
+  {
+    "query": "install nodejs npm windows powershell",
+    "expected_top1": "",
+    "expected_top3": [],
+    "category": "negative_ood",
+    "should_match": false
+  },
+  {
+    "query": "what time is sunset tonight in Lagos",
+    "expected_top1": "",
+    "expected_top3": [],
+    "category": "negative_ood",
+    "should_match": false
+  }
+]

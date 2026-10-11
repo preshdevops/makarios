@@ -28,7 +28,14 @@ object CuratedTopicRepository {
         TopicMeta("Rest", "Stillness in His presence", Light.Grove, 26)
     )
 
-    val pairs: List<CuratedTopicPair> = listOf(
+    val pairs: List<CuratedTopicPair> = SeedDeclarations.entries.mapIndexed { idx, seed ->
+        CuratedTopicPair(
+            id = "seed-${idx + 1}",
+            declaration = seed.declaration,
+            reference = com.makarios.app.data.bible.ScriptureText.normalizeReference(seed.bestVerse.ref),
+            topic = seed.topic
+        )
+    } + listOf(
         CuratedTopicPair("topic-1", "I am a child of God, loved with an everlasting love.", "1 John 3:1", "Identity"),
         CuratedTopicPair("topic-2", "I am a new creation; the old has passed away and the new has come.", "2 Corinthians 5:17", "Identity"),
         CuratedTopicPair("topic-3", "I am chosen in Him before the foundation of the world.", "Ephesians 1:4", "Identity"),

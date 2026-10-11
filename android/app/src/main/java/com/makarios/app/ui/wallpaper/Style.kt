@@ -32,7 +32,8 @@ data class StyleSpec(
     val milestoneDays: Int? = null,
     val hourFormatted: String? = null,
     val timestampFormatted: String? = null,
-    val recapDeclarations: List<StyleSpec>? = null
+    val recapDeclarations: List<StyleSpec>? = null,
+    val replyText: String? = null
 ) {
     /** Resolved chapter number: uses explicit value, extracts from reference, or defaults to 23. */
     val resolvedChapter: String
@@ -121,6 +122,9 @@ fun defaultWallpaperSpec(style: Style, light: Light = Light.forNow()): Wallpaper
 interface Style {
     val id: String
     val displayName: String
+    val category: String get() = "Type"
+    val supportsLights: Boolean get() = true
+    val maxChars: Int get() = 140
 
     fun render(spec: StyleSpec, light: Light, size: IntSize): Bitmap
 
@@ -197,6 +201,48 @@ object StyleRegistry {
     val CAROUSEL_RECAP: Style = CarouselRecapStyle
     val UNDERLINED: Style = UnderlinedStyle
 
+    // 36 new templates from Prompt 15 (numbered 22 to 57)
+    val STACK: Style = StackStyle
+    val DROP_CAP: Style = DropCapStyle
+    val OUTLINE: Style = OutlineStyle
+    val TICKER: Style = TickerStyle
+    val SPLIT_WEIGHT: Style = SplitWeightStyle
+    val SPINE: Style = SpineStyle
+    val POEM: Style = PoemStyle
+    val MARKER: Style = MarkerStyle
+    val DOORWAY: Style = DoorwayStyle
+
+    val HORIZON: Style = HorizonStyle
+    val ECLIPSE: Style = EclipseStyle
+    val MOON: Style = MoonStyle
+    val DUNES: Style = DunesStyle
+    val RAIN: Style = RainStyle
+    val FIREFLIES: Style = FirefliesStyle
+    val CANDLE: Style = CandleStyle
+
+    val INDEX_CARD: Style = IndexCardStyle
+    val TORN_PAPER: Style = TornPaperStyle
+    val STICKY_NOTE: Style = StickyNoteStyle
+    val LETTER: Style = LetterStyle
+    val BIBLE_PAGE: Style = BiblePageStyle
+    val TICKET: Style = TicketStyle
+    val SEAL: Style = SealStyle
+    val BOOKMARK: Style = BookmarkStyle
+
+    val BIRTHDAY: Style = BirthdayStyle
+    val PRAYING_FOR_YOU: Style = PrayingForYouStyle
+    val GOOD_MORNING: Style = GoodMorningStyle
+    val DAY_OF_THE_WEEK: Style = DayOfTheWeekStyle
+    val ANSWERED: Style = AnsweredStyle
+    val SEASON: Style = SeasonStyle
+
+    val CHAT_BUBBLE: Style = ChatBubbleStyle
+    val FILL_IN: Style = FillInStyle
+    val PICK_ONE: Style = PickOneStyle
+    val WEEK: Style = WeekStyle
+    val CALL_AND_ANSWER: Style = CallAndAnswerStyle
+    val COORDINATES: Style = CoordinatesStyle
+
     val essentials: List<Style> = listOf(
         PAIRING, WINDOWS, RAYS, NUMERALS,
         PAPER, CONSTELLATION, WORD, PAGE,
@@ -208,7 +254,114 @@ object StyleRegistry {
         POLAROID, VERSE_FIRST, THE_HOUR, CAROUSEL_RECAP, UNDERLINED
     )
 
-    val all: List<Style> = essentials + more
+    val new36: List<Style> = listOf(
+        STACK, DROP_CAP, OUTLINE, TICKER, SPLIT_WEIGHT, SPINE, POEM, MARKER, DOORWAY,
+        HORIZON, ECLIPSE, MOON, DUNES, RAIN, FIREFLIES, CANDLE,
+        INDEX_CARD, TORN_PAPER, STICKY_NOTE, LETTER, BIBLE_PAGE, TICKET, SEAL, BOOKMARK,
+        BIRTHDAY, PRAYING_FOR_YOU, GOOD_MORNING, DAY_OF_THE_WEEK, ANSWERED, SEASON,
+        CHAT_BUBBLE, FILL_IN, PICK_ONE, WEEK, CALL_AND_ANSWER, COORDINATES
+    )
+
+    val all: List<Style> = essentials + more + new36
+
+    val categories: List<String> = listOf("For you", "Type", "Light", "Paper", "Occasion", "Conversation")
+
+    fun byCategory(category: String): List<Style> = when (category) {
+        "Type" -> all.filter { it.category == "Type" }
+        "Light" -> all.filter { it.category == "Light" }
+        "Paper" -> all.filter { it.category == "Paper" }
+        "Occasion" -> all.filter { it.category == "Occasion" }
+        "Conversation" -> all.filter { it.category == "Conversation" }
+        else -> all
+    }
+
+    fun forYouStyles(
+        spec: StyleSpec,
+        light: Light,
+        recentIds: List<String> = emptyList(),
+        favoriteIds: Set<String> = emptySet()
+    ): List<Style> {
+        val candidates = mutableListOf<Style>()
+
+        // 1. Recents take priority if they fit
+        recentIds.mapNotNull { get(it) }.forEach { candidates.add(it) }
+
+        // 2. Name entered -> Occasion styles (Birthday, Letter, Praying for you, For you)
+        if (!spec.recipientName.isNullOrBlank()) {
+            candidates.add(BIRTHDAY)
+            candidates.add(LETTER)
+            candidates.add(PRAYING_FOR_YOU)
+            candidates.add(FOR_YOU)
+        }
+
+        // 3. Short text (under 28 chars) -> Stack, Split weight, Outline, Horizon
+        val len = spec.declaration.trim().length
+        if (len <= 28) {
+            candidates.add(STACK)
+            candidates.add(SPLIT_WEIGHT)
+            candidates.add(OUTLINE)
+            candidates.add(HORIZON)
+            candidates.add(WORD)
+        }
+
+        // 4. Long text (60+ chars) -> Bible page, Poem, Letter
+        if (len >= 60) {
+            candidates.add(BIBLE_PAGE)
+            candidates.add(POEM)
+            candidates.add(LETTER)
+            candidates.add(PAGE)
+        }
+
+        // 5. Time window -> Candle / Moon / Eclipse at night, Good morning at dawn
+        when (light) {
+            Light.Night -> {
+                candidates.add(MOON)
+                candidates.add(CANDLE)
+                candidates.add(ECLIPSE)
+                candidates.add(CONSTELLATION)
+            }
+            Light.Dawn -> {
+                candidates.add(GOOD_MORNING)
+                candidates.add(HORIZON)
+                candidates.add(RAYS)
+            }
+            else -> {}
+        }
+
+        // 6. Weekday -> Day of the week
+        candidates.add(DAY_OF_THE_WEEK)
+
+        // 7. Streak milestone -> Streak, Week
+        if ((spec.milestoneDays ?: 0) >= 3) {
+            candidates.add(WEEK)
+            candidates.add(STREAK)
+        }
+
+        // Fillers if needed
+        candidates.add(PAIRING)
+        candidates.add(DOORWAY)
+        candidates.add(MARKER)
+        candidates.add(DUNES)
+        candidates.add(INDEX_CARD)
+        candidates.add(CALL_AND_ANSWER)
+
+        val filtered = candidates
+            .filter { it.maxChars >= len }
+            .distinctBy { it.id }
+            .toMutableList()
+
+        if (filtered.size < 6) {
+            val backfill = all.filter { it.maxChars >= len && it !in filtered }
+            filtered.addAll(backfill.take(6 - filtered.size))
+        }
+
+        if (filtered.size < 6) {
+            val emergency = all.sortedByDescending { it.maxChars }.filter { it !in filtered }
+            filtered.addAll(emergency.take(6 - filtered.size))
+        }
+
+        return filtered.take(6)
+    }
 
     private val byId: Map<String, Style> = all.associateBy { it.id.lowercase() }
 
@@ -302,6 +455,67 @@ object ShareSettings {
             .edit()
             .putBoolean(KEY_WORDMARK, enabled)
             .apply()
+    }
+}
+
+/** Settings for favoriting, recent and last-used styles, persisted in SharedPreferences. */
+object StyleFavoritesStore {
+    private const val PREFS = "makarios_style_prefs"
+    private const val KEY_FAVORITES = "fav_styles"
+    private const val KEY_LAST_USED = "last_used_style"
+    private const val KEY_RECENT = "recent_styles"
+
+    fun isFavorite(context: Context, styleId: String): Boolean {
+        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        val set = prefs.getStringSet(KEY_FAVORITES, emptySet()) ?: emptySet()
+        return set.contains(styleId.lowercase())
+    }
+
+    fun toggleFavorite(context: Context, styleId: String): Boolean {
+        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        val set = (prefs.getStringSet(KEY_FAVORITES, emptySet()) ?: emptySet()).toMutableSet()
+        val key = styleId.lowercase()
+        val newState = if (set.contains(key)) {
+            set.remove(key)
+            false
+        } else {
+            set.add(key)
+            true
+        }
+        prefs.edit().putStringSet(KEY_FAVORITES, set).apply()
+        return newState
+    }
+
+    fun getFavorites(context: Context): Set<String> {
+        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        return prefs.getStringSet(KEY_FAVORITES, emptySet()) ?: emptySet()
+    }
+
+    fun getLastUsed(context: Context): String? {
+        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        return prefs.getString(KEY_LAST_USED, null)
+    }
+
+    fun setLastUsed(context: Context, styleId: String) {
+        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        prefs.edit().putString(KEY_LAST_USED, styleId).apply()
+        addRecent(context, styleId)
+    }
+
+    fun getRecent(context: Context): List<String> {
+        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        val raw = prefs.getString(KEY_RECENT, "") ?: ""
+        return raw.split(",").filter { it.isNotBlank() }
+    }
+
+    fun addRecent(context: Context, styleId: String) {
+        val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        val current = getRecent(context).toMutableList()
+        val id = styleId.lowercase()
+        current.remove(id)
+        current.add(0, id)
+        val updated = current.take(3).joinToString(",")
+        prefs.edit().putString(KEY_RECENT, updated).apply()
     }
 }
 

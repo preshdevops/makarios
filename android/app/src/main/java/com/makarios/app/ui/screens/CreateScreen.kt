@@ -24,8 +24,24 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material.icons.outlined.InsertDriveFile
 import androidx.compose.material.icons.outlined.MenuBook
+import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.outlined.Wallpaper
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.material.icons.automirrored.outlined.MenuBook
+import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.Search
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontStyle
+import com.makarios.app.data.bible.BibleReferenceParser
+import com.makarios.app.data.bible.BibleRepository
+import com.makarios.app.data.bible.ScriptureText
+import com.makarios.app.ui.wallpaper.StyleTypefaces
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import kotlinx.coroutines.withContext
@@ -42,6 +58,9 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.graphics.FilterQuality
+import kotlin.math.roundToInt
+import kotlin.math.max
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntSize
@@ -54,6 +73,9 @@ import com.makarios.app.ui.theme.*
 import com.makarios.app.ui.wallpaper.AutoStyleSelector
 import com.makarios.app.ui.wallpaper.Style
 import com.makarios.app.ui.wallpaper.StyleRegistry
+import com.makarios.app.ui.wallpaper.StyleFavoritesStore
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import com.makarios.app.ui.wallpaper.StyleSpec
 import com.makarios.app.util.ExportFormat
 import com.makarios.app.util.LightCanvas
@@ -75,6 +97,7 @@ fun CreateScreen(
     initialVerseText: String? = null,
     initialReference: String? = null,
     initialStep: Int = 1,
+    onSearchBible: ((currentDeclaration: String) -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -82,24 +105,24 @@ fun CreateScreen(
 
     var step by remember(initialStep) { mutableStateOf(initialStep) }
     var declarationText by remember(initialDeclaration) { mutableStateOf(initialDeclaration ?: "") }
-    var tone by remember { mutableStateOf("Still") }
     var selectedLight by remember { mutableStateOf(Light.forNow()) }
     var selectedStyle by remember { mutableStateOf<Style>(StyleRegistry.PAIRING) }
     var formatName by remember { mutableStateOf("Story") }
     var selectedPhotoUrl by remember { mutableStateOf<String?>(null) }
-    var showBiblePicker by remember { mutableStateOf(false) }
     var showNotificationAsk by remember { mutableStateOf(false) }
     var isSharingInProgress by remember { mutableStateOf(false) }
 
     // Verses matched for the declaration
     var matchedVerses by remember(initialVerseText, initialReference) {
         mutableStateOf(
-            if (initialVerseText != null) {
-                listOf(ScriptureVerse(text = initialVerseText, reference = initialReference ?: "Romans 8:28"))
+            if (initialVerseText != null && !initialReference.isNullOrBlank()) {
+                listOf(ScriptureVerse(text = initialVerseText, reference = initialReference))
             } else emptyList()
         )
     }
     var currentVerseIndex by remember { mutableStateOf(0) }
+    var isEngineConfident by remember { mutableStateOf(true) }
+    var engineReason by remember { mutableStateOf("") }
     var savedAffirmation by remember { mutableStateOf<Affirmation?>(null) }
 
     val currentVerse: ScriptureVerse? = remember(matchedVerses, currentVerseIndex) {
@@ -111,18 +134,16 @@ fun CreateScreen(
     fun getOrCreateSavedAffirmation(): Affirmation {
         val existing = savedAffirmation
         if (existing != null) return existing
+        val v = currentVerse ?: throw IllegalStateException("Cannot save affirmation without a verse reference.")
+        require(v.reference.isNotBlank()) { "Cannot save affirmation without a real reference." }
         val aff = Affirmation(
             id = "custom-${System.currentTimeMillis()}",
             declaration = declarationText.trim(),
-            scriptureText = currentVerse?.text ?: "The Lord is my strength and my shield.",
-            reference = currentVerse?.reference ?: "Psalm 28:7",
+            scriptureText = v.text,
+            reference = v.reference,
             context = "Authored in Makarios Declare Studio.",
             category = "Personal",
-            tone = when (tone) {
-                "Bold" -> AffirmationTone.RESOLUTE
-                "Gentle" -> AffirmationTone.GENTLE
-                else -> AffirmationTone.STILL
-            },
+            tone = AffirmationTone.STILL,
             imageUrl = selectedPhotoUrl ?: "",
             isFavorite = true
         )
@@ -246,19 +267,18 @@ fun CreateScreen(
                         1 -> WriteStep(
                             text = declarationText,
                             onTextChanged = { declarationText = it },
-                            tone = tone,
-                            onToneChanged = { tone = it },
                             light = activeStepLight,
                             onNext = {
-                                val selectedTone = when (tone) {
-                                    "Bold" -> AffirmationTone.RESOLUTE
-                                    "Gentle" -> AffirmationTone.GENTLE
-                                    else -> AffirmationTone.STILL
+                                coroutineScope.launch {
+                                    val result = MatchEngine.getInstance(context).match(declarationText, limit = 3)
+                                    isEngineConfident = result.confident
+                                    engineReason = result.reason
+                                    matchedVerses = result.top.map {
+                                        ScriptureVerse(text = it.text, reference = it.reference)
+                                    }
+                                    currentVerseIndex = 0
+                                    step = 2
                                 }
-                                val results = ScriptureMatcher.match(declarationText, selectedTone, limit = 15)
-                                matchedVerses = results.map { it.verse }
-                                currentVerseIndex = 0
-                                step = 2
                             }
                         )
                         2 -> VerseStep(
@@ -266,23 +286,34 @@ fun CreateScreen(
                             light = activeStepLight,
                             matchedVerses = matchedVerses,
                             selectedVerseIndex = currentVerseIndex,
+                            engineReason = engineReason,
+                            isConfident = isEngineConfident,
                             onSelectVerseIndex = { currentVerseIndex = it },
-                            onSearchBible = { showBiblePicker = true },
+                            onSearchBible = { onSearchBible?.invoke(declarationText) },
+                            onAddCustomVerse = { customVerse ->
+                                matchedVerses = listOf(customVerse) + matchedVerses
+                                currentVerseIndex = 0
+                                engineReason = "Selected from reference"
+                                isEngineConfident = true
+                            },
                             onEditDeclaration = { step = 1 },
                             onUseThisVerse = {
-                                selectedStyle = AutoStyleSelector.pickStyle(
-                                    declaration = declarationText,
-                                    verse = currentVerse?.text,
-                                    reference = currentVerse?.reference,
-                                    light = selectedLight
-                                )
-                                step = 3
+                                val cv = currentVerse
+                                if (cv != null && cv.reference.isNotBlank()) {
+                                    selectedStyle = AutoStyleSelector.pickStyle(
+                                        declaration = declarationText,
+                                        verse = cv.text,
+                                        reference = cv.reference,
+                                        light = selectedLight
+                                    )
+                                    step = 3
+                                }
                             }
                         )
                         3 -> LookStep(
                             declarationText = declarationText,
-                            verseText = currentVerse?.text ?: "The Lord is my strength and my shield.",
-                            verseReference = currentVerse?.reference ?: "Psalm 28:7",
+                            verseText = currentVerse?.text.orEmpty(),
+                            verseReference = currentVerse?.reference.orEmpty(),
                             selectedLight = selectedLight,
                             onLightChanged = { selectedLight = it },
                             selectedStyle = selectedStyle,
@@ -306,9 +337,27 @@ fun CreateScreen(
                                 }
                             },
                             onDone = {
-                                getOrCreateSavedAffirmation()
-                                showNotificationAsk = true
-                                step = 4
+                                coroutineScope.launch {
+                                    try {
+                                        val aff = getOrCreateSavedAffirmation()
+                                        val entity = com.makarios.app.data.local.KeptEntity(
+                                            id = aff.id,
+                                            declaration = aff.declaration,
+                                            verseText = aff.scriptureText,
+                                            reference = aff.reference,
+                                            lightName = selectedLight.name,
+                                            styleId = selectedStyle.id,
+                                            createdAt = System.currentTimeMillis(),
+                                            isFavorite = true,
+                                            sourceType = "authored"
+                                        )
+                                        com.makarios.app.data.local.KeptRepository.save(entity)
+                                        showNotificationAsk = true
+                                        step = 4
+                                    } catch (e: Exception) {
+                                        Toast.makeText(context, "Could not save to Kept: ${e.message}. Please tap Kept again.", Toast.LENGTH_LONG).show()
+                                    }
+                                }
                             },
                             onSavePhotos = {
                                 val aff = getOrCreateSavedAffirmation()
@@ -370,55 +419,21 @@ fun CreateScreen(
     if (showNotificationAsk && !com.makarios.app.util.NotificationStore.askShown(context)) {
         NotificationSoftAsk { showNotificationAsk = false }
     }
-
-    if (showBiblePicker) {
-        var pickerBook by remember { mutableStateOf<String?>(null) }
-        var pickerChapter by remember { mutableStateOf(1) }
-
-        if (pickerBook != null) {
-            ChapterVersePickerScreen(
-                bookName = pickerBook!!,
-                initialChapter = pickerChapter,
-                onNavigateBack = { pickerBook = null },
-                onVerseSelected = { selection ->
-                    matchedVerses = listOf(ScriptureVerse(text = selection.text, reference = selection.reference)) + matchedVerses
-                    currentVerseIndex = 0
-                    pickerBook = null
-                    showBiblePicker = false
-                }
-            )
-        } else {
-            BiblePickerScreen(
-                onNavigateBack = { showBiblePicker = false },
-                onSelectBookChapter = { b, ch ->
-                    pickerBook = b
-                    pickerChapter = ch
-                },
-                onVerseSelected = { selection ->
-                    matchedVerses = listOf(ScriptureVerse(text = selection.text, reference = selection.reference)) + matchedVerses
-                    currentVerseIndex = 0
-                    showBiblePicker = false
-                }
-            )
-        }
-    }
 }
 
 @Composable
 fun WriteStep(
     text: String,
     onTextChanged: (String) -> Unit,
-    tone: String,
-    onToneChanged: (String) -> Unit,
     light: Light,
     onNext: () -> Unit
 ) {
-    val starters = listOf(
-        "I walk in perfect peace because God guards my heart.",
-        "I lack nothing, for the Lord is my shepherd.",
-        "I am strong in the grace that is in Christ Jesus.",
-        "My steps are ordered and my future is secure in God's hands."
-    )
+    var starterIndex by remember { mutableStateOf(0) }
+    val starters = remember(starterIndex) {
+        val all = SeedDeclarations.entries.map { it.declaration }
+        val start = (starterIndex * 3) % all.size
+        (0 until 3).map { all[(start + it) % all.size] }
+    }
 
     Column(
         modifier = Modifier
@@ -476,41 +491,26 @@ fun WriteStep(
 
         Spacer(modifier = Modifier.height(28.dp))
 
-        // Tone Selector
-        Text("Tone", style = MakariosTypography.labelMedium, color = light.text.copy(alpha = 0.8f))
-        Spacer(modifier = Modifier.height(8.dp))
+        // Starters: Start from yours (3 at a time with refresh)
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(44.dp)
-                .clip(RoundedCornerShape(22.dp))
-                .border(1.dp, light.text.copy(alpha = 0.15f), RoundedCornerShape(22.dp)),
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            listOf("Still", "Bold", "Gentle").forEach { t ->
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight()
-                        .clip(RoundedCornerShape(22.dp))
-                        .background(if (tone == t) light.text else Color.Transparent)
-                        .clickable { onToneChanged(t) },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = t,
-                        style = MakariosTypography.labelLarge,
-                        color = if (tone == t) light.top else light.text
-                    )
-                }
+            Text("Start from yours", style = MakariosTypography.labelMedium, color = light.text.copy(alpha = 0.8f))
+            IconButton(
+                onClick = { starterIndex++ },
+                modifier = Modifier.size(32.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Refresh,
+                    contentDescription = "Refresh declarations",
+                    tint = light.text.copy(alpha = 0.7f),
+                    modifier = Modifier.size(18.dp)
+                )
             }
         }
-
-        Spacer(modifier = Modifier.height(28.dp))
-
-        // Starters
-        Text("Or begin with one of these", style = MakariosTypography.labelMedium, color = light.text.copy(alpha = 0.8f))
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(10.dp))
 
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             starters.forEach { starter ->
@@ -555,61 +555,65 @@ fun VerseStep(
     light: Light,
     matchedVerses: List<ScriptureVerse>,
     selectedVerseIndex: Int,
+    engineReason: String = "",
+    isConfident: Boolean = true,
     onSelectVerseIndex: (Int) -> Unit,
     onSearchBible: () -> Unit,
+    onAddCustomVerse: (ScriptureVerse) -> Unit,
     onEditDeclaration: () -> Unit,
     onUseThisVerse: () -> Unit
 ) {
+    var showTypeRefDialog by remember { mutableStateOf(false) }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = 24.dp)
             .verticalScroll(rememberScrollState())
     ) {
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
-        // Your declaration banner
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(16.dp))
-                .background(if (light.isDark) Color(0x22FFFFFF) else Color(0x55FFFFFF))
-                .border(1.dp, light.text.copy(alpha = 0.12f), RoundedCornerShape(16.dp))
-                .padding(16.dp)
-        ) {
+        // 1. Top: "YOUR WORDS", declaration, short rule, then "STANDING ON"
+        Column(modifier = Modifier.fillMaxWidth()) {
             Text(
-                text = "YOUR DECLARATION",
-                style = MakariosTypography.labelSmall.copy(fontSize = 11.sp, letterSpacing = 1.sp),
-                color = light.text.copy(alpha = 0.65f),
-                fontWeight = FontWeight.SemiBold
+                text = "YOUR WORDS",
+                style = MakariosTypography.labelSmall.copy(
+                    letterSpacing = 1.2.sp,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 11.sp
+                ),
+                color = light.text.copy(alpha = 0.6f)
             )
             Spacer(modifier = Modifier.height(6.dp))
             Text(
                 text = "\"${declarationText.ifBlank { "I walk in God's peace and strength." }}\"",
-                style = MakariosTypography.bodyLarge.copy(
-                    fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
-                    fontSize = 17.sp,
-                    lineHeight = 24.sp
+                style = TextStyle(
+                    fontFamily = NewsreaderFontFamily,
+                    fontSize = 22.sp,
+                    lineHeight = 28.sp
                 ),
                 color = light.text
             )
+            Spacer(modifier = Modifier.height(14.dp))
+            HorizontalDivider(
+                modifier = Modifier.width(48.dp),
+                thickness = 1.dp,
+                color = light.text.copy(alpha = 0.25f)
+            )
+            Spacer(modifier = Modifier.height(14.dp))
+            Text(
+                text = "STANDING ON",
+                style = MakariosTypography.labelSmall.copy(
+                    letterSpacing = 1.2.sp,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 11.sp
+                ),
+                color = light.text.copy(alpha = 0.6f)
+            )
         }
 
-        Spacer(modifier = Modifier.height(20.dp))
-
-        Text(
-            text = "Anchor in Scripture",
-            style = MakariosTypography.displaySmall.copy(fontSize = 24.sp),
-            color = light.text
-        )
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(
-            text = "Choose the verse that anchors what you are declaring.",
-            style = MakariosTypography.bodyMedium,
-            color = light.text.copy(alpha = 0.75f)
-        )
-
-        if (matchedVerses.isEmpty()) {
+        if (!isConfident || matchedVerses.isEmpty()) {
+            // 6. No confident match calm prompt without picking a random fallback
             Spacer(modifier = Modifier.height(16.dp))
             Box(
                 modifier = Modifier
@@ -628,7 +632,7 @@ fun VerseStep(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Icon(
-                        imageVector = Icons.Outlined.MenuBook,
+                        imageVector = Icons.Outlined.Search,
                         contentDescription = null,
                         tint = light.text.copy(alpha = 0.7f),
                         modifier = Modifier.size(36.dp)
@@ -641,26 +645,36 @@ fun VerseStep(
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "We could not find a clear scripture match for this declaration. Search the Bible to find the exact verse you want to anchor with.",
+                        text = "We couldn't find a close match for that phrasing. Pick from the Bible or try rephrasing.",
                         style = MakariosTypography.bodyMedium,
-                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                        textAlign = TextAlign.Center,
                         color = light.text.copy(alpha = 0.75f)
                     )
                     Spacer(modifier = Modifier.height(20.dp))
-                    Button(
-                        onClick = onSearchBible,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(56.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = light.text,
-                            contentColor = light.top
-                        ),
-                        shape = RoundedCornerShape(28.dp)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        Icon(Icons.Outlined.MenuBook, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Search the Bible", style = MakariosTypography.labelLarge)
+                        OutlinedButton(
+                            onClick = onSearchBible,
+                            modifier = Modifier.weight(1f).height(48.dp),
+                            shape = RoundedCornerShape(24.dp),
+                            border = BorderStroke(1.dp, light.text.copy(alpha = 0.5f))
+                        ) {
+                            Icon(Icons.AutoMirrored.Outlined.MenuBook, contentDescription = null, modifier = Modifier.size(16.dp), tint = light.text)
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Search the Bible", style = MakariosTypography.labelMedium, color = light.text)
+                        }
+                        OutlinedButton(
+                            onClick = { showTypeRefDialog = true },
+                            modifier = Modifier.weight(1f).height(48.dp),
+                            shape = RoundedCornerShape(24.dp),
+                            border = BorderStroke(1.dp, light.text.copy(alpha = 0.5f))
+                        ) {
+                            Icon(Icons.Outlined.Edit, contentDescription = null, modifier = Modifier.size(16.dp), tint = light.text)
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("Type reference", style = MakariosTypography.labelMedium, color = light.text)
+                        }
                     }
                 }
             }
@@ -678,58 +692,54 @@ fun VerseStep(
         } else {
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Best Match Card
-            val bestMatch = matchedVerses.getOrNull(0) ?: ScriptureVerse(
-                reference = "Romans 8:38-39",
-                text = "For I am convinced that neither death nor life, neither angels nor demons, neither the present nor the future, nor any powers... will be able to separate us from the love of God that is in Christ Jesus our Lord.",
-                themes = setOf("love", "peace"),
-                toneAffinity = AffirmationTone.STILL,
-                keywords = setOf("love", "convinced", "separate")
-            )
-            val isBestSelected = selectedVerseIndex == 0
-
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(20.dp))
-                    .background(if (light.isDark) Color(0x2EFFFFFF) else Color(0xE6FFFFFF))
-                    .border(
-                        width = if (isBestSelected) 2.dp else 1.dp,
-                        color = if (isBestSelected) light.text else light.text.copy(alpha = 0.15f),
-                        shape = RoundedCornerShape(20.dp)
-                    )
-                    .clickable { onSelectVerseIndex(0) }
-                    .padding(20.dp)
-            ) {
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(light.text)
-                                .padding(horizontal = 8.dp, vertical = 4.dp)
+            // 2. Best fit large selected card
+            val selectedVerse = matchedVerses.getOrNull(selectedVerseIndex) ?: matchedVerses[0]
+            AnimatedContent(
+                targetState = selectedVerse,
+                transitionSpec = {
+                    fadeIn(animationSpec = tween(150)) togetherWith fadeOut(animationSpec = tween(150))
+                },
+                label = "SelectedVerseSwap"
+            ) { verse ->
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(20.dp))
+                        .background(if (light.isDark) Color(0x2EFFFFFF) else Color(0xE6FFFFFF))
+                        .border(
+                            width = 2.dp,
+                            color = light.text,
+                            shape = RoundedCornerShape(20.dp)
+                        )
+                        .padding(20.dp)
+                ) {
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(
-                                text = "BEST MATCH",
-                                style = MakariosTypography.labelSmall.copy(
-                                    fontSize = 10.sp,
-                                    letterSpacing = 1.sp,
-                                    fontWeight = FontWeight.Bold
-                                ),
-                                color = light.top
-                            )
-                        }
-
-                        if (isBestSelected) {
                             Box(
                                 modifier = Modifier
-                                .size(24.dp)
-                                .clip(CircleShape)
-                                .background(light.text),
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(light.text)
+                                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                            ) {
+                                Text(
+                                    text = "BEST FIT",
+                                    style = MakariosTypography.labelSmall.copy(
+                                        fontSize = 10.sp,
+                                        letterSpacing = 1.sp,
+                                        fontWeight = FontWeight.Bold
+                                    ),
+                                    color = light.top
+                                )
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .size(24.dp)
+                                    .clip(CircleShape)
+                                    .background(light.text),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(
@@ -740,34 +750,44 @@ fun VerseStep(
                                 )
                             }
                         }
+
+                        Spacer(modifier = Modifier.height(14.dp))
+
+                        Text(
+                            text = "\"${verse.text}\"",
+                            style = TextStyle(
+                                fontFamily = NewsreaderFontFamily,
+                                fontStyle = FontStyle.Italic,
+                                fontSize = 20.sp,
+                                lineHeight = 28.sp
+                            ),
+                            color = light.text
+                        )
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        Text(
+                            text = verse.reference,
+                            style = MakariosTypography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                            color = light.text
+                        )
+
+                        if (engineReason.isNotBlank()) {
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = engineReason,
+                                style = MakariosTypography.bodySmall,
+                                color = light.text.copy(alpha = 0.7f)
+                            )
+                        }
                     }
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    Text(
-                        text = bestMatch.reference,
-                        style = MakariosTypography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                        color = light.text
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Text(
-                        text = "\"${bestMatch.text}\"",
-                        style = MakariosTypography.bodyLarge.copy(
-                            fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
-                            fontSize = 16.sp,
-                            lineHeight = 24.sp
-                        ),
-                        color = light.text.copy(alpha = 0.9f)
-                    )
                 }
             }
 
-            // Alternatives
-            val altIndices = listOf(1, 2).filter { it < matchedVerses.size }
-            if (altIndices.isNotEmpty()) {
-                Spacer(modifier = Modifier.height(20.dp))
+            // 3. Two alternative cards: smaller, reference + first line + reason, selectable on tap (swaps into top slot)
+            val alternatives = matchedVerses.indices.filter { it != selectedVerseIndex }
+            if (alternatives.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(18.dp))
                 Text(
                     text = "ALTERNATIVES",
                     style = MakariosTypography.labelSmall.copy(
@@ -779,10 +799,10 @@ fun VerseStep(
                 )
                 Spacer(modifier = Modifier.height(10.dp))
 
-                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    altIndices.forEach { altIdx ->
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    alternatives.forEach { altIdx ->
                         val altVerse = matchedVerses[altIdx]
-                        val isAltSelected = selectedVerseIndex == altIdx
+                        val firstLine = altVerse.text.lineSequence().firstOrNull()?.take(90) ?: altVerse.text.take(90)
 
                         Box(
                             modifier = Modifier
@@ -790,54 +810,30 @@ fun VerseStep(
                                 .clip(RoundedCornerShape(16.dp))
                                 .background(if (light.isDark) Color(0x1EFFFFFF) else Color(0xD0FFFFFF))
                                 .border(
-                                    width = if (isAltSelected) 2.dp else 1.dp,
-                                    color = if (isAltSelected) light.text else light.text.copy(alpha = 0.12f),
+                                    width = 1.dp,
+                                    color = light.text.copy(alpha = 0.15f),
                                     shape = RoundedCornerShape(16.dp)
                                 )
                                 .clickable { onSelectVerseIndex(altIdx) }
-                                .padding(16.dp)
+                                .padding(14.dp)
                         ) {
                             Column(modifier = Modifier.fillMaxWidth()) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(
-                                        text = altVerse.reference,
-                                        style = MakariosTypography.titleMedium.copy(fontWeight = FontWeight.SemiBold, fontSize = 15.sp),
-                                        color = light.text
-                                    )
-                                    if (isAltSelected) {
-                                        Box(
-                                            modifier = Modifier
-                                                .size(20.dp)
-                                                .clip(CircleShape)
-                                                .background(light.text),
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            Icon(
-                                                imageVector = Icons.Filled.Check,
-                                                contentDescription = "Selected",
-                                                tint = light.top,
-                                                modifier = Modifier.size(14.dp)
-                                            )
-                                        }
-                                    }
-                                }
-
-                                Spacer(modifier = Modifier.height(6.dp))
-
                                 Text(
-                                    text = "\"${altVerse.text}\"",
-                                    style = MakariosTypography.bodyMedium.copy(
-                                        fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
-                                        fontSize = 14.sp,
-                                        lineHeight = 20.sp
+                                    text = altVerse.reference,
+                                    style = MakariosTypography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                                    color = light.text
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = "\"$firstLine...\"",
+                                    style = MakariosTypography.bodySmall.copy(
+                                        fontStyle = FontStyle.Italic,
+                                        fontSize = 13.sp,
+                                        lineHeight = 18.sp
                                     ),
                                     color = light.text.copy(alpha = 0.85f),
-                                    maxLines = 4,
-                                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                                    maxLines = 2,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             }
                         }
@@ -847,26 +843,37 @@ fun VerseStep(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Search the Bible and Edit declaration row
+            // 4. Two outline action buttons below cards
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                TextButton(onClick = onSearchBible) {
-                    Icon(Icons.Outlined.MenuBook, contentDescription = null, modifier = Modifier.size(16.dp), tint = light.text)
+                OutlinedButton(
+                    onClick = onSearchBible,
+                    modifier = Modifier.weight(1f).height(46.dp),
+                    shape = RoundedCornerShape(23.dp),
+                    border = BorderStroke(1.dp, light.text.copy(alpha = 0.4f))
+                ) {
+                    Icon(Icons.AutoMirrored.Outlined.MenuBook, contentDescription = null, modifier = Modifier.size(16.dp), tint = light.text)
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text("Search the Bible", style = MakariosTypography.labelLarge, color = light.text)
+                    Text("Search the Bible", style = MakariosTypography.labelMedium, color = light.text)
                 }
 
-                TextButton(onClick = onEditDeclaration) {
-                    Text("Edit declaration", style = MakariosTypography.labelLarge, color = light.text.copy(alpha = 0.75f))
+                OutlinedButton(
+                    onClick = { showTypeRefDialog = true },
+                    modifier = Modifier.weight(1f).height(46.dp),
+                    shape = RoundedCornerShape(23.dp),
+                    border = BorderStroke(1.dp, light.text.copy(alpha = 0.4f))
+                ) {
+                    Icon(Icons.Outlined.Edit, contentDescription = null, modifier = Modifier.size(16.dp), tint = light.text)
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("Type a reference", style = MakariosTypography.labelMedium, color = light.text)
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
-            // Primary: ink pill "Use this verse" (56dp)
+            // 5. Primary button: "Use <reference>"
             Button(
                 onClick = onUseThisVerse,
                 modifier = Modifier
@@ -878,11 +885,90 @@ fun VerseStep(
                 ),
                 shape = RoundedCornerShape(28.dp)
             ) {
-                Text("Use this verse", style = MakariosTypography.labelLarge)
+                Text(
+                    text = "Use ${selectedVerse.reference}",
+                    style = MakariosTypography.labelLarge.copy(fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                )
             }
 
             Spacer(modifier = Modifier.height(32.dp))
         }
+    }
+
+    if (showTypeRefDialog) {
+        var refInput by remember { mutableStateOf("") }
+        var refError by remember { mutableStateOf<String?>(null) }
+        var isLookingUp by remember { mutableStateOf(false) }
+        val scope = rememberCoroutineScope()
+
+        AlertDialog(
+            onDismissRequest = { showTypeRefDialog = false },
+            title = {
+                Text(
+                    "Type a reference",
+                    style = MakariosTypography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                )
+            },
+            text = {
+                Column {
+                    Text(
+                        "Enter any Bible reference (e.g. Phil 4:13, Romans 8:28, Psalm 23:1):",
+                        style = MakariosTypography.bodyMedium
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    OutlinedTextField(
+                        value = refInput,
+                        onValueChange = {
+                            refInput = it
+                            refError = null
+                        },
+                        singleLine = true,
+                        placeholder = { Text("e.g. Phil 4:13") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    if (refError != null) {
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = refError!!,
+                            style = MakariosTypography.bodySmall,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val parsed = BibleReferenceParser.parse(refInput)
+                        if (parsed == null) {
+                            refError = "Could not parse reference. Try 'Book Chapter:Verse' (e.g. Phil 4:13)."
+                            return@Button
+                        }
+                        scope.launch {
+                            isLookingUp = true
+                            val res = BibleRepository.getVerse(refInput)
+                            val verse = res.getOrNull()
+                            if (verse != null) {
+                                val dispRef = ScriptureText.formatDisplayReference(verse.reference)
+                                onAddCustomVerse(ScriptureVerse(reference = dispRef, text = verse.text))
+                                showTypeRefDialog = false
+                            } else {
+                                refError = "Verse not found in this translation. Check the chapter and verse numbers."
+                            }
+                            isLookingUp = false
+                        }
+                    },
+                    enabled = refInput.isNotBlank() && !isLookingUp
+                ) {
+                    Text("Find verse")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showTypeRefDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 }
 
@@ -912,14 +998,17 @@ fun LookStep(
     val context = LocalContext.current
     val exportFormat = remember(format) { ExportFormat.from(format) }
 
-    var activeCategory by remember { mutableStateOf("Essentials") }
+    var activeCategory by remember { mutableStateOf("For you") }
     var recipientName by remember { mutableStateOf("") }
+    var replyText by remember { mutableStateOf("Needed this today") }
     var rewrittenText by remember(declarationText) { mutableStateOf(PronounRewriter.rewrite(declarationText)) }
     var selectedMilestone by remember { mutableStateOf(30) }
+    var favoriteIds by remember { mutableStateOf(StyleFavoritesStore.getFavorites(context)) }
+    val recentIds = remember { StyleFavoritesStore.getRecent(context) }
 
     val spec = remember(
         declarationText, verseText, verseReference,
-        selectedStyle.id, recipientName, rewrittenText, selectedMilestone
+        selectedStyle.id, recipientName, rewrittenText, selectedMilestone, replyText
     ) {
         StyleSpec(
             declaration = if (selectedStyle.id == StyleRegistry.FOR_YOU.id) rewrittenText else declarationText,
@@ -927,44 +1016,83 @@ fun LookStep(
             reference = verseReference,
             recipientName = recipientName.takeIf { it.isNotBlank() },
             isPronounRewritten = selectedStyle.id == StyleRegistry.FOR_YOU.id,
-            milestoneDays = selectedMilestone
+            milestoneDays = selectedMilestone,
+            replyText = replyText
         )
     }
 
     val isIgInstalled = remember { ShareRepository.isInstagramInstalled(context) }
     val isWaInstalled = remember { ShareRepository.isWhatsAppInstalled(context) }
 
-    // Auto-fallback if Numerals is currently selected but chapter is 1-digit and ineligible
-    LaunchedEffect(spec.isNumeralsEligible) {
+    // Auto-fallback if Numerals is currently selected but chapter is 1-digit, or text exceeds maxChars
+    LaunchedEffect(declarationText, selectedStyle.id, spec.isNumeralsEligible) {
         if (selectedStyle.id == StyleRegistry.NUMERALS.id && !spec.isNumeralsEligible) {
-            onStyleChanged(AutoStyleSelector.pickStyle(declarationText, verseText, verseReference, null, selectedLight))
+            val pick = AutoStyleSelector.pickStyle(declarationText, verseText, verseReference, null, selectedLight)
+            onStyleChanged(pick)
+            StyleFavoritesStore.setLastUsed(context, pick.id)
+        } else if (declarationText.length > selectedStyle.maxChars) {
+            val fallback = StyleRegistry.all.firstOrNull { it.maxChars >= declarationText.length } ?: StyleRegistry.PAIRING
+            onStyleChanged(fallback)
+            StyleFavoritesStore.setLastUsed(context, fallback.id)
         }
     }
 
-    // Performance: render 200x433 preview in background coroutine at 1/4 scale with cache
-    val previewBitmap by produceState<android.graphics.Bitmap?>(
-        initialValue = null,
-        selectedStyle.id,
-        selectedLight.name,
-        format,
-        spec.declaration,
-        verseText,
-        spec.recipientName,
-        spec.milestoneDays
+    val density = androidx.compose.ui.platform.LocalDensity.current.density
+    val formatAspect = when (exportFormat) {
+        ExportFormat.Square -> 1.0f
+        ExportFormat.Portrait -> 1.25f
+        ExportFormat.X -> 9f / 16f
+        ExportFormat.Story -> 16f / 9f
+        ExportFormat.Wallpaper -> 844f / 390f
+    }
+    val previewWidthDp = when (exportFormat) {
+        ExportFormat.Square -> 240.dp
+        ExportFormat.Portrait -> 220.dp
+        ExportFormat.X -> 280.dp
+        ExportFormat.Story -> 200.dp
+        ExportFormat.Wallpaper -> 200.dp
+    }
+    val previewHeightDp = (previewWidthDp.value * formatAspect).dp
+    val rawWidthPx = (previewWidthDp.value * density).roundToInt()
+    val rawHeightPx = (rawWidthPx * formatAspect).roundToInt()
+    val maxDim = max(rawWidthPx, rawHeightPx)
+    val widthPx = if (maxDim > 1440) ((rawWidthPx.toFloat() * 1440f) / maxDim).roundToInt() else rawWidthPx
+    val heightPx = if (maxDim > 1440) ((rawHeightPx.toFloat() * 1440f) / maxDim).roundToInt() else rawHeightPx
+
+    // Fast 200px placeholder + full-resolution background render with 150ms debounce and 120ms cross-fade
+    var placeholderBitmap by remember { mutableStateOf<android.graphics.Bitmap?>(null) }
+    var highResBitmap by remember { mutableStateOf<android.graphics.Bitmap?>(null) }
+
+    LaunchedEffect(
+        selectedStyle.id, selectedLight.name, format, spec.declaration, verseText, spec.recipientName, spec.milestoneDays
     ) {
-        value = withContext(Dispatchers.Default) {
-            val key = "${selectedStyle.id}:${selectedLight.name}:${exportFormat.name}:200x433:${spec.declaration.hashCode()}:${verseText.hashCode()}:${spec.recipientName.hashCode()}"
-            previewBitmapCache.getOrPut(key) {
-                // Render at exact preview aspect ratio (200 x 433)
-                val (w, h) = when (exportFormat) {
-                    ExportFormat.Square -> 200 to 200
-                    ExportFormat.Portrait -> 200 to 250
-                    ExportFormat.X -> 320 to 180
-                    ExportFormat.Story, ExportFormat.Wallpaper -> 200 to 433
-                }
-                selectedStyle.render(spec, selectedLight, IntSize(w, h))
+        val lowW = 200
+        val lowH = (200 * formatAspect).roundToInt()
+        val lowKey = "${selectedStyle.id}:${selectedLight.name}:${exportFormat.name}:placeholder:${lowW}x${lowH}:${spec.declaration.hashCode()}:${verseText.hashCode()}:${spec.recipientName.hashCode()}"
+        val cached = previewBitmapCache[lowKey]
+        if (cached != null) {
+            placeholderBitmap = cached
+        } else {
+            withContext(Dispatchers.Default) {
+                val bmp = selectedStyle.render(spec, selectedLight, IntSize(lowW, lowH))
+                previewBitmapCache[lowKey] = bmp
+                placeholderBitmap = bmp
             }
         }
+    }
+
+    LaunchedEffect(
+        selectedStyle.id, selectedLight.name, format, spec.declaration, verseText, spec.recipientName, spec.milestoneDays, widthPx, heightPx
+    ) {
+        highResBitmap = null
+        kotlinx.coroutines.delay(150) // Debounce 150ms while user types or switches style
+        val hiRes = withContext(Dispatchers.Default) {
+            val key = "${selectedStyle.id}:${selectedLight.name}:${exportFormat.name}:${widthPx}x${heightPx}:${spec.declaration.hashCode()}:${verseText.hashCode()}:${spec.recipientName.hashCode()}:${spec.milestoneDays}"
+            previewBitmapCache.getOrPut(key) {
+                selectedStyle.render(spec, selectedLight, IntSize(widthPx, heightPx))
+            }
+        }
+        highResBitmap = hiRes
     }
 
     Column(
@@ -976,37 +1104,60 @@ fun LookStep(
     ) {
         Spacer(Modifier.height(12.dp))
 
-        // 1. Live preview: 200x433 (the same renderer scaled)
+        // 1. Live preview rendered at real pixel resolution
         Box(
             Modifier
-                .width(200.dp)
-                .height(433.dp)
+                .width(previewWidthDp)
+                .height(previewHeightDp)
                 .clip(RoundedCornerShape(22.dp))
                 .background(selectedLight.bottom)
                 .border(1.dp, selectedLight.text.copy(alpha = 0.12f), RoundedCornerShape(22.dp)),
             contentAlignment = Alignment.Center
         ) {
-            previewBitmap?.let { bmp ->
-                androidx.compose.foundation.Image(
-                    bitmap = bmp.asImageBitmap(),
-                    contentDescription = "Live style preview",
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Fit
-                )
-            } ?: CircularProgressIndicator(color = selectedLight.text, modifier = Modifier.size(28.dp))
+            Crossfade(
+                targetState = highResBitmap,
+                animationSpec = tween(120),
+                label = "PreviewCrossfade"
+            ) { hiRes ->
+                if (hiRes != null) {
+                    androidx.compose.foundation.Image(
+                        bitmap = hiRes.asImageBitmap(),
+                        contentDescription = "Live style preview",
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.None,
+                        filterQuality = FilterQuality.High
+                    )
+                } else if (placeholderBitmap != null) {
+                    androidx.compose.foundation.Image(
+                        bitmap = placeholderBitmap!!.asImageBitmap(),
+                        contentDescription = "Preview placeholder",
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Fit,
+                        filterQuality = FilterQuality.Medium
+                    )
+                } else {
+                    CircularProgressIndicator(color = selectedLight.text, modifier = Modifier.size(28.dp))
+                }
+            }
         }
 
         Spacer(Modifier.height(24.dp))
 
-        // Extra controls for For you (gift) style
-        if (selectedStyle.id == StyleRegistry.FOR_YOU.id) {
+        // 1. Contextual Option: "For" name field (Birthday, Letter, Praying for you, For you)
+        val isNameStyle = selectedStyle.id in listOf(
+            StyleRegistry.FOR_YOU.id,
+            StyleRegistry.BIRTHDAY.id,
+            StyleRegistry.LETTER.id,
+            StyleRegistry.PRAYING_FOR_YOU.id
+        )
+        if (isNameStyle) {
             Card(
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(containerColor = selectedLight.text.copy(alpha = 0.06f)),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(Modifier.padding(16.dp)) {
-                    Text("For you (Gift)", style = MakariosTypography.labelMedium, color = selectedLight.text)
+                    Text("For (Recipient)", style = MakariosTypography.labelMedium, color = selectedLight.text)
                     Spacer(Modifier.height(8.dp))
                     BasicTextField(
                         value = recipientName,
@@ -1023,13 +1174,45 @@ fun LookStep(
                             .background(selectedLight.text.copy(alpha = 0.08f))
                             .padding(horizontal = 12.dp, vertical = 10.dp)
                     )
-                    Spacer(Modifier.height(10.dp))
-                    Text("Declaration for them (editable)", style = MakariosTypography.labelSmall, color = selectedLight.text.copy(alpha = 0.7f))
-                    Spacer(Modifier.height(4.dp))
+                    if (selectedStyle.id == StyleRegistry.FOR_YOU.id) {
+                        Spacer(Modifier.height(10.dp))
+                        Text("Declaration for them (editable)", style = MakariosTypography.labelSmall, color = selectedLight.text.copy(alpha = 0.7f))
+                        Spacer(Modifier.height(4.dp))
+                        BasicTextField(
+                            value = rewrittenText,
+                            onValueChange = { rewrittenText = it },
+                            textStyle = MakariosTypography.bodyMedium.copy(color = selectedLight.text),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(selectedLight.text.copy(alpha = 0.08f))
+                                .padding(horizontal = 12.dp, vertical = 10.dp)
+                        )
+                    }
+                }
+            }
+            Spacer(Modifier.height(16.dp))
+        }
+
+        // 2. Contextual Option: Reply text (Chat bubble)
+        if (selectedStyle.id == StyleRegistry.CHAT_BUBBLE.id) {
+            Card(
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = selectedLight.text.copy(alpha = 0.06f)),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(Modifier.padding(16.dp)) {
+                    Text("Reply message", style = MakariosTypography.labelMedium, color = selectedLight.text)
+                    Spacer(Modifier.height(8.dp))
                     BasicTextField(
-                        value = rewrittenText,
-                        onValueChange = { rewrittenText = it },
+                        value = replyText,
+                        onValueChange = { replyText = it },
+                        singleLine = true,
                         textStyle = MakariosTypography.bodyMedium.copy(color = selectedLight.text),
+                        decorationBox = { inner ->
+                            if (replyText.isEmpty()) Text("e.g. Needed this today", color = selectedLight.text.copy(alpha = 0.45f), style = MakariosTypography.bodyMedium)
+                            inner()
+                        },
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(10.dp))
@@ -1041,8 +1224,8 @@ fun LookStep(
             Spacer(Modifier.height(16.dp))
         }
 
-        // Extra controls for Streak style
-        if (selectedStyle.id == StyleRegistry.STREAK.id) {
+        // 3. Contextual Option: Milestone days (Streak, Week)
+        if (selectedStyle.id in listOf(StyleRegistry.STREAK.id, StyleRegistry.WEEK.id)) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -1050,8 +1233,8 @@ fun LookStep(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("Milestone:", style = MakariosTypography.labelSmall, color = selectedLight.text.copy(alpha = 0.7f))
-                listOf(7, 14, 21, 30, 50, 100, 365).forEach { ms ->
+                Text("Days:", style = MakariosTypography.labelSmall, color = selectedLight.text.copy(alpha = 0.7f))
+                listOf(3, 5, 7, 14, 21, 30, 100).forEach { ms ->
                     val isMsSel = selectedMilestone == ms
                     Box(
                         modifier = Modifier
@@ -1067,35 +1250,77 @@ fun LookStep(
             Spacer(Modifier.height(16.dp))
         }
 
-        // 2. Style row: Grouped into Essentials (12) and More (9)
+        // 4. Two-Level Style Picker
+        // Header with "Surprise me"
         Row(
             Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text("Style", style = MakariosTypography.labelMedium, color = selectedLight.text.copy(alpha = 0.8f))
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                listOf("Essentials", "More").forEach { cat ->
-                    val isCatActive = activeCategory == cat
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(if (isCatActive) selectedLight.text else selectedLight.text.copy(alpha = 0.08f))
-                            .clickable { activeCategory = cat }
-                            .padding(horizontal = 10.dp, vertical = 4.dp)
-                    ) {
-                        Text(
-                            text = cat,
-                            style = MakariosTypography.labelSmall,
-                            color = if (isCatActive) selectedLight.top else selectedLight.text
-                        )
-                    }
+            TextButton(
+                onClick = {
+                    val eligible = StyleRegistry.all.filter { it.maxChars >= spec.declaration.length }
+                    val pick = eligible.randomOrNull() ?: StyleRegistry.PAIRING
+                    onStyleChanged(pick)
+                    StyleFavoritesStore.setLastUsed(context, pick.id)
+                },
+                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
+            ) {
+                Icon(Icons.Filled.AutoAwesome, contentDescription = null, tint = selectedLight.text, modifier = Modifier.size(14.dp))
+                Spacer(Modifier.width(4.dp))
+                Text("Surprise me", style = MakariosTypography.labelSmall, color = selectedLight.text)
+            }
+        }
+        Spacer(Modifier.height(4.dp))
+
+        // Level 1: Category Chips Row
+        val allCategories = buildList {
+            add("For you")
+            if (favoriteIds.isNotEmpty()) {
+                add("Favourites")
+            }
+            add("Type")
+            add("Light")
+            add("Paper")
+            add("Occasion")
+            add("Conversation")
+        }
+
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            allCategories.forEach { cat ->
+                val isCatActive = activeCategory == cat
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(if (isCatActive) selectedLight.text else selectedLight.text.copy(alpha = 0.08f))
+                        .clickable { activeCategory = cat }
+                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                ) {
+                    Text(
+                        text = cat,
+                        style = MakariosTypography.labelSmall,
+                        color = if (isCatActive) selectedLight.top else selectedLight.text
+                    )
                 }
             }
         }
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(12.dp))
 
-        val stylesToDisplay = if (activeCategory == "Essentials") StyleRegistry.essentials else StyleRegistry.more
+        // Level 2: Style Thumbnails Row for active category
+        val stylesToDisplay = when (activeCategory) {
+            "For you" -> StyleRegistry.forYouStyles(spec, selectedLight, recentIds, favoriteIds)
+            "Favourites" -> StyleRegistry.all.filter { favoriteIds.contains(it.id.lowercase()) }
+            else -> StyleRegistry.byCategory(activeCategory)
+        }
+
+        @OptIn(ExperimentalFoundationApi::class)
         Row(
             Modifier
                 .fillMaxWidth()
@@ -1105,32 +1330,24 @@ fun LookStep(
         ) {
             stylesToDisplay.forEach { style ->
                 val isNumerals = style.id == StyleRegistry.NUMERALS.id
-                val isEligible = !isNumerals || spec.isNumeralsEligible
+                val isEligible = (!isNumerals || spec.isNumeralsEligible) && (spec.declaration.length <= style.maxChars)
                 val isSelected = style.id == selectedStyle.id
-                val thumbBitmap by produceState<android.graphics.Bitmap?>(null, style.id, selectedLight.name) {
+                val isFav = favoriteIds.contains(style.id.lowercase())
+                val thumbW = (56f * density).roundToInt()
+                val thumbH = (121f * density).roundToInt()
+                val thumbBitmap by produceState<android.graphics.Bitmap?>(null, style.id, selectedLight.name, thumbW, thumbH) {
                     value = withContext(Dispatchers.Default) {
-                        val thumbKey = "${style.id}:${selectedLight.name}:thumb:56x121:${spec.shortText.hashCode()}"
+                        val thumbKey = "${style.id}:${selectedLight.name}:thumb:${thumbW}x${thumbH}:${spec.shortText.hashCode()}"
                         previewBitmapCache.getOrPut(thumbKey) {
-                            style.render(spec, selectedLight, IntSize(56, 121))
+                            style.render(spec, selectedLight, IntSize(thumbW, thumbH))
                         }
                     }
                 }
 
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier
-                        .then(
-                            if (isEligible) {
-                                Modifier.clickable {
-                                    onStyleChanged(style)
-                                    if (!style.supports(exportFormat)) {
-                                        onFormatChanged("Story")
-                                    }
-                                }
-                            } else Modifier
-                        )
+                    modifier = Modifier.width(62.dp)
                 ) {
-                    // Outer box providing 2dp outline with 3dp offset when selected
                     Box(
                         Modifier
                             .then(
@@ -1145,7 +1362,24 @@ fun LookStep(
                             .size(width = 56.dp, height = 121.dp)
                             .clip(RoundedCornerShape(10.dp))
                             .background(selectedLight.top)
-                            .alpha(if (isEligible) 1f else 0.35f),
+                            .alpha(if (isEligible) 1f else 0.35f)
+                            .then(
+                                if (isEligible) {
+                                    Modifier.combinedClickable(
+                                        onClick = {
+                                            onStyleChanged(style)
+                                            StyleFavoritesStore.setLastUsed(context, style.id)
+                                            if (!style.supports(exportFormat)) {
+                                                onFormatChanged("Story")
+                                            }
+                                        },
+                                        onLongClick = {
+                                            StyleFavoritesStore.toggleFavorite(context, style.id)
+                                            favoriteIds = StyleFavoritesStore.getFavorites(context)
+                                        }
+                                    )
+                                } else Modifier
+                            ),
                         contentAlignment = Alignment.Center
                     ) {
                         thumbBitmap?.let {
@@ -1156,13 +1390,27 @@ fun LookStep(
                                 contentScale = ContentScale.Crop
                             )
                         }
+
+                        // Favorite indicator dot top-right
+                        if (isFav) {
+                            Box(
+                                modifier = Modifier
+                                    .align(Alignment.TopEnd)
+                                    .padding(4.dp)
+                                    .size(6.dp)
+                                    .clip(CircleShape)
+                                    .background(if (selectedLight.dark) Color(0xFFE8A860) else Color(0xFFB5532B))
+                            )
+                        }
                     }
                     Spacer(Modifier.height(4.dp))
                     Text(
                         text = style.displayName,
                         style = MakariosTypography.labelSmall.copy(fontSize = 11.sp),
                         color = if (isSelected) selectedLight.text else if (isEligible) selectedLight.text.copy(alpha = 0.65f) else selectedLight.text.copy(alpha = 0.30f),
-                        fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
+                        fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }

@@ -583,7 +583,15 @@ fun drawAdaptivePairing(
 }
 
 /** Base Style renderer helper producing a pixel-perfect Bitmap at export resolution. */
-abstract class BaseStyle(override val id: String, override val displayName: String) : Style {
+abstract class BaseStyle(
+    override val id: String,
+    override val displayName: String,
+    override val category: String = "Type",
+    override val supportsLights: Boolean = true,
+    override val maxChars: Int = 140
+) : Style {
+    open val showWordmark: Boolean get() = true
+
     override fun supports(format: ExportFormat): Boolean = true
     override fun textBudget(format: ExportFormat): TextBudget = when (format) {
         ExportFormat.Story, ExportFormat.Wallpaper -> TextBudget(64f, 32f, 36f, 24f)
@@ -610,7 +618,7 @@ abstract class BaseStyle(override val id: String, override val displayName: Stri
         drawTypography(androidCanvas, bitmap, geom, light, spec)
 
         // Draw subtle wordmark
-        drawWordmark(androidCanvas, geom, light)
+        drawWordmark(androidCanvas, geom, light, include = showWordmark)
 
         return bitmap
     }
@@ -985,7 +993,7 @@ object ConstellationStyle : BaseStyle("constellation", "Constellation") {
 // ---------------------------------------------------------------------------
 // 7. WORD STYLE (Typographic Poster with Sunset Fill)
 // ---------------------------------------------------------------------------
-object WordStyle : BaseStyle("word", "Word") {
+object WordStyle : BaseStyle("word", "Word", maxChars = 65) {
     override fun drawArt(scope: DrawScope, geom: LayoutGeometry, light: Light, spec: StyleSpec) {
         val w = geom.width
         val h = geom.height
@@ -1673,7 +1681,8 @@ object StreakStyle : BaseStyle("streak", "Streak") {
 // ---------------------------------------------------------------------------
 // 16. STICKER STYLE (Transparent ARGB PNG with rounded cream card)
 // ---------------------------------------------------------------------------
-object StickerStyle : BaseStyle("sticker", "Sticker") {
+object StickerStyle : BaseStyle("sticker", "Sticker", category = "Paper", supportsLights = false) {
+    override val showWordmark: Boolean get() = false
     override fun drawArt(scope: DrawScope, geom: LayoutGeometry, light: Light, spec: StyleSpec) {
         // Outer canvas is completely transparent for Instagram Stories sticker overlay!
         val w = geom.width

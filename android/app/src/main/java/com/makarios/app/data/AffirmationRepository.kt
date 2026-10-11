@@ -206,12 +206,12 @@ object AffirmationRepository {
         imageUrl = ""
     )
 
-    val starterAffirmation = fullscreenAffirmation
+    val starterAffirmation: Affirmation get() = SeedDeclarations.asAffirmations().firstOrNull() ?: fullscreenAffirmation
 
     val focusAreas = listOf("Peace", "Strength", "Identity", "Purpose", "Joy", "Confidence", "Relationships", "Discipline")
     val categories = listOf("All", "Identity", "Peace", "Strength", "Purpose", "Courage", "Joy", "Provision", "Confidence", "Relationships", "Discipline")
 
-    private val allAffirmations = listOf(
+    private val allAffirmations = SeedDeclarations.asAffirmations() + listOf(
         fullscreenAffirmation,
         affirmationOfTheDay,
         strengthAffirmation,
@@ -226,24 +226,11 @@ object AffirmationRepository {
         disciplineAffirmation
     )
 
-    // Reactive saved IDs
-    val savedAffirmationIds = mutableStateListOf("ident-1", "fav-1", "fav-2")
+    // Reactive saved IDs (empty by default; Room is the source of truth)
+    val savedAffirmationIds = mutableStateListOf<String>()
 
-    // Personal user-authored declarations
-    val personalAffirmations = mutableStateListOf(
-        Affirmation(
-            id = "personal-1",
-            declaration = "I do not walk in anxiety or overwhelm. God goes before me, and His peace guards my thoughts.",
-            scriptureText = "You will keep in perfect peace those whose minds are steadfast, because they trust in you.",
-            reference = "ISAIAH 26:3",
-            context = "Written for seasons of transition and unexpected decisions.",
-            category = "Peace",
-            tone = AffirmationTone.STILL,
-            imageUrl = "",
-            isFavorite = true,
-            personalDeclaration = "I release the need to control the outcome. My steps are ordered by the Lord."
-        )
-    )
+    // Personal user-authored declarations (empty by default; Room is the source of truth)
+    val personalAffirmations = mutableStateListOf<Affirmation>()
 
     fun addPersonalAffirmation(affirmation: Affirmation) {
         val existingIndex = personalAffirmations.indexOfFirst { it.id == affirmation.id }

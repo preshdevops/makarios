@@ -1,0 +1,67 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="260dp"
+    android:height="280dp"
+    android:viewportWidth="260"
+    android:viewportHeight="280">
+    <path
+        android:pathData="M24,0 L236,0 A24,24 0 0,1 260,24 L260,256 A24,24 0 0,1 236,280 L24,280 A24,24 0 0,1 0,256 L0,24 A24,24 0 0,1 24,0 Z"
+        android:fillColor="#F4ECE1"/>
+    <!-- Top label "DAWN" -->
+    <path
+        android:pathData="M24,36 L64,36"
+        android:strokeColor="#786F66"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"/>
+    <!-- Sun disc on top right -->
+    <path
+        android:pathData="M210,48 m-18,0 a18,18 0 1,1 36,0 a18,18 0 1,1 -36,0"
+        android:fillColor="#E8A860"/>
+    <!-- Large declaration lines -->
+    <path
+        android:pathData="M24,80 L220,80"
+        android:strokeColor="#2C2724"
+        android:strokeWidth="5"
+        android:strokeLineCap="round"/>
+    <path
+        android:pathData="M24,98 L180,98"
+        android:strokeColor="#2C2724"
+        android:strokeWidth="5"
+        android:strokeLineCap="round"/>
+    <!-- Anchor rule -->
+    <path
+        android:pathData="M24,124 L60,124"
+        android:strokeColor="#B5532B"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"/>
+    <!-- Verse lines -->
+    <path
+        android:pathData="M24,148 L220,148"
+        android:strokeColor="#524A44"
+        android:strokeWidth="3"
+        android:strokeLineCap="round"/>
+    <path
+        android:pathData="M24,164 L200,164"
+        android:strokeColor="#524A44"
+        android:strokeWidth="3"
+        android:strokeLineCap="round"/>
+    <!-- Reference line -->
+    <path
+        android:pathData="M24,192 L100,192"
+        android:strokeColor="#786F66"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"/>
+    <!-- Doorway arch mark and wordmark at bottom -->
+    <path
+        android:pathData="M24,250 L24,238 A6,6 0 0,1 36,238 L36,250"
+        android:strokeColor="#2C2724"
+        android:strokeWidth="2"
+        android:fillColor="#00000000"/>
+    <path
+        android:pathData="M27,238 A3,3 0 0,1 33,238 Z"
+        android:fillColor="#B5532B"/>
+    <path
+        android:pathData="M44,244 L90,244"
+        android:strokeColor="#2C2724"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"/>
+</vector>

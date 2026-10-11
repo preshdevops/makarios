@@ -54,7 +54,7 @@ object ScriptureMatcher {
         return if (denom > 0f) (intersection / denom).coerceIn(0f, 1f) else 0f
     }
 
-    fun match(declaration: String, tone: AffirmationTone? = null, limit: Int = 20): List<MatchResult> {
+    fun match(declaration: String, limit: Int = 20): List<MatchResult> {
         val cleaned = ScriptureText.clean(declaration)
         if (cleaned.isBlank()) return emptyList()
 
@@ -81,7 +81,7 @@ object ScriptureMatcher {
         // 2. Whole-token scoring across declarable index
         val scoredIndex = DeclarableIndex.verses.asSequence()
             .filter { it.reference !in seen }
-            .map { verse -> MatchResult(verse, score(query, verse, tone)) }
+            .map { verse -> MatchResult(verse, score(query, verse)) }
             .filter { it.score >= 0.35f } // Threshold: below 0.35 is not confident
             .sortedByDescending { it.score }
             .toList()
@@ -95,7 +95,7 @@ object ScriptureMatcher {
         return results.take(limit)
     }
 
-    private fun score(query: Set<String>, verse: ScriptureVerse, tone: AffirmationTone?): Float {
+    private fun score(query: Set<String>, verse: ScriptureVerse): Float {
         val verseTextTokens = tokens(verse.text, dropFillers = false)
         val textCosine = cosineSimilarity(query, verseTextTokens)
 
@@ -108,10 +108,9 @@ object ScriptureMatcher {
         // Keyword weight is 0.1 and ONLY applied when kwOverlap > 0.5f
         val kwBonus = if (kwOverlap > 0.5f) kwOverlap * 0.10f else 0f
 
-        val toneBonus = if (tone != null && verse.toneAffinity == tone) 0.05f else 0f
         val qualityBonus = verseQuality(verse) * 0.05f
 
-        val total = (textCosine * 0.80f + kwBonus + toneBonus + qualityBonus).coerceIn(0f, 1f)
+        val total = (textCosine * 0.80f + kwBonus + qualityBonus).coerceIn(0f, 1f)
         return total
     }
 
@@ -119,5 +118,5 @@ object ScriptureMatcher {
         if (verse.themes.any { it in setOf("identity", "peace", "strength", "hope", "love", "rest", "protection") }) 1f else 0.5f
 
     fun expandSynonyms(tokens: Set<String>): Set<String> = tokens
-    fun keywordScore(declaration: String, verse: ScriptureVerse): Float = score(tokens(declaration), verse, null)
+    fun keywordScore(declaration: String, verse: ScriptureVerse): Float = score(tokens(declaration), verse)
 }

@@ -1,14 +1,47 @@
-﻿package com.makarios.app.widget
+package com.makarios.app.widget
 
 import android.content.Context
 import androidx.work.*
-import java.util.concurrent.TimeUnit
 import java.time.Duration
+import java.time.LocalTime
 import java.time.ZonedDateTime
+import java.util.concurrent.TimeUnit
 
 object WidgetScheduling {
- private const val NAME="makarios-widget-daily-refresh"
- fun schedule(context:Context){val now=ZonedDateTime.now();var next=now.withHour(com.makarios.app.util.ReminderManager.getReminderHour(context)).withMinute(com.makarios.app.util.ReminderManager.getReminderMinute(context)).withSecond(0).withNano(0);if(!next.isAfter(now))next=next.plusDays(1);val request=PeriodicWorkRequestBuilder<WidgetRefreshWorker>(1,TimeUnit.DAYS).setInitialDelay(Duration.between(now,next).toMillis(),TimeUnit.MILLISECONDS).build();WorkManager.getInstance(context).enqueueUniquePeriodicWork(NAME,ExistingPeriodicWorkPolicy.UPDATE,request)}
- fun refreshNow(context:Context){WorkManager.getInstance(context).enqueue(OneTimeWorkRequestBuilder<WidgetRefreshWorker>().build())}
-}
+    private const val WORK_NAME = "makarios_widget_boundary_refresh"
 
+    fun schedule(context: Context) {
+        val now = ZonedDateTime.now()
+        val boundaries = listOf(
+            LocalTime.of(5, 30),
+            LocalTime.of(9, 0),
+            LocalTime.of(16, 30),
+            LocalTime.of(19, 30)
+        )
+
+        val nextBoundary = boundaries
+            .map { now.toLocalDate().atTime(it).atZone(now.zone) }
+            .filter { it.isAfter(now) }
+            .minOrNull()
+            ?: now.toLocalDate().plusDays(1).atTime(boundaries.first()).atZone(now.zone)
+
+        val delayMillis = Duration.between(now, nextBoundary).toMillis().coerceAtLeast(1000L)
+
+        val workRequest = OneTimeWorkRequestBuilder<WidgetRefreshWorker>()
+            .setInitialDelay(delayMillis, TimeUnit.MILLISECONDS)
+            .build()
+
+        WorkManager.getInstance(context).enqueueUniqueWork(
+            WORK_NAME,
+            ExistingWorkPolicy.REPLACE,
+            workRequest
+        )
+    }
+
+    fun refreshNow(context: Context) {
+        WorkManager.getInstance(context).enqueue(
+            OneTimeWorkRequestBuilder<WidgetRefreshWorker>().build()
+        )
+        schedule(context)
+    }
+}

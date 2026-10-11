@@ -46,7 +46,7 @@ fun ChapterVersePickerScreen(
     var chapterVerses by remember { mutableStateOf<List<BibleVerse>>(emptyList()) }
 
     LaunchedEffect(bookName, selectedChapter) {
-        chapterVerses = BibleRepository.getChapter(context, bookName, selectedChapter)
+        chapterVerses = BibleRepository.getChapter(bookName, selectedChapter).getOrElse { emptyList() }
     }
 
     var startVerse by remember { mutableStateOf<Int?>(null) }

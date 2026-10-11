@@ -1,0 +1,43 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="260dp"
+    android:height="140dp"
+    android:viewportWidth="260"
+    android:viewportHeight="140">
+    <path
+        android:pathData="M24,0 L236,0 A24,24 0 0,1 260,24 L260,116 A24,24 0 0,1 236,140 L24,140 A24,24 0 0,1 0,116 L0,24 A24,24 0 0,1 24,0 Z"
+        android:fillColor="#F4ECE1"/>
+    <!-- Declaration lines -->
+    <path
+        android:pathData="M24,36 L210,36"
+        android:strokeColor="#2C2724"
+        android:strokeWidth="4"
+        android:strokeLineCap="round"/>
+    <path
+        android:pathData="M24,50 L160,50"
+        android:strokeColor="#2C2724"
+        android:strokeWidth="4"
+        android:strokeLineCap="round"/>
+    <!-- Anchor rule -->
+    <path
+        android:pathData="M24,68 L56,68"
+        android:strokeColor="#B5532B"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"/>
+    <!-- Scripture verse line (italic) -->
+    <path
+        android:pathData="M24,86 L220,86"
+        android:strokeColor="#524A44"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"/>
+    <path
+        android:pathData="M24,98 L140,98"
+        android:strokeColor="#524A44"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"/>
+    <!-- Reference line -->
+    <path
+        android:pathData="M24,116 L90,116"
+        android:strokeColor="#786F66"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"/>
+</vector>

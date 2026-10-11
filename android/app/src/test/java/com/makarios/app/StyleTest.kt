@@ -14,7 +14,8 @@ class StyleTest {
         val essentials = StyleRegistry.essentials
         assertEquals(12, essentials.size)
         assertEquals(12, Style.values().size)
-        assertEquals(21, StyleRegistry.all.size)
+        assertEquals(57, StyleRegistry.all.size)
+        assertEquals(36, StyleRegistry.new36.size)
 
         val expectedIds = listOf(
             "pairing", "windows", "rays", "numerals",

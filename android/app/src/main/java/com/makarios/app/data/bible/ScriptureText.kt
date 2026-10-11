@@ -58,6 +58,20 @@ object ScriptureText {
     }
 
     /**
+     * Normalizes references for UI display.
+     * The corpus names the book "Psalms". Display single-chapter references as "Psalm 23:1"
+     * and the book as "Psalms".
+     */
+    fun formatDisplayReference(raw: String): String {
+        val norm = normalizeReference(raw)
+        return if (norm.startsWith("Psalms ", ignoreCase = true)) {
+            "Psalm " + norm.substring(7)
+        } else {
+            norm
+        }
+    }
+
+    /**
      * Formats selected verses for clipboard copy:
      * curly-quoted text, blank line, "Book Ch:vv WEB"
      */

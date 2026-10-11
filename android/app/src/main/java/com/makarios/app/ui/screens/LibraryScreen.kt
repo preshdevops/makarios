@@ -130,7 +130,7 @@ fun ExploreScreen(
                 textStyle = MakariosTypography.bodyMedium.copy(color = Ink),
                 decorationBox = { field ->
                     if (query.isEmpty()) {
-                        Text("Search promises and scriptures", color = Ink.copy(alpha = 0.5f))
+                        Text("Search verses and declarations", color = Ink.copy(alpha = 0.5f))
                     }
                     field()
                 }
@@ -145,6 +145,7 @@ fun ExploreScreen(
         Spacer(Modifier.height(16.dp))
 
         if (query.isBlank()) {
+            val votd = remember { com.makarios.app.data.bible.VerseOfTheDayStore.getTodayVerse(context) }
             // EXPLORE HOME VIEW
             LazyColumn(
                 contentPadding = PaddingValues(start = 24.dp, end = 24.dp, bottom = 100.dp),
@@ -158,7 +159,7 @@ fun ExploreScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable {
-                                onNavigateToReader("Romans", 8, 28)
+                                onNavigateToReader(votd.book, votd.chapter, votd.verse)
                             }
                     ) {
                         Column(Modifier.padding(18.dp)) {
@@ -189,13 +190,13 @@ fun ExploreScreen(
                             }
                             Spacer(Modifier.height(8.dp))
                             Text(
-                                text = "“And we know that in all things God works for the good of those who love Him, who have been called according to His purpose.”",
+                                text = "“${votd.text}”",
                                 style = MakariosTypography.bodyMedium.copy(fontStyle = FontStyle.Italic, lineHeight = 22.sp),
                                 color = Ink
                             )
                             Spacer(Modifier.height(4.dp))
                             Text(
-                                text = "Romans 8:28",
+                                text = votd.reference,
                                 style = MakariosTypography.labelMedium,
                                 color = Color(0xFFB5532B)
                             )
@@ -218,8 +219,6 @@ fun ExploreScreen(
                     ) {
                         Text(topic.name, color = topic.light.text, style = MakariosTypography.displaySmall)
                         Row(Modifier.align(Alignment.TopEnd), verticalAlignment = Alignment.CenterVertically) {
-                            Text("${topic.count} promises", color = topic.light.text.copy(alpha = 0.8f), style = MakariosTypography.labelSmall)
-                            Spacer(Modifier.width(4.dp))
                             Icon(Icons.Outlined.ChevronRight, "Open ${topic.name}", tint = topic.light.text)
                         }
                         Text(

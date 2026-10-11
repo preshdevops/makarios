@@ -8,29 +8,31 @@ import java.io.File
 import java.io.PrintWriter
 import java.io.StringWriter
 
+import com.makarios.app.data.bible.BibleRepository
+import com.makarios.app.util.CrashReporter
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+
 class MakariosApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
 
+        // Install global crash reporter catching all uncaught exceptions
+        CrashReporter.install(this)
+
         // Clean old share files (>24 hours) on startup
         ShareRepository.cleanupOldShareFiles(this)
 
-        // Initialize fonts
+        // Initialize fonts and Room database
         StyleTypefaces.init(this)
+        com.makarios.app.data.local.KeptRepository.init(this)
 
-        // Debug uncaught exception handler writes to crash_log.txt
-        if (BuildConfig.DEBUG) {
-            val defaultHandler = Thread.getDefaultUncaughtExceptionHandler()
-            Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
-                runCatching {
-                    val logFile = File(filesDir, "crash_log.txt")
-                    val sw = StringWriter()
-                    throwable.printStackTrace(PrintWriter(sw))
-                    logFile.writeText("Thread: ${thread.name}\nTime: ${System.currentTimeMillis()}\n$sw")
-                }
-                defaultHandler?.uncaughtException(thread, throwable)
-            }
+        // Initialize Bible repository and warm up MatchEngine once in background
+        CoroutineScope(Dispatchers.IO).launch {
+            BibleRepository.initialize(this@MakariosApp)
+            com.makarios.app.data.MatchEngine.getInstance(this@MakariosApp).initialize()
         }
     }
 }
