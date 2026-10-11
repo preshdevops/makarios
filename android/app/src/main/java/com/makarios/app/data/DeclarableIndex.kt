@@ -58,19 +58,27 @@ object DeclarationBank {
         var bestEntry: TokenizedBankEntry? = null
         var bestCosine = 0f
 
+        // 1. Exact phrase or stripped phrase match across all entries
         for (bankEntry in tokenizedEntries) {
-            // 1. Exact phrase or stripped phrase match
             for (p in bankEntry.normalizedPhrases) {
                 val pFiltered = p.split(" ").filter { it !in ScriptureMatcher.FILLER_WORDS && it.isNotBlank() }.joinToString(" ")
-                if (normQuery == p || filteredQuery == pFiltered ||
-                    (pFiltered.isNotBlank() && filteredQuery.contains(pFiltered)) ||
-                    (filteredQuery.isNotBlank() && pFiltered.contains(filteredQuery))
-                ) {
+                if (normQuery == p || filteredQuery == pFiltered) {
                     return Pair(bankEntry.references, 1.0f)
                 }
             }
+        }
 
-            // 2. Cosine similarity against bank token sets
+        // 2. Substring match or Cosine similarity
+        for (bankEntry in tokenizedEntries) {
+            for (p in bankEntry.normalizedPhrases) {
+                val pFiltered = p.split(" ").filter { it !in ScriptureMatcher.FILLER_WORDS && it.isNotBlank() }.joinToString(" ")
+                if ((pFiltered.isNotBlank() && filteredQuery.contains(pFiltered)) ||
+                    (filteredQuery.isNotBlank() && pFiltered.contains(filteredQuery))
+                ) {
+                    return Pair(bankEntry.references, 0.95f)
+                }
+            }
+
             for (tSet in bankEntry.tokenSets) {
                 val cos = ScriptureMatcher.cosineSimilarity(queryTokens, tSet)
                 if (cos > bestCosine) {

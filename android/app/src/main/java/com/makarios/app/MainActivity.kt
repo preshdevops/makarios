@@ -74,9 +74,12 @@ class MainActivity : ComponentActivity() {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
             window.isNavigationBarContrastEnforced = false
         }
-        ReminderManager.init(this)
-        lifecycleScope.launch(Dispatchers.IO) { com.makarios.app.data.MatchEngine.getInstance(this@MainActivity).initialize() }
-        com.makarios.app.widget.WidgetScheduling.schedule(this)
+        runCatching { ReminderManager.init(this) }.onFailure { android.util.Log.e("MainActivity", "Reminder init failed", it) }
+        lifecycleScope.launch(Dispatchers.IO) {
+            runCatching { com.makarios.app.data.MatchEngine.getInstance(this@MainActivity).initialize() }
+                .onFailure { android.util.Log.e("MainActivity", "MatchEngine init failed", it) }
+        }
+        runCatching { com.makarios.app.widget.WidgetScheduling.schedule(this) }.onFailure { android.util.Log.e("MainActivity", "WidgetScheduling failed", it) }
 
         val hasCrash = CrashReporter.hasCrashReport(this)
         val crashReportText = if (hasCrash) CrashReporter.getCrashReport(this) else null

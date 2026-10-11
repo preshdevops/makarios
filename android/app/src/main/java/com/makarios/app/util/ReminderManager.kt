@@ -10,6 +10,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
@@ -49,7 +50,10 @@ object ReminderManager {
     enum class ReminderType(val action: String, val requestCode: Int, val hour: Int, val minute: Int) { DAWN(ACTION_MORNING, REQ_MORNING, 6, 30), MIDDAY(ACTION_MORNING, REQ_MORNING, 12, 0), EVENING(ACTION_EVENING, REQ_EVENING, 21, 30), HOURLY(ACTION_MORNING, REQ_MORNING, 6, 30) }
     enum class ReminderSource(val id: String, val title: String, val subtitle: String) { CUSTOM("custom", "My Created Declarations", ""), SAVED("saved", "Kept declarations", ""), ALL("all", "Daily declaration", ""), PINNED("pinned", "Selected declaration", "") }
 
-    fun init(context: Context) { createNotificationChannels(context); rescheduleAll(context) }
+    fun init(context: Context) {
+        runCatching { createNotificationChannels(context) }.onFailure { Log.e("ReminderManager", "Failed to create notification channels", it) }
+        runCatching { rescheduleAll(context) }.onFailure { Log.e("ReminderManager", "Failed to reschedule reminders", it) }
+    }
     fun createNotificationChannels(context: Context) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
         val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -97,7 +101,13 @@ object ReminderManager {
         val renderAt = nextDateTime(context, morning.first, morning.second).minusHours(1)
         val rawDelay = Duration.between(ZonedDateTime.now(), renderAt)
         val delay = if (rawDelay.isNegative) Duration.ZERO else rawDelay
-        WorkManager.getInstance(context).enqueueUniqueWork("notification-artwork", ExistingWorkPolicy.REPLACE, OneTimeWorkRequestBuilder<NotificationArtworkWorker>().setInitialDelay(delay.toMillis(), java.util.concurrent.TimeUnit.MILLISECONDS).build())
+        runCatching {
+            WorkManager.getInstance(context).enqueueUniqueWork(
+                "notification-artwork",
+                ExistingWorkPolicy.REPLACE,
+                OneTimeWorkRequestBuilder<NotificationArtworkWorker>().setInitialDelay(delay.toMillis(), java.util.concurrent.TimeUnit.MILLISECONDS).build()
+            )
+        }.onFailure { Log.e("ReminderManager", "Failed to enqueue notification artwork worker", it) }
     }
     fun scheduleDaily(c: Context, type: ReminderType = ReminderType.DAWN, customHour: Int? = null, customMinute: Int? = null) = rescheduleAll(c)
     fun scheduleHourly(c: Context) = rescheduleAll(c)
