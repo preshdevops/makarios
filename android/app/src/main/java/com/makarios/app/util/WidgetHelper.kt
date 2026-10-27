@@ -1,4 +1,4 @@
-﻿package com.makarios.app.util
+package com.makarios.app.util
 
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
@@ -107,16 +107,9 @@ object WidgetHelper {
                 )
                 
                 val bitmap = android.graphics.BitmapFactory.decodeFile(out.absolutePath)
-                val wallpaperManager = android.app.WallpaperManager.getInstance(context)
-                val success = try {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                        wallpaperManager.setBitmap(bitmap, null, true, android.app.WallpaperManager.FLAG_LOCK)
-                        true
-                    } else {
-                        wallpaperManager.setBitmap(bitmap)
-                        true
-                    }
-                } catch(e: Exception) { false }
+                val success = if (bitmap != null) {
+                    WallpaperHelper.applyWallpaper(context, bitmap, WallpaperScreenTarget.LOCK).isSuccess
+                } else false
                 
                 withContext(Dispatchers.Main) {
                     if (success) {

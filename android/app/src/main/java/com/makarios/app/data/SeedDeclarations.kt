@@ -12,7 +12,7 @@ data class SeedDeclaration(
     val topic: String,
     val verses: List<SeedVerse>
 ) {
-    val bestVerse: SeedVerse get() = verses.first()
+    val bestVerse: SeedVerse get() = verses.firstOrNull() ?: SeedVerse("Joshua 1:9", "Be strong and courageous.")
 }
 
 object SeedDeclarations {

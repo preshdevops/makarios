@@ -1,4 +1,6 @@
 package com.makarios.app.ui.screens.bible
+import com.makarios.app.ui.components.MakChip
+import com.makarios.app.ui.components.MakSurface
 
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -12,6 +14,7 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -29,12 +32,18 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import com.makarios.app.data.BibleVersion
+import com.makarios.app.data.BibleVersionRepository
+import com.makarios.app.ui.theme.ProvideActiveLight
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontStyle
@@ -42,39 +51,41 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.BaselineShift
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import com.makarios.app.ui.components.ShareSheet
+import com.makarios.app.ui.components.ShareContent
 import androidx.compose.ui.unit.sp
 import com.makarios.app.data.Affirmation
 import com.makarios.app.data.AffirmationRepository
 import com.makarios.app.data.AffirmationTone
-import com.makarios.app.data.BibleVersionRepository
 import com.makarios.app.data.bible.*
 import com.makarios.app.ui.theme.Ink
 import com.makarios.app.ui.theme.Light
 import com.makarios.app.ui.theme.MakariosTypography
 import com.makarios.app.ui.theme.SystemBarsController
+import com.makarios.app.ui.theme.LocalLight
 import java.util.Calendar
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun BibleReaderScreen(
-    bookName: String = "Romans",
-    chapterNumber: Int = 8,
+    bookName: String? = null,
+    chapterNumber: Int? = null,
     initialVerse: Int? = null,
     onNavigateBack: () -> Unit,
+    onOpenPicker: () -> Unit = {},
+    pickMode: Boolean = false,
     onDeclareThis: (VerseSelection) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
 
-    // Follow current time window: Midday paper by day, Night by night
-    val activeLight = remember {
-        val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
-        if (hour in 6..18) Light.Midday else Light.Night
-    }
+    val activeLight = LocalLight.current
     SystemBarsController(activeLight)
+    ProvideActiveLight(activeLight, "Bible reader") {}
 
-    var currentBook by rememberSaveable { mutableStateOf(bookName) }
-    var currentChapter by rememberSaveable { mutableStateOf(chapterNumber) }
+    var currentBook by rememberSaveable { mutableStateOf(bookName ?: BibleReaderPrefs.getLastBook(context)) }
+    var currentChapter by rememberSaveable { mutableIntStateOf(chapterNumber ?: BibleReaderPrefs.getLastChapter(context)) }
+    var shareContentToOpen by remember { mutableStateOf<ShareContent?>(null) }
 
     // Text size steps: 0 = regular (18sp), 1 = large (21sp), 2 = extra large (24sp)
     var textSizeStep by rememberSaveable { mutableStateOf(1) }
@@ -89,7 +100,7 @@ fun BibleReaderScreen(
         else -> 38.sp
     }
 
-    var selectedVersion by rememberSaveable { mutableStateOf("WEB") }
+    var selectedVersion by rememberSaveable { mutableStateOf(BibleReaderPrefs.getVersion(context)) }
     var showVersionMenu by remember { mutableStateOf(false) }
 
     var chapterVerses by remember { mutableStateOf<List<BibleVerse>>(emptyList()) }
@@ -98,12 +109,30 @@ fun BibleReaderScreen(
     val coroutineScope = rememberCoroutineScope()
     val bibleState by BibleRepository.state.collectAsState()
 
-    // Load chapter
-    LaunchedEffect(currentBook, currentChapter) {
-        BibleRepository.initialize(context)
-        chapterVerses = BibleRepository.getChapter(currentBook, currentChapter).getOrElse { emptyList() }
+    // Load one chapter from the selected on-device translation.
+    LaunchedEffect(currentBook, currentChapter, selectedVersion) {
+        BibleReaderPrefs.setLastPlace(context, currentBook, currentChapter)
+        val rows = withContext(Dispatchers.IO) {
+            BibleRepository.initialize(context)
+            val web = BibleRepository.getChapter(currentBook, currentChapter).getOrElse { emptyList() }
+            val version = BibleVersionRepository.availableVersions.firstOrNull { it.displayName == selectedVersion }
+                ?: BibleVersionRepository.availableVersions.firstOrNull() ?: BibleVersion("web", "WEB", "World English Bible", true, "")
+            BibleVersionRepository.getChapter(context, currentBook, currentChapter, version, web)
+        }
+        chapterVerses = rows
+        if (rows.isNotEmpty()) {
+            val savedIndex = BibleReaderPrefs.getScrollPosition(context, currentBook, currentChapter).coerceIn(0, rows.lastIndex)
+            listState.scrollToItem(savedIndex)
+        }
     }
 
+    LaunchedEffect(currentBook, currentChapter) {
+        var initialIndex = true
+        snapshotFlow { listState.firstVisibleItemIndex }.collect { index ->
+            if (initialIndex) initialIndex = false
+            else BibleReaderPrefs.setScrollPosition(context, currentBook, currentChapter, index)
+        }
+    }
     // Selected verse range
     var selectedVerseStart by rememberSaveable { mutableStateOf(initialVerse) }
     var selectedVerseEnd by rememberSaveable { mutableStateOf(initialVerse) }
@@ -143,14 +172,8 @@ fun BibleReaderScreen(
     // Context menu / long press sheet
     var longPressedVerse by remember { mutableStateOf<BibleVerse?>(null) }
 
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(activeLight.bottom)
-            .statusBarsPadding()
-            .navigationBarsPadding()
-    ) {
-        Column(modifier = Modifier.fillMaxSize()) {
+    com.makarios.app.ui.components.LightScreen(activeLight, "Bible reader", modifier) {
+        Column(modifier = Modifier.fillMaxSize().statusBarsPadding()) {
             // Header
             Row(
                 modifier = Modifier
@@ -173,14 +196,9 @@ fun BibleReaderScreen(
                     )
                 }
 
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.clickable { onOpenPicker() }) {
                     Text(
-                        text = currentBook.uppercase(),
-                        style = MakariosTypography.labelSmall.copy(letterSpacing = 2.sp),
-                        color = activeLight.text.copy(alpha = 0.6f)
-                    )
-                    Text(
-                        text = "Chapter $currentChapter",
+                        text = "$currentBook Chapter $currentChapter",
                         style = MakariosTypography.displaySmall.copy(fontSize = 22.sp),
                         color = activeLight.text
                     )
@@ -200,23 +218,19 @@ fun BibleReaderScreen(
                             expanded = showVersionMenu,
                             onDismissRequest = { showVersionMenu = false }
                         ) {
-                            listOf("WEB", "KJV", "BBE", "ASV").forEach { version ->
+                            BibleVersionRepository.availableVersions.forEach { version ->
                                 DropdownMenuItem(
                                     text = {
                                         Row(verticalAlignment = Alignment.CenterVertically) {
-                                            Text(version)
-                                            if (version != "WEB") {
-                                                Spacer(Modifier.width(6.dp))
-                                                Text("(needs web)", fontSize = 11.sp, color = Color.Gray)
-                                            }
+                                            Text(version.displayName)
+                                            Spacer(Modifier.width(8.dp))
+                                            Text("On this phone", fontSize = 11.sp, color = activeLight.text.copy(alpha = .65f))
                                         }
                                     },
                                     onClick = {
-                                        selectedVersion = version
+                                        selectedVersion = version.displayName
+                                        BibleReaderPrefs.setVersion(context, version.displayName)
                                         showVersionMenu = false
-                                        if (version != "WEB") {
-                                            Toast.makeText(context, "$version online translation selected", Toast.LENGTH_SHORT).show()
-                                        }
                                     }
                                 )
                             }
@@ -300,14 +314,24 @@ fun BibleReaderScreen(
                     verticalArrangement = Arrangement.Center
                 ) {
                     Text(
-                        text = "That chapter is not in this translation",
+                        text = "Needs internet once to download, then it works offline",
                         style = MakariosTypography.titleMedium,
                         color = activeLight.text,
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center
                     )
                     Spacer(Modifier.height(16.dp))
-                    OutlinedButton(onClick = onNavigateBack) {
-                        Text("Go back", color = activeLight.text)
+                    Button(
+                        onClick = {
+                            coroutineScope.launch {
+                                val web = BibleRepository.getChapter(currentBook, currentChapter).getOrElse { emptyList() }
+                                val version = BibleVersionRepository.availableVersions.firstOrNull { it.displayName == selectedVersion }
+                                    ?: BibleVersionRepository.availableVersions.firstOrNull() ?: BibleVersion("web", "WEB", "World English Bible", true, "")
+                                chapterVerses = BibleVersionRepository.getChapter(context, currentBook, currentChapter, version, web)
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = activeLight.buttonFill, contentColor = activeLight.buttonText)
+                    ) {
+                        Text("Retry")
                     }
                 }
             } else {
@@ -318,14 +342,14 @@ fun BibleReaderScreen(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                     modifier = Modifier.fillMaxSize()
                 ) {
-                items(chapterVerses, key = { "${it.chapter}:${it.verse}" }) { verse ->
+                items(chapterVerses.distinctBy { it.verse }, key = { "reader-verse-${it.book}-${it.chapter}-${it.verse}" }) { verse ->
                     val isSelected = selectedRange != null && verse.verse in selectedRange
 
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(8.dp))
-                            .background(if (isSelected) Color(0x2CB5532B) else Color.Transparent)
+                            .background(if (isSelected) activeLight.highlight else Color.Transparent)
                             .combinedClickable(
                                 onClick = {
                                     if (selectedVerseStart == null) {
@@ -353,7 +377,7 @@ fun BibleReaderScreen(
                                 SpanStyle(
                                     fontSize = 12.sp,
                                     baselineShift = BaselineShift.Superscript,
-                                    color = Color(0xFF8A5A14),
+                                    color = activeLight.accent,
                                     fontWeight = FontWeight.Bold
                                 )
                             ) {
@@ -368,13 +392,13 @@ fun BibleReaderScreen(
                                     fontStyle = FontStyle.Normal
                                 )
                             ) {
-                                append(verse.text)
+                                append(ScriptureText.clean(verse.text))
                             }
                         }
 
                         Text(
                             text = annotatedText,
-                            style = MakariosTypography.bodyLarge.copy(lineHeight = baseLineHeight)
+                            style = com.makarios.app.ui.theme.VerseTextStyle.copy(fontStyle = FontStyle.Normal, fontSize = baseFontSize, lineHeight = baseLineHeight)
                         )
                     }
                 }
@@ -389,9 +413,10 @@ fun BibleReaderScreen(
             exit = slideOutVertically(targetOffsetY = { it }) + fadeOut(),
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(bottom = 28.dp, start = 20.dp, end = 20.dp)
+                // Above the bottom nav (56dp bar + hairline + gesture inset), never behind it
+                .padding(bottom = 84.dp, start = 20.dp, end = 20.dp)
         ) {
-            Card(
+            MakSurface(
                 shape = RoundedCornerShape(32.dp),
                 colors = CardDefaults.cardColors(containerColor = Ink),
                 elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
@@ -408,13 +433,16 @@ fun BibleReaderScreen(
                         Text(
                             text = selectedReference,
                             style = MakariosTypography.titleMedium.copy(fontSize = 15.sp),
-                            color = Color(0xFFFFF4E4)
+                            color = activeLight.paper
                         )
-                        Text(
-                            text = "${selectedRange!!.last - selectedRange.first + 1} verses chosen",
-                            style = MakariosTypography.labelSmall,
-                            color = Color(0xFFFFF4E4).copy(alpha = 0.65f)
-                        )
+                        val count = selectedRange?.let { it.last - it.first + 1 } ?: 0
+                        if (count > 0) {
+                            Text(
+                                text = if (count == 1) "1 verse chosen" else "$count verses chosen",
+                                style = MakariosTypography.labelSmall,
+                                color = activeLight.paper.copy(alpha = 0.65f)
+                            )
+                        }
                     }
 
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -426,7 +454,7 @@ fun BibleReaderScreen(
                                 Toast.makeText(context, "Copied $selectedReference", Toast.LENGTH_SHORT).show()
                             }
                         ) {
-                            Icon(Icons.Outlined.ContentCopy, contentDescription = "Copy", tint = Color(0xFFFFF4E4))
+                            Icon(Icons.Outlined.ContentCopy, contentDescription = "Copy", tint = activeLight.paper)
                         }
 
                         Spacer(Modifier.width(8.dp))
@@ -449,11 +477,11 @@ fun BibleReaderScreen(
                             },
                             shape = RoundedCornerShape(20.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFFFFF4E4),
+                                containerColor = activeLight.paper,
                                 contentColor = Ink
                             )
                         ) {
-                            Text("Declare this", style = MakariosTypography.labelLarge)
+                            Text(if (pickMode) "Use this verse" else "Declare this", style = MakariosTypography.labelLarge)
                         }
                     }
                 }
@@ -480,14 +508,17 @@ fun BibleReaderScreen(
                 dismissButton = {
                     Row {
                         TextButton(onClick = {
-                            val sendIntent = Intent(Intent.ACTION_SEND).apply {
-                                type = "text/plain"
-                                putExtra(Intent.EXTRA_TEXT, "“${v.text}” - $vRef")
-                            }
-                            context.startActivity(Intent.createChooser(sendIntent, "Share verse"))
+                            shareContentToOpen = ShareContent(
+                                declaration = v.text,
+                                verse = v.text,
+                                reference = vRef,
+                                initialStyleId = "pairing",
+                                initialLightName = activeLight.name,
+                                source = "bible", contentType = "verse"
+                            )
                             longPressedVerse = null
                         }) {
-                            Text("Share as text")
+                            Text("Share")
                         }
                         TextButton(onClick = {
                             coroutineScope.launch {
@@ -503,15 +534,26 @@ fun BibleReaderScreen(
                                     sourceType = "bible"
                                 )
                                 com.makarios.app.data.local.KeptRepository.save(entity)
-                                Toast.makeText(context, "Added $vRef to Kept", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, "Saved $vRef", Toast.LENGTH_SHORT).show()
                             }
                             longPressedVerse = null
                         }) {
-                            Text("Add to Kept")
+                            Text("Save verse")
                         }
                     }
                 }
             )
         }
     }
+
+    shareContentToOpen?.let { content ->
+        ShareSheet(
+            content = content,
+            onDismiss = { shareContentToOpen = null }
+        )
+    }
 }
+
+
+
+

@@ -30,6 +30,8 @@ import com.makarios.app.data.bible.BibleReferenceParser
 import com.makarios.app.data.bible.BibleRepository
 import com.makarios.app.ui.theme.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 @Composable
 fun TopicDetailScreen(
@@ -47,8 +49,9 @@ fun TopicDetailScreen(
             ?: TopicMeta(topicName, "Standing on God's truth", Light.Dawn, 26)
     }
 
-    val light = topicMeta.light
+    val light = LocalLight.current
     SystemBarsController(light)
+    ProvideActiveLight(light, "Topic detail") {}
 
     val pairs = remember(topicName) {
         CuratedTopicRepository.getPairsForTopic(topicName)
@@ -60,13 +63,14 @@ fun TopicDetailScreen(
     // Preload verse texts for pairing rows
     val verseTexts = remember { mutableStateMapOf<String, String>() }
     LaunchedEffect(pairs) {
-        BibleRepository.initialize(context)
-        pairs.forEach { p ->
-            val v = BibleRepository.getVerse(context, p.reference)
-            if (v != null) {
-                verseTexts[p.id] = v.text
+        val loadedTexts = withContext(Dispatchers.IO) {
+            BibleRepository.initialize(context)
+            pairs.mapNotNull { pair ->
+                BibleRepository.getVerse(context, pair.reference)?.let { pair.id to it.text }
             }
         }
+        verseTexts.clear()
+        loadedTexts.forEach { (id, text) -> verseTexts[id] = text }
     }
 
     val displayPairs = remember(pairs, selectedFilter, keptIds) {
@@ -79,7 +83,7 @@ fun TopicDetailScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(Color(0xFFFBF9F5))
+            .background(light.bottom)
             .navigationBarsPadding()
     ) {
         // Horizon Scene Header (about 300dp tall in topic's Light)
@@ -123,7 +127,7 @@ fun TopicDetailScreen(
                 Spacer(Modifier.height(4.dp))
                 Text(
                     text = topicMeta.tagline,
-                    style = MakariosTypography.bodyLarge.copy(fontStyle = FontStyle.Italic, fontSize = 17.sp),
+                    style = MakariosTypography.bodyLarge.copy(fontSize = 17.sp),
                     color = light.text.copy(alpha = 0.88f)
                 )
             }
@@ -149,7 +153,7 @@ fun TopicDetailScreen(
                     Text(
                         text = filter,
                         style = MakariosTypography.labelMedium,
-                        color = if (isSelected) Color(0xFFFFF4E4) else Ink.copy(alpha = 0.7f)
+                        color = if (isSelected) Cream else Ink.copy(alpha = 0.7f)
                     )
                 }
             }
@@ -175,7 +179,7 @@ fun TopicDetailScreen(
                 contentPadding = PaddingValues(start = 24.dp, end = 24.dp, bottom = 90.dp),
                 modifier = Modifier.fillMaxSize()
             ) {
-                items(displayPairs, key = { it.id }) { pair ->
+                items(displayPairs.distinctBy { it.id }, key = { "topic-detail-${it.id}" }) { pair ->
                     val vText = verseTexts[pair.id] ?: "The Word of the Lord stands forever."
                     val isSaved = keptIds.contains(pair.id) || keptIds.contains("topic-kept-${pair.id}")
 
@@ -195,7 +199,7 @@ fun TopicDetailScreen(
 
                         // Verse in italic
                         Text(
-                            text = "“$vText”",
+                            text = vText,
                             style = MakariosTypography.bodyMedium.copy(fontStyle = FontStyle.Italic, lineHeight = 22.sp),
                             color = Ink.copy(alpha = 0.80f)
                         )
@@ -206,7 +210,7 @@ fun TopicDetailScreen(
                         Text(
                             text = pair.reference,
                             style = MakariosTypography.labelSmall.copy(letterSpacing = 1.sp),
-                            color = Color(0xFF8A5A14)
+                            color = AnchorLight
                         )
 
                         Spacer(Modifier.height(14.dp))
@@ -224,7 +228,7 @@ fun TopicDetailScreen(
                                     shape = RoundedCornerShape(20.dp),
                                     colors = ButtonDefaults.buttonColors(
                                         containerColor = Ink,
-                                        contentColor = Color(0xFFFFF4E4)
+                                        contentColor = Cream
                                     ),
                                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
                                 ) {
@@ -257,9 +261,9 @@ fun TopicDetailScreen(
                                 onClick = {
                                     scope.launch {
                                         if (isSaved) {
-                                            com.makarios.app.data.local.KeptRepository.deleteById(pair.id)
-                                            com.makarios.app.data.local.KeptRepository.deleteById("topic-kept-${pair.id}")
-                                            Toast.makeText(context, "Removed from Kept", Toast.LENGTH_SHORT).show()
+                                            com.makarios.app.data.local.KeptRepository.softDelete(pair.id)
+                                            com.makarios.app.data.local.KeptRepository.softDelete("topic-kept-${pair.id}")
+                                            Toast.makeText(context, "Removed", Toast.LENGTH_SHORT).show()
                                         } else {
                                             val entity = com.makarios.app.data.local.KeptEntity(
                                                 id = "topic-kept-${pair.id}",
@@ -273,7 +277,7 @@ fun TopicDetailScreen(
                                                 sourceType = "bank"
                                             )
                                             com.makarios.app.data.local.KeptRepository.save(entity)
-                                            Toast.makeText(context, "Saved to Kept", Toast.LENGTH_SHORT).show()
+                                            Toast.makeText(context, "Saved", Toast.LENGTH_SHORT).show()
                                         }
                                     }
                                 }
@@ -281,7 +285,7 @@ fun TopicDetailScreen(
                                 Icon(
                                     imageVector = if (isSaved) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
                                     contentDescription = if (isSaved) "Remove bookmark" else "Bookmark",
-                                    tint = if (isSaved) Color(0xFFB5532B) else Ink.copy(alpha = 0.45f)
+                                    tint = if (isSaved) MakError else Ink.copy(alpha = 0.45f)
                                 )
                             }
                         }
@@ -299,3 +303,6 @@ fun TopicDetailScreen(
         }
     }
 }
+
+
+

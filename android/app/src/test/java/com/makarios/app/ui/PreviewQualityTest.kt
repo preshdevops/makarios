@@ -23,7 +23,7 @@ class PreviewQualityTest {
             StyleRegistry.PAIRING,
             StyleRegistry.WINDOWS,
             StyleRegistry.RAYS,
-            StyleRegistry.NUMERALS,
+            StyleRegistry.PAIRING,
             StyleRegistry.PAPER
         )
 

@@ -32,6 +32,7 @@ import androidx.core.content.res.ResourcesCompat
 import com.makarios.app.R
 import com.makarios.app.ui.theme.*
 import com.makarios.app.util.ExportFormat
+import com.makarios.app.util.PerformanceTier
 import kotlin.math.*
 import kotlin.random.Random
 
@@ -61,17 +62,7 @@ object StyleTypefaces {
 }
 
 /** Grain noise texture tile for eliminating color banding and adding tactile paper warmth. */
-private val grainNoiseTile by lazy {
-    val b = Bitmap.createBitmap(256, 256, Bitmap.Config.ARGB_8888)
-    val pixels = IntArray(256 * 256)
-    val rng = Random(0x4D414B23)
-    for (i in pixels.indices) {
-        val n = rng.nextInt(256)
-        pixels[i] = AndroidColor.argb(n, n, n, n)
-    }
-    b.setPixels(pixels, 0, 256, 0, 0, 256, 256)
-    b.asImageBitmap()
-}
+private val grainNoiseTile by lazy { com.makarios.app.util.GrainTileProvider.imageBitmap }
 
 /** Layout configuration and platform safe zones for a target resolution. */
 data class LayoutGeometry(
@@ -136,6 +127,7 @@ data class LayoutGeometry(
 
 /** Draws grain texture and dither noise over canvas. */
 fun DrawScope.drawGrainOverlay(light: Light, size: Size = this.size) {
+    if (!com.makarios.app.util.PerformanceTier.grainEnabled) return
     drawIntoCanvas { c ->
         c.drawRect(
             0f, 0f, size.width, size.height,
@@ -163,7 +155,7 @@ fun DrawScope.drawRidgePath(w: Float, h: Float, y0: Float, amp: Float, seed: Int
             val m = Offset((points[i].x + points[i + 1].x) / 2f, (points[i].y + points[i + 1].y) / 2f)
             quadraticTo(points[i].x, points[i].y, m.x, m.y)
         }
-        lineTo(points.last().x, points.last().y)
+        lineTo(points.lastOrNull()?.x ?: size.width, points.lastOrNull()?.y ?: size.height)
         lineTo(w + overscan, h)
         close()
     }
@@ -603,7 +595,9 @@ abstract class BaseStyle(
     override fun render(spec: StyleSpec, light: Light, size: IntSize): Bitmap {
         val w = size.width
         val h = size.height
-        require(w > 0 && h > 0) { "Render dimensions must be positive ($w x $h)" }
+        // Dimensions guard
+        val safeW = if (w > 0) w else 1080
+        val safeH = if (h > 0) h else 1920
         val bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
         val androidCanvas = AndroidCanvas(bitmap)
         val geom = LayoutGeometry.compute(size)
@@ -763,113 +757,6 @@ object RaysStyle : BaseStyle("rays", "Rays") {
 }
 
 // ---------------------------------------------------------------------------
-// 4. NUMERALS STYLE (Verse Chapter Number Clip Path)
-// ---------------------------------------------------------------------------
-object NumeralsStyle : BaseStyle("numerals", "Numerals") {
-    override fun drawArt(scope: DrawScope, geom: LayoutGeometry, light: Light, spec: StyleSpec) {
-        val w = geom.width
-        val h = geom.height
-        val s = geom.scale
-
-        scope.drawRect(Brush.verticalGradient(listOf(Color(0xFFF4B98E), Color(0xFFC9703F), Color(0xFF6B2E1E))), size = Size(w, h))
-
-        val chapter = spec.resolvedChapter
-        val type = StyleTypefaces.getNewsreader()
-
-        scope.drawIntoCanvas { c ->
-            val nativeCanvas = c.nativeCanvas
-            // 1. Outline extraction at modest size (200px) - avoids FreeType/Skia glyph rasterisation clipping
-            val baseSize = 200f
-            val numPaint = AndroidPaint(AndroidPaint.ANTI_ALIAS_FLAG).apply {
-                typeface = Typeface.create(type, Typeface.BOLD)
-                textSize = baseSize
-                textAlign = AndroidPaint.Align.LEFT
-            }
-            val basePath = AndroidPath()
-            numPaint.getTextPath(chapter, 0, chapter.length, 0f, 0f, basePath)
-
-            val bounds = RectF()
-            basePath.computeBounds(bounds, true)
-
-            // Desired height: 380sp * scale
-            val targetHeight = (if (geom.isLandscapeX) 240f else if (geom.isSquare) 260f else 360f) * s
-            val maxWidth = if (geom.isLandscapeX) w * 0.40f else w * 0.80f
-            val rawScale = if (bounds.height() > 0f) targetHeight / bounds.height() else (targetHeight / baseSize)
-            // Constrain width so 3-digit numerals (119, 150) or combined chapter:verse never bleed outside safe margins
-            val scaleFactor = if (bounds.width() * rawScale > maxWidth && bounds.width() > 0f) {
-                maxWidth / bounds.width()
-            } else {
-                rawScale
-            }
-
-            val targetCenterX = if (geom.isLandscapeX) w * 0.74f else w * 0.5f
-            val targetCenterY = if (geom.isLandscapeX) h * 0.52f else if (geom.isSquare) h * 0.68f else h * 0.44f
-
-            // 2. Scale up using Matrix
-            val matrix = AndroidMatrix().apply {
-                postTranslate(-bounds.centerX(), -bounds.centerY())
-                postScale(scaleFactor, scaleFactor)
-                postTranslate(targetCenterX, targetCenterY)
-            }
-
-            val numeralPath = AndroidPath()
-            basePath.transform(matrix, numeralPath)
-
-            val scaledW = bounds.width() * scaleFactor
-            val scaledH = bounds.height() * scaleFactor
-
-            // 3. Clip strictly to the numeral path - NO glow outside the numeral!
-            nativeCanvas.save()
-            nativeCanvas.clipPath(numeralPath)
-
-            // Mini sunset landscape inside the clipped numeral
-            val gradPaint = AndroidPaint(AndroidPaint.ANTI_ALIAS_FLAG or AndroidPaint.DITHER_FLAG).apply {
-                shader = LinearGradient(
-                    0f, targetCenterY - scaledH * 0.55f,
-                    0f, targetCenterY + scaledH * 0.55f,
-                    Color(0xFFFBE3C4).toArgb(),
-                    Color(0xFF6B2E1E).toArgb(),
-                    Shader.TileMode.CLAMP
-                )
-            }
-            nativeCanvas.drawPaint(gradPaint)
-
-            // Sun disc and glow inside the numeral clip ONLY
-            val sunRadius = (28f * s).coerceAtLeast(14f)
-            val sunX = targetCenterX + scaledW * 0.18f
-            val sunY = targetCenterY - scaledH * 0.16f
-
-            val glowPaint = AndroidPaint(AndroidPaint.ANTI_ALIAS_FLAG).apply {
-                shader = RadialGradient(
-                    sunX, sunY, sunRadius * 2.8f,
-                    intArrayOf(Color(0x99FFE8C2).toArgb(), Color(0x00FFE8C2).toArgb()),
-                    floatArrayOf(0f, 1f),
-                    Shader.TileMode.CLAMP
-                )
-            }
-            nativeCanvas.drawCircle(sunX, sunY, sunRadius * 2.8f, glowPaint)
-
-            val sunPaint = AndroidPaint(AndroidPaint.ANTI_ALIAS_FLAG).apply {
-                color = Color(0xFFFFD9A8).toArgb()
-            }
-            nativeCanvas.drawCircle(sunX, sunY, sunRadius, sunPaint)
-
-            // Mini sunset ridges inside clipped numeral
-            scope.drawRidgePath(w, h, targetCenterY + scaledH * 0.12f, 12f * s, 3, Color(0xFF6B2E1E))
-            scope.drawRidgePath(w, h, targetCenterY + scaledH * 0.36f, 10f * s, 5, Color(0xFF432017))
-
-            nativeCanvas.restore()
-        }
-        scope.drawGrainOverlay(Light.Midday, Size(w, h))
-    }
-
-    override fun drawTypography(canvas: AndroidCanvas, bitmap: Bitmap, geom: LayoutGeometry, light: Light, spec: StyleSpec) {
-        val top = if (geom.isSquare) geom.topSafe else if (geom.isLandscapeX) geom.topSafe else geom.height * 0.58f
-        drawAdaptivePairing(canvas, bitmap, geom, Light.Midday, spec, declarationSizeSp = 28f, verseSizeSp = 15f, topOverride = top, centerAlign = !geom.isLandscapeX)
-    }
-}
-
-// ---------------------------------------------------------------------------
 // 5. PAPER STYLE (6 Paper-cut Ridges with Upward Drop Shadows)
 // ---------------------------------------------------------------------------
 object PaperStyle : BaseStyle("paper", "Paper") {
@@ -902,7 +789,9 @@ object PaperStyle : BaseStyle("paper", "Paper") {
             scope.drawIntoCanvas { canvas ->
                 val shadowPaint = AndroidPaint(AndroidPaint.ANTI_ALIAS_FLAG).apply {
                     color = AndroidColor.argb(115, 20, 35, 40)
-                    maskFilter = BlurMaskFilter(3f * s, BlurMaskFilter.Blur.NORMAL)
+                    if (com.makarios.app.util.PerformanceTier.blurEnabled) {
+                        maskFilter = BlurMaskFilter(3f * s, BlurMaskFilter.Blur.NORMAL)
+                    }
                 }
                 canvas.nativeCanvas.drawRect(0f, yPos - 4f * s, w, yPos, shadowPaint)
             }
@@ -941,7 +830,9 @@ object ConstellationStyle : BaseStyle("constellation", "Constellation") {
         scope.drawIntoCanvas { c ->
             val p = AndroidPaint(AndroidPaint.ANTI_ALIAS_FLAG).apply {
                 shader = LinearGradient(0f, h * 0.2f, w, h * 0.7f, Color(0x339FB4B4).toArgb(), AndroidColor.TRANSPARENT, Shader.TileMode.CLAMP)
-                maskFilter = BlurMaskFilter(28f * s, BlurMaskFilter.Blur.NORMAL)
+                if (com.makarios.app.util.PerformanceTier.blurEnabled) {
+                    maskFilter = BlurMaskFilter(28f * s, BlurMaskFilter.Blur.NORMAL)
+                }
             }
             c.nativeCanvas.save()
             c.nativeCanvas.rotate(-28f, w * 0.5f, h * 0.45f)
@@ -1289,7 +1180,9 @@ object CrossStyle : BaseStyle("cross", "Cross") {
         scope.drawIntoCanvas { c ->
             val halo = AndroidPaint(AndroidPaint.ANTI_ALIAS_FLAG).apply {
                 color = AndroidColor.argb(120, 255, 230, 180)
-                maskFilter = BlurMaskFilter(26f * s, BlurMaskFilter.Blur.NORMAL)
+                if (com.makarios.app.util.PerformanceTier.blurEnabled) {
+                    maskFilter = BlurMaskFilter(26f * s, BlurMaskFilter.Blur.NORMAL)
+                }
             }
             c.nativeCanvas.drawCircle(crossX, crossY, 90f * s, halo)
         }

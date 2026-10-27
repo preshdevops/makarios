@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.androidx.baselineprofile)
     id("com.google.gms.google-services")
     id("com.google.firebase.crashlytics")
     id("com.google.devtools.ksp")
@@ -15,8 +16,8 @@ android {
         applicationId = "com.makarios.app"
         minSdk = 26
         targetSdk = 35
-        versionCode = 5
-        versionName = "1.0.4"
+        versionCode = 8
+        versionName = "1.0.7"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -38,6 +39,8 @@ android {
         }
         release {
             isMinifyEnabled = true
+            isShrinkResources = true
+            signingConfig = signingConfigs.getByName("debug")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -56,7 +59,7 @@ android {
         buildConfig = true
     }
     androidResources {
-        noCompress += listOf("bin", "onnx")
+        noCompress += listOf("bin", "onnx", "json", "db")
     }
     testOptions {
         unitTests.isReturnDefaultValues = true
@@ -67,6 +70,7 @@ android {
 dependencies {
     implementation(libs.androidx.core.ktx)
     implementation("androidx.core:core-splashscreen:1.0.1")
+    implementation("androidx.datastore:datastore-preferences:1.1.1")
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
@@ -83,9 +87,13 @@ dependencies {
     implementation(libs.androidx.work.runtime.ktx)
 
     // Coil for modern async image loading
+    implementation("io.coil-kt:coil-compose:2.7.0")
 
     // ONNX Runtime Mobile for on-device local vector search
     implementation("com.microsoft.onnxruntime:onnxruntime-android:1.20.0")
+    implementation("com.jakewharton.timber:timber:5.0.1")
+    implementation(libs.androidx.profileinstaller)
+    baselineProfile(project(":baselineprofile"))
 
     // Firebase BoM and SDKs
     implementation(platform("com.google.firebase:firebase-bom:33.10.0"))
@@ -117,3 +125,24 @@ dependencies {
 
 
 
+
+
+// Prompt 21 Part 1.5: fail the build on hard-coded colours / default Material widgets in screens
+tasks.register("verifyTheme") {
+    group = "verification"
+    description = "Fails if ui/screens uses hardcoded colours or default Material chips/cards"
+    doLast {
+        val roots = listOf(file("src/main/java/com/makarios/app/ui/screens"))
+        val forbidden = listOf("Color(0xFF", "Color.White", "Color.Black", "MaterialTheme.colorScheme.", "FilterChip(", "Card(", "OutlinedCard(", "ElevatedCard(", "AssistChip(", "SuggestionChip(")
+        val offenders = mutableListOf<String>()
+        roots.forEach { root ->
+            root.walkTopDown().filter { it.isFile && it.extension == "kt" }.forEach { f ->
+                f.readLines().forEachIndexed { i, line ->
+                    forbidden.forEach { p -> if (line.contains(p)) offenders += "${f.name}:${i + 1}: $p" }
+                }
+            }
+        }
+        if (offenders.isNotEmpty()) throw GradleException("verifyTheme failed:\n" + offenders.joinToString("\n"))
+        println("verifyTheme: clean (${roots.size} roots scanned)")
+    }
+}

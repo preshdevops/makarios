@@ -173,10 +173,10 @@ private fun OnboardingWelcomeScreen(
 
     val welcomeGradient = Brush.verticalGradient(
         colorStops = arrayOf(
-            0.00f to Color(0xFF0F1716),
-            0.30f to Color(0xFF1F2B2A),
-            0.62f to Color(0xFF43292B),
-            1.00f to Color(0xFFC9703F)
+            0.00f to Ink,
+            0.30f to Ink,
+            0.62f to Ink,
+            1.00f to Ink
         )
     )
 
@@ -209,7 +209,7 @@ private fun OnboardingWelcomeScreen(
             // Wordmark: mark + "makarios" Newsreader italic 22 centred at top (y=80)
             com.makarios.app.ui.components.MakariosWordmark(
                 markSize = 22.dp,
-                textColor = Color(0xFFFFF4E4),
+                textColor = Cream,
                 modifier = Modifier.semantics { heading() }
             )
 
@@ -225,7 +225,7 @@ private fun OnboardingWelcomeScreen(
                     lineHeight = 52.sp,
                     fontFeatureSettings = "lnum, tnum"
                 ),
-                color = Color(0xFFFFF4E4),
+                color = Cream,
                 textAlign = TextAlign.Center
             )
 
@@ -240,7 +240,7 @@ private fun OnboardingWelcomeScreen(
                     fontSize = 17.sp,
                     lineHeight = 26.sp
                 ),
-                color = Color(0xFFFFF4E4).copy(alpha = 0.88f),
+                color = Cream.copy(alpha = 0.88f),
                 textAlign = TextAlign.Center,
                 modifier = Modifier.padding(horizontal = 8.dp)
             )
@@ -256,7 +256,7 @@ private fun OnboardingWelcomeScreen(
                     .sizeIn(minHeight = 48.dp),
                 shape = RoundedCornerShape(28.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFFFF4E4),
+                    containerColor = Cream,
                     contentColor = Ink
                 ),
                 elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp)
@@ -281,7 +281,7 @@ private fun OnboardingWelcomeScreen(
                     fontFamily = HankenGroteskFontFamily,
                     fontSize = 13.sp
                 ),
-                color = Color(0xFFFFF4E4).copy(alpha = 0.72f),
+                color = Cream.copy(alpha = 0.72f),
                 textAlign = TextAlign.Center
             )
 
@@ -316,8 +316,8 @@ private fun WelcomeSunriseArt(
         if (haloAlpha > 0f) {
             val haloBrush = Brush.radialGradient(
                 colors = listOf(
-                    Color(0xFFFFD9A8).copy(alpha = 0.85f * haloAlpha),
-                    Color(0xFFFFD9A8).copy(alpha = 0f)
+                    Cream.copy(alpha = 0.85f * haloAlpha),
+                    Cream.copy(alpha = 0f)
                 ),
                 center = Offset(sunX, sunY),
                 radius = haloRadius
@@ -327,18 +327,18 @@ private fun WelcomeSunriseArt(
 
         // 2. Sun disc (#FFF1D6, r46)
         drawCircle(
-            color = Color(0xFFFFF1D6),
+            color = Cream,
             radius = sunRadius,
             center = Offset(sunX, sunY)
         )
 
         // 3. Three dark ridges rising in front of the sun
         // Ridge 1 (back): #2A1618 at y=76%
-        drawWelcomeRidge(Color(0xFF2A1618), w, h, y0 = h * 0.76f, amp = h * 0.024f, seed = 17)
+        drawWelcomeRidge(Ink, w, h, y0 = h * 0.76f, amp = h * 0.024f, seed = 17)
         // Ridge 2 (mid): #1A0E10 at y=81%
-        drawWelcomeRidge(Color(0xFF1A0E10), w, h, y0 = h * 0.81f, amp = h * 0.020f, seed = 31)
+        drawWelcomeRidge(Ink, w, h, y0 = h * 0.81f, amp = h * 0.020f, seed = 31)
         // Ridge 3 (front): #0F1716 at y=87%
-        drawWelcomeRidge(Color(0xFF0F1716), w, h, y0 = h * 0.87f, amp = h * 0.016f, seed = 53)
+        drawWelcomeRidge(Ink, w, h, y0 = h * 0.87f, amp = h * 0.016f, seed = 53)
     }
 }
 
@@ -659,11 +659,13 @@ private fun OnboardingDeclarationScreen(
     selectedTopics: List<String>,
     onFinishOnboarding: () -> Unit
 ) {
-    val currentLight = remember { Light.forNow() }
+    val currentLight = LocalLight.current
+    val declarationScope = rememberCoroutineScope()
     val bankDeclarations = remember(selectedTopics) {
         OnboardingStore.getBankForTopics(selectedTopics)
     }
 
+    val coroutineScope = rememberCoroutineScope()
     var currentIndex by remember { mutableStateOf(0) }
     val currentAffirmation = remember(currentIndex, bankDeclarations) {
         bankDeclarations.getOrElse(currentIndex % bankDeclarations.size) {
@@ -738,10 +740,10 @@ private fun OnboardingDeclarationScreen(
 
             Spacer(modifier = Modifier.weight(1f).defaultMinSize(minHeight = 40.dp))
 
-            // Primary: ink pill "Keep it" with bookmark icon
+            // Primary: ink pill "Save" with bookmark icon
             Button(
                 onClick = {
-                    AffirmationRepository.save(currentAffirmation.id)
+                    declarationScope.launch { com.makarios.app.data.local.KeptRepository.save(com.makarios.app.data.local.KeptEntity(currentAffirmation.id, currentAffirmation.declaration, currentAffirmation.scriptureText, currentAffirmation.reference, currentLight.name, "", sourceType = "bank")) }
                     isKeptAnimTriggered = true
                     onFinishOnboarding()
                 },
@@ -770,7 +772,7 @@ private fun OnboardingDeclarationScreen(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "Keep it",
+                        text = "Save",
                         style = MakariosTypography.labelLarge.copy(
                             fontFamily = HankenGroteskFontFamily,
                             fontWeight = FontWeight.SemiBold,
@@ -843,3 +845,5 @@ private fun OnboardingProgressDots(
         }
     }
 }
+
+

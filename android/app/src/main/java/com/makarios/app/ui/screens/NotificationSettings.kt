@@ -1,9 +1,10 @@
-package com.makarios.app.ui.screens
+﻿package com.makarios.app.ui.screens
 
 import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.media.MediaPlayer
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -41,22 +42,38 @@ fun NotificationsSettings(context: Context) {
     var morning by remember { mutableStateOf(NotificationStore.morningEnabled(context)) }
     var evening by remember { mutableStateOf(NotificationStore.eveningEnabled(context)) }
     var streak by remember { mutableStateOf(NotificationStore.streakEnabled(context)) }
-    var silent by remember { mutableStateOf(NotificationStore.silent(context)) }
+    var sound by remember { mutableStateOf(NotificationStore.soundChoice(context)) }
     var morningTime by remember { mutableStateOf(NotificationStore.morningTime(context)) }
     var eveningTime by remember { mutableStateOf(NotificationStore.eveningTime(context)) }
     var days by remember { mutableStateOf(NotificationStore.weekdays(context)) }
     var picker by remember { mutableStateOf<String?>(null) }
     val permissionMissing = android.os.Build.VERSION.SDK_INT >= 33 && androidx.core.content.ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text("Notifications", style = MakariosTypography.bodyLarge.copy(fontFamily = NewsreaderFontFamily, fontStyle = FontStyle.Italic, fontSize = 20.sp), color = Ink)
+        Text("Notifications", style = MakariosTypography.bodyLarge.copy(fontSize = 20.sp), color = Ink)
         NotificationToggle("Morning declaration", "A short declaration at your chosen hour", morning, { morning = it; NotificationStore.setMorningEnabled(context, it); ReminderManager.rescheduleAll(context) })
         if (morning) NotificationTimeChips(morningTime, { morningTime = it; NotificationStore.setMorningTime(context, it.first, it.second); ReminderManager.rescheduleAll(context) }) { picker = "morning" }
         NotificationToggle("Evening verse", "Before you sleep", evening, { evening = it; NotificationStore.setEveningEnabled(context, it); ReminderManager.rescheduleAll(context) })
         if (evening) NotificationTimeChips(eveningTime, { eveningTime = it; NotificationStore.setEveningTime(context, it.first, it.second); ReminderManager.rescheduleAll(context) }) { picker = "evening" }
-        Text("Days", style = MakariosTypography.bodyLarge.copy(fontFamily = NewsreaderFontFamily, fontStyle = FontStyle.Italic, fontSize = 20.sp), color = Ink)
+        Text("Days", style = MakariosTypography.bodyLarge.copy(fontSize = 20.sp), color = Ink)
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) { DayOfWeek.values().forEach { day -> DayCircle(day, day in days) { days = if (day in days) days - day else days + day; NotificationStore.setWeekdays(context, days); ReminderManager.rescheduleAll(context) } } }
-        Text("Gentle by default", style = MakariosTypography.bodyLarge.copy(fontFamily = NewsreaderFontFamily, fontStyle = FontStyle.Italic, fontSize = 20.sp), color = Ink)
-        NotificationToggle("Silent notifications", "No sound or vibration", silent, { silent = it; NotificationStore.setSilent(context, it) })
+        Text("Notification sound", style = MakariosTypography.bodyLarge.copy(fontSize = 20.sp), color = Ink)
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            NotificationStore.SoundChoice.values().forEach { choice ->
+                TimeChip(choice.name.lowercase().replaceFirstChar { it.uppercase() }, sound == choice) {
+                    sound = choice
+                    NotificationStore.setSoundChoice(context, choice)
+                    ReminderManager.createNotificationChannels(context)
+                }
+            }
+        }
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            TextButton(onClick = { previewNotificationSound(context, sound) }) { Text("Play", color = Ink) }
+            TextButton(onClick = {
+                val channel = "declarations_${sound.name.lowercase()}_v2"
+                val intent = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) Intent(Settings.ACTION_CHANNEL_NOTIFICATION_SETTINGS).putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName).putExtra(Settings.EXTRA_CHANNEL_ID, channel) else Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+                context.startActivity(intent)
+            }) { Text("More options in Android settings", color = Ink) }
+        }
         NotificationToggle("Streak reminder", "One quiet nudge at 8 PM", streak, { streak = it; NotificationStore.setStreakEnabled(context, it); ReminderManager.rescheduleAll(context) })
         NotificationPreview()
         TextButton(onClick = { context.startActivity(Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)) }) { Text("Manage in system settings", color = Ink) }
@@ -77,5 +94,25 @@ fun NotificationSoftAsk(onDismiss: () -> Unit) {
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { NotificationStore.markAsked(context) }
     val a = remember { AffirmationRepository.affirmationOfTheDay }
     var time by remember { mutableStateOf(NotificationStore.morningTime(context)) }
-    AlertDialog(onDismissRequest = { NotificationStore.markAsked(context); onDismiss() }, title = { Text("Let it find you each morning.", style = MakariosTypography.displaySmall, color = Ink) }, text = { Column { Text("One declaration, at the hour you choose. Nothing else. No streak guilt, no marketing.", color = Ink.copy(alpha = .72f)); Spacer(Modifier.height(16.dp)); Text("What time?", style = MakariosTypography.labelLarge, color = Ink); NotificationTimeChips(time, { time = it; NotificationStore.setMorningTime(context, it.first, it.second) }) {}; Spacer(Modifier.height(12.dp)); NotificationPreview() } }, confirmButton = { Button(onClick = { NotificationStore.markAsked(context); if (android.os.Build.VERSION.SDK_INT >= 33) launcher.launch(Manifest.permission.POST_NOTIFICATIONS) else ReminderManager.setDailyReminderEnabled(context, true); onDismiss() }, colors = ButtonDefaults.buttonColors(containerColor = Ink, contentColor = Cream), shape = RoundedCornerShape(22.dp)) { Text("Turn on") } }, dismissButton = { TextButton(onClick = { NotificationStore.markAsked(context); onDismiss() }) { Text("Not now", color = Ink) } }, containerColor = Color(0xFFFFF4D6))
+    AlertDialog(onDismissRequest = { NotificationStore.markAsked(context); onDismiss() }, title = { Text("Let it find you each morning.", style = MakariosTypography.displaySmall, color = Ink) }, text = { Column { Text("One declaration, at the hour you choose. Nothing else. No streak guilt, no marketing.", color = Ink.copy(alpha = .72f)); Spacer(Modifier.height(16.dp)); Text("What time?", style = MakariosTypography.labelLarge, color = Ink); NotificationTimeChips(time, { time = it; NotificationStore.setMorningTime(context, it.first, it.second) }) {}; Spacer(Modifier.height(12.dp)); NotificationPreview() } }, confirmButton = { Button(onClick = { NotificationStore.markAsked(context); if (android.os.Build.VERSION.SDK_INT >= 33) launcher.launch(Manifest.permission.POST_NOTIFICATIONS) else ReminderManager.setDailyReminderEnabled(context, true); onDismiss() }, colors = ButtonDefaults.buttonColors(containerColor = Ink, contentColor = Cream), shape = RoundedCornerShape(22.dp)) { Text("Turn on") } }, dismissButton = { TextButton(onClick = { NotificationStore.markAsked(context); onDismiss() }) { Text("Not now", color = Ink) } }, containerColor = Cream)
 }
+private fun previewNotificationSound(context: Context, choice: NotificationStore.SoundChoice) {
+    val audio = context.getSystemService(Context.AUDIO_SERVICE) as android.media.AudioManager
+    if (audio.ringerMode != android.media.AudioManager.RINGER_MODE_NORMAL) return
+    val resource = when (choice) {
+        NotificationStore.SoundChoice.CHIME -> com.makarios.app.R.raw.makarios_chime
+        NotificationStore.SoundChoice.SOFT -> com.makarios.app.R.raw.makarios_soft
+        NotificationStore.SoundChoice.SILENT -> return
+    }
+    val attributes = android.media.AudioAttributes.Builder()
+        .setUsage(android.media.AudioAttributes.USAGE_NOTIFICATION)
+        .setContentType(android.media.AudioAttributes.CONTENT_TYPE_SONIFICATION)
+        .build()
+    runCatching {
+        MediaPlayer.create(context, resource, attributes, android.media.AudioManager.STREAM_NOTIFICATION)?.also { player ->
+            player.setOnCompletionListener { it.release() }
+            player.start()
+        }
+    }
+}
+

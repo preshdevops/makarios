@@ -1,15 +1,26 @@
 package com.makarios.app.data
 
 import android.content.Context
+import android.os.SystemClock
+import android.util.JsonReader
 import ai.onnxruntime.OnnxTensor
 import ai.onnxruntime.OrtEnvironment
 import ai.onnxruntime.OrtSession
 import com.makarios.app.data.bible.ScriptureText
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import org.json.JSONObject
+import com.makarios.app.util.PerformanceMetrics
+import timber.log.Timber
+import java.io.File
+import java.io.FileOutputStream
 import java.io.InputStream
+import java.io.InputStreamReader
 import java.nio.ByteBuffer
+import java.nio.MappedByteBuffer
+import java.nio.channels.FileChannel
+import java.nio.file.StandardOpenOption
 import kotlin.math.abs
 import kotlin.math.sqrt
 
@@ -37,30 +48,74 @@ class MatchEngine private constructor(private val context: Context?) {
     @Volatile var ready: Boolean = false
         private set
 
+    @Volatile var isInitializing: Boolean = false
+        private set
+
+    private val initializeMutex = Mutex()
+    @Volatile private var initializationAttempted = false
+    @Volatile private var retryPendingForeground = false
+    @Volatile private var foregroundRetryUsed = false
+
     private var ortEnv: OrtEnvironment? = null
     private var ortSession: OrtSession? = null
     private var tokenizer: BertTokenizer? = null
 
     private var dim: Int = 384
     private var totalRows: Int = 0
-    private var embMatrix: ByteArray? = null
+    private var embMatrix: MappedByteBuffer? = null
     private var rowWeights: FloatArray = FloatArray(0)
     private var verses: List<IndexedVerse> = emptyList()
     private var verseByRef: Map<String, IndexedVerse> = emptyMap()
     private var reviewedBank: List<ReviewedBankEntry> = emptyList()
 
-    suspend fun initialize() = withContext(Dispatchers.IO) {
-        if (ready) return@withContext
+    suspend fun initialize() {
+        val startedAt = SystemClock.elapsedRealtime()
+        var performedAttempt = false
+        isInitializing = true
         try {
-            if (context != null) {
-                initializeFromAssets(context)
+            withContext(Dispatchers.IO) {
+                initializeMutex.withLock {
+                    if (ready || initializationAttempted) return@withLock
+                    initializationAttempted = true
+                    performedAttempt = true
+                    try {
+                        val appContext = context ?: com.makarios.app.MakariosApp.instance
+                        initializeFromAssets(appContext)
+                    } catch (failure: Throwable) {
+                        handleInitializationFailure(failure, scheduleForegroundRetry = true)
+                    }
+                }
             }
-        } catch (e: Exception) {
-            e.printStackTrace()
+        } finally {
+            isInitializing = false
+            if (performedAttempt) PerformanceMetrics.recordEngineInitialization(SystemClock.elapsedRealtime() - startedAt)
         }
-        ready = true
     }
 
+    private suspend fun retryAfterForeground() {
+        val startedAt = SystemClock.elapsedRealtime()
+        var performedAttempt = false
+        try {
+            withContext(Dispatchers.IO) {
+                initializeMutex.withLock {
+                    if (ready || !retryPendingForeground || foregroundRetryUsed) return@withLock
+                    retryPendingForeground = false
+                    foregroundRetryUsed = true
+                    initializationAttempted = true
+                    performedAttempt = true
+                    try {
+                        val appContext = context ?: return@withLock
+                        initializeFromAssets(appContext)
+                    } catch (failure: Throwable) {
+                        handleInitializationFailure(failure, scheduleForegroundRetry = false)
+                    }
+                }
+            }
+        } finally {
+            if (performedAttempt) PerformanceMetrics.recordEngineInitialization(SystemClock.elapsedRealtime() - startedAt)
+        }
+    }
+    /** Test/standalone entry point. Model and embedding streams are copied to files before use. */
     fun initializeFromStreams(
         modelStream: InputStream,
         vocabStream: InputStream,
@@ -69,21 +124,102 @@ class MatchEngine private constructor(private val context: Context?) {
         seedJsonStream: InputStream,
         bankJsonStream: InputStream
     ) {
-        val env = OrtEnvironment.getEnvironment()
-        ortEnv = env
-        val modelBytes = modelStream.readBytes()
-        ortSession = env.createSession(modelBytes, OrtSession.SessionOptions())
+        ready = false
+        initializationAttempted = true
+        try {
+            val root = context?.filesDir ?: File(System.getProperty("java.io.tmpdir"), "makarios-match-engine").apply { mkdirs() }
+            val modelFile = File(root, MODEL_FILE)
+            val indexFile = File(root, INDEX_FILE)
+            val embeddingsFile = File(root, EMBEDDINGS_FILE)
+            copyStreamToFile(modelStream, modelFile)
+            copyStreamToFile(indexJsonStream, indexFile)
+            copyStreamToFile(embeddingsBinStream, embeddingsFile)
+            initializeFromFiles(modelFile, vocabStream, indexFile, embeddingsFile, seedJsonStream, bankJsonStream)
+        } catch (failure: Throwable) {
+            failure.printStackTrace()
+            handleInitializationFailure(failure, scheduleForegroundRetry = context != null)
+        }
+    }
+
+    private fun initializeFromAssets(ctx: Context) {
+        val modelFile = copyAssetIfNeeded(ctx, MODEL_FILE)
+        val indexFile = copyAssetIfNeeded(ctx, INDEX_FILE)
+        val embeddingsFile = copyAssetIfNeeded(ctx, EMBEDDINGS_FILE)
+        ctx.assets.open("vocab.txt").use { vocab ->
+            ctx.assets.open("declarations_seed.json").use { seeds ->
+                ctx.assets.open("declaration_bank.json").use { bank ->
+                    initializeFromFiles(modelFile, vocab, indexFile, embeddingsFile, seeds, bank)
+                }
+            }
+        }
+    }
+
+    private fun initializeFromFiles(
+        modelFile: File,
+        vocabStream: InputStream,
+        indexFile: File,
+        embeddingsFile: File,
+        seedJsonStream: InputStream,
+        bankJsonStream: InputStream
+    ) {
+        ready = false
+        ortSession?.close()
+        ortSession = null
+        tokenizer = null
+
+        // Parse small indices directly from the streams so no second JSON-sized String/JSONObject is made.
+        val parsedIndex = readIndex(indexFile)
+        dim = parsedIndex.dim
+        totalRows = parsedIndex.weights.size
+        verses = parsedIndex.verses
+        verseByRef = parsedIndex.verseByRef
+        rowWeights = parsedIndex.weights
+
+        reviewedBank = readReviewedBank(seedJsonStream, bankJsonStream)
         tokenizer = BertTokenizer.loadFromStream(vocabStream)
 
-        // Load index.json
-        val indexJsonStr = indexJsonStream.bufferedReader().use { it.readText() }
-        val root = JSONObject(indexJsonStr)
-        dim = root.optInt("dim", 384)
-        totalRows = root.optInt("total_rows", 0)
+        val mapped = FileChannel.open(embeddingsFile.toPath(), StandardOpenOption.READ).use { channel ->
+            channel.map(FileChannel.MapMode.READ_ONLY, 0L, channel.size())
+        }
+        val requiredBytes = totalRows.toLong() * dim.toLong()
+        if (mapped.capacity().toLong() < requiredBytes) {
+            Timber.e("Embedding map has %d bytes; index requires %d", mapped.capacity(), requiredBytes)
+            return
+        }
+        embMatrix = mapped
 
+        val env = OrtEnvironment.getEnvironment()
+        ortEnv = env
+        val options = OrtSession.SessionOptions()
+        try {
+            options.setIntraOpNumThreads(2)
+            ortSession = env.createSession(modelFile.absolutePath, options)
+        } finally {
+            options.close()
+        }
+
+        // Keep the reviewed bank available for lexical fallback even if ONNX initialization later fails.
+        for (entry in reviewedBank) {
+            entry.embedding = computeEmbedding(entry.phrase)
+        }
+        ready = true
+        retryPendingForeground = false
+        Timber.i("MatchEngine initialized: %d verses, %d embedding rows", verses.size, totalRows)
+    }
+
+    private data class ParsedIndex(
+        val dim: Int,
+        val verses: List<IndexedVerse>,
+        val verseByRef: Map<String, IndexedVerse>,
+        val weights: FloatArray
+    )
+
+    private fun readIndex(indexFile: File): ParsedIndex {
+        val root = org.json.JSONObject(indexFile.readText())
+        val parsedDim = root.optInt("dim", 384)
         val versesArray = root.getJSONArray("verses")
-        val vList = ArrayList<IndexedVerse>(versesArray.length())
-        val vMap = mutableMapOf<String, IndexedVerse>()
+        val parsedVerses = ArrayList<IndexedVerse>(versesArray.length())
+        val parsedByRef = mutableMapOf<String, IndexedVerse>()
         for (i in 0 until versesArray.length()) {
             val obj = versesArray.getJSONObject(i)
             val v = IndexedVerse(
@@ -93,16 +229,14 @@ class MatchEngine private constructor(private val context: Context?) {
                 book = obj.getString("book"),
                 reason = obj.getString("reason")
             )
-            vList.add(v)
-            vMap[v.ref] = v
+            parsedVerses.add(v)
+            parsedByRef[v.ref] = v
             if (v.ref.startsWith("Psalms ")) {
-                vMap["Psalm " + v.ref.removePrefix("Psalms ")] = v
+                parsedByRef["Psalm " + v.ref.removePrefix("Psalms ")] = v
             } else if (v.ref.startsWith("Psalm ")) {
-                vMap["Psalms " + v.ref.removePrefix("Psalm ")] = v
+                parsedByRef["Psalms " + v.ref.removePrefix("Psalm ")] = v
             }
         }
-        verses = vList
-        verseByRef = vMap
 
         val rowsArray = root.getJSONArray("rows")
         val weights = FloatArray(rowsArray.length())
@@ -111,82 +245,90 @@ class MatchEngine private constructor(private val context: Context?) {
             val vId = rObj.getInt("v")
             val w = rObj.getDouble("w").toFloat()
             weights[r] = w
-            if (vId in 0 until vList.size) {
-                vList[vId].rowIndices.add(r)
+            if (vId in parsedVerses.indices) {
+                parsedVerses[vId].rowIndices.add(r)
             }
         }
-        rowWeights = weights
+        return ParsedIndex(parsedDim, parsedVerses, parsedByRef, weights)
+    }
 
-        // Load embeddings_i8.bin
-        embMatrix = embeddingsBinStream.readBytes()
-
-        // Load reviewed bank entries (seeds + bank)
-        val bankList = mutableListOf<ReviewedBankEntry>()
-
-        val seedStr = seedJsonStream.bufferedReader().use { it.readText() }
-        val seedArr = org.json.JSONArray(seedStr)
-        for (i in 0 until seedArr.length()) {
-            val sObj = seedArr.getJSONObject(i)
+    private fun readReviewedBank(seedsStream: InputStream, bankStream: InputStream): List<ReviewedBankEntry> {
+        val entries = mutableListOf<ReviewedBankEntry>()
+        val seedsStr = seedsStream.bufferedReader().use { it.readText() }
+        val seedsArr = org.json.JSONArray(seedsStr)
+        for (i in 0 until seedsArr.length()) {
+            val sObj = seedsArr.getJSONObject(i)
             val decl = sObj.getString("declaration")
             val vArr = sObj.getJSONArray("verses")
-            val refs = mutableListOf<String>()
+            val rList = mutableListOf<String>()
             for (j in 0 until vArr.length()) {
-                refs.add(vArr.getJSONObject(j).getString("ref"))
+                rList.add(vArr.getJSONObject(j).getString("ref"))
             }
-            bankList.add(ReviewedBankEntry(decl, refs, "Matches: $decl"))
+            entries.add(ReviewedBankEntry(decl, rList, "Matches: $decl"))
         }
 
-        val bankStr = bankJsonStream.bufferedReader().use { it.readText() }
+        val bankStr = bankStream.bufferedReader().use { it.readText() }
         val bankArr = org.json.JSONArray(bankStr)
         for (i in 0 until bankArr.length()) {
             val bObj = bankArr.getJSONObject(i)
             val decl = bObj.getString("declaration")
-            val rArr = bObj.optJSONArray("references") ?: org.json.JSONArray()
-            val refs = mutableListOf<String>()
-            for (j in 0 until rArr.length()) {
-                refs.add(rArr.getString(j))
+            val refs = bObj.getJSONArray("references")
+            val rList = mutableListOf<String>()
+            for (j in 0 until refs.length()) {
+                rList.add(refs.getString(j))
             }
-            if (refs.isNotEmpty()) {
-                bankList.add(ReviewedBankEntry(decl, refs, "Matches: $decl"))
-                val aliasArr = bObj.optJSONArray("aliases")
-                if (aliasArr != null) {
-                    val maxAliases = minOf(2, aliasArr.length())
-                    for (k in 0 until maxAliases) {
-                        bankList.add(ReviewedBankEntry(aliasArr.getString(k), refs, "Matches: $decl"))
-                    }
+            val reason = "Matches: $decl"
+            entries.add(ReviewedBankEntry(decl, rList, reason))
+            val aliases = bObj.optJSONArray("aliases")
+            if (aliases != null) {
+                for (k in 0 until aliases.length()) {
+                    entries.add(ReviewedBankEntry(aliases.getString(k), rList, reason))
                 }
             }
         }
-
-        // Precompute reviewed bank embeddings
-        for (entry in bankList) {
-            entry.embedding = computeEmbedding(entry.phrase)
-        }
-        reviewedBank = bankList
-        ready = true
+        return entries
     }
 
-    private fun initializeFromAssets(ctx: Context) {
-        val am = ctx.assets
-        am.open("minilm_l12_quantized.onnx").use { mStream ->
-            am.open("vocab.txt").use { vocStream ->
-                am.open("index.json").use { idxStream ->
-                    am.open("embeddings_i8.bin").use { embStream ->
-                        am.open("declarations_seed.json").use { seedStream ->
-                            am.open("declaration_bank.json").use { bankStream ->
-                                initializeFromStreams(
-                                    mStream,
-                                    vocStream,
-                                    idxStream,
-                                    embStream,
-                                    seedStream,
-                                    bankStream
-                                )
-                            }
-                        }
-                    }
-                }
+    private class MappedBufferInputStream(private val buffer: ByteBuffer) : InputStream() {
+        override fun read(): Int = if (buffer.hasRemaining()) buffer.get().toInt() and 0xFF else -1
+
+        override fun read(bytes: ByteArray, offset: Int, length: Int): Int {
+            if (length == 0) return 0
+            if (!buffer.hasRemaining()) return -1
+            val count = minOf(length, buffer.remaining())
+            buffer.get(bytes, offset, count)
+            return count
+        }
+    }
+    private fun copyAssetIfNeeded(ctx: Context, assetName: String): File {
+        val output = File(ctx.filesDir, assetName)
+        val expectedSize = runCatching { ctx.assets.openFd(assetName).use { it.length } }.getOrNull()
+        if (expectedSize != null && expectedSize >= 0L && output.isFile && output.length() == expectedSize) return output
+        ctx.assets.open(assetName).use { input -> copyStreamToFile(input, output) }
+        return output
+    }
+
+    private fun copyStreamToFile(input: InputStream, output: File) {
+        output.parentFile?.mkdirs()
+        if (output.exists() && output.length() > 0L) {
+            return
+        }
+        val temp = File(output.parentFile ?: output.absoluteFile.parentFile, output.name + ".tmp")
+        FileOutputStream(temp).use { out ->
+            val buffer = ByteArray(COPY_BUFFER_BYTES)
+            while (true) {
+                val count = input.read(buffer)
+                if (count < 0) break
+                out.write(buffer, 0, count)
             }
+            out.fd.sync()
+        }
+        if (output.exists() && !output.delete()) {
+            temp.copyTo(output, overwrite = true)
+            temp.delete()
+        } else if (!temp.renameTo(output)) {
+            temp.copyTo(output, overwrite = true)
+            temp.delete()
         }
     }
 
@@ -196,7 +338,6 @@ class MatchEngine private constructor(private val context: Context?) {
         val env = ortEnv ?: return null
 
         val tokenized = tok.tokenize(text, maxSeqLength = 64)
-        val shape = longArrayOf(1L, tokenized.inputIds.size.toLong())
         val inputIdsTensor = OnnxTensor.createTensor(env, arrayOf(tokenized.inputIds))
         val maskTensor = OnnxTensor.createTensor(env, arrayOf(tokenized.attentionMask))
         val typeIdsTensor = OnnxTensor.createTensor(env, arrayOf(tokenized.tokenTypeIds))
@@ -209,29 +350,28 @@ class MatchEngine private constructor(private val context: Context?) {
 
         return try {
             val outputs = session.run(inputs)
-            @Suppress("UNCHECKED_CAST")
-            val lastHidden = outputs.get(0).value as Array<Array<FloatArray>>
-            val seqLen = tokenized.inputIds.size
-            val pooled = FloatArray(dim)
-            var count = 0f
-            for (i in 0 until seqLen) {
-                if (tokenized.attentionMask[i] == 1L) {
-                    val h = lastHidden[0][i]
-                    for (d in 0 until dim) {
-                        pooled[d] += h[d]
+            try {
+                @Suppress("UNCHECKED_CAST")
+                val lastHidden = outputs.get(0).value as Array<Array<FloatArray>>
+                val seqLen = tokenized.inputIds.size
+                val pooled = FloatArray(dim)
+                var count = 0f
+                for (i in 0 until seqLen) {
+                    if (tokenized.attentionMask[i] == 1L) {
+                        val h = lastHidden[0][i]
+                        for (d in 0 until dim) pooled[d] += h[d]
+                        count += 1f
                     }
-                    count += 1f
                 }
+                if (count > 0f) for (d in 0 until dim) pooled[d] /= count
+                var sumSq = 0f
+                for (d in 0 until dim) sumSq += pooled[d] * pooled[d]
+                val norm = sqrt(sumSq).coerceAtLeast(1e-9f)
+                for (d in 0 until dim) pooled[d] /= norm
+                pooled
+            } finally {
+                outputs.close()
             }
-            if (count > 0f) {
-                for (d in 0 until dim) pooled[d] /= count
-            }
-            var sumSq = 0f
-            for (d in 0 until dim) sumSq += pooled[d] * pooled[d]
-            val norm = sqrt(sumSq).coerceAtLeast(1e-9f)
-            for (d in 0 until dim) pooled[d] /= norm
-            outputs.close()
-            pooled
         } finally {
             inputIdsTensor.close()
             maskTensor.close()
@@ -242,47 +382,33 @@ class MatchEngine private constructor(private val context: Context?) {
     private fun expandQuery(text: String): String {
         val lower = text.lowercase().trim()
         var expanded = text
-        if ("inside" in lower || "within me" in lower || "in me" in lower) {
-            expanded += " in you, indwelling, Christ in you, Spirit within"
-        }
-        if ("can do anything" in lower || "literally do anything" in lower || "can do all things" in lower) {
-            expanded += " all things through Christ"
-        }
-        if ("never stranded" in lower || "not alone" in lower || "never alone" in lower) {
-            expanded += " never leave nor forsake"
-        }
-        if ("safe" in lower || "hiding" in lower || "refuge" in lower) {
-            expanded += " Psalm 91, Colossians 3:3 refuge hiding place"
-        }
+        if ("inside" in lower || "within me" in lower || "in me" in lower) expanded += " in you, indwelling, Christ in you, Spirit within"
+        if ("can do anything" in lower || "literally do anything" in lower || "can do all things" in lower) expanded += " all things through Christ"
+        if ("never stranded" in lower || "not alone" in lower || "never alone" in lower) expanded += " never leave nor forsake"
+        if ("safe" in lower || "hiding" in lower || "refuge" in lower) expanded += " Psalm 91, Colossians 3:3 refuge hiding place"
         return expanded
     }
 
     suspend fun match(text: String, limit: Int = 3): EngineMatchResult = withContext(Dispatchers.Default) {
         val trimmed = text.trim()
-        if (trimmed.isEmpty()) {
-            return@withContext EngineMatchResult(emptyList(), false, "No confident match")
+        if (trimmed.isEmpty()) return@withContext EngineMatchResult(emptyList(), false, "No confident match")
+
+        if (!ready) initialize()
+        val rawEmbedding = try { computeEmbedding(trimmed) } catch (failure: Throwable) {
+            Timber.e(failure, "MatchEngine embedding failed; using lexical fallback")
+            null
+        }
+        val matrix = embMatrix
+        if (!ready || rawEmbedding == null || matrix == null) {
+            return@withContext lexicalFallback(trimmed, limit)
         }
 
-        if (!ready) {
-            initialize()
-        }
-
-        val rawEmb = computeEmbedding(trimmed)
-        if (rawEmb == null || embMatrix == null) {
-            // Fallback to token matcher if ONNX is unavailable
-            val ranked = ScriptureMatcher.match(trimmed, limit = maxOf(limit, 3)).take(limit)
-            val top = ranked.map { VerseMatch(it.verse.reference, ScriptureText.clean(it.verse.text), true, it.score) }
-            val confident = top.firstOrNull()?.score?.let { it >= 0.35f } == true
-            return@withContext EngineMatchResult(top, confident, if (confident) "curated_match" else "No confident match")
-        }
-
-        // Rule 1: Reviewed bank exact or near match (cosine >= 0.80)
         var bestBankScore = -1f
         var bestBankEntry: ReviewedBankEntry? = null
         for (entry in reviewedBank) {
-            val bEmb = entry.embedding ?: continue
+            val bankEmbedding = entry.embedding ?: continue
             var dot = 0f
-            for (d in 0 until dim) dot += rawEmb[d] * bEmb[d]
+            for (d in 0 until dim) dot += rawEmbedding[d] * bankEmbedding[d]
             if (dot > bestBankScore) {
                 bestBankScore = dot
                 bestBankEntry = entry
@@ -290,78 +416,113 @@ class MatchEngine private constructor(private val context: Context?) {
         }
 
         if (bestBankScore >= 0.80f && bestBankEntry != null) {
-            val curatedMatches = mutableListOf<VerseMatch>()
-            val seenBooks = mutableSetOf<String>()
-            for (ref in bestBankEntry.refs) {
-                val v = verseByRef[ref]
-                if (v != null && v.book !in seenBooks) {
-                    curatedMatches.add(VerseMatch(v.ref, ScriptureText.clean(v.text), true, bestBankScore))
-                    seenBooks.add(v.book)
-                    if (curatedMatches.size >= limit) break
-                }
-            }
-            if (curatedMatches.isNotEmpty()) {
-                return@withContext EngineMatchResult(curatedMatches, true, bestBankEntry.reason)
-            }
+            val curatedMatches = matchesForReferences(bestBankEntry.refs, bestBankScore, limit)
+            if (curatedMatches.isNotEmpty()) return@withContext EngineMatchResult(curatedMatches, true, bestBankEntry.reason)
         }
 
-        // Rule 2: Vector embedding search on int8 matrix
         val expandedText = expandQuery(trimmed)
-        val expEmb = if (expandedText == trimmed) rawEmb else (computeEmbedding(expandedText) ?: rawEmb)
-        val matrix = embMatrix ?: return@withContext EngineMatchResult(emptyList(), false, "No confident match")
-
+        val queryEmbedding = if (expandedText == trimmed) rawEmbedding else (computeEmbedding(expandedText) ?: rawEmbedding)
         val rowScores = FloatArray(totalRows)
-        for (r in 0 until totalRows) {
+        for (row in 0 until totalRows) {
             var dot = 0f
-            val offset = r * dim
-            for (d in 0 until dim) {
-                dot += expEmb[d] * (matrix[offset + d] / 127f)
-            }
-            rowScores[r] = dot
+            val offset = row * dim
+            for (d in 0 until dim) dot += queryEmbedding[d] * (matrix.get(offset + d) / 127f)
+            rowScores[row] = dot
         }
 
         val verseScores = ArrayList<Pair<Float, IndexedVerse>>(verses.size)
-        for (v in verses) {
+        for (verse in verses) {
             var best = -1f
-            for (rIdx in v.rowIndices) {
-                val s = rowScores[rIdx] * rowWeights[rIdx]
-                if (s > best) best = s
+            for (rowIndex in verse.rowIndices) {
+                val score = rowScores[rowIndex] * rowWeights[rowIndex]
+                if (score > best) best = score
             }
-            verseScores.add(Pair(best, v))
+            verseScores.add(Pair(best, verse))
         }
         verseScores.sortByDescending { it.first }
 
         val topScore = verseScores.firstOrNull()?.first ?: 0f
-        val confident = topScore >= 0.42f
-        if (!confident || verseScores.isEmpty()) {
+        if (topScore < 0.42f || verseScores.isEmpty()) {
             return@withContext EngineMatchResult(emptyList(), false, "No confident match")
         }
 
-        // Rule 3: Book diversity - at most 1 verse per book in top 3 unless within 0.02
         val results = mutableListOf<VerseMatch>()
         val seenBooks = mutableSetOf<String>()
         val primaryReason = verseScores[0].second.reason
-
-        for ((idx, pair) in verseScores.withIndex()) {
+        for ((index, pair) in verseScores.withIndex()) {
             val score = pair.first
-            val v = pair.second
-            if (idx == 0) {
-                results.add(VerseMatch(v.ref, ScriptureText.clean(v.text), true, score))
-                seenBooks.add(v.book)
+            val verse = pair.second
+            if (index == 0) {
+                results.add(VerseMatch(verse.ref, ScriptureText.clean(verse.text), true, score))
+                seenBooks.add(verse.book)
             } else if (results.size < limit) {
-                if (v.book !in seenBooks) {
-                    results.add(VerseMatch(v.ref, ScriptureText.clean(v.text), true, score))
-                    seenBooks.add(v.book)
+                if (verse.book !in seenBooks) {
+                    results.add(VerseMatch(verse.ref, ScriptureText.clean(verse.text), true, score))
+                    seenBooks.add(verse.book)
                 } else if (results.size == 1 && abs(score - verseScores[0].first) <= 0.02f) {
-                    results.add(VerseMatch(v.ref, ScriptureText.clean(v.text), true, score))
+                    results.add(VerseMatch(verse.ref, ScriptureText.clean(verse.text), true, score))
+                }
+            }
+        }
+        EngineMatchResult(results, true, primaryReason)
+    }
+
+    private fun lexicalFallback(text: String, limit: Int): EngineMatchResult {
+        val queryTokens = ScriptureMatcher.tokens(text)
+        if (queryTokens.isNotEmpty()) {
+            val bestBank = reviewedBank.maxByOrNull { entry ->
+                ScriptureMatcher.cosineSimilarity(queryTokens, ScriptureMatcher.tokens(entry.phrase))
+            }
+            if (bestBank != null) {
+                val score = ScriptureMatcher.cosineSimilarity(queryTokens, ScriptureMatcher.tokens(bestBank.phrase))
+                if (score >= LEXICAL_BANK_THRESHOLD) {
+                    val bankMatches = matchesForReferences(bestBank.refs, score, limit)
+                    if (bankMatches.isNotEmpty()) return EngineMatchResult(bankMatches, true, bestBank.reason)
                 }
             }
         }
 
-        EngineMatchResult(results, true, primaryReason)
+        val ranked = ScriptureMatcher.match(text, limit = maxOf(limit, 3)).take(limit)
+        val matches = ranked.map { result ->
+            VerseMatch(result.verse.reference, ScriptureText.clean(result.verse.text), true, result.score)
+        }
+        val confident = matches.firstOrNull()?.score?.let { it >= 0.35f } == true
+        return EngineMatchResult(matches, confident, if (confident) "curated_match" else "No confident match")
+    }
+
+    private fun matchesForReferences(refs: List<String>, score: Float, limit: Int): List<VerseMatch> {
+        val matches = mutableListOf<VerseMatch>()
+        val seenBooks = mutableSetOf<String>()
+        for (ref in refs) {
+            val indexedVerse = verseByRef[ref]
+            val text = indexedVerse?.text
+                ?: DeclarableIndex.verses.firstOrNull { it.reference.equals(ref, ignoreCase = true) }?.text
+                ?: ScriptureDatabase.verses.firstOrNull { it.reference.equals(ref, ignoreCase = true) }?.text
+            val book = indexedVerse?.book
+                ?: ref.substringBeforeLast(' ')
+            if (text != null && seenBooks.add(book)) {
+                matches.add(VerseMatch(ref, ScriptureText.clean(text), true, score))
+                if (matches.size >= limit) break
+            }
+        }
+        return matches
+    }
+
+    private fun handleInitializationFailure(failure: Throwable, scheduleForegroundRetry: Boolean) {
+        ready = false
+        try { ortSession?.close() } catch (_: Throwable) { }
+        ortSession = null
+        retryPendingForeground = scheduleForegroundRetry && !foregroundRetryUsed
+        Timber.e(failure, "MatchEngine initialization failed; Declare will use reviewed and lexical matching")
     }
 
     companion object {
+        private const val MODEL_FILE = "minilm_l12_quantized.onnx"
+        private const val EMBEDDINGS_FILE = "embeddings_i8.bin"
+        private const val INDEX_FILE = "index.json"
+        private const val COPY_BUFFER_BYTES = 8 * 1024
+        private const val LEXICAL_BANK_THRESHOLD = 0.72f
+
         @Volatile private var instance: MatchEngine? = null
 
         fun getInstance(context: Context): MatchEngine =
@@ -370,5 +531,9 @@ class MatchEngine private constructor(private val context: Context?) {
             }
 
         fun createStandalone(): MatchEngine = MatchEngine(null)
+
+        suspend fun retryPendingInstanceOnForeground() {
+            instance?.retryAfterForeground()
+        }
     }
 }

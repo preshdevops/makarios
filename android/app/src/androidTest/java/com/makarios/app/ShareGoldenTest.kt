@@ -1,4 +1,4 @@
-﻿package com.makarios.app
+package com.makarios.app
 
 import android.graphics.BitmapFactory
 import androidx.test.platform.app.InstrumentationRegistry

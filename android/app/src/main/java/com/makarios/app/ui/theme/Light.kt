@@ -1,4 +1,4 @@
-package com.makarios.app.ui.theme
+﻿package com.makarios.app.ui.theme
 
 import androidx.compose.ui.graphics.Color
 import java.time.Clock
@@ -17,6 +17,15 @@ enum class Light(
     Dusk(true,Color(0xFF8F4B3A),Color(0xFF43292B),Cream,.88f,Color(0x38190A0F),Color(0x5C190A0F),Color(0xFFF4B98E),Color(0xFFF4B98E),.72f,.70f,30f,.95f),
     Grove(true,Color(0xFF3F5A37),Color(0xFF223019),Cream,.88f,Color(0x33081006),Color(0x57081006),Color(0xFFE8F0D0),Color(0xFFE8F0D0),.74f,.60f,22f,.90f),
     Night(true,Color(0xFF1F2B2A),Color(0xFF0F1716),Cream,.88f,Color(0x33000000),Color(0x52000000),Color(0xFFF3E6C8),Color(0xFFF3E6C8),.76f,.62f,20f,.92f);
+    val paper get()=top
+    val accent get()=theme().accent
+    val textMuted get()=theme().textMuted
+    val onAccent get()=theme().onAccent
+    val surfaceTint get()=theme().surface
+    val line get()=theme().line
+    val scrim get()=theme().scrim
+    val highlight get()=ridge2.copy(alpha=0.30f)
+    val secondary get()=text.copy(alpha=secondaryAlpha)
     val isLight get()=!dark
     val isDark get()=dark
     val anchorRule get()=if(dark) AnchorDark else AnchorLight
@@ -28,3 +37,4 @@ enum class Light(
     }
 }
 fun getCurrentLightForTime()=Light.forNow()
+

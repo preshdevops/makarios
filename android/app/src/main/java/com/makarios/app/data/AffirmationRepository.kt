@@ -1,4 +1,4 @@
-package com.makarios.app.data
+﻿package com.makarios.app.data
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -13,7 +13,7 @@ data class MoodCategory(
 
 object AffirmationRepository {
 
-    // ── Mood categories with atmospheric sacred photography ───────
+    // â”€â”€ Mood categories with atmospheric sacred photography â”€â”€â”€â”€â”€â”€â”€
     val moodCategories = listOf(
         MoodCategory(
             name = "Peace",
@@ -57,7 +57,7 @@ object AffirmationRepository {
         )
     )
 
-    // ── Curated Affirmations with Evocative Photography ───────────
+    // â”€â”€ Curated Affirmations with Evocative Photography â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     val affirmationOfTheDay = Affirmation(
         id = "aotd-1",
         declaration = "I am fully known, deeply loved, and precisely placed for this moment.",
@@ -226,58 +226,14 @@ object AffirmationRepository {
         disciplineAffirmation
     )
 
-    // Reactive saved IDs (empty by default; Room is the source of truth)
-    val savedAffirmationIds = mutableStateListOf<String>()
-
-    // Personal user-authored declarations (empty by default; Room is the source of truth)
-    val personalAffirmations = mutableStateListOf<Affirmation>()
-
-    fun addPersonalAffirmation(affirmation: Affirmation) {
-        val existingIndex = personalAffirmations.indexOfFirst { it.id == affirmation.id }
-        if (existingIndex >= 0) {
-            personalAffirmations[existingIndex] = affirmation
-        } else {
-            personalAffirmations.add(0, affirmation)
-        }
-        if (!savedAffirmationIds.contains(affirmation.id)) {
-            savedAffirmationIds.add(affirmation.id)
-        }
-    }
-
+    // Built-in content is immutable. User declarations and kept ids live in Room.
     val activeWidgetAffirmation: Affirmation get() = widgetAffirmation
 
-    fun isSaved(id: String): Boolean = savedAffirmationIds.contains(id)
+    fun getById(id: String): Affirmation? = allAffirmations.firstOrNull { it.id == id }
 
-    fun save(id: String) {
-        if (!savedAffirmationIds.contains(id)) {
-            savedAffirmationIds.add(id)
-        }
-    }
-
-    fun unsave(id: String) {
-        savedAffirmationIds.remove(id)
-    }
-
-    fun toggleSave(id: String) {
-        if (savedAffirmationIds.contains(id)) {
-            savedAffirmationIds.remove(id)
-        } else {
-            savedAffirmationIds.add(id)
-        }
-    }
-
-    fun getSaved(): List<Affirmation> = (personalAffirmations + allAffirmations).filter { savedAffirmationIds.contains(it.id) }
-
-    fun getFavorites(): List<Affirmation> = (personalAffirmations + allAffirmations).filter { it.isFavorite || savedAffirmationIds.contains(it.id) }
-
-    fun getById(id: String): Affirmation =
-        personalAffirmations.find { it.id == id }
-            ?: allAffirmations.find { it.id == id }
-            ?: fullscreenAffirmation
-
-    fun getAll(): List<Affirmation> = personalAffirmations + allAffirmations
-
+    fun getAll(): List<Affirmation> = allAffirmations
     val featuredAffirmation: Affirmation get() = affirmationOfTheDay
     val curatedAffirmations: List<Affirmation> get() = getAll()
 }
+
 

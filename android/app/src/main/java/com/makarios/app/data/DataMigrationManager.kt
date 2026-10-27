@@ -5,6 +5,10 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 import com.makarios.app.ui.wallpaper.ShareSettings
 import com.makarios.app.util.ReminderManager
+import com.makarios.app.data.local.KeptEntity
+import com.makarios.app.data.local.KeptRepository
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import com.makarios.app.widget.WidgetStore
 import kotlinx.coroutines.tasks.await
 
@@ -51,7 +55,7 @@ object DataMigrationManager {
         onProgress: (Float, String) -> Unit = { _, _ -> }
     ): Result<Unit> {
         return try {
-            val firestore = FirebaseFirestore.getInstance()
+                        val firestore = FirebaseFirestore.getInstance()
             val userDoc = firestore.collection("users").document(uid)
 
             onProgress(0.15f, "Connecting to your cloud library...")
@@ -60,6 +64,8 @@ object DataMigrationManager {
             val keptCol = userDoc.collection("kept")
             val settingsDoc = userDoc.collection("settings").document("preferences")
 
+
+            val now = System.currentTimeMillis()
             // 1. Fetch remote declarations to handle merging
             onProgress(0.30f, "Checking cloud declarations...")
             val remoteDeclSnap = declarationsCol.get().await()
@@ -70,8 +76,9 @@ object DataMigrationManager {
 
             // Sync remote declarations down to local repository if missing
             for ((id, data) in remoteDeclMap) {
-                val existsLocally = AffirmationRepository.personalAffirmations.any { it.id == id }
-                if (!existsLocally) {
+                val existsLocally = KeptRepository.getById(id)
+                val remoteUpdatedAt = (data["updatedAt"] as? Number)?.toLong() ?: 0L
+                if (existsLocally == null || remoteUpdatedAt > existsLocally.updatedAt) {
                     val declText = data["declaration"] as? String ?: ""
                     val scriptText = data["scriptureText"] as? String ?: ""
                     val ref = data["reference"] as? String ?: ""
@@ -93,60 +100,74 @@ object DataMigrationManager {
                         isFavorite = true,
                         personalDeclaration = personalDecl
                     )
-                    AffirmationRepository.addPersonalAffirmation(item)
+                    KeptRepository.applyRemote(KeptEntity(id, item.declaration, item.scriptureText, item.reference, data["lightName"] as? String ?: "Dawn", data["styleId"] as? String ?: "", createdAt = (data["createdAt"] as? Number)?.toLong() ?: now, isFavorite = data["isFavorite"] as? Boolean ?: true, updatedAt = (data["updatedAt"] as? Number)?.toLong() ?: now, deletedAt = (data["deletedAt"] as? Number)?.toLong(), sourceType = "authored", visibility = data["visibility"] as? String ?: "PRIVATE", publicId = data["publicId"] as? String, syncState = "SYNCED"))
                 }
             }
 
             // 2. Upload local personal declarations to Firestore
             onProgress(0.55f, "Backing up personal declarations...")
-            val now = System.currentTimeMillis()
-            val localDeclarations = AffirmationRepository.personalAffirmations.toList()
+            val localDeclarations = KeptRepository.getMineFlow().firstOrNull() ?: emptyList()
             for (decl in localDeclarations) {
                 val remoteData = remoteDeclMap[decl.id]
                 val remoteTimestamp = (remoteData?.get("updatedAt") as? Number)?.toLong() ?: 0L
 
                 // If local is newer or not yet remote, upload
-                if (now >= remoteTimestamp) {
+                if (decl.updatedAt >= remoteTimestamp) {
                     val payload = hashMapOf(
                         "id" to decl.id,
                         "declaration" to decl.declaration,
-                        "shortText" to decl.shortText,
-                        "scriptureText" to decl.scriptureText,
+                        
+                        "scriptureText" to decl.verseText,
                         "reference" to decl.reference,
-                        "context" to decl.context,
-                        "category" to decl.category,
-                        "tone" to decl.tone.name,
-                        "personalDeclaration" to decl.personalDeclaration,
-                        "updatedAt" to now
+                        
+                        
+                        
+                        
+                        "updatedAt" to decl.updatedAt
                     )
                     declarationsCol.document(decl.id).set(payload, SetOptions.merge()).await()
                 }
             }
 
             // 3. Kept items migration
-            onProgress(0.75f, "Syncing kept affirmations...")
+            onProgress(0.75f, "Syncing saved declarations...")
             val remoteKeptSnap = keptCol.get().await()
             val remoteKeptIds = remoteKeptSnap.documents.map { it.id }.toSet()
+            val localKept = KeptRepository.getAllIncludingDeleted()
 
-            // Merge remote kept into local
-            for (remoteId in remoteKeptIds) {
-                if (!AffirmationRepository.savedAffirmationIds.contains(remoteId)) {
-                    AffirmationRepository.savedAffirmationIds.add(remoteId)
+            val localIds = localKept.map { it.id }.toSet()
+            for (row in localKept) {
+                val remoteData = remoteKeptSnap.documents.firstOrNull { it.id == row.id }?.data.orEmpty()
+                val remoteTimestamp = (remoteData["updatedAt"] as? Number)?.toLong() ?: 0L
+                if (row.updatedAt >= remoteTimestamp) {
+                    keptCol.document(row.id).set(mapOf("id" to row.id, "declaration" to row.declaration, "shortText" to row.declaration.take(200), "scriptureText" to row.verseText, "reference" to row.reference, "isFavorite" to row.isFavorite, "kept" to true, "createdAt" to row.createdAt, "updatedAt" to row.updatedAt, "userId" to uid, "lightName" to row.lightName, "styleId" to row.styleId, "deletedAt" to row.deletedAt, "syncState" to "PENDING", "visibility" to row.visibility, "publicId" to row.publicId, "sourceType" to row.sourceType, "inWidget" to row.inWidget, "inReminders" to row.inReminders), SetOptions.merge()).await()
                 }
             }
-
-            // Upload local kept items that aren't on remote
-            for (savedId in AffirmationRepository.savedAffirmationIds) {
-                if (!remoteKeptIds.contains(savedId)) {
-                    val keptPayload = hashMapOf(
-                        "affirmationId" to savedId,
-                        "savedAt" to now
-                    )
-                    keptCol.document(savedId).set(keptPayload, SetOptions.merge()).await()
+            for (doc in remoteKeptSnap.documents) {
+                val data = doc.data.orEmpty()
+                val remoteUpdatedAt = (data["updatedAt"] as? Number)?.toLong() ?: 0L
+                val local = KeptRepository.getById(doc.id)
+                if (local == null || remoteUpdatedAt > local.updatedAt) {
+                    KeptRepository.applyRemote(KeptEntity(
+                        id = doc.id,
+                        declaration = data["declaration"] as? String ?: "",
+                        verseText = data["scriptureText"] as? String ?: "",
+                        reference = data["reference"] as? String ?: "",
+                        lightName = data["lightName"] as? String ?: "Dawn",
+                        styleId = data["styleId"] as? String ?: "",
+                        createdAt = (data["createdAt"] as? Number)?.toLong() ?: now,
+                        isFavorite = data["isFavorite"] as? Boolean ?: false,
+                        sourceType = data["sourceType"] as? String ?: "curated",
+                        inWidget = data["inWidget"] as? Boolean ?: false,
+                        inReminders = data["inReminders"] as? Boolean ?: false,
+                        updatedAt = remoteUpdatedAt,
+                        deletedAt = (data["deletedAt"] as? Number)?.toLong(),
+                        visibility = data["visibility"] as? String ?: "PRIVATE",
+                        publicId = data["publicId"] as? String,
+                        syncState = "SYNCED"
+                    ))
                 }
-            }
-
-            // 4. Preferences migration
+            }            // 4. Preferences migration
             onProgress(0.90f, "Saving preferences...")
             val topics = OnboardingStore.getSelectedTopics(context).toList()
             val wordmark = ShareSettings.isWordmarkEnabled(context)
@@ -175,3 +196,8 @@ object DataMigrationManager {
         }
     }
 }
+
+
+
+
+

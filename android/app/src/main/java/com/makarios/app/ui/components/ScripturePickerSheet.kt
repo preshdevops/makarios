@@ -1,4 +1,4 @@
-package com.makarios.app.ui.components
+﻿package com.makarios.app.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.makarios.app.ui.theme.Ink
 import com.makarios.app.ui.theme.Light
+import com.makarios.app.ui.theme.LocalLight
 import com.makarios.app.ui.theme.MakariosTypography
 import com.makarios.app.ui.theme.lightBackground
 import java.util.Calendar
@@ -39,12 +40,8 @@ fun BibleReaderSheet(
     bookAndChapter: String = "Genesis 1",
     translation: String = "WEB"
 ) {
-    var selectedLight by remember {
-        val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
-        mutableStateOf(if (hour in 6..18) Light.Midday else Light.Night)
-    }
-    
-    var selectedVerses by remember { mutableStateOf(setOf<Int>()) }
+    val selectedLight = LocalLight.current
+        var selectedVerses by remember { mutableStateOf(setOf<Int>()) }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -65,7 +62,7 @@ fun BibleReaderSheet(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "$bookAndChapter • $translation",
+                        text = "$bookAndChapter â€¢ $translation",
                         style = MakariosTypography.displaySmall,
                         color = selectedLight.text
                     )
@@ -139,3 +136,4 @@ fun BibleReaderSheet(
         }
     }
 }
+

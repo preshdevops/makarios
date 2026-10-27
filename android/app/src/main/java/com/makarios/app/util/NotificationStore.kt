@@ -1,10 +1,11 @@
-package com.makarios.app.util
+﻿package com.makarios.app.util
 
 import android.content.Context
 import java.time.DayOfWeek
 import java.time.LocalDate
 
 object NotificationStore {
+    enum class SoundChoice { CHIME, SOFT, SILENT }
     const val PREFS = "makarios_notifications"
     private const val MORNING_ENABLED = "morning_enabled"
     private const val MORNING_HOUR = "morning_hour"
@@ -30,7 +31,18 @@ object NotificationStore {
     fun streakEnabled(c: Context) = p(c).getBoolean(STREAK_ENABLED, false)
     fun setStreakEnabled(c: Context, v: Boolean) = p(c).edit().putBoolean(STREAK_ENABLED, v).apply()
     fun silent(c: Context) = p(c).getBoolean(SILENT, true)
-    fun setSilent(c: Context, v: Boolean) = p(c).edit().putBoolean(SILENT, v).apply()
+    fun soundChoice(c: Context): SoundChoice = runCatching {
+        val prefs = p(c)
+        val stored = prefs.getString("sound_choice", null)
+        val choice = stored ?: if (prefs.contains(SILENT)) {
+            if (prefs.getBoolean(SILENT, false)) "SILENT" else "CHIME"
+        } else "CHIME"
+        SoundChoice.valueOf(choice)
+    }.getOrDefault(SoundChoice.CHIME)    fun setSoundChoice(c: Context, choice: SoundChoice) = p(c).edit()
+        .putString("sound_choice", choice.name)
+        .putBoolean(SILENT, choice == SoundChoice.SILENT)
+        .apply()
+    fun setSilent(c: Context, v: Boolean) = setSoundChoice(c, if (v) SoundChoice.SILENT else SoundChoice.CHIME)
     fun weekdays(c: Context): Set<DayOfWeek> = p(c).getStringSet(DAYS, DayOfWeek.values().map { it.value.toString() }.toSet()).orEmpty().mapNotNull { it.toIntOrNull()?.let(DayOfWeek::of) }.toSet()
     fun setWeekdays(c: Context, days: Set<DayOfWeek>) = p(c).edit().putStringSet(DAYS, days.map { it.value.toString() }.toSet()).apply()
     fun markAsked(c: Context) = p(c).edit().putInt(PERMISSION_ASKS, permissionAsks(c) + 1).putBoolean(ASK_SHOWN, true).apply()
@@ -39,3 +51,6 @@ object NotificationStore {
     fun addHistory(c: Context, id: String, date: LocalDate = LocalDate.now()) { val old = p(c).getStringSet(HISTORY, emptySet()).orEmpty().toMutableSet(); old.removeAll { it.substringAfter('|', "") < date.minusDays(14).toString() }; old.add("$id|$date"); p(c).edit().putStringSet(HISTORY, old).apply() }
     fun recentIds(c: Context, date: LocalDate = LocalDate.now()): Set<String> = p(c).getStringSet(HISTORY, emptySet()).orEmpty().filter { it.substringAfter('|', "") >= date.minusDays(14).toString() }.map { it.substringBefore('|') }.toSet()
 }
+
+
+

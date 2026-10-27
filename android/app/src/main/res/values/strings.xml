@@ -2,5 +2,5 @@
     <string name="app_name">Makarios</string>
     <string name="widget_name">Everyday Presence</string>
     <string name="widget_description">Daily biblical declarations on your home screen.</string>
-    <string name="google_web_client_id" translatable="false"></string>
+    <string name="google_web_client_id" translatable="false">10687276915-3m2l9utkihjc6okfpbomh4cqmv4ngov0.apps.googleusercontent.com</string>
 </resources>

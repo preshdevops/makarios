@@ -47,6 +47,16 @@ object WidgetBitmapRenderer {
             h = (h * scale).toInt()
         }
 
+        // 0. Check disk cache first to keep memory footprint light
+        val cacheDir = java.io.File(context.cacheDir, "widget_cache").apply { mkdirs() }
+        val safeId = affirmation.id.replace(Regex("[^a-zA-Z0-9_-]"), "_")
+        val cacheFile = java.io.File(cacheDir, "${safeId}_${light.name}_${w}x${h}_${layoutType.name}.png")
+
+        if (cacheFile.exists() && cacheFile.length() > 0) {
+            val cached = BitmapFactory.decodeFile(cacheFile.absolutePath)
+            if (cached != null) return cached
+        }
+
         val bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
 
@@ -61,6 +71,13 @@ object WidgetBitmapRenderer {
             WidgetLayoutType.SMALL_2X2 -> drawSmall2x2(canvas, w.toFloat(), h.toFloat(), affirmation, light, density)
             WidgetLayoutType.PAIRING_4X2 -> drawPairing4x2(canvas, w.toFloat(), h.toFloat(), affirmation, light, density)
             WidgetLayoutType.SCENE_4X4 -> drawScene4x4(canvas, w.toFloat(), h.toFloat(), affirmation, light, density)
+        }
+
+        // Persist to disk cache
+        runCatching {
+            java.io.FileOutputStream(cacheFile).use { out ->
+                bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
+            }
         }
 
         return bitmap
@@ -93,16 +110,16 @@ object WidgetBitmapRenderer {
         }
 
         // Tactile paper grain
-        val rng = Random(0x4D414B)
-        val grainPaint = Paint().apply {
-            color = if (light.isLight) Color.BLACK else Color.WHITE
-            alpha = (255 * 0.04f).toInt()
-            style = Paint.Style.FILL
-        }
-        for (i in 0 until (w * h * 0.0006f).toInt()) {
-            val gx = rng.nextFloat() * w
-            val gy = rng.nextFloat() * h
-            canvas.drawPoint(gx, gy, grainPaint)
+        if (com.makarios.app.util.PerformanceTier.grainEnabled) {
+            val grainPaint = Paint().apply {
+                shader = BitmapShader(
+                    com.makarios.app.util.GrainTileProvider.androidBitmap,
+                    Shader.TileMode.REPEAT,
+                    Shader.TileMode.REPEAT
+                )
+                alpha = (255 * 0.04f).toInt()
+            }
+            canvas.drawRect(0f, 0f, w, h, grainPaint)
         }
     }
 
@@ -120,8 +137,8 @@ object WidgetBitmapRenderer {
         val textColor = light.text.toArgb()
         val secColor = light.text.copy(alpha = light.secondaryAlpha).toArgb()
 
-        // Sacred Doorway Arch Mark on Left
-        val markSize = min(h * 0.55f, 28f * density)
+        // Art (sacred mark) on the left at fixed 56dp (capped only by widget height), text on the right, never overlapping
+        val markSize = min(56f * density, h * 0.55f)
         drawSacredMark(canvas, padX, h * 0.5f - markSize * 0.5f, markSize, light)
 
         val contentLeft = padX + markSize + 12f * density
@@ -132,7 +149,7 @@ object WidgetBitmapRenderer {
         val sans = StyleTypefaces.getHankenGrotesk() ?: Typeface.SANS_SERIF
 
         // Text layout with auto step down in 2% increments
-        val declText = aff.shortText.ifEmpty { aff.declaration }
+        val declText = com.makarios.app.data.widgetTextFor(aff.declaration, aff.shortText)
         val declLayout = autoStepDownLayout(
             text = declText,
             typeface = serif,
@@ -154,7 +171,7 @@ object WidgetBitmapRenderer {
         val textTop = (h - (declLayout.height + 14f * density)) * 0.5f
         canvas.translate(contentLeft, textTop.coerceAtLeast(padY))
         declLayout.draw(canvas)
-        canvas.drawText(aff.reference, 0f, declLayout.height + 12f * density, refPaint)
+        canvas.drawText(aff.reference.uppercase(), 0f, declLayout.height + 12f * density, refPaint)
         canvas.restore()
     }
 
@@ -178,7 +195,7 @@ object WidgetBitmapRenderer {
         val serif = StyleTypefaces.getNewsreader() ?: Typeface.SERIF
         val sans = StyleTypefaces.getHankenGrotesk() ?: Typeface.SANS_SERIF
 
-        val declText = aff.shortText.take(45)
+        val declText = com.makarios.app.data.widgetTextFor(aff.declaration, aff.shortText)
         val availableWidth = w - pad * 2
         val availableHeight = h * 0.48f
 
@@ -240,7 +257,7 @@ object WidgetBitmapRenderer {
 
         // Declaration
         val declLayout = autoStepDownLayout(
-            text = aff.declaration,
+            text = com.makarios.app.data.widgetTextFor(aff.declaration, aff.shortText),
             typeface = serif,
             color = textColor,
             maxWidth = availableWidth,

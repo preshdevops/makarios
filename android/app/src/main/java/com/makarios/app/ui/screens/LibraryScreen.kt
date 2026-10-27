@@ -1,4 +1,6 @@
 package com.makarios.app.ui.screens
+import com.makarios.app.ui.components.MakChip
+import com.makarios.app.ui.components.MakSurface
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -39,7 +41,13 @@ import com.makarios.app.data.bible.BibleRepository
 import com.makarios.app.data.bible.BibleVerse
 import com.makarios.app.data.bible.ParsedReference
 import com.makarios.app.ui.theme.*
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import androidx.compose.runtime.snapshotFlow
+import com.makarios.app.data.MatchEngine
 
 @Composable
 fun ExploreScreen(
@@ -50,14 +58,12 @@ fun ExploreScreen(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    var query by remember { mutableStateOf("") }
+    val queryState = remember { mutableStateOf("") }
+    var activeQuery by remember { mutableStateOf("") }
     var selectedGroupChip by remember { mutableStateOf("All") }
 
-    SystemBarsController(Light.Dawn)
-
-    LaunchedEffect(Unit) {
-        BibleRepository.initialize(context)
-    }
+    val appLight = LocalLight.current
+    // (LightScreen below publishes this Light to the bottom bar)
 
     // 3-in-1 Debounced Search States
     var parsedRef by remember { mutableStateOf<ParsedReference?>(null) }
@@ -66,33 +72,46 @@ fun ExploreScreen(
     var topicMatches by remember { mutableStateOf<List<TopicMeta>>(emptyList()) }
     var isSearching by remember { mutableStateOf(false) }
 
-    LaunchedEffect(query) {
-        val trimmed = query.trim()
-        if (trimmed.isBlank()) {
-            parsedRef = null
-            verseMatches = emptyList()
-            declarationMatches = emptyList()
-            topicMatches = emptyList()
+    LaunchedEffect(Unit) {
+        launch(Dispatchers.Default) {
+            MatchEngine.getInstance(context).initialize()
+        }
+        snapshotFlow { queryState.value }.collectLatest { rawQuery ->
+            delay(200)
+            activeQuery = rawQuery
+            val trimmed = rawQuery.trim()
+            if (trimmed.isBlank()) {
+                parsedRef = null
+                verseMatches = emptyList()
+                declarationMatches = emptyList()
+                topicMatches = emptyList()
+                isSearching = false
+                return@collectLatest
+            }
+            isSearching = true
+            val localMatches = withContext(Dispatchers.Default) {
+                Triple(
+                    BibleReferenceParser.parse(trimmed),
+                    CuratedTopicRepository.TOPIC_METAS.filter {
+                        it.name.contains(trimmed, ignoreCase = true) || it.tagline.contains(trimmed, ignoreCase = true)
+                    },
+                    CuratedTopicRepository.searchDeclarations(trimmed)
+                )
+            }
+            parsedRef = localMatches.first
+            topicMatches = localMatches.second
+            declarationMatches = localMatches.third
+            verseMatches = withContext(Dispatchers.IO) {
+                BibleRepository.initialize(context)
+                BibleRepository.searchVerses(trimmed, limit = 25).getOrElse { emptyList() }
+            }
             isSearching = false
-            return@LaunchedEffect
         }
-        delay(200) // 200 ms debounce off main thread
-        isSearching = true
-
-        parsedRef = BibleReferenceParser.parse(trimmed)
-        topicMatches = CuratedTopicRepository.TOPIC_METAS.filter {
-            it.name.contains(trimmed, ignoreCase = true) || it.tagline.contains(trimmed, ignoreCase = true)
-        }
-        declarationMatches = CuratedTopicRepository.searchDeclarations(trimmed)
-        verseMatches = BibleRepository.searchVerses(context, trimmed, limit = 25)
-
-        isSearching = false
     }
-
+    com.makarios.app.ui.components.LightScreen(appLight, "Explore", modifier) {
     Column(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFFBF9F5))
             .statusBarsPadding()
     ) {
         // Top App Bar
@@ -103,59 +122,66 @@ fun ExploreScreen(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("Explore", style = MakariosTypography.displayLarge, color = Ink)
-            IconButton(onClick = onNavigateToBiblePicker) {
-                Icon(Icons.Outlined.MenuBook, "Open Bible reader", tint = Ink)
-            }
+            Text("Explore", style = MakariosTypography.displayLarge, color = appLight.text)
         }
 
-        // Search Field
-        Row(
-            modifier = Modifier
-                .padding(horizontal = 24.dp)
-                .fillMaxWidth()
-                .height(56.dp)
-                .clip(RoundedCornerShape(16.dp))
-                .background(Ink.copy(alpha = 0.07f))
-                .padding(horizontal = 16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(Icons.Default.Search, "Search library", tint = Ink.copy(alpha = 0.6f))
-            Spacer(Modifier.width(12.dp))
-            BasicTextField(
-                value = query,
-                onValueChange = { query = it },
-                modifier = Modifier.weight(1f),
-                singleLine = true,
-                textStyle = MakariosTypography.bodyMedium.copy(color = Ink),
-                decorationBox = { field ->
-                    if (query.isEmpty()) {
-                        Text("Search verses and declarations", color = Ink.copy(alpha = 0.5f))
-                    }
-                    field()
-                }
-            )
-            if (query.isNotEmpty()) {
-                IconButton(onClick = { query = "" }, modifier = Modifier.size(24.dp)) {
-                    Icon(Icons.Default.Close, "Clear", tint = Ink.copy(alpha = 0.5f))
-                }
-            }
-        }
-
+        ExploreSearchField(queryState)
         Spacer(Modifier.height(16.dp))
 
-        if (query.isBlank()) {
-            val votd = remember { com.makarios.app.data.bible.VerseOfTheDayStore.getTodayVerse(context) }
+        if (activeQuery.isBlank()) {
+            var votd by remember { mutableStateOf(com.makarios.app.data.bible.VerseOfTheDayStore.fallbackVerse()) }
+            LaunchedEffect(Unit) { votd = com.makarios.app.data.bible.VerseOfTheDayStore.loadTodayVerse(context) }
             // EXPLORE HOME VIEW
             LazyColumn(
                 contentPadding = PaddingValues(start = 24.dp, end = 24.dp, bottom = 100.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                // 1. Verse of the Day Strip
-                item {
-                    Card(
+                // 0. Read the Bible Card
+                item(key = "explore-read-bible-card") {
+                    MakSurface(
                         shape = RoundedCornerShape(20.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF4E4)),
+                        colors = CardDefaults.cardColors(containerColor = Cream),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                onNavigateToBiblePicker()
+                            }
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(18.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Column(Modifier.weight(1f)) {
+                                Text(
+                                    text = "Read the Bible",
+                                    style = MakariosTypography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                    color = Ink
+                                )
+                                Spacer(Modifier.height(4.dp))
+                                Text(
+                                    text = "Read any chapter, verse by verse, across translations.",
+                                    style = MakariosTypography.bodySmall,
+                                    color = Ink.copy(alpha = 0.70f)
+                                )
+                            }
+                            Spacer(Modifier.width(12.dp))
+                            Icon(
+                                imageVector = Icons.Outlined.MenuBook,
+                                contentDescription = "Read the Bible",
+                                tint = Ink
+                            )
+                        }
+                    }
+                }
+
+                // 1. Verse of the Day Strip
+                item(key = "explore-votd") {
+                    MakSurface(
+                        shape = RoundedCornerShape(20.dp),
+                        colors = CardDefaults.cardColors(containerColor = Cream),
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable {
@@ -172,20 +198,20 @@ fun ExploreScreen(
                                     Icon(
                                         imageVector = Icons.Outlined.AutoAwesome,
                                         contentDescription = null,
-                                        tint = Color(0xFFB5532B),
+                                        tint = MakError,
                                         modifier = Modifier.size(16.dp)
                                     )
                                     Spacer(Modifier.width(6.dp))
                                     Text(
                                         text = "VERSE OF THE DAY",
                                         style = MakariosTypography.labelSmall.copy(letterSpacing = 1.2.sp),
-                                        color = Color(0xFF8A5A14)
+                                        color = AnchorLight
                                     )
                                 }
                                 Text(
                                     text = "Read chapter",
                                     style = MakariosTypography.labelSmall,
-                                    color = Color(0xFF8A5A14)
+                                    color = AnchorLight
                                 )
                             }
                             Spacer(Modifier.height(8.dp))
@@ -198,14 +224,14 @@ fun ExploreScreen(
                             Text(
                                 text = votd.reference,
                                 style = MakariosTypography.labelMedium,
-                                color = Color(0xFFB5532B)
+                                color = MakError
                             )
                         }
                     }
                 }
 
                 // 2. 7 Topic Bands (Light scenes)
-                items(CuratedTopicRepository.TOPIC_METAS, key = { it.name }) { topic ->
+                items(CuratedTopicRepository.TOPIC_METAS.distinctBy { it.name }, key = { "explore-topic-${it.name}" }) { topic ->
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -223,64 +249,10 @@ fun ExploreScreen(
                         }
                         Text(
                             topic.tagline,
-                            color = topic.light.text.copy(alpha = 0.9f),
-                            style = MakariosTypography.bodyLarge.copy(fontStyle = FontStyle.Italic),
-                            modifier = Modifier.align(Alignment.BottomStart)
+                            color = topic.light.text,
+                            style = MakariosTypography.bodyMedium,
+                            modifier = Modifier.align(Alignment.BottomStart).background(topic.light.scrim, RoundedCornerShape(8.dp)).padding(horizontal = 8.dp, vertical = 4.dp)
                         )
-                    }
-                }
-
-                // 3. "Read the Bible" Band
-                item {
-                    Card(
-                        shape = RoundedCornerShape(20.dp),
-                        colors = CardDefaults.cardColors(containerColor = Ink),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(88.dp)
-                            .clickable { onNavigateToBiblePicker() }
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(horizontal = 20.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(44.dp)
-                                        .clip(CircleShape)
-                                        .background(Color(0xFFFFF4E4).copy(alpha = 0.12f)),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Outlined.MenuBook,
-                                        contentDescription = null,
-                                        tint = Color(0xFFFFF4E4)
-                                    )
-                                }
-                                Spacer(Modifier.width(14.dp))
-                                Column {
-                                    Text(
-                                        text = "Read the Bible",
-                                        style = MakariosTypography.titleLarge,
-                                        color = Color(0xFFFFF4E4)
-                                    )
-                                    Text(
-                                        text = "All 66 books, chapters & verses",
-                                        style = MakariosTypography.bodySmall,
-                                        color = Color(0xFFFFF4E4).copy(alpha = 0.7f)
-                                    )
-                                }
-                            }
-                            Icon(
-                                imageVector = Icons.Outlined.ChevronRight,
-                                contentDescription = "Open Bible",
-                                tint = Color(0xFFFFF4E4)
-                            )
-                        }
                     }
                 }
             }
@@ -296,12 +268,15 @@ fun ExploreScreen(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     val totalMatches = verseMatches.size + declarationMatches.size + topicMatches.size
-                    listOf(
-                        "All" to totalMatches,
-                        "Verses" to verseMatches.size,
-                        "Declarations" to declarationMatches.size,
-                        "Topics" to topicMatches.size
-                    ).forEach { (group, count) ->
+                    val groups = remember(verseMatches.size, declarationMatches.size, topicMatches.size) {
+                        listOf(
+                            "All" to totalMatches,
+                            "Verses" to verseMatches.size,
+                            "Declarations" to declarationMatches.size,
+                            "Topics" to topicMatches.size
+                        )
+                    }
+                    groups.forEach { (group, count) ->
                         val isSelected = selectedGroupChip == group
                         Box(
                             modifier = Modifier
@@ -313,7 +288,7 @@ fun ExploreScreen(
                             Text(
                                 text = "$group ($count)",
                                 style = MakariosTypography.labelMedium,
-                                color = if (isSelected) Color(0xFFFFF4E4) else Ink.copy(alpha = 0.7f)
+                                color = if (isSelected) Cream else Ink.copy(alpha = 0.7f)
                             )
                         }
                     }
@@ -333,7 +308,7 @@ fun ExploreScreen(
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(
-                                text = "Nothing matches '$query'. Try a single word like peace, or a reference like John 3:16.",
+                                text = "Nothing matches '$activeQuery'. Try a single word like peace, or a reference like John 3:16.",
                                 style = MakariosTypography.bodyLarge,
                                 color = Ink.copy(alpha = 0.65f),
                                 textAlign = androidx.compose.ui.text.style.TextAlign.Center
@@ -342,7 +317,7 @@ fun ExploreScreen(
                             Button(
                                 onClick = onNavigateToBiblePicker,
                                 shape = RoundedCornerShape(20.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = Ink, contentColor = Color(0xFFFFF4E4))
+                                colors = ButtonDefaults.buttonColors(containerColor = Ink, contentColor = Cream)
                             ) {
                                 Text("Open Bible picker", style = MakariosTypography.labelMedium)
                             }
@@ -356,10 +331,10 @@ fun ExploreScreen(
                     ) {
                         // Direct "Open [Reference]" Card if parsed
                         parsedRef?.let { ref ->
-                            item {
-                                Card(
+                                        item(key = "explore-search-direct-reference") {
+                                MakSurface(
                                     shape = RoundedCornerShape(16.dp),
-                                    colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF4E4)),
+                                    colors = CardDefaults.cardColors(containerColor = Cream),
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clickable {
@@ -377,7 +352,7 @@ fun ExploreScreen(
                                             Text(
                                                 text = "Open ${ref.formatDisplay()}",
                                                 style = MakariosTypography.titleMedium,
-                                                color = Color(0xFF8A5A14)
+                                                color = AnchorLight
                                             )
                                             Text(
                                                 text = "Read chapter ${ref.chapter} in ${ref.book}",
@@ -385,7 +360,7 @@ fun ExploreScreen(
                                                 color = Ink.copy(alpha = 0.7f)
                                             )
                                         }
-                                        Icon(Icons.Outlined.ChevronRight, contentDescription = null, tint = Color(0xFF8A5A14))
+                                        Icon(Icons.Outlined.ChevronRight, contentDescription = null, tint = AnchorLight)
                                     }
                                 }
                             }
@@ -393,10 +368,10 @@ fun ExploreScreen(
 
                         // Matching Topics
                         if (selectedGroupChip == "All" || selectedGroupChip == "Topics") {
-                            items(topicMatches, key = { "topic-${it.name}" }) { topic ->
-                                Card(
+                            items(topicMatches.distinctBy { it.name }, key = { "explore-search-topic-${it.name}" }) { topic ->
+                                MakSurface(
                                     shape = RoundedCornerShape(16.dp),
-                                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                                    colors = CardDefaults.cardColors(containerColor = Cream),
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clickable { onNavigateToTopic(topic.name, topic.light) }
@@ -410,7 +385,7 @@ fun ExploreScreen(
                                     ) {
                                         Column {
                                             Text(topic.name, style = MakariosTypography.titleLarge, color = Ink)
-                                            Text(topic.tagline, style = MakariosTypography.bodySmall.copy(fontStyle = FontStyle.Italic), color = Ink.copy(alpha = 0.7f))
+                                            Text(topic.tagline, style = MakariosTypography.bodySmall, color = Ink.copy(alpha = 0.7f))
                                         }
                                         Icon(Icons.Outlined.ChevronRight, contentDescription = null, tint = Ink.copy(alpha = 0.4f))
                                     }
@@ -420,10 +395,10 @@ fun ExploreScreen(
 
                         // Matching Declarations
                         if (selectedGroupChip == "All" || selectedGroupChip == "Declarations") {
-                            items(declarationMatches, key = { "decl-${it.id}" }) { decl ->
-                                Card(
+                            items(declarationMatches.distinctBy { it.id }, key = { "explore-search-decl-${it.id}" }) { decl ->
+                                MakSurface(
                                     shape = RoundedCornerShape(16.dp),
-                                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                                    colors = CardDefaults.cardColors(containerColor = Cream),
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clickable {
@@ -441,7 +416,7 @@ fun ExploreScreen(
                                             horizontalArrangement = Arrangement.SpaceBetween,
                                             modifier = Modifier.fillMaxWidth()
                                         ) {
-                                            Text(decl.reference, style = MakariosTypography.labelSmall, color = Color(0xFF8A5A14))
+                                            Text(decl.reference, style = MakariosTypography.labelSmall, color = AnchorLight)
                                             Text("Declare this →", style = MakariosTypography.labelSmall, color = Ink)
                                         }
                                     }
@@ -451,10 +426,10 @@ fun ExploreScreen(
 
                         // Matching Verses
                         if (selectedGroupChip == "All" || selectedGroupChip == "Verses") {
-                            items(verseMatches, key = { "verse-${it.reference}" }) { verse ->
-                                Card(
+                            items(verseMatches.distinctBy { "${it.book}-${it.chapter}-${it.verse}" }, key = { "explore-search-verse-${it.book}-${it.chapter}-${it.verse}" }) { verse ->
+                                MakSurface(
                                     shape = RoundedCornerShape(16.dp),
-                                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                                    colors = CardDefaults.cardColors(containerColor = Cream),
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clickable {
@@ -462,9 +437,9 @@ fun ExploreScreen(
                                         }
                                 ) {
                                     Column(Modifier.padding(16.dp)) {
-                                        Text(verse.reference, style = MakariosTypography.labelLarge, color = Color(0xFF8A5A14))
+                                        Text(verse.reference, style = MakariosTypography.labelLarge, color = AnchorLight)
                                         Spacer(Modifier.height(4.dp))
-                                        HighlightedSearchText(verse.text, query.trim())
+                                        HighlightedSearchText(verse.text, activeQuery.trim())
                                     }
                                 }
                             }
@@ -474,8 +449,43 @@ fun ExploreScreen(
             }
         }
     }
+    }
 }
 
+
+@Composable
+private fun ExploreSearchField(queryState: androidx.compose.runtime.MutableState<String>) {
+    val query = queryState.value
+    Row(
+        modifier = Modifier
+            .padding(horizontal = 24.dp)
+            .fillMaxWidth()
+            .height(56.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .background(Ink.copy(alpha = 0.07f))
+            .padding(horizontal = 16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(Icons.Default.Search, "Search library", tint = Ink.copy(alpha = 0.6f))
+        Spacer(Modifier.width(12.dp))
+        BasicTextField(
+            value = query,
+            onValueChange = { queryState.value = it },
+            modifier = Modifier.weight(1f),
+            singleLine = true,
+            textStyle = MakariosTypography.bodyMedium.copy(color = Ink),
+            decorationBox = { field ->
+                if (query.isEmpty()) Text("Search verses and declarations", color = Ink.copy(alpha = 0.5f))
+                field()
+            }
+        )
+        if (query.isNotEmpty()) {
+            IconButton(onClick = { queryState.value = "" }, modifier = Modifier.size(24.dp)) {
+                Icon(Icons.Default.Close, "Clear", tint = Ink.copy(alpha = 0.5f))
+            }
+        }
+    }
+}
 @Composable
 private fun HighlightedSearchText(text: String, query: String) {
     val annotated = remember(text, query) {
@@ -492,7 +502,7 @@ private fun HighlightedSearchText(text: String, query: String) {
                 if (matchIdx > startIdx) {
                     append(text.substring(startIdx, matchIdx))
                 }
-                withStyle(SpanStyle(fontWeight = FontWeight.Bold, background = Color(0x33B5532B))) {
+                withStyle(SpanStyle(fontWeight = FontWeight.Bold, background = Ink.copy(alpha = 0.2f))) {
                     append(text.substring(matchIdx, matchIdx + q.length))
                 }
                 startIdx = matchIdx + q.length

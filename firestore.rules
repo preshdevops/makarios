@@ -1,4 +1,4 @@
-rules_version = '2';
+﻿rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
@@ -196,7 +196,7 @@ service cloud.firestore {
         data.keys().hasOnly([
           'id', 'declaration', 'shortText', 'scriptureText', 'reference',
           'context', 'category', 'tone', 'imageUrl', 'isFavorite',
-          'personalDeclaration', 'createdAt', 'updatedAt', 'userId'
+          'personalDeclaration', 'createdAt', 'updatedAt', 'userId', 'lightName', 'styleId', 'deletedAt', 'syncState', 'visibility', 'publicId', 'sourceType', 'inWidget', 'inReminders'
         ]) &&
         (!('id' in data) || (data.id is string && data.id.size() <= 128 && data.id == declarationId)) &&
         data.declaration is string && data.declaration.size() >= 1 && data.declaration.size() <= 1000 &&
@@ -211,7 +211,16 @@ service cloud.firestore {
         (!('personalDeclaration' in data) || data.personalDeclaration == null || (data.personalDeclaration is string && data.personalDeclaration.size() <= 1000)) &&
         (!('userId' in data) || (data.userId is string && data.userId == request.auth.uid)) &&
         (!('createdAt' in data) || isValidTimestampOrEpoch(data.createdAt)) &&
-        (!('updatedAt' in data) || isValidTimestampOrEpoch(data.updatedAt));
+        (!('updatedAt' in data) || isValidTimestampOrEpoch(data.updatedAt)) &&
+        (!('lightName' in data) || (data.lightName is string && data.lightName.size() <= 32)) &&
+        (!('styleId' in data) || (data.styleId is string && data.styleId.size() <= 64)) &&
+        (!('deletedAt' in data) || data.deletedAt == null || isValidTimestampOrEpoch(data.deletedAt)) &&
+        (!('syncState' in data) || data.syncState in ['LOCAL', 'PENDING', 'SYNCED']) &&
+        (!('visibility' in data) || data.visibility in ['PRIVATE', 'PUBLIC']) &&
+        (!('publicId' in data) || data.publicId == null || (data.publicId is string && data.publicId.size() <= 128)) &&
+        (!('sourceType' in data) || (data.sourceType is string && data.sourceType.size() <= 32)) &&
+        (!('inWidget' in data) || data.inWidget is bool) &&
+        (!('inReminders' in data) || data.inReminders is bool);
     }
 
     function areDeclarationImmutableFieldsUnchanged() {
@@ -228,7 +237,7 @@ service cloud.firestore {
       return data.keys().hasOnly([
           'id', 'affirmationId', 'declaration', 'shortText', 'scriptureText',
           'reference', 'context', 'category', 'tone', 'imageUrl', 'isFavorite',
-          'personalDeclaration', 'savedAt', 'createdAt', 'updatedAt', 'userId', 'kept'
+          'personalDeclaration', 'savedAt', 'createdAt', 'updatedAt', 'userId', 'kept', 'lightName', 'styleId', 'deletedAt', 'syncState', 'visibility', 'publicId', 'sourceType', 'inWidget', 'inReminders'
         ]) &&
         (!('id' in data) || (data.id is string && data.id.size() <= 128 && data.id == keptId)) &&
         (!('affirmationId' in data) || (data.affirmationId is string && data.affirmationId.size() <= 128)) &&
@@ -246,7 +255,16 @@ service cloud.firestore {
         (!('userId' in data) || (data.userId is string && data.userId == request.auth.uid)) &&
         (!('savedAt' in data) || isValidTimestampOrEpoch(data.savedAt)) &&
         (!('createdAt' in data) || isValidTimestampOrEpoch(data.createdAt)) &&
-        (!('updatedAt' in data) || isValidTimestampOrEpoch(data.updatedAt));
+        (!('updatedAt' in data) || isValidTimestampOrEpoch(data.updatedAt)) &&
+        (!('lightName' in data) || (data.lightName is string && data.lightName.size() <= 32)) &&
+        (!('styleId' in data) || (data.styleId is string && data.styleId.size() <= 64)) &&
+        (!('deletedAt' in data) || data.deletedAt == null || isValidTimestampOrEpoch(data.deletedAt)) &&
+        (!('syncState' in data) || data.syncState in ['LOCAL', 'PENDING', 'SYNCED']) &&
+        (!('visibility' in data) || data.visibility in ['PRIVATE', 'PUBLIC']) &&
+        (!('publicId' in data) || data.publicId == null || (data.publicId is string && data.publicId.size() <= 128)) &&
+        (!('sourceType' in data) || (data.sourceType is string && data.sourceType.size() <= 32)) &&
+        (!('inWidget' in data) || data.inWidget is bool) &&
+        (!('inReminders' in data) || data.inReminders is bool);
     }
 
     function areKeptImmutableFieldsUnchanged() {
@@ -285,7 +303,16 @@ service cloud.firestore {
         (!('focusAreas' in data) || (data.focusAreas is list && data.focusAreas.size() <= 20)) &&
         (!('completed' in data) || (data.completed is bool)) &&
         (!('userId' in data) || (data.userId is string && data.userId == request.auth.uid)) &&
-        (!('updatedAt' in data) || isValidTimestampOrEpoch(data.updatedAt));
+        (!('updatedAt' in data) || isValidTimestampOrEpoch(data.updatedAt)) &&
+        (!('lightName' in data) || (data.lightName is string && data.lightName.size() <= 32)) &&
+        (!('styleId' in data) || (data.styleId is string && data.styleId.size() <= 64)) &&
+        (!('deletedAt' in data) || data.deletedAt == null || isValidTimestampOrEpoch(data.deletedAt)) &&
+        (!('syncState' in data) || data.syncState in ['LOCAL', 'PENDING', 'SYNCED']) &&
+        (!('visibility' in data) || data.visibility in ['PRIVATE', 'PUBLIC']) &&
+        (!('publicId' in data) || data.publicId == null || (data.publicId is string && data.publicId.size() <= 128)) &&
+        (!('sourceType' in data) || (data.sourceType is string && data.sourceType.size() <= 32)) &&
+        (!('inWidget' in data) || data.inWidget is bool) &&
+        (!('inReminders' in data) || data.inReminders is bool);
     }
 
     // ===============================================================
@@ -376,10 +403,10 @@ service cloud.firestore {
 
       allow delete: if isOwner(userId);
 
-      // ─────────────────────────────────────────────────────────────
+      // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       // Subcollection: Personal Declarations (Device Sync)
       // Strictly private to the document owner
-      // ─────────────────────────────────────────────────────────────
+      // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       match /declarations/{declarationId} {
         allow read: if isOwner(userId);
 
@@ -393,10 +420,10 @@ service cloud.firestore {
         allow delete: if isOwner(userId);
       }
 
-      // ─────────────────────────────────────────────────────────────
+      // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       // Subcollection: Kept / Saved Affirmations
       // Strictly private to the document owner
-      // ─────────────────────────────────────────────────────────────
+      // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       match /kept/{keptId} {
         allow read: if isOwner(userId);
 
@@ -410,10 +437,10 @@ service cloud.firestore {
         allow delete: if isOwner(userId);
       }
 
-      // ─────────────────────────────────────────────────────────────
+      // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       // Subcollection: Synced App Settings
       // Strictly private to the document owner
-      // ─────────────────────────────────────────────────────────────
+      // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       match /settings/{settingId} {
         allow read: if isOwner(userId);
 
@@ -426,12 +453,12 @@ service cloud.firestore {
         allow delete: if isOwner(userId);
       }
 
-      // ─────────────────────────────────────────────────────────────
+      // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       // Subcollection: Friends List
       // Owner can read their friends list.
       // Owner can add friends.
       // Reciprocal friendship writing is supported when friendId matches auth.uid.
-      // ─────────────────────────────────────────────────────────────
+      // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
       match /friends/{friendId} {
         allow read: if isOwner(userId);
 
@@ -486,3 +513,4 @@ service cloud.firestore {
     }
   }
 }
+

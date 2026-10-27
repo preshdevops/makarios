@@ -40,7 +40,7 @@ fun Pairing(
         Text(
             text = verseText,
             color = light.text,
-            style = MakariosTypography.bodyLarge // This is Newsreader Italic 17sp
+            style = com.makarios.app.ui.theme.VerseTextStyle // Italic Newsreader only for verses
         )
         
         Spacer(modifier = Modifier.height(8.dp))

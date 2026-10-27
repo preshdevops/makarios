@@ -211,7 +211,7 @@ fun FindFriendsDialog(
                         modifier = Modifier.weight(1f),
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        items(searchResults, key = { it.userId }) { user ->
+                        items(searchResults.distinctBy { it.userId }, key = { "friend-search-${it.userId}" }) { user ->
                             val isConnected = connectedUids.contains(user.userId) ||
                                     CommunityRepository.friendsList.any { it.userId == user.userId }
 

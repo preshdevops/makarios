@@ -100,7 +100,7 @@ object StackStyle : BaseStyle("stack", "Stack", category = "Type", supportsLight
                 listOf(
                     words.take(mid).joinToString(" "),
                     words.slice(mid until words.size - 1).joinToString(" ").uppercase(),
-                    words.last().uppercase()
+                    words.lastOrNull()?.uppercase().orEmpty()
                 )
             }
         }

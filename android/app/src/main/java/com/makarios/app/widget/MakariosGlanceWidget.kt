@@ -14,15 +14,21 @@ import androidx.glance.layout.*
 import com.makarios.app.MainActivity
 import com.makarios.app.data.Affirmation
 import com.makarios.app.data.AffirmationRepository
+import com.makarios.app.data.DeclarationPicker
+import com.makarios.app.data.DeclarationSource
 import com.makarios.app.data.SeedDeclarations
+import com.makarios.app.data.WidgetLookMode
+import com.makarios.app.data.WidgetSettingsStore
 import com.makarios.app.data.local.KeptRepository
 import com.makarios.app.data.local.toAffirmation
 import com.makarios.app.ui.theme.Light
+import com.makarios.app.util.DiagnosticStore
 import kotlinx.coroutines.runBlocking
 import java.time.LocalDate
 import java.time.LocalTime
 import kotlin.random.Random
 
+// WidgetSource kept for backward compatibility with the existing WidgetConfigureActivity
 enum class WidgetSource {
     TODAY,
     MY_DECLARATIONS,
@@ -35,6 +41,7 @@ object WidgetStore {
     private const val KEY_LIGHT_GLOBAL = "light_global"
     private const val KEY_SOURCE_GLOBAL = "source_global"
     private const val KEY_TOPIC_GLOBAL = "topic_global"
+    private const val KEY_LAST_PICKED_PREFIX = "last_picked_"
 
     fun fixedLight(context: Context): String {
         val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
@@ -48,6 +55,15 @@ object WidgetStore {
     }
 
     fun light(context: Context, appWidgetId: Int? = null): Light {
+        // Check per-widget settings first
+        val widgetSettings = appWidgetId?.let { WidgetSettingsStore.loadForWidget(context, it) }
+        if (widgetSettings != null && widgetSettings.lookMode == WidgetLookMode.FIXED_LIGHT) {
+            val lightName = widgetSettings.fixedLightName
+            if (lightName.isNotEmpty() && lightName != "AUTO") {
+                return runCatching { Light.valueOf(lightName) }.getOrDefault(autoLightByTime())
+            }
+        }
+
         val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
         val key = if (appWidgetId != null) "light_$appWidgetId" else KEY_LIGHT_GLOBAL
         val lightName = prefs.getString(key, null) ?: prefs.getString(KEY_LIGHT_GLOBAL, "AUTO") ?: "AUTO"
@@ -58,13 +74,9 @@ object WidgetStore {
         val now = LocalTime.now()
         val minuteOfDay = now.hour * 60 + now.minute
         return when {
-            // 05:30 to 09:00 -> Dawn
             minuteOfDay in (5 * 60 + 30) until (9 * 60) -> Light.Dawn
-            // 09:00 to 16:30 -> Midday / Grove
             minuteOfDay in (9 * 60) until (16 * 60 + 30) -> Light.Midday
-            // 16:30 to 19:30 -> Dusk
             minuteOfDay in (16 * 60 + 30) until (19 * 60 + 30) -> Light.Dusk
-            // 19:30 to 05:30 -> Night
             else -> Light.Night
         }
     }
@@ -72,7 +84,7 @@ object WidgetStore {
     fun source(context: Context, appWidgetId: Int? = null): WidgetSource {
         val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
         val key = if (appWidgetId != null) "source_$appWidgetId" else KEY_SOURCE_GLOBAL
-        val name = prefs.getString(key, null) ?: prefs.getString(KEY_SOURCE_GLOBAL, WidgetSource.TODAY.name)!!
+        val name = prefs.getString(key, null) ?: prefs.getString(KEY_SOURCE_GLOBAL, WidgetSource.TODAY.name) ?: WidgetSource.TODAY.name
         return runCatching { WidgetSource.valueOf(name) }.getOrDefault(WidgetSource.TODAY)
     }
 
@@ -94,15 +106,66 @@ object WidgetStore {
         WidgetScheduling.refreshNow(context)
     }
 
+    fun getLastPickedId(context: Context, appWidgetId: Int): String? =
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString("${KEY_LAST_PICKED_PREFIX}$appWidgetId", null)
+
+    fun setLastPickedId(context: Context, appWidgetId: Int, id: String) {
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putString("${KEY_LAST_PICKED_PREFIX}$appWidgetId", id).apply()
+        DiagnosticStore.setLastPickedId(context, id)
+    }
+
+    /**
+     * Main entry point: uses DeclarationPicker with new WidgetSettings if available,
+     * otherwise falls back to the old WidgetSource logic for backward compatibility.
+     */
     fun affirmation(context: Context, isSmall: Boolean = false, appWidgetId: Int? = null): Affirmation {
+        // Try new DeclarationPicker path (WidgetSettings)
+        val widgetSettings = appWidgetId?.let { WidgetSettingsStore.loadForWidget(context, it) }
+            ?: WidgetSettingsStore.load(context)
+
+        // If default sources (MAKARIOS only) and no user customization — still use picker for consistency
+        val excludeId = appWidgetId?.let { getLastPickedId(context, it) }
+
+        val picked = runCatching {
+            runBlocking {
+                DeclarationPicker.pickForWidget(
+                    context = context,
+                    settings = widgetSettings,
+                    appWidgetId = appWidgetId ?: 0,
+                    excludeId = excludeId
+                )
+            }
+        }.getOrNull()
+
+        if (picked != null) {
+            appWidgetId?.let { setLastPickedId(context, it, picked.id) }
+            return if (isSmall) {
+                // For small widgets prefer short declarations
+                val shortText = com.makarios.app.data.widgetTextFor(picked.declaration, picked.shortText)
+                if (shortText.length <= 45) picked
+                else {
+                    // Try to find a shorter one from the same pool
+                    val seeds = SeedDeclarations.asAffirmations()
+                    seeds.filter { com.makarios.app.data.widgetTextFor(it.declaration, it.shortText).length <= 32 }.firstOrNull() ?: picked
+                }
+            } else {
+                picked
+            }
+        }
+
+        // Legacy fallback path (should never be reached)
+        return legacyAffirmation(context, isSmall, appWidgetId)
+    }
+
+    /** Kept for backward compatibility only */
+    private fun legacyAffirmation(context: Context, isSmall: Boolean, appWidgetId: Int?): Affirmation {
         val src = source(context, appWidgetId)
         val seeds = SeedDeclarations.asAffirmations()
-
         val pool: List<Affirmation> = when (src) {
             WidgetSource.TODAY -> listOf(seeds.firstOrNull() ?: AffirmationRepository.affirmationOfTheDay)
             WidgetSource.MY_DECLARATIONS -> {
                 val kept = runCatching {
-                    KeptRepository.init(context)
                     runBlocking { KeptRepository.getAllList().map { it.toAffirmation() } }
                 }.getOrDefault(emptyList())
                 if (kept.isNotEmpty()) kept else seeds
@@ -110,34 +173,12 @@ object WidgetStore {
             WidgetSource.TOPIC -> {
                 val top = topic(context, appWidgetId)
                 val topicPairs = com.makarios.app.data.CuratedTopicRepository.getPairsForTopic(top)
-                if (topicPairs.isNotEmpty()) {
-                    topicPairs.map { p ->
-                        Affirmation(
-                            id = p.id,
-                            declaration = p.declaration,
-                            scriptureText = "The word of the Lord stands forever.",
-                            reference = p.reference,
-                            context = top,
-                            category = top,
-                            tone = com.makarios.app.data.AffirmationTone.RESOLUTE
-                        )
-                    }
+                if (topicPairs.isNotEmpty()) topicPairs.map { p ->
+                    Affirmation(id = p.id, declaration = p.declaration, scriptureText = "The word of the Lord stands forever.", reference = p.reference, context = top, category = top, tone = com.makarios.app.data.AffirmationTone.RESOLUTE)
                 } else seeds
             }
             WidgetSource.SURPRISE -> seeds + AffirmationRepository.getAll()
         }
-
-        if (isSmall) {
-            // For 2x2 small: pick declarations with <= 32 chars, or the shortest available
-            val shortMatches = pool.filter { (it.shortText.ifEmpty { it.declaration }).length <= 32 }
-            if (shortMatches.isNotEmpty()) {
-                val daySeed = LocalDate.now().dayOfYear + (appWidgetId ?: 0)
-                return shortMatches[Random(daySeed).nextInt(shortMatches.size)]
-            }
-            // Fallback: pick shortest declaration in pool
-            return pool.minByOrNull { (it.shortText.ifEmpty { it.declaration }).length } ?: seeds.first()
-        }
-
         val daySeed = LocalDate.now().dayOfYear + (appWidgetId ?: 0)
         return pool[Random(daySeed).nextInt(pool.size)]
     }
@@ -172,42 +213,70 @@ class MakariosGlanceWidget : GlanceAppWidget() {
                 else -> WidgetLayoutType.SCENE_4X4
             }
 
+            val appWidgetId = LocalGlanceId.current.hashCode()
             val isSmall = layoutType == WidgetLayoutType.SMALL_2X2
-            val affirmation = WidgetStore.affirmation(context, isSmall = isSmall)
-            val light = WidgetStore.light(context)
+            val affirmation = WidgetStore.affirmation(context, isSmall = isSmall, appWidgetId = appWidgetId)
+            val light = WidgetStore.light(context, appWidgetId)
 
             val widthPx = (size.width.value * density).toInt()
             val heightPx = (size.height.value * density).toInt()
 
-            val bitmap = WidgetBitmapRenderer.render(
-                context = context,
-                affirmation = affirmation,
-                light = light,
-                widthPx = widthPx,
-                heightPx = heightPx,
-                layoutType = layoutType
+            val idKey = androidx.glance.action.ActionParameters.Key<String>("id")
+            val sourceKey = androidx.glance.action.ActionParameters.Key<String>("source")
+            val launchAction = actionStartActivity(
+                android.content.ComponentName(context, MainActivity::class.java),
+                androidx.glance.action.actionParametersOf(idKey to affirmation.id, sourceKey to "widget")
             )
 
-            // Deep-link intent directly to the declaration in the app
-            val deepLinkIntent = Intent(context, MainActivity::class.java).apply {
-                action = Intent.ACTION_VIEW
-                data = Uri.parse("makarios://declare?id=${affirmation.id}")
-                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-            }
+            val bitmap = runCatching {
+                WidgetBitmapRenderer.render(
+                    context = context,
+                    affirmation = affirmation,
+                    light = light,
+                    widthPx = widthPx,
+                    heightPx = heightPx,
+                    layoutType = layoutType
+                )
+            }.getOrNull()
 
             val desc = "${affirmation.declaration}. ${affirmation.scriptureText} (${affirmation.reference})"
 
-            Box(
-                modifier = GlanceModifier
-                    .fillMaxSize()
-                    .cornerRadius(24.dp)
-                    .clickable(actionStartActivity(android.content.ComponentName(context, MainActivity::class.java)))
-            ) {
-                Image(
-                    provider = ImageProvider(bitmap),
-                    contentDescription = desc,
-                    modifier = GlanceModifier.fillMaxSize()
-                )
+            if (bitmap != null) {
+                Box(
+                    modifier = GlanceModifier
+                        .fillMaxSize()
+                        .cornerRadius(24.dp)
+                        .clickable(launchAction)
+                ) {
+                    Image(
+                        provider = ImageProvider(bitmap),
+                        contentDescription = desc,
+                        modifier = GlanceModifier.fillMaxSize()
+                    )
+                }
+            } else {
+                // Plain text fallback if bitmap rendering fails (never a blank widget)
+                Column(
+                    modifier = GlanceModifier
+                        .fillMaxSize()
+                        .cornerRadius(24.dp)
+                        .padding(16.dp)
+                        .clickable(launchAction),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    androidx.glance.text.Text(
+                        text = com.makarios.app.data.widgetTextFor(affirmation.declaration, affirmation.shortText),
+                        style = androidx.glance.text.TextStyle(
+                            fontWeight = androidx.glance.text.FontWeight.Bold
+                        )
+                    )
+                    Spacer(modifier = GlanceModifier.height(4.dp))
+                    androidx.glance.text.Text(
+                        text = affirmation.reference,
+                        style = androidx.glance.text.TextStyle()
+                    )
+                }
             }
         }
     }

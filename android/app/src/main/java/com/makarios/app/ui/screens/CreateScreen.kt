@@ -1,4 +1,6 @@
 package com.makarios.app.ui.screens
+import com.makarios.app.ui.components.MakChip
+import com.makarios.app.ui.components.MakSurface
 
 import android.app.WallpaperManager
 import android.graphics.BitmapFactory
@@ -65,6 +67,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import com.makarios.app.ui.components.ShareSheet
+import com.makarios.app.ui.components.ShareContent
 import androidx.compose.ui.unit.sp
 import com.makarios.app.data.*
 import com.makarios.app.ui.components.BibleReaderSheet
@@ -79,13 +83,14 @@ import androidx.compose.foundation.combinedClickable
 import com.makarios.app.ui.wallpaper.StyleSpec
 import com.makarios.app.util.ExportFormat
 import com.makarios.app.util.LightCanvas
+import com.makarios.app.util.PerformanceTier
+import com.makarios.app.util.BitmapMemoryCache
 import com.makarios.app.data.ShareRepository
 import com.makarios.app.data.ShareRequest
 import com.makarios.app.data.ShareResult
 import com.makarios.app.data.ShareTarget
 import com.makarios.app.data.bible.VerseSelection
 import com.makarios.app.ui.screens.bible.BiblePickerScreen
-import com.makarios.app.ui.screens.bible.ChapterVersePickerScreen
 import com.makarios.app.util.PronounRewriter
 import kotlinx.coroutines.launch
 import java.io.File
@@ -98,19 +103,39 @@ fun CreateScreen(
     initialReference: String? = null,
     initialStep: Int = 1,
     onSearchBible: ((currentDeclaration: String) -> Unit)? = null,
+    onOpenWidgetSettings: (() -> Unit)? = null,
+    onOpenReminderSettings: (() -> Unit)? = null,
+    onStepChange: ((Int) -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 
     var step by remember(initialStep) { mutableStateOf(initialStep) }
-    var declarationText by remember(initialDeclaration) { mutableStateOf(initialDeclaration ?: "") }
-    var selectedLight by remember { mutableStateOf(Light.forNow()) }
+    LaunchedEffect(step) {
+        onStepChange?.invoke(step)
+    }
+
+    val declarationTextState = remember(initialDeclaration) { mutableStateOf(initialDeclaration ?: "") }
+    val appLight = LocalLight.current
+    var selectedLight by remember { mutableStateOf(appLight) }
+    ProvideActiveLight(selectedLight, "Declare: Step $step")
     var selectedStyle by remember { mutableStateOf<Style>(StyleRegistry.PAIRING) }
     var formatName by remember { mutableStateOf("Story") }
+    var shareContentToOpen by remember { mutableStateOf<ShareContent?>(null) }
     var selectedPhotoUrl by remember { mutableStateOf<String?>(null) }
     var showNotificationAsk by remember { mutableStateOf(false) }
     var isSharingInProgress by remember { mutableStateOf(false) }
+    val matchEngine = remember { MatchEngine.getInstance(context) }
+    var isMatchingInProgress by remember { mutableStateOf(false) }
+    val isEngineInitializing by produceState(initialValue = !matchEngine.ready && matchEngine.isInitializing) {
+        while (!matchEngine.ready && matchEngine.isInitializing) {
+            value = true
+            kotlinx.coroutines.delay(100)
+        }
+        value = false
+    }
+    val isEngineLoading = isMatchingInProgress || isEngineInitializing
 
     // Verses matched for the declaration
     var matchedVerses by remember(initialVerseText, initialReference) {
@@ -134,20 +159,19 @@ fun CreateScreen(
     fun getOrCreateSavedAffirmation(): Affirmation {
         val existing = savedAffirmation
         if (existing != null) return existing
-        val v = currentVerse ?: throw IllegalStateException("Cannot save affirmation without a verse reference.")
-        require(v.reference.isNotBlank()) { "Cannot save affirmation without a real reference." }
+        val v = currentVerse ?: com.makarios.app.data.ScriptureVerse("The Lord is my shepherd; I shall not want.", "Psalm 23:1")
+        val safeRef = if (v.reference.isNotBlank()) v.reference else "Scripture"
         val aff = Affirmation(
             id = "custom-${System.currentTimeMillis()}",
-            declaration = declarationText.trim(),
+            declaration = declarationTextState.value.trim(),
             scriptureText = v.text,
-            reference = v.reference,
+            reference = safeRef,
             context = "Authored in Makarios Declare Studio.",
             category = "Personal",
             tone = AffirmationTone.STILL,
             imageUrl = selectedPhotoUrl ?: "",
             isFavorite = true
         )
-        AffirmationRepository.addPersonalAffirmation(aff)
         savedAffirmation = aff
         return aff
     }
@@ -178,12 +202,14 @@ fun CreateScreen(
                 style = selectedStyle,
                 onBackToToday = onNavigateBack,
                 onDeclareAnother = {
-                    declarationText = ""
+                    declarationTextState.value = ""
                     savedAffirmation = null
                     matchedVerses = emptyList()
                     currentVerseIndex = 0
                     step = 1
-                }
+                },
+                onOpenWidgetSettings = onOpenWidgetSettings,
+                onOpenReminderSettings = onOpenReminderSettings
             )
         } else {
             Column(
@@ -262,34 +288,39 @@ fun CreateScreen(
                     )
                 }
 
-                Crossfade(targetState = step, label = "CreateSteps") { currentStep ->
+                Crossfade(targetState = step, animationSpec = tween(if (PerformanceTier.animationsEnabled) 220 else 0), label = "CreateSteps") { currentStep ->
                     when (currentStep) {
                         1 -> WriteStep(
-                            text = declarationText,
-                            onTextChanged = { declarationText = it },
+                            textState = declarationTextState,
+                            isEngineLoading = isEngineLoading,
                             light = activeStepLight,
                             onNext = {
                                 coroutineScope.launch {
-                                    val result = MatchEngine.getInstance(context).match(declarationText, limit = 3)
-                                    isEngineConfident = result.confident
-                                    engineReason = result.reason
-                                    matchedVerses = result.top.map {
-                                        ScriptureVerse(text = it.text, reference = it.reference)
+                                    isMatchingInProgress = true
+                                    try {
+                                        val result = matchEngine.match(declarationTextState.value, limit = 3)
+                                        isEngineConfident = result.confident
+                                        engineReason = result.reason
+                                        matchedVerses = result.top.map {
+                                            ScriptureVerse(text = it.text, reference = it.reference)
+                                        }
+                                        currentVerseIndex = 0
+                                        step = 2
+                                    } finally {
+                                        isMatchingInProgress = false
                                     }
-                                    currentVerseIndex = 0
-                                    step = 2
                                 }
                             }
                         )
                         2 -> VerseStep(
-                            declarationText = declarationText,
+                            declarationText = declarationTextState.value,
                             light = activeStepLight,
                             matchedVerses = matchedVerses,
                             selectedVerseIndex = currentVerseIndex,
                             engineReason = engineReason,
                             isConfident = isEngineConfident,
                             onSelectVerseIndex = { currentVerseIndex = it },
-                            onSearchBible = { onSearchBible?.invoke(declarationText) },
+                            onSearchBible = { onSearchBible?.invoke(declarationTextState.value) },
                             onAddCustomVerse = { customVerse ->
                                 matchedVerses = listOf(customVerse) + matchedVerses
                                 currentVerseIndex = 0
@@ -301,7 +332,7 @@ fun CreateScreen(
                                 val cv = currentVerse
                                 if (cv != null && cv.reference.isNotBlank()) {
                                     selectedStyle = AutoStyleSelector.pickStyle(
-                                        declaration = declarationText,
+                                        declaration = declarationTextState.value,
                                         verse = cv.text,
                                         reference = cv.reference,
                                         light = selectedLight
@@ -311,7 +342,7 @@ fun CreateScreen(
                             }
                         )
                         3 -> LookStep(
-                            declarationText = declarationText,
+                            declarationText = declarationTextState.value,
                             verseText = currentVerse?.text.orEmpty(),
                             verseReference = currentVerse?.reference.orEmpty(),
                             selectedLight = selectedLight,
@@ -324,17 +355,17 @@ fun CreateScreen(
                             onShare = {
                                 val aff = getOrCreateSavedAffirmation()
                                 showNotificationAsk = true
-                                val exportFmt = ExportFormat.from(formatName)
-                                val spec = StyleSpec(
+                                shareContentToOpen = ShareContent(
                                     declaration = aff.declaration,
                                     verse = aff.scriptureText,
-                                    reference = aff.reference
+                                    reference = aff.reference,
+                                    initialStyleId = selectedStyle.id,
+                                    initialLightName = selectedLight.name,
+                                    initialFormat = formatName,
+                                    declarationId = aff.id,
+                                    source = "declare",
+                                    contentType = "declaration"
                                 )
-                                coroutineScope.launch {
-                                    isSharingInProgress = true
-                                    ShareRepository.share(context, ShareRequest(spec, selectedLight, exportFmt, selectedStyle, ShareTarget.Chooser))
-                                    isSharingInProgress = false
-                                }
                             },
                             onDone = {
                                 coroutineScope.launch {
@@ -355,7 +386,7 @@ fun CreateScreen(
                                         showNotificationAsk = true
                                         step = 4
                                     } catch (e: Exception) {
-                                        Toast.makeText(context, "Could not save to Kept: ${e.message}. Please tap Kept again.", Toast.LENGTH_LONG).show()
+                                        Toast.makeText(context, "Could not save: ${e.message}. Please tap Save again.", Toast.LENGTH_LONG).show()
                                     }
                                 }
                             },
@@ -378,19 +409,11 @@ fun CreateScreen(
                                 coroutineScope.launch {
                                     val res = ShareRepository.share(context, ShareRequest(spec, selectedLight, ExportFormat.Wallpaper, selectedStyle, ShareTarget.SetWallpaper))
                                     if (res is ShareResult.Success) {
-                                        Toast.makeText(context, "Wallpaper updated & saved to Kept!", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(context, "Wallpaper updated & saved!", Toast.LENGTH_SHORT).show()
                                     }
                                 }
                             },
-                            onShareAsFile = {
-                                val aff = getOrCreateSavedAffirmation()
-                                showNotificationAsk = true
-                                val exportFmt = ExportFormat.from(formatName)
-                                val spec = StyleSpec(declaration = aff.declaration, verse = aff.scriptureText, reference = aff.reference)
-                                coroutineScope.launch {
-                                    ShareRepository.share(context, ShareRequest(spec, selectedLight, exportFmt, selectedStyle, ShareTarget.ShareAsFile))
-                                }
-                            },
+
                             onShareToInstagram = {
                                 val aff = getOrCreateSavedAffirmation()
                                 showNotificationAsk = true
@@ -419,22 +442,17 @@ fun CreateScreen(
     if (showNotificationAsk && !com.makarios.app.util.NotificationStore.askShown(context)) {
         NotificationSoftAsk { showNotificationAsk = false }
     }
+
+    shareContentToOpen?.let { content ->
+        ShareSheet(
+            content = content,
+            onDismiss = { shareContentToOpen = null }
+        )
+    }
 }
 
 @Composable
-fun WriteStep(
-    text: String,
-    onTextChanged: (String) -> Unit,
-    light: Light,
-    onNext: () -> Unit
-) {
-    var starterIndex by remember { mutableStateOf(0) }
-    val starters = remember(starterIndex) {
-        val all = SeedDeclarations.entries.map { it.declaration }
-        val start = (starterIndex * 3) % all.size
-        (0 until 3).map { all[(start + it) % all.size] }
-    }
-
+fun WriteStep(textState: MutableState<String>, isEngineLoading: Boolean, light: Light, onNext: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -449,103 +467,144 @@ fun WriteStep(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .defaultMinSize(minHeight = 160.dp)
-                .clip(RoundedCornerShape(16.dp))
-                .border(1.dp, light.text.copy(alpha = 0.15f), RoundedCornerShape(16.dp))
-                .background(if (light.isDark) Color(0x28FFFFFF) else Color(0xE6FFFFFF))
-                .padding(16.dp)
-        ) {
-            BasicTextField(
-                value = text,
-                onValueChange = { if (it.length <= 280) onTextChanged(it) },
-                textStyle = MakariosTypography.displaySmall.copy(color = light.text, fontSize = 20.sp),
-                modifier = Modifier.fillMaxWidth(),
-                decorationBox = { innerTextField ->
-                    if (text.isEmpty()) {
-                        Text(
-                            text = "I am...",
-                            style = MakariosTypography.displaySmall.copy(
-                                color = light.text.copy(alpha = 0.35f),
-                                fontSize = 20.sp,
-                                fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
-                            )
-                        )
-                    }
-                    innerTextField()
-                }
-            )
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text("Say it in first person.", style = MakariosTypography.labelSmall, color = light.text.copy(alpha = 0.6f))
-            Text("${text.length} / 280", style = MakariosTypography.labelSmall, color = light.text.copy(alpha = 0.6f))
-        }
+        DeclarationInputBox(textState = textState, light = light)
 
         Spacer(modifier = Modifier.height(28.dp))
 
-        // Starters: Start from yours (3 at a time with refresh)
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text("Start from yours", style = MakariosTypography.labelMedium, color = light.text.copy(alpha = 0.8f))
-            IconButton(
-                onClick = { starterIndex++ },
-                modifier = Modifier.size(32.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.Refresh,
-                    contentDescription = "Refresh declarations",
-                    tint = light.text.copy(alpha = 0.7f),
-                    modifier = Modifier.size(18.dp)
-                )
-            }
-        }
-        Spacer(modifier = Modifier.height(10.dp))
-
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            starters.forEach { starter ->
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(light.text.copy(alpha = 0.05f))
-                        .clickable { onTextChanged(starter) }
-                        .padding(horizontal = 16.dp, vertical = 12.dp)
-                ) {
-                    Text(
-                        text = "“$starter”",
-                        style = MakariosTypography.bodyMedium,
-                        color = light.text
-                    )
-                }
-            }
-        }
+        StartersSection(light = light, onSelectStarter = { textState.value = it })
 
         Spacer(modifier = Modifier.height(36.dp))
 
-        Button(
-            onClick = onNext,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = light.text, contentColor = light.top),
-            shape = RoundedCornerShape(28.dp),
-            enabled = text.isNotBlank()
+        FindVerseButton(
+            textState = textState,
+            isEngineLoading = isEngineLoading,
+            light = light,
+            onNext = onNext
+        )
+    }
+}
+
+@Composable
+private fun DeclarationInputBox(
+    textState: MutableState<String>,
+    light: Light
+) {
+    val text = textState.value
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .defaultMinSize(minHeight = 160.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .border(1.dp, light.text.copy(alpha = 0.15f), RoundedCornerShape(16.dp))
+            .background(if (light.isDark) Color(0x28FFFFFF) else Color(0xE6FFFFFF))
+            .padding(16.dp)
+    ) {
+        BasicTextField(
+            value = text,
+            onValueChange = { if (it.length <= 280) textState.value = it },
+            textStyle = MakariosTypography.displaySmall.copy(color = light.text, fontSize = 20.sp),
+            modifier = Modifier.fillMaxWidth(),
+            decorationBox = { innerTextField ->
+                if (text.isEmpty()) {
+                    Text(
+                        text = "I am...",
+                        style = MakariosTypography.displaySmall.copy(
+                            color = light.text.copy(alpha = 0.35f),
+                            fontSize = 20.sp,
+                            fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
+                        )
+                    )
+                }
+                innerTextField()
+            }
+        )
+    }
+
+    Spacer(modifier = Modifier.height(8.dp))
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text("Say it in first person.", style = MakariosTypography.labelSmall, color = light.text.copy(alpha = 0.6f))
+        Text("${text.length} / 280", style = MakariosTypography.labelSmall, color = light.text.copy(alpha = 0.6f))
+    }
+}
+
+@Composable
+private fun StartersSection(
+    light: Light,
+    onSelectStarter: (String) -> Unit
+) {
+    var starterIndex by remember { mutableStateOf(0) }
+    val starters = remember(starterIndex) {
+        val all = SeedDeclarations.entries.map { it.declaration }
+        val start = (starterIndex * 3) % all.size
+        (0 until 3).map { all[(start + it) % all.size] }
+    }
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text("Start from yours", style = MakariosTypography.labelMedium, color = light.text.copy(alpha = 0.8f))
+        IconButton(
+            onClick = { starterIndex++ },
+            modifier = Modifier.size(32.dp)
         ) {
-            Icon(Icons.Filled.AutoAwesome, contentDescription = null, modifier = Modifier.size(18.dp))
-            Spacer(modifier = Modifier.width(8.dp))
-            Text("Find my verse", style = MakariosTypography.labelLarge)
+            Icon(
+                imageVector = Icons.Outlined.Refresh,
+                contentDescription = "Refresh declarations",
+                tint = light.text.copy(alpha = 0.7f),
+                modifier = Modifier.size(18.dp)
+            )
         }
+    }
+    Spacer(modifier = Modifier.height(10.dp))
+
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        starters.forEach { starter ->
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(light.text.copy(alpha = 0.05f))
+                    .clickable { onSelectStarter(starter) }
+                    .padding(horizontal = 16.dp, vertical = 12.dp)
+            ) {
+                Text(
+                    text = "\u201C$starter\u201D",
+                    style = MakariosTypography.bodyMedium,
+                    color = light.text
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun FindVerseButton(
+    textState: State<String>,
+    isEngineLoading: Boolean,
+    light: Light,
+    onNext: () -> Unit
+) {
+    val isEnabled by remember(textState, isEngineLoading) {
+        derivedStateOf { textState.value.isNotBlank() && !isEngineLoading }
+    }
+    Button(
+        onClick = onNext,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(56.dp),
+        colors = ButtonDefaults.buttonColors(containerColor = light.text, contentColor = light.top),
+        shape = RoundedCornerShape(28.dp),
+        enabled = isEnabled
+    ) {
+        Icon(Icons.Filled.AutoAwesome, contentDescription = null, modifier = Modifier.size(18.dp))
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(if (isEngineLoading) "Getting ready…" else "Find my verse", style = MakariosTypography.labelLarge)
     }
 }
 
@@ -563,6 +622,7 @@ fun VerseStep(
     onEditDeclaration: () -> Unit,
     onUseThisVerse: () -> Unit
 ) {
+    val context = LocalContext.current
     var showTypeRefDialog by remember { mutableStateOf(false) }
 
     Column(
@@ -697,7 +757,7 @@ fun VerseStep(
             AnimatedContent(
                 targetState = selectedVerse,
                 transitionSpec = {
-                    fadeIn(animationSpec = tween(150)) togetherWith fadeOut(animationSpec = tween(150))
+                    fadeIn(animationSpec = tween(if (PerformanceTier.animationsEnabled) 150 else 0)) togetherWith fadeOut(animationSpec = tween(if (PerformanceTier.animationsEnabled) 150 else 0))
                 },
                 label = "SelectedVerseSwap"
             ) { verse ->
@@ -785,7 +845,7 @@ fun VerseStep(
             }
 
             // 3. Two alternative cards: smaller, reference + first line + reason, selectable on tap (swaps into top slot)
-            val alternatives = matchedVerses.indices.filter { it != selectedVerseIndex }
+            val alternatives = remember(matchedVerses.size, selectedVerseIndex) { matchedVerses.indices.filter { it != selectedVerseIndex } }
             if (alternatives.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(18.dp))
                 Text(
@@ -929,9 +989,9 @@ fun VerseStep(
                     if (refError != null) {
                         Spacer(modifier = Modifier.height(6.dp))
                         Text(
-                            text = refError!!,
+                            text = refError ?: "",
                             style = MakariosTypography.bodySmall,
-                            color = MaterialTheme.colorScheme.error
+                            color = MakError
                         )
                     }
                 }
@@ -946,7 +1006,10 @@ fun VerseStep(
                         }
                         scope.launch {
                             isLookingUp = true
-                            val res = BibleRepository.getVerse(refInput)
+                            val res = withContext(Dispatchers.IO) {
+                                BibleRepository.initialize(context)
+                                BibleRepository.getVerse(refInput)
+                            }
                             val verse = res.getOrNull()
                             if (verse != null) {
                                 val dispRef = ScriptureText.formatDisplayReference(verse.reference)
@@ -973,7 +1036,8 @@ fun VerseStep(
 }
 
 /** Cache for offscreen preview bitmaps keyed by (styleId, lightName, formatName, size, textHash) */
-private val previewBitmapCache = mutableMapOf<String, android.graphics.Bitmap>()
+private val previewBitmapCache = com.makarios.app.util.BitmapMemoryCache
+private val thumbnailBitmapCache = android.util.LruCache<String, android.graphics.Bitmap>(24)
 
 @Composable
 fun LookStep(
@@ -991,7 +1055,6 @@ fun LookStep(
     onDone: () -> Unit,
     onSavePhotos: () -> Unit,
     onSetWallpaper: () -> Unit,
-    onShareAsFile: () -> Unit,
     onShareToInstagram: () -> Unit = {},
     onShareToWhatsApp: () -> Unit = {}
 ) {
@@ -1024,13 +1087,9 @@ fun LookStep(
     val isIgInstalled = remember { ShareRepository.isInstagramInstalled(context) }
     val isWaInstalled = remember { ShareRepository.isWhatsAppInstalled(context) }
 
-    // Auto-fallback if Numerals is currently selected but chapter is 1-digit, or text exceeds maxChars
-    LaunchedEffect(declarationText, selectedStyle.id, spec.isNumeralsEligible) {
-        if (selectedStyle.id == StyleRegistry.NUMERALS.id && !spec.isNumeralsEligible) {
-            val pick = AutoStyleSelector.pickStyle(declarationText, verseText, verseReference, null, selectedLight)
-            onStyleChanged(pick)
-            StyleFavoritesStore.setLastUsed(context, pick.id)
-        } else if (declarationText.length > selectedStyle.maxChars) {
+    // Auto-fallback if text exceeds maxChars
+    LaunchedEffect(declarationText, selectedStyle.id) {
+        if (declarationText.length > selectedStyle.maxChars) {
             val fallback = StyleRegistry.all.firstOrNull { it.maxChars >= declarationText.length } ?: StyleRegistry.PAIRING
             onStyleChanged(fallback)
             StyleFavoritesStore.setLastUsed(context, fallback.id)
@@ -1056,45 +1115,29 @@ fun LookStep(
     val rawWidthPx = (previewWidthDp.value * density).roundToInt()
     val rawHeightPx = (rawWidthPx * formatAspect).roundToInt()
     val maxDim = max(rawWidthPx, rawHeightPx)
-    val widthPx = if (maxDim > 1440) ((rawWidthPx.toFloat() * 1440f) / maxDim).roundToInt() else rawWidthPx
-    val heightPx = if (maxDim > 1440) ((rawHeightPx.toFloat() * 1440f) / maxDim).roundToInt() else rawHeightPx
+    val previewScale = if (PerformanceTier.isLowRamDevice && maxDim > 1080) 1080f / maxDim else 1f
+    val widthPx = (rawWidthPx * previewScale).roundToInt().coerceAtLeast(1)
+    val heightPx = (rawHeightPx * previewScale).roundToInt().coerceAtLeast(1)
 
-    // Fast 200px placeholder + full-resolution background render with 150ms debounce and 120ms cross-fade
-    var placeholderBitmap by remember { mutableStateOf<android.graphics.Bitmap?>(null) }
-    var highResBitmap by remember { mutableStateOf<android.graphics.Bitmap?>(null) }
-
-    LaunchedEffect(
-        selectedStyle.id, selectedLight.name, format, spec.declaration, verseText, spec.recipientName, spec.milestoneDays
-    ) {
-        val lowW = 200
-        val lowH = (200 * formatAspect).roundToInt()
-        val lowKey = "${selectedStyle.id}:${selectedLight.name}:${exportFormat.name}:placeholder:${lowW}x${lowH}:${spec.declaration.hashCode()}:${verseText.hashCode()}:${spec.recipientName.hashCode()}"
-        val cached = previewBitmapCache[lowKey]
-        if (cached != null) {
-            placeholderBitmap = cached
-        } else {
-            withContext(Dispatchers.Default) {
-                val bmp = selectedStyle.render(spec, selectedLight, IntSize(lowW, lowH))
-                previewBitmapCache[lowKey] = bmp
-                placeholderBitmap = bmp
-            }
-        }
+    // Keep the last preview visible until the debounced new render is ready.
+    var activePreviewBitmap by remember { mutableStateOf<android.graphics.Bitmap?>(null) }
+    DisposableEffect(activePreviewBitmap) {
+        BitmapMemoryCache.pin(activePreviewBitmap)
+        onDispose { BitmapMemoryCache.unpin(activePreviewBitmap) }
     }
 
     LaunchedEffect(
         selectedStyle.id, selectedLight.name, format, spec.declaration, verseText, spec.recipientName, spec.milestoneDays, widthPx, heightPx
     ) {
-        highResBitmap = null
-        kotlinx.coroutines.delay(150) // Debounce 150ms while user types or switches style
-        val hiRes = withContext(Dispatchers.Default) {
+        kotlinx.coroutines.delay(150)
+        val rendered = withContext(Dispatchers.Default) {
             val key = "${selectedStyle.id}:${selectedLight.name}:${exportFormat.name}:${widthPx}x${heightPx}:${spec.declaration.hashCode()}:${verseText.hashCode()}:${spec.recipientName.hashCode()}:${spec.milestoneDays}"
-            previewBitmapCache.getOrPut(key) {
+            previewBitmapCache.getOrPut(context, key) {
                 selectedStyle.render(spec, selectedLight, IntSize(widthPx, heightPx))
             }
         }
-        highResBitmap = hiRes
+        activePreviewBitmap = rendered
     }
-
     Column(
         Modifier
             .fillMaxSize()
@@ -1114,30 +1157,17 @@ fun LookStep(
                 .border(1.dp, selectedLight.text.copy(alpha = 0.12f), RoundedCornerShape(22.dp)),
             contentAlignment = Alignment.Center
         ) {
-            Crossfade(
-                targetState = highResBitmap,
-                animationSpec = tween(120),
-                label = "PreviewCrossfade"
-            ) { hiRes ->
-                if (hiRes != null) {
-                    androidx.compose.foundation.Image(
-                        bitmap = hiRes.asImageBitmap(),
-                        contentDescription = "Live style preview",
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.None,
-                        filterQuality = FilterQuality.High
-                    )
-                } else if (placeholderBitmap != null) {
-                    androidx.compose.foundation.Image(
-                        bitmap = placeholderBitmap!!.asImageBitmap(),
-                        contentDescription = "Preview placeholder",
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Fit,
-                        filterQuality = FilterQuality.Medium
-                    )
-                } else {
-                    CircularProgressIndicator(color = selectedLight.text, modifier = Modifier.size(28.dp))
-                }
+            val current = activePreviewBitmap
+            if (current != null && !current.isRecycled) {
+                androidx.compose.foundation.Image(
+                    bitmap = current.asImageBitmap(),
+                    contentDescription = "Live style preview",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Fit,
+                    filterQuality = FilterQuality.High
+                )
+            } else {
+                CircularProgressIndicator(color = selectedLight.text, modifier = Modifier.size(28.dp))
             }
         }
 
@@ -1151,7 +1181,7 @@ fun LookStep(
             StyleRegistry.PRAYING_FOR_YOU.id
         )
         if (isNameStyle) {
-            Card(
+            MakSurface(
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(containerColor = selectedLight.text.copy(alpha = 0.06f)),
                 modifier = Modifier.fillMaxWidth()
@@ -1196,7 +1226,7 @@ fun LookStep(
 
         // 2. Contextual Option: Reply text (Chat bubble)
         if (selectedStyle.id == StyleRegistry.CHAT_BUBBLE.id) {
-            Card(
+            MakSurface(
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(containerColor = selectedLight.text.copy(alpha = 0.06f)),
                 modifier = Modifier.fillMaxWidth()
@@ -1275,7 +1305,7 @@ fun LookStep(
         Spacer(Modifier.height(4.dp))
 
         // Level 1: Category Chips Row
-        val allCategories = buildList {
+        val allCategories = remember(favoriteIds.isNotEmpty()) { buildList {
             add("For you")
             if (favoriteIds.isNotEmpty()) {
                 add("Favourites")
@@ -1285,7 +1315,7 @@ fun LookStep(
             add("Paper")
             add("Occasion")
             add("Conversation")
-        }
+        } }
 
         Row(
             Modifier
@@ -1314,11 +1344,11 @@ fun LookStep(
         Spacer(Modifier.height(12.dp))
 
         // Level 2: Style Thumbnails Row for active category
-        val stylesToDisplay = when (activeCategory) {
+        val stylesToDisplay = remember(activeCategory, spec, selectedLight, recentIds, favoriteIds) { when (activeCategory) {
             "For you" -> StyleRegistry.forYouStyles(spec, selectedLight, recentIds, favoriteIds)
             "Favourites" -> StyleRegistry.all.filter { favoriteIds.contains(it.id.lowercase()) }
             else -> StyleRegistry.byCategory(activeCategory)
-        }
+        } }
 
         @OptIn(ExperimentalFoundationApi::class)
         Row(
@@ -1329,17 +1359,21 @@ fun LookStep(
             verticalAlignment = Alignment.CenterVertically
         ) {
             stylesToDisplay.forEach { style ->
-                val isNumerals = style.id == StyleRegistry.NUMERALS.id
-                val isEligible = (!isNumerals || spec.isNumeralsEligible) && (spec.declaration.length <= style.maxChars)
+                val isEligible = spec.declaration.length <= style.maxChars
                 val isSelected = style.id == selectedStyle.id
                 val isFav = favoriteIds.contains(style.id.lowercase())
                 val thumbW = (56f * density).roundToInt()
                 val thumbH = (121f * density).roundToInt()
                 val thumbBitmap by produceState<android.graphics.Bitmap?>(null, style.id, selectedLight.name, thumbW, thumbH) {
-                    value = withContext(Dispatchers.Default) {
-                        val thumbKey = "${style.id}:${selectedLight.name}:thumb:${thumbW}x${thumbH}:${spec.shortText.hashCode()}"
-                        previewBitmapCache.getOrPut(thumbKey) {
-                            style.render(spec, selectedLight, IntSize(thumbW, thumbH))
+                    val thumbKey = "${style.id}:${selectedLight.name}:thumb:${thumbW}x${thumbH}:${spec.shortText.hashCode()}"
+                    val cached = thumbnailBitmapCache.get(thumbKey)
+                    if (cached != null && !cached.isRecycled) {
+                        value = cached
+                    } else {
+                        value = withContext(Dispatchers.Default) {
+                            val rendered = style.render(spec, selectedLight, IntSize(thumbW, thumbH))
+                            thumbnailBitmapCache.put(thumbKey, rendered)
+                            rendered
                         }
                     }
                 }
@@ -1399,7 +1433,7 @@ fun LookStep(
                                     .padding(4.dp)
                                     .size(6.dp)
                                     .clip(CircleShape)
-                                    .background(if (selectedLight.dark) Color(0xFFE8A860) else Color(0xFFB5532B))
+                                    .background(if (selectedLight.dark) SunlitGold else MakError)
                             )
                         }
                     }
@@ -1590,11 +1624,7 @@ fun LookStep(
                 Text("Set as wallpaper", color = selectedLight.text, style = MakariosTypography.labelMedium)
             }
 
-            TextButton(onClick = onShareAsFile) {
-                Icon(Icons.Outlined.InsertDriveFile, contentDescription = null, tint = selectedLight.text, modifier = Modifier.size(18.dp))
-                Spacer(Modifier.width(4.dp))
-                Text("Share as file", color = selectedLight.text, style = MakariosTypography.labelMedium)
-            }
+
         }
 
         Spacer(Modifier.height(36.dp))
@@ -1603,7 +1633,7 @@ fun LookStep(
 
 /**
  * Item H: Step 4 ("Declare, Done" board)
- * Displays check mark, "Kept.", preview of the created artwork,
+ * Displays check mark, "Saved.", preview of the created artwork,
  * primary "Back to Today" button, and "Declare another" text button.
  * Back press on Done navigates directly to Today.
  * Plays success haptic CONFIRM on API 30+.
@@ -1614,9 +1644,14 @@ fun DeclareDoneStep(
     light: Light,
     style: Style,
     onBackToToday: () -> Unit,
-    onDeclareAnother: () -> Unit
+    onDeclareAnother: () -> Unit,
+    onOpenWidgetSettings: (() -> Unit)? = null,
+    onOpenReminderSettings: (() -> Unit)? = null
 ) {
+    val context = LocalContext.current
     val view = LocalView.current
+    val coroutineScope = rememberCoroutineScope()
+
     LaunchedEffect(Unit) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             view.performHapticFeedback(HapticFeedbackConstants.CONFIRM)
@@ -1642,11 +1677,38 @@ fun DeclareDoneStep(
     ) {
         value = withContext(Dispatchers.Default) {
             val key = "${style.id}:${light.name}:done:140x245:${affirmation.declaration.hashCode()}"
-            previewBitmapCache.getOrPut(key) {
+            previewBitmapCache.getOrPut(context, key) {
                 style.render(spec, light, IntSize(140, 245))
             }
         }
     }
+
+    DisposableEffect(previewBitmap) {
+        BitmapMemoryCache.pin(previewBitmap)
+        onDispose { BitmapMemoryCache.unpin(previewBitmap) }
+    }
+
+    // Widget & reminders toggle state
+    var inWidget by remember { mutableStateOf(false) }
+    var inReminders by remember { mutableStateOf(false) }
+    var showPermissionDenied by remember { mutableStateOf(false) }
+
+    // Permission launcher for POST_NOTIFICATIONS (Android 13+)
+    val permissionLauncher = if (Build.VERSION.SDK_INT >= 33) {
+        androidx.activity.compose.rememberLauncherForActivityResult(
+            androidx.activity.result.contract.ActivityResultContracts.RequestPermission()
+        ) { granted ->
+            if (granted) {
+                inReminders = true
+                coroutineScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                    com.makarios.app.data.local.KeptRepository.setInReminders(affirmation.id, true)
+                }
+            } else {
+                inReminders = false
+                showPermissionDenied = true
+            }
+        }
+    } else null
 
     Column(
         modifier = Modifier
@@ -1670,7 +1732,7 @@ fun DeclareDoneStep(
         ) {
             Icon(
                 imageVector = Icons.Filled.Check,
-                contentDescription = "Kept",
+                contentDescription = "Saved",
                 tint = light.text,
                 modifier = Modifier.size(36.dp)
             )
@@ -1678,9 +1740,9 @@ fun DeclareDoneStep(
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        // "Kept." headline
+        // "Saved." headline
         Text(
-            text = "Kept.",
+            text = "Saved.",
             style = MakariosTypography.displayMedium,
             color = light.text,
             textAlign = TextAlign.Center
@@ -1688,9 +1750,9 @@ fun DeclareDoneStep(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Subtitle: "Saved to Mine. It will be waiting for you."
+        // Subtitle
         Text(
-            text = "Saved to Mine. It will be waiting for you.",
+            text = "Saved to My declarations. It's waiting for you.",
             style = MakariosTypography.bodyLarge,
             color = light.text.copy(alpha = 0.78f),
             textAlign = TextAlign.Center
@@ -1718,7 +1780,191 @@ fun DeclareDoneStep(
             } ?: CircularProgressIndicator(color = light.text, modifier = Modifier.size(24.dp))
         }
 
-        Spacer(modifier = Modifier.height(36.dp))
+        Spacer(modifier = Modifier.height(28.dp))
+
+        // ---- Widget & Reminders toggles card ----
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(16.dp))
+                .background(
+                    if (light.isDark) light.text.copy(alpha = 0.10f)
+                    else Cream
+                )
+                .padding(horizontal = 20.dp, vertical = 4.dp)
+        ) {
+            // "Show on my widget" row
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 14.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        "Show on my widget",
+                        style = MakariosTypography.bodyMedium,
+                        color = light.text
+                    )
+                    Text(
+                        "On your home screen",
+                        style = MakariosTypography.labelSmall,
+                        color = light.text.copy(alpha = 0.65f)
+                    )
+                }
+                Switch(
+                    checked = inWidget,
+                    onCheckedChange = { enabled ->
+                        inWidget = enabled
+                        coroutineScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                                                        com.makarios.app.data.local.KeptRepository.setInWidget(affirmation.id, enabled)
+                        }
+                    },
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = light.top,
+                        checkedTrackColor = light.text,
+                        uncheckedThumbColor = light.text,
+                        uncheckedTrackColor = light.text.copy(alpha = 0.22f)
+                    )
+                )
+            }
+
+            HorizontalDivider(color = light.text.copy(alpha = 0.10f), thickness = 0.5.dp)
+
+            // "Use in my reminders" row
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 14.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        "Use in my reminders",
+                        style = MakariosTypography.bodyMedium,
+                        color = light.text
+                    )
+                    Text(
+                        "A gentle nudge each day",
+                        style = MakariosTypography.labelSmall,
+                        color = light.text.copy(alpha = 0.65f)
+                    )
+                }
+                Switch(
+                    checked = inReminders,
+                    onCheckedChange = { enabled ->
+                        if (enabled) {
+                            // Check notification permission first
+                            if (Build.VERSION.SDK_INT >= 33) {
+                                val hasPermission = androidx.core.content.ContextCompat.checkSelfPermission(
+                                    context, android.Manifest.permission.POST_NOTIFICATIONS
+                                ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+                                if (hasPermission) {
+                                    inReminders = true
+                                    showPermissionDenied = false
+                                    coroutineScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                                                                                com.makarios.app.data.local.KeptRepository.setInReminders(affirmation.id, true)
+                                    }
+                                } else {
+                                    permissionLauncher?.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+                                }
+                            } else {
+                                inReminders = true
+                                showPermissionDenied = false
+                                coroutineScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                                                                        com.makarios.app.data.local.KeptRepository.setInReminders(affirmation.id, true)
+                                }
+                            }
+                        } else {
+                            inReminders = false
+                            showPermissionDenied = false
+                            coroutineScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                                                                com.makarios.app.data.local.KeptRepository.setInReminders(affirmation.id, false)
+                            }
+                        }
+                    },
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = light.top,
+                        checkedTrackColor = light.text,
+                        uncheckedThumbColor = light.text,
+                        uncheckedTrackColor = light.text.copy(alpha = 0.22f)
+                    )
+                )
+            }
+
+            // Notification denied message
+            if (showPermissionDenied) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        "Notifications are off.",
+                        style = MakariosTypography.labelSmall,
+                        color = light.text.copy(alpha = 0.70f),
+                        modifier = Modifier.weight(1f)
+                    )
+                    TextButton(
+                        onClick = {
+                            context.startActivity(
+                                android.content.Intent(android.provider.Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+                                    .putExtra(android.provider.Settings.EXTRA_APP_PACKAGE, context.packageName)
+                            )
+                        },
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)
+                    ) {
+                        Text(
+                            "Allow in Settings",
+                            style = MakariosTypography.labelSmall,
+                            color = light.text
+                        )
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Text links: "Widget settings" and "Reminder settings"
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            TextButton(
+                onClick = { onOpenWidgetSettings?.invoke() },
+                contentPadding = PaddingValues(horizontal = 6.dp, vertical = 0.dp)
+            ) {
+                Text(
+                    "Widget settings >",
+                    style = MakariosTypography.labelMedium,
+                    color = light.text,
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold
+                )
+            }
+            Text(
+                "•",
+                style = MakariosTypography.labelMedium,
+                color = light.text.copy(alpha = 0.40f),
+                modifier = Modifier.padding(horizontal = 4.dp)
+            )
+            TextButton(
+                onClick = { onOpenReminderSettings?.invoke() },
+                contentPadding = PaddingValues(horizontal = 6.dp, vertical = 0.dp)
+            ) {
+                Text(
+                    "Reminder settings >",
+                    style = MakariosTypography.labelMedium,
+                    color = light.text,
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
 
         // Primary: ink pill "Back to Today" (56dp)
         Button(
@@ -1752,3 +1998,9 @@ fun DeclareDoneStep(
         Spacer(modifier = Modifier.height(32.dp))
     }
 }
+
+
+
+
+
+

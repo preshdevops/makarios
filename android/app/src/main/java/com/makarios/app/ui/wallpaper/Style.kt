@@ -33,7 +33,8 @@ data class StyleSpec(
     val hourFormatted: String? = null,
     val timestampFormatted: String? = null,
     val recapDeclarations: List<StyleSpec>? = null,
-    val replyText: String? = null
+    val replyText: String? = null,
+    val options: StyleOptions = StyleOptions()
 ) {
     /** Resolved chapter number: uses explicit value, extracts from reference, or defaults to 23. */
     val resolvedChapter: String
@@ -53,25 +54,6 @@ data class StyleSpec(
                 if (ch.isNotEmpty()) return ch
             }
             return "23"
-        }
-
-    /**
-     * Numerals style is eligible only when chapter has 2 or more digits,
-     * or verse number has 2+ digits, or combined group (e.g. 5:13) has 2+ digits.
-     */
-    val isNumeralsEligible: Boolean
-        get() {
-            if (!chapterNumber.isNullOrBlank()) {
-                return chapterNumber.filter { it.isDigit() }.length >= 2
-            }
-            val ref = reference
-            if (ref != null && ref.contains(":")) {
-                val lastToken = ref.substringAfterLast(" ")
-                val ch = lastToken.substringBefore(":").filter { it.isDigit() }
-                val v = lastToken.substringAfter(":").substringBefore("-").substringBefore("-").filter { it.isDigit() }
-                return ch.length >= 2 || v.length >= 2
-            }
-            return false
         }
 }
 
@@ -113,7 +95,7 @@ data class WallpaperSpec(
 typealias WallpaperStyle = Style
 
 fun defaultWallpaperSpec(style: Style, light: Light = Light.forNow()): WallpaperSpec =
-    WallpaperSpec(style, light, CuratedWallpaperVerses.first())
+    WallpaperSpec(style, light, CuratedWallpaperVerses.firstOrNull() ?: CuratedVerse("The Lord is my shepherd; I shall not want.", "Psalm 23:1"))
 
 /**
  * A Style is a pure, offscreen renderer: Style x Light x Format -> Bitmap.
@@ -124,7 +106,8 @@ interface Style {
     val displayName: String
     val category: String get() = "Type"
     val supportsLights: Boolean get() = true
-    val maxChars: Int get() = 140
+    val maxChars: Int get() = 300
+    val supportedOptions: Set<StyleOptionField> get() = emptySet()
 
     fun render(spec: StyleSpec, light: Light, size: IntSize): Bitmap
 
@@ -146,7 +129,6 @@ interface Style {
         val PAIRING: Style get() = StyleRegistry.PAIRING
         val WINDOWS: Style get() = StyleRegistry.WINDOWS
         val RAYS: Style get() = StyleRegistry.RAYS
-        val NUMERALS: Style get() = StyleRegistry.NUMERALS
         val PAPER: Style get() = StyleRegistry.PAPER
         val CONSTELLATION: Style get() = StyleRegistry.CONSTELLATION
         val WORD: Style get() = StyleRegistry.WORD
@@ -171,7 +153,7 @@ interface Style {
         fun values(): Array<Style> = StyleRegistry.essentials.toTypedArray()
         fun allValues(): Array<Style> = StyleRegistry.all.toTypedArray()
         fun valueOf(id: String): Style = StyleRegistry[id]
-            ?: error("Style not found for id: $id. Available: ${StyleRegistry.all.map { it.id }}")
+            ?: StyleRegistry.PAIRING
     }
 }
 
@@ -180,7 +162,6 @@ object StyleRegistry {
     val PAIRING: Style = PairingStyle
     val WINDOWS: Style = WindowsStyle
     val RAYS: Style = RaysStyle
-    val NUMERALS: Style = NumeralsStyle
     val PAPER: Style = PaperStyle
     val CONSTELLATION: Style = ConstellationStyle
     val WORD: Style = WordStyle
@@ -243,8 +224,36 @@ object StyleRegistry {
     val CALL_AND_ANSWER: Style = CallAndAnswerStyle
     val COORDINATES: Style = CoordinatesStyle
 
+    // 20 New Non-Photo Styles (Prompt 20 Part F)
+    val ARCH: Style = ArchStyle
+    val MONOSPACE: Style = MonospaceStyle
+    val SANCTUARY: Style = SanctuaryStyle
+    val PARCHMENT: Style = ParchmentStyle
+    val HEADLINE: Style = HeadlineStyle
+    val NOTEBOOK: Style = NotebookStyle
+    val CREST: Style = CrestStyle
+    val OASIS: Style = OasisStyle
+    val SERENE: Style = SereneStyle
+    val IMPACT: Style = ImpactStyle
+    val DIARY: Style = DiaryStyle
+    val DOUBLE_LINE: Style = DoubleLineStyle
+    val STARS: Style = StarsStyle
+    val PURE: Style = PureStyle
+    val BLOCK: Style = BlockStyle
+    val LEDGER: Style = LedgerStyle
+    val PILLAR: Style = PillarStyle
+    val DAWN_BREAK: Style = DawnBreakStyle
+    val AIR: Style = AirStyle
+    val PUNCH: Style = PunchStyle
+
+    val new20: List<Style> = listOf(
+        ARCH, MONOSPACE, SANCTUARY, PARCHMENT, HEADLINE, NOTEBOOK,
+        CREST, OASIS, SERENE, IMPACT, DIARY, DOUBLE_LINE,
+        STARS, PURE, BLOCK, LEDGER, PILLAR, DAWN_BREAK, AIR, PUNCH
+    )
+
     val essentials: List<Style> = listOf(
-        PAIRING, WINDOWS, RAYS, NUMERALS,
+        PAIRING, WINDOWS, RAYS,
         PAPER, CONSTELLATION, WORD, PAGE,
         EIGHT_LIGHTS, CROSS, PATH, TIDE
     )
@@ -262,16 +271,31 @@ object StyleRegistry {
         CHAT_BUBBLE, FILL_IN, PICK_ONE, WEEK, CALL_AND_ANSWER, COORDINATES
     )
 
-    val all: List<Style> = essentials + more + new36
+    val all: List<Style> = essentials + more + new36 + new20
 
-    val categories: List<String> = listOf("For you", "Type", "Light", "Paper", "Occasion", "Conversation")
+    val categories: List<String> = listOf("All", "Simple", "Scene", "Frame", "Journal", "Bold")
 
-    fun byCategory(category: String): List<Style> = when (category) {
-        "Type" -> all.filter { it.category == "Type" }
-        "Light" -> all.filter { it.category == "Light" }
-        "Paper" -> all.filter { it.category == "Paper" }
-        "Occasion" -> all.filter { it.category == "Occasion" }
-        "Conversation" -> all.filter { it.category == "Conversation" }
+    fun byCategory(category: String): List<Style> = when (category.lowercase()) {
+        "simple" -> all.filter {
+            it.category.equals("simple", ignoreCase = true) ||
+            it.category.equals("type", ignoreCase = true)
+        }
+        "scene" -> all.filter {
+            it.category.equals("scene", ignoreCase = true) ||
+            it.category.equals("light", ignoreCase = true)
+        }
+        "frame" -> all.filter {
+            it.category.equals("frame", ignoreCase = true) ||
+            it.category.equals("conversation", ignoreCase = true)
+        }
+        "journal" -> all.filter {
+            it.category.equals("journal", ignoreCase = true) ||
+            it.category.equals("paper", ignoreCase = true) ||
+            it.category.equals("occasion", ignoreCase = true)
+        }
+        "bold" -> all.filter {
+            it.category.equals("bold", ignoreCase = true)
+        }
         else -> all
     }
 
@@ -395,10 +419,9 @@ object AutoStyleSelector {
             return StyleRegistry.WORD
         }
 
-        // 3. Scripture-forward -> Page or Numerals (Numerals requires 2+ digits)
-        val tempSpec = StyleSpec(declaration = trimmed, verse = verse, reference = reference, chapterNumber = chapterNumber)
+        // 3. Scripture-forward -> Page
         if (verse != null && (verse.length >= len || !chapterNumber.isNullOrBlank())) {
-            return if (tempSpec.isNumeralsEligible) StyleRegistry.NUMERALS else StyleRegistry.PAGE
+            return StyleRegistry.PAGE
         }
 
         // 4. Peace / rest -> Tide or Paper
@@ -433,11 +456,6 @@ object AutoStyleSelector {
         if (light == Light.Night) return StyleRegistry.CONSTELLATION
 
         return StyleRegistry.PAIRING
-    }
-
-    fun surpriseMe(seed: Int = Random.nextInt()): Style {
-        val styles = StyleRegistry.all
-        return styles[Random(seed).nextInt(styles.size)]
     }
 }
 

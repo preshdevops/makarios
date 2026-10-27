@@ -14,6 +14,6 @@ object MilestoneHelper {
 
     fun closestOrPastMilestone(streak: Int): Int {
         if (streak <= 0) return 30
-        return MILESTONES.lastOrNull { it <= streak } ?: MILESTONES.first()
+        return MILESTONES.lastOrNull { it <= streak } ?: (MILESTONES.firstOrNull() ?: 1)
     }
 }

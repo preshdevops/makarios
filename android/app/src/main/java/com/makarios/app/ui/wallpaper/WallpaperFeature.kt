@@ -27,24 +27,21 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.launch
 
 class WallpaperRenderer(private val context: Context) {
-    private val cache = mutableMapOf<String, Bitmap>()
-
     suspend fun preview(spec: WallpaperSpec, width: Int, height: Int): Bitmap = withContext(Dispatchers.Default) {
         val key = "${spec.style.id}:${spec.light.name}:$width:$height:${spec.declaration.hashCode()}:${spec.verse?.text.hashCode()}"
-        cache.getOrPut(key) {
+        val cacheKey = "wallpaper:$key"
+        com.makarios.app.util.BitmapMemoryCache.getOrPut(context, cacheKey) {
             renderWallpaper(context, spec, width, height)
         }
     }
 
     suspend fun export(spec: WallpaperSpec): Bitmap = withContext(Dispatchers.Default) {
-        val wm = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
-        val bounds = wm.currentWindowMetrics.bounds
-        renderWallpaper(context, spec, bounds.width(), bounds.height())
+        val dm = context.resources.displayMetrics
+        renderWallpaper(context, spec, dm.widthPixels, dm.heightPixels)
     }
 
     fun clear() {
-        cache.values.forEach { if (!it.isRecycled) it.recycle() }
-        cache.clear()
+        com.makarios.app.util.BitmapMemoryCache.clear()
     }
 }
 
@@ -57,7 +54,9 @@ fun applyWallpaper(context: Context, bitmap: Bitmap, target: WallpaperTarget) {
         WallpaperTarget.HOME -> WallpaperManager.FLAG_SYSTEM
         WallpaperTarget.BOTH -> WallpaperManager.FLAG_LOCK or WallpaperManager.FLAG_SYSTEM
     }
-    manager.setBitmap(bitmap, null, true, flags)
+    manager.suggestDesiredDimensions(bitmap.width, bitmap.height)
+    android.util.Log.d("Wallpaper", "wallpaper render ${bitmap.width}x${bitmap.height} set ${bitmap.width}x${bitmap.height}")
+    manager.setBitmap(bitmap, android.graphics.Rect(0, 0, bitmap.width, bitmap.height), true, flags)
 }
 
 @Composable
@@ -103,7 +102,7 @@ fun WallpaperGallery(onBack: () -> Unit, modifier: Modifier = Modifier) {
             horizontalArrangement = Arrangement.spacedBy(14.dp),
             verticalArrangement = Arrangement.spacedBy(18.dp)
         ) {
-            items(StyleRegistry.all) { style ->
+            items(StyleRegistry.all.distinctBy { it.id }, key = { "wallpaper-style-${it.id}" }) { style ->
                 WallpaperTile(style, selectedLight, renderer) {
                     selectedStyle = style
                 }
@@ -113,7 +112,7 @@ fun WallpaperGallery(onBack: () -> Unit, modifier: Modifier = Modifier) {
 
     if (selectedStyle != null) {
         WallpaperPreview(
-            style = selectedStyle!!,
+            style = selectedStyle ?: StyleRegistry.PAIRING,
             light = selectedLight,
             onLightChanged = { selectedLight = it },
             renderer = renderer,
@@ -143,7 +142,11 @@ fun WallpaperGallery(onBack: () -> Unit, modifier: Modifier = Modifier) {
                                     if (chosen != null) {
                                         scope.launch {
                                             val bmp = renderer.export(defaultWallpaperSpec(chosen, selectedLight))
-                                            applyWallpaper(context, bmp, target)
+                                            try {
+                                                applyWallpaper(context, bmp, target)
+                                            } finally {
+                                                if (!bmp.isRecycled) bmp.recycle()
+                                            }
                                         }
                                     }
                                 }
@@ -173,6 +176,11 @@ private fun WallpaperTile(
         // 1/4 scale render in coroutine
         value = renderer.preview(defaultWallpaperSpec(style, light), 108, 234)
     }
+    DisposableEffect(bitmap) {
+        com.makarios.app.util.BitmapMemoryCache.pin(bitmap)
+        onDispose { com.makarios.app.util.BitmapMemoryCache.unpin(bitmap) }
+    }
+
     Column(Modifier.clickable { onClick() }) {
         Box(
             Modifier
@@ -192,7 +200,7 @@ private fun WallpaperTile(
         }
         Text(
             style.displayName,
-            style = MakariosTypography.bodyLarge.copy(fontStyle = FontStyle.Italic),
+            style = MakariosTypography.bodyLarge,
             color = light.text,
             modifier = Modifier.padding(top = 7.dp)
         )
@@ -208,9 +216,17 @@ private fun WallpaperPreview(
     onClose: () -> Unit,
     onSet: () -> Unit
 ) {
-    val bitmap by produceState<Bitmap?>(null, style.id, light.name) {
-        value = renderer.preview(defaultWallpaperSpec(style, light), 360, 780)
+    // Preview at the exact aspect of this phone, rendered by the same function used on apply.
+    val configuration = androidx.compose.ui.platform.LocalConfiguration.current
+    val deviceAspect = configuration.screenWidthDp.toFloat() / configuration.screenHeightDp.coerceAtLeast(1).toFloat()
+    val bitmap by produceState<Bitmap?>(null, style.id, light.name, deviceAspect) {
+        value = renderer.preview(defaultWallpaperSpec(style, light), 360, (360 / deviceAspect).toInt().coerceAtLeast(1))
     }
+    DisposableEffect(bitmap) {
+        com.makarios.app.util.BitmapMemoryCache.pin(bitmap)
+        onDispose { com.makarios.app.util.BitmapMemoryCache.unpin(bitmap) }
+    }
+
     Box(Modifier.fillMaxSize().background(light.bottom)) {
         Column(
             Modifier
@@ -236,7 +252,7 @@ private fun WallpaperPreview(
             Box(
                 Modifier
                     .fillMaxHeight(0.72f)
-                    .aspectRatio(9f / 19.5f)
+                    .aspectRatio(deviceAspect)
                     .clip(RoundedCornerShape(24.dp))
                     .background(light.top)
             ) {

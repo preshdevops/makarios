@@ -158,6 +158,9 @@ fun AuthDialog(
                 onError = { error ->
                     isLoading = false
                     errorMessage = error
+                },
+                onCancel = {
+                    isLoading = false
                 }
             )
         }
@@ -217,7 +220,7 @@ fun AuthDialog(
 
                 Text(
                     text = if (isSignUp)
-                        "Back up your authored declarations & sync across all your devices."
+                        "Back up your declarations across all your devices."
                     else
                         "Sign in to restore your declarations & settings.",
                     fontFamily = BodyFontFamily,
@@ -240,7 +243,7 @@ fun AuthDialog(
                             .padding(horizontal = 12.dp, vertical = 8.dp)
                     ) {
                         Text(
-                            text = errorMessage!!,
+                            text = errorMessage ?: "",
                             fontFamily = BodyFontFamily,
                             fontSize = 12.sp,
                             lineHeight = 16.sp,
@@ -454,3 +457,4 @@ fun AuthDialog(
         }
     }
 }
+

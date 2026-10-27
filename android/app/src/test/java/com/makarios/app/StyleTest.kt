@@ -12,13 +12,14 @@ class StyleTest {
     @Test
     fun twelveStylesAreRegisteredAndAvailable() {
         val essentials = StyleRegistry.essentials
-        assertEquals(12, essentials.size)
-        assertEquals(12, Style.values().size)
-        assertEquals(57, StyleRegistry.all.size)
+        assertEquals(11, essentials.size)
+        assertEquals(11, Style.values().size)
+        assertEquals(76, StyleRegistry.all.size)
         assertEquals(36, StyleRegistry.new36.size)
+        assertEquals(20, StyleRegistry.new20.size)
 
         val expectedIds = listOf(
-            "pairing", "windows", "rays", "numerals",
+            "pairing", "windows", "rays",
             "paper", "constellation", "word", "page",
             "eight_lights", "cross", "path", "tide"
         )
@@ -54,14 +55,14 @@ class StyleTest {
         val wordStyle = AutoStyleSelector.pickStyle("The Lord is my shepherd.", chapterNumber = null)
         assertEquals(StyleRegistry.WORD, wordStyle)
 
-        // 2. Scripture-forward -> Page or Numerals
+        // 2. Scripture-forward -> Page
         val pageStyle = AutoStyleSelector.pickStyle(
             declaration = "He restores my soul and leads me beside quiet waters.",
             verse = "He restores my soul.",
             reference = "Psalm 23:3",
             chapterNumber = "23"
         )
-        assertTrue(pageStyle == StyleRegistry.PAGE || pageStyle == StyleRegistry.NUMERALS)
+        assertEquals(StyleRegistry.PAGE, pageStyle)
 
         // 3. Peace/Rest -> Tide or Paper
         val peaceStyle = AutoStyleSelector.pickStyle("I abide in perfect peace and rest.")
@@ -82,10 +83,6 @@ class StyleTest {
         // 7. Night hour fallback -> Constellation
         val nightStyle = AutoStyleSelector.pickStyle("In the quiet watches of the night I will meditate on You.", light = Light.Night)
         assertEquals(StyleRegistry.CONSTELLATION, nightStyle)
-
-        // 8. Surprise me returns valid registered style
-        val surprise = AutoStyleSelector.surpriseMe(seed = 12345)
-        assertTrue(StyleRegistry.all.contains(surprise))
     }
 
     @Test
@@ -176,7 +173,7 @@ class StyleTest {
         val matrixLights = listOf(Light.Dawn, Light.Midday, Light.Night)
         val matrixFormats = listOf(ExportFormat.Story, ExportFormat.Square)
 
-        assertEquals(12, matrixStyles.size)
+        assertEquals(11, matrixStyles.size)
         assertEquals(3, matrixLights.size)
         assertEquals(2, matrixFormats.size)
 
@@ -232,6 +229,6 @@ class StyleTest {
         }
 
         // Verify exactly 72 configurations were evaluated
-        assertEquals(72, totalConfigurations)
+        assertEquals(66, totalConfigurations)
     }
 }

@@ -1,4 +1,4 @@
-﻿package com.makarios.app
+package com.makarios.app
 
 import com.makarios.app.util.ExportFormat
 import org.junit.Assert.assertEquals

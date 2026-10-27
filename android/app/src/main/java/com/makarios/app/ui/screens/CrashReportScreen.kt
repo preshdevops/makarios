@@ -13,6 +13,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -21,6 +22,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.makarios.app.ui.theme.Cream
 import com.makarios.app.ui.theme.Ink
 import com.makarios.app.ui.theme.Light
 import com.makarios.app.ui.theme.MakariosTypography
@@ -35,11 +37,15 @@ fun CrashReportScreen(
 ) {
     val context = LocalContext.current
     SystemBarsController(Light.Dawn)
+    val diagLine = remember { com.makarios.app.util.DiagnosticStore.reportLine(context) }
+    val fullReport = remember(reportText, diagLine) {
+        "$reportText\n\n--- Diagnostics ---\n$diagLine"
+    }
 
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(Color(0xFFFBF9F5))
+            .background(Cream)
             .statusBarsPadding()
             .navigationBarsPadding()
             .padding(24.dp)
@@ -68,14 +74,14 @@ fun CrashReportScreen(
                 .weight(1f)
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(16.dp))
-                .background(Color(0xFFF0ECE1))
+                .background(Cream)
                 .padding(14.dp)
         ) {
             val vScroll = rememberScrollState()
             val hScroll = rememberScrollState()
 
             Text(
-                text = reportText,
+                text = fullReport,
                 style = MakariosTypography.bodySmall.copy(
                     fontFamily = FontFamily.Monospace,
                     fontSize = 11.sp,
@@ -88,7 +94,26 @@ fun CrashReportScreen(
             )
         }
 
-        Spacer(Modifier.height(20.dp))
+        Spacer(Modifier.height(12.dp))
+
+        // Diagnostic line badge
+        Surface(
+            shape = RoundedCornerShape(10.dp),
+            color = Cream,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(
+                text = diagLine,
+                style = MakariosTypography.bodySmall.copy(
+                    fontFamily = FontFamily.Monospace,
+                    fontSize = 10.sp
+                ),
+                color = Ink.copy(alpha = 0.8f),
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
+            )
+        }
+
+        Spacer(Modifier.height(16.dp))
 
         // Two primary buttons: Copy report and Share report
         Row(
@@ -98,7 +123,7 @@ fun CrashReportScreen(
             Button(
                 onClick = {
                     val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                    clipboard.setPrimaryClip(ClipData.newPlainText("Makarios Crash Report", reportText))
+                    clipboard.setPrimaryClip(ClipData.newPlainText("Makarios Crash Report", fullReport))
                     Toast.makeText(context, "Crash report copied", Toast.LENGTH_SHORT).show()
                     CrashReporter.clearCrashReport(context)
                     onDismiss()
@@ -109,7 +134,7 @@ fun CrashReportScreen(
                 shape = RoundedCornerShape(26.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Ink,
-                    contentColor = Color.White
+                    contentColor = Cream
                 )
             ) {
                 Text("Copy report", style = MakariosTypography.labelLarge)
@@ -119,7 +144,7 @@ fun CrashReportScreen(
                 onClick = {
                     val sendIntent = Intent().apply {
                         action = Intent.ACTION_SEND
-                        putExtra(Intent.EXTRA_TEXT, reportText)
+                        putExtra(Intent.EXTRA_TEXT, fullReport)
                         putExtra(Intent.EXTRA_SUBJECT, "Makarios Crash Report")
                         type = "text/plain"
                     }

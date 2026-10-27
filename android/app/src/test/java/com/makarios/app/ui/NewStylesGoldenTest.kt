@@ -21,7 +21,7 @@ class NewStylesGoldenTest {
     fun all36StylesRegisteredAndConfiguredCorrectly() {
         val new36 = StyleRegistry.new36
         assertEquals(36, new36.size)
-        assertEquals(57, StyleRegistry.all.size)
+        assertEquals(76, StyleRegistry.all.size)
 
         val expectedIds = listOf(
             // Type that speaks (22..30)

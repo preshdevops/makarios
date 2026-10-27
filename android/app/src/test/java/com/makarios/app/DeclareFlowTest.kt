@@ -1,7 +1,13 @@
 package com.makarios.app
 
 import com.makarios.app.data.Affirmation
-import com.makarios.app.data.AffirmationRepository
+import android.content.Context
+import androidx.room.Room
+import androidx.test.core.app.ApplicationProvider
+import com.makarios.app.data.local.AppDatabase
+import com.makarios.app.data.local.KeptEntity
+import com.makarios.app.data.local.KeptRepository
+import kotlinx.coroutines.runBlocking
 import com.makarios.app.data.AffirmationTone
 import com.makarios.app.data.ScriptureDatabase
 import com.makarios.app.data.ScriptureMatcher
@@ -15,7 +21,12 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
+@RunWith(RobolectricTestRunner::class)
+@Config(manifest = Config.NONE)
 class DeclareFlowTest {
 
     @Test
@@ -36,29 +47,35 @@ class DeclareFlowTest {
     }
 
     @Test
-    fun testAffirmationSavingIdempotency() {
-        val testId = "test-declare-${System.currentTimeMillis()}"
-        val affirmation1 = Affirmation(
-            id = testId,
-            declaration = "My future is secure in God's hands",
-            scriptureText = "For I know the plans I have for you...",
-            reference = "Jeremiah 29:11",
-            context = "Authored in Makarios Declare Studio.",
-            category = "Personal",
-            tone = AffirmationTone.STILL,
-            imageUrl = "",
-            isFavorite = true
-        )
-
-        AffirmationRepository.addPersonalAffirmation(affirmation1)
-        val initialCount = AffirmationRepository.getAll().count { it.id == testId }
-        assertEquals(1, initialCount)
-
-        // Re-saving same affirmation should maintain single instance
-        AffirmationRepository.addPersonalAffirmation(affirmation1)
-        val secondCount = AffirmationRepository.getAll().count { it.id == testId }
-        assertEquals(1, secondCount)
-        assertTrue(AffirmationRepository.isSaved(testId))
+    fun testKeptRepositoryPersistenceAndUndo() = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val db = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java).allowMainThreadQueries().build()
+        try {
+            KeptRepository.setDatabaseForTesting(db)
+            val row = KeptEntity(
+                id = "kept-test",
+                declaration = "I am held.",
+                verseText = "Do not fear.",
+                reference = "Isaiah 41:10",
+                lightName = "Dawn",
+                styleId = "classic",
+                createdAt = 1L
+            )
+            KeptRepository.save(row)
+            val stored = KeptRepository.getById(row.id)!!
+            assertEquals(row.declaration, stored.declaration)
+            assertEquals(row.reference, stored.reference)
+            assertEquals(row.lightName, stored.lightName)
+            assertEquals(1, KeptRepository.activeCount())
+            KeptRepository.softDelete(row.id, 2L)
+            assertEquals(0, KeptRepository.activeCount())
+            assertEquals(1, KeptRepository.deletedCount())
+            KeptRepository.restore(row.id, 3L)
+            assertEquals(1, KeptRepository.activeCount())
+        } finally {
+            KeptRepository.setDatabaseForTesting(null)
+            db.close()
+        }
     }
 
     @Test
@@ -94,3 +111,5 @@ class DeclareFlowTest {
         assertEquals(3840, (ExportFormat.Story.height * scale).toInt())
     }
 }
+
+

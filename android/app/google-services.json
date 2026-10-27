@@ -12,7 +12,20 @@
           "package_name": "com.makarios.app"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "10687276915-q0d4b49jb3v0kbmsmrrk541rlqnio9m7.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.makarios.app",
+            "certificate_hash": "8ff88252f4a3edd0fdb95d5843870cfd8a207f29"
+          }
+        },
+        {
+          "client_id": "10687276915-3m2l9utkihjc6okfpbomh4cqmv4ngov0.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyAzsaLygrna5UZ91YIbJ0XWz8UWK04PRfw"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "10687276915-3m2l9utkihjc6okfpbomh4cqmv4ngov0.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

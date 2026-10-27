@@ -1,4 +1,4 @@
-package com.makarios.app.data
+﻿package com.makarios.app.data
 
 import android.content.Context
 import androidx.room.Room
@@ -66,7 +66,7 @@ class KeptPersistenceTest {
             verseText = "I can do all things through him who strengthens me.",
             reference = "Philippians 4:13",
             lightName = "Dusk",
-            styleId = "numerals",
+            styleId = "pairing",
             createdAt = 3000L,
             sourceType = "bank"
         )
@@ -109,15 +109,17 @@ class KeptPersistenceTest {
         dao.insert(item)
         assertEquals(1, dao.getAllFlow().first().size)
 
-        // Delete
-        dao.delete(item)
+        // Soft delete, then restore before the undo window closes.
+        dao.softDelete(item.id, 5001L, "LOCAL")
         assertEquals(0, dao.getAllFlow().first().size)
+        assertEquals(1, dao.deletedCount())
 
-        // Undo (re-insert)
-        dao.insert(item)
+        dao.restore(item.id, 5002L, "LOCAL")
         val restored = dao.getAllFlow().first()
         assertEquals(1, restored.size)
         assertEquals("item-undo", restored[0].id)
         assertEquals("He restores my soul.", restored[0].declaration)
     }
 }
+
+

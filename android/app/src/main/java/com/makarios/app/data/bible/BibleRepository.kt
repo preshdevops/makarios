@@ -1,6 +1,9 @@
 package com.makarios.app.data.bible
 
 import android.content.Context
+import android.database.Cursor
+import android.database.sqlite.SQLiteDatabase
+import android.database.sqlite.SQLiteOpenHelper
 import android.util.JsonReader
 import android.util.Log
 import kotlinx.coroutines.Dispatchers
@@ -12,15 +15,10 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.io.InputStreamReader
 
-enum class Testament {
-    OT, NT
-}
+// The SQLite index stays on disk; only a requested chapter or limited search result enters heap.
+enum class Testament { OT, NT }
 
-data class BibleBook(
-    val name: String,
-    val testament: Testament,
-    val chapterCount: Int
-)
+data class BibleBook(val name: String, val testament: Testament, val chapterCount: Int)
 
 data class BibleVerse(
     val book: String,
@@ -41,197 +39,203 @@ data class VerseSelection(
 )
 
 sealed interface BibleState {
-    object Loading : BibleState
-    object Ready : BibleState
+    data object Loading : BibleState
+    data object Ready : BibleState
     data class Failed(val error: Throwable) : BibleState
 }
 
 object BibleRepository {
-
     private const val TAG = "BibleRepository"
+    private const val DB_NAME = "bible_index.db"
     private val initMutex = Mutex()
-
     private val _state = MutableStateFlow<BibleState>(BibleState.Loading)
     val state: StateFlow<BibleState> = _state.asStateFlow()
-
-    private val booksList = mutableListOf<BibleBook>()
-    private val chapterMap = HashMap<String, MutableMap<Int, MutableList<BibleVerse>>>()
-    private val verseMap = HashMap<String, BibleVerse>()
-    private val allVerses = mutableListOf<BibleVerse>()
+    @Volatile private var booksSnapshot: List<BibleBook> = emptyList()
+    @Volatile private var database: SQLiteDatabase? = null
 
     val isReady: Boolean get() = _state.value is BibleState.Ready
+    val books: List<BibleBook> get() = booksSnapshot
 
-    val books: List<BibleBook>
-        get() = booksList
-
-    /**
-     * Initializes the in-memory Bible index using a streaming JsonReader from assets/verses.json.
-     * Loads once on Dispatchers.IO and stays in memory for instant (<50ms) access.
-     */
+    /** Builds a disk-backed index from the Bible asset only when a Bible view or search is opened. */
     suspend fun initialize(context: Context): Result<Unit> = withContext(Dispatchers.IO) {
-        if (_state.value is BibleState.Ready) return@withContext Result.success(Unit)
+        if (isReady) return@withContext Result.success(Unit)
         initMutex.withLock {
-            if (_state.value is BibleState.Ready) return@withLock Result.success(Unit)
+            if (isReady) return@withLock Result.success(Unit)
             _state.value = BibleState.Loading
-            val start = System.currentTimeMillis()
+            val startedAt = System.currentTimeMillis()
             try {
-                booksList.clear()
-                chapterMap.clear()
-                verseMap.clear()
-                allVerses.clear()
+                val db = BibleIndexHelper(context.applicationContext).writableDatabase
+                val count = db.rawQuery("SELECT COUNT(*) FROM verses", null).use { cursor ->
+                    if (cursor.moveToFirst()) cursor.getInt(0) else 0
+                }
+                if (count == 0) importVerses(context, db)
+                loadBooks(db)
+                database = db
+                _state.value = BibleState.Ready
+                Log.d(TAG, "SQLite index ready in ${System.currentTimeMillis() - startedAt}ms")
+                Result.success(Unit)
+            } catch (failure: Throwable) {
+                _state.value = BibleState.Failed(failure)
+                Log.e(TAG, "Failed to build Bible SQLite index", failure)
+                Result.failure(failure)
+            }
+        }
+    }
 
-                val bookMaxChapters = HashMap<String, Int>()
-
-                context.assets.open("verses.json").use { inputStream ->
-                    JsonReader(InputStreamReader(inputStream, Charsets.UTF_8)).use { reader ->
-                        reader.beginArray()
+    private fun importVerses(context: Context, db: SQLiteDatabase) {
+        val insert = db.compileStatement(
+            "INSERT OR REPLACE INTO verses(reference, reference_key, book, chapter, verse, text) VALUES(?, ?, ?, ?, ?, ?)"
+        )
+        db.beginTransaction()
+        try {
+            context.assets.open("verses.json").use { input ->
+                JsonReader(InputStreamReader(input, Charsets.UTF_8)).use { reader ->
+                    reader.beginArray()
+                    while (reader.hasNext()) {
+                        var rawReference = ""
+                        var rawText = ""
+                        reader.beginObject()
                         while (reader.hasNext()) {
-                            reader.beginObject()
-                            var rawRef = ""
-                            var rawText = ""
-                            while (reader.hasNext()) {
-                                when (reader.nextName()) {
-                                    "r" -> rawRef = reader.nextString()
-                                    "t" -> rawText = reader.nextString()
-                                    else -> reader.skipValue()
-                                }
-                            }
-                            reader.endObject()
-
-                            val normRef = ScriptureText.normalizeReference(rawRef)
-                            val cleanText = ScriptureText.clean(rawText)
-
-                            val lastSpace = normRef.lastIndexOf(' ')
-                            if (lastSpace <= 0) continue
-                            val bookName = normRef.substring(0, lastSpace)
-                            val colonPart = normRef.substring(lastSpace + 1)
-                            val colonIdx = colonPart.indexOf(':')
-                            if (colonIdx <= 0) continue
-
-                            val chapter = colonPart.substring(0, colonIdx).toIntOrNull() ?: 1
-                            val verse = colonPart.substring(colonIdx + 1).toIntOrNull() ?: 1
-
-                            val bVerse = BibleVerse(
-                                book = bookName,
-                                chapter = chapter,
-                                verse = verse,
-                                text = cleanText,
-                                reference = normRef
-                            )
-
-                            allVerses.add(bVerse)
-                            verseMap[normRef.lowercase()] = bVerse
-
-                            val chapters = chapterMap.getOrPut(bookName) { HashMap() }
-                            chapters.getOrPut(chapter) { mutableListOf() }.add(bVerse)
-
-                            val maxCh = bookMaxChapters[bookName] ?: 0
-                            if (chapter > maxCh) {
-                                bookMaxChapters[bookName] = chapter
+                            when (reader.nextName()) {
+                                "r" -> rawReference = reader.nextString()
+                                "t" -> rawText = reader.nextString()
+                                else -> reader.skipValue()
                             }
                         }
-                        reader.endArray()
+                        reader.endObject()
+                        val reference = ScriptureText.normalizeReference(rawReference)
+                        val parts = splitReference(reference) ?: continue
+                        insert.clearBindings()
+                        insert.bindString(1, reference)
+                        insert.bindString(2, reference.lowercase())
+                        insert.bindString(3, parts.first)
+                        insert.bindLong(4, parts.second.toLong())
+                        insert.bindLong(5, parts.third.toLong())
+                        insert.bindString(6, ScriptureText.clean(rawText))
+                        insert.executeInsert()
                     }
+                    reader.endArray()
                 }
-
-                // Populate canonical book list
-                val canonicalOrder = BibleReferenceParser.CANONICAL_BOOKS
-                canonicalOrder.forEachIndexed { index, name ->
-                    val chCount = bookMaxChapters[name] ?: 1
-                    val testament = if (index < 39) Testament.OT else Testament.NT
-                    booksList.add(BibleBook(name, testament, chCount))
-                }
-
-                _state.value = BibleState.Ready
-                Log.d(TAG, "Stream loaded ${allVerses.size} verses across ${booksList.size} books in ${System.currentTimeMillis() - start}ms")
-                Result.success(Unit)
-            } catch (t: Throwable) {
-                Log.e(TAG, "Failed to stream load verses.json", t)
-                _state.value = BibleState.Failed(t)
-                Result.failure(t)
             }
+            db.setTransactionSuccessful()
+        } finally {
+            db.endTransaction()
+            insert.close()
         }
     }
 
-    fun getVerse(reference: String): Result<BibleVerse?> {
-        return runCatching {
-            val parsed = BibleReferenceParser.parse(reference)
-            if (parsed != null && parsed.fromVerse != null) {
-                val key = "${parsed.book} ${parsed.chapter}:${parsed.fromVerse}".lowercase()
-                verseMap[key]
-            } else {
-                val cleanKey = ScriptureText.normalizeReference(reference).lowercase()
-                verseMap[cleanKey]
-            }
+    private fun loadBooks(db: SQLiteDatabase) {
+        val chapterCounts = mutableMapOf<String, Int>()
+        db.rawQuery("SELECT book, MAX(chapter) FROM verses GROUP BY book", null).use { cursor ->
+            while (cursor.moveToNext()) chapterCounts[cursor.getString(0)] = cursor.getInt(1)
         }
+        val books = ArrayList<BibleBook>(BibleReferenceParser.CANONICAL_BOOKS.size)
+        BibleReferenceParser.CANONICAL_BOOKS.forEachIndexed { index, book ->
+            val testament = if (index < 39) Testament.OT else Testament.NT
+            books.add(BibleBook(book, testament, chapterCounts[book] ?: 1))
+        }
+        // Publish atomically: Compose can read this on the main thread while initialization
+        // runs on Dispatchers.IO.
+        booksSnapshot = books.toList()
     }
 
-    // Overload for backward compatibility
+    private fun splitReference(reference: String): Triple<String, Int, Int>? {
+        val lastSpace = reference.lastIndexOf(' ')
+        if (lastSpace <= 0) return null
+        val book = reference.substring(0, lastSpace)
+        val chapterVerse = reference.substring(lastSpace + 1)
+        val colon = chapterVerse.indexOf(':')
+        if (colon <= 0) return null
+        val chapter = chapterVerse.substring(0, colon).toIntOrNull() ?: return null
+        val verse = chapterVerse.substring(colon + 1).toIntOrNull() ?: return null
+        return Triple(book, chapter, verse)
+    }
+
+    fun getVerse(reference: String): Result<BibleVerse?> = runCatching {
+        val db = database ?: return@runCatching null
+        val normalized = ScriptureText.normalizeReference(reference)
+        db.rawQuery(
+            "SELECT book, chapter, verse, text, reference FROM verses WHERE reference_key = ? LIMIT 1",
+            arrayOf(normalized.lowercase())
+        ).use { cursor -> if (cursor.moveToFirst()) cursor.toBibleVerse() else null }
+    }
+
     fun getVerse(context: Context, reference: String): BibleVerse? = getVerse(reference).getOrNull()
 
-    fun getChapter(book: String, chapter: Int): Result<List<BibleVerse>> {
-        return runCatching {
-            val canonical = BibleReferenceParser.resolveBookName(book) ?: book
-            val chList = chapterMap[canonical]?.get(chapter)
-            if (chList.isNullOrEmpty()) {
-                throw NoSuchElementException("Chapter $chapter of $book is not found.")
-            }
-            chList.toList()
+    fun getChapter(book: String, chapter: Int): Result<List<BibleVerse>> = runCatching {
+        val db = database ?: throw IllegalStateException("Bible index has not been initialized")
+        val canonical = BibleReferenceParser.resolveBookName(book) ?: book
+        db.rawQuery(
+            "SELECT book, chapter, verse, text, reference FROM verses WHERE book = ? AND chapter = ? ORDER BY verse",
+            arrayOf(canonical, chapter.toString())
+        ).use { cursor ->
+            val verses = ArrayList<BibleVerse>()
+            while (cursor.moveToNext()) verses.add(cursor.toBibleVerse())
+            if (verses.isEmpty()) throw NoSuchElementException("Chapter $chapter of $book is not found.")
+            verses
         }
     }
 
-    // Overload for backward compatibility
     fun getChapter(context: Context, book: String, chapter: Int): List<BibleVerse> =
         getChapter(book, chapter).getOrElse { emptyList() }
 
-    fun getRange(
-        book: String,
-        chapter: Int,
-        fromVerse: Int,
-        toVerse: Int
-    ): Result<List<BibleVerse>> {
-        return runCatching {
-            val chResult = getChapter(book, chapter).getOrThrow()
-            val minV = minOf(fromVerse, toVerse)
-            val maxV = maxOf(fromVerse, toVerse)
-            val cappedMax = minOf(maxV, minV + 7)
-            chResult.filter { it.verse in minV..cappedMax }
+    fun getRange(book: String, chapter: Int, fromVerse: Int, toVerse: Int): Result<List<BibleVerse>> = runCatching {
+        val db = database ?: throw IllegalStateException("Bible index has not been initialized")
+        val canonical = BibleReferenceParser.resolveBookName(book) ?: book
+        val first = minOf(fromVerse, toVerse)
+        val last = minOf(maxOf(fromVerse, toVerse), first + 7)
+        db.rawQuery(
+            "SELECT book, chapter, verse, text, reference FROM verses WHERE book = ? AND chapter = ? AND verse BETWEEN ? AND ? ORDER BY verse",
+            arrayOf(canonical, chapter.toString(), first.toString(), last.toString())
+        ).use { cursor ->
+            val verses = ArrayList<BibleVerse>()
+            while (cursor.moveToNext()) verses.add(cursor.toBibleVerse())
+            verses
         }
     }
 
-    // Overload for backward compatibility
     fun getRange(context: Context, book: String, chapter: Int, fromVerse: Int, toVerse: Int): List<BibleVerse> =
         getRange(book, chapter, fromVerse, toVerse).getOrElse { emptyList() }
 
-    fun searchVerses(query: String, limit: Int = 20): Result<List<BibleVerse>> {
-        return runCatching {
-            val q = query.trim().lowercase()
-            if (q.length < 2) return@runCatching emptyList()
-
-            val wordRegex = Regex("\\b${Regex.escape(q)}\\b", RegexOption.IGNORE_CASE)
-            val exactMatches = mutableListOf<BibleVerse>()
-            val substringMatches = mutableListOf<BibleVerse>()
-
-            for (verse in allVerses) {
+    fun searchVerses(query: String, limit: Int = 20): Result<List<BibleVerse>> = runCatching {
+        val db = database ?: return@runCatching emptyList()
+        val term = query.trim()
+        if (term.length < 2) return@runCatching emptyList()
+        val wordRegex = Regex("\\b${Regex.escape(term)}\\b", RegexOption.IGNORE_CASE)
+        val exact = ArrayList<BibleVerse>(limit)
+        val partial = ArrayList<BibleVerse>(limit)
+        db.rawQuery(
+            "SELECT book, chapter, verse, text, reference FROM verses WHERE text LIKE ? COLLATE NOCASE ORDER BY book, chapter, verse",
+            arrayOf("%$term%")
+        ).use { cursor ->
+            while (cursor.moveToNext()) {
+                val verse = cursor.toBibleVerse()
                 if (wordRegex.containsMatchIn(verse.text)) {
-                    exactMatches.add(verse)
-                    if (exactMatches.size >= limit) break
-                } else if (verse.text.contains(q, ignoreCase = true)) {
-                    if (substringMatches.size < limit) {
-                        substringMatches.add(verse)
-                    }
-                }
-            }
-
-            if (exactMatches.size >= limit) {
-                exactMatches
-            } else {
-                (exactMatches + substringMatches).distinctBy { it.reference }.take(limit)
+                    exact.add(verse)
+                    if (exact.size >= limit) break
+                } else if (partial.size < limit) partial.add(verse)
             }
         }
+        if (exact.size >= limit) exact else (exact + partial).distinctBy { it.reference }.take(limit)
     }
 
-    // Overload for backward compatibility
     fun searchVerses(context: Context, query: String, limit: Int = 20): List<BibleVerse> =
         searchVerses(query, limit).getOrElse { emptyList() }
+
+    private fun Cursor.toBibleVerse() = BibleVerse(
+        book = getString(0), chapter = getInt(1), verse = getInt(2), text = getString(3), reference = getString(4)
+    )
+
+    private class BibleIndexHelper(context: Context) : SQLiteOpenHelper(context, DB_NAME, null, 1) {
+        override fun onCreate(db: SQLiteDatabase) {
+            db.execSQL("CREATE TABLE verses (reference TEXT NOT NULL, reference_key TEXT PRIMARY KEY NOT NULL, book TEXT NOT NULL, chapter INTEGER NOT NULL, verse INTEGER NOT NULL, text TEXT NOT NULL)")
+            db.execSQL("CREATE INDEX idx_verses_book_chapter_verse ON verses(book, chapter, verse)")
+            db.execSQL("CREATE INDEX idx_verses_book ON verses(book)")
+        }
+
+        override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
+            db.execSQL("DROP TABLE IF EXISTS verses")
+            onCreate(db)
+        }
+    }
 }

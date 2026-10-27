@@ -14,6 +14,14 @@ object ScriptureText {
     fun clean(raw: String): String {
         if (raw.isBlank()) return ""
         var text = raw.trim()
+        // Apostrophes: normalise curly to straight and repair split contractions
+        // ("doesn' t" -> "doesn't"). Only contraction fragments are rejoined, so a
+        // closing quote after a word ('Go' and) is never glued to the next word.
+        text = text.replace('’', '\'').replace('‘', '\'')
+        text = text.replace(
+            Regex("([A-Za-z])\\s*'\\s+(?=(?:t|s|re|ve|ll|d|m|em)\\b)", RegexOption.IGNORE_CASE),
+            "$1'"
+        )
 
         // Normalize doubled quotes e.g. ."" or ." " or ?" " or ""
         text = text.replace(Regex("\"\\s*\""), "\"")

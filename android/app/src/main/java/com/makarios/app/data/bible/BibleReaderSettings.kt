@@ -1,4 +1,4 @@
-package com.makarios.app.data.bible
+﻿package com.makarios.app.data.bible
 
 import android.content.Context
 import androidx.compose.ui.graphics.Color
@@ -42,6 +42,26 @@ object BibleReaderPrefs {
     private const val KEY_THEME = "reader_theme"
     private const val KEY_SHOW_NUMBERS = "reader_show_numbers"
     private const val KEY_HIGHLIGHTS = "reader_highlights"
+    private const val KEY_VERSION = "reader_version"
+    private const val KEY_LAST_BOOK = "last_book"
+    private const val KEY_LAST_CHAPTER = "last_chapter"
+    private const val KEY_LAST_SCROLL_PREFIX = "last_scroll_"
+
+    fun getLastBook(context: Context): String = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).getString(KEY_LAST_BOOK, "John") ?: "John"
+    fun getLastChapter(context: Context): Int = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).getInt(KEY_LAST_CHAPTER, 1)
+    fun setLastPlace(context: Context, book: String, chapter: Int) {
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit().putString(KEY_LAST_BOOK, book).putInt(KEY_LAST_CHAPTER, chapter).apply()
+    }
+    fun getScrollPosition(context: Context, book: String, chapter: Int): Int =
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).getInt(KEY_LAST_SCROLL_PREFIX + book + "_" + chapter, 0)
+    fun setScrollPosition(context: Context, book: String, chapter: Int, position: Int) {
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit().putInt(KEY_LAST_SCROLL_PREFIX + book + "_" + chapter, position).apply()
+    }
+    fun getVersion(context: Context): String = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).getString(KEY_VERSION, "WEB") ?: "WEB"
+
+    fun setVersion(context: Context, version: String) {
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit().putString(KEY_VERSION, version).apply()
+    }
 
     fun getFontSize(context: Context): Float {
         return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
@@ -97,3 +117,5 @@ object BibleReaderPrefs {
         return isNowHighlighted
     }
 }
+
+

@@ -21,3 +21,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "Makarios"
 include(":app")
+include(":baselineprofile")

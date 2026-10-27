@@ -194,7 +194,7 @@ fun AuthChooseScreen(
 
             // Sub: (16/24, 78% ink)
             Text(
-                text = "Sign in to sync across your devices. Or start as a guest and sign in any time.",
+                text = "Sign in to back up across your devices. Or start as a guest and sign in any time.",
                 style = TextStyle(
                     fontFamily = HankenGroteskFontFamily,
                     fontWeight = FontWeight.Normal,
@@ -208,7 +208,7 @@ fun AuthChooseScreen(
 
             if (inlineError != null) {
                 Spacer(modifier = Modifier.height(16.dp))
-                AuthInlineError(message = inlineError!!)
+                inlineError?.let { AuthInlineError(message = it) }
             }
 
             Spacer(modifier = Modifier.weight(1f).defaultMinSize(minHeight = 40.dp))
@@ -263,6 +263,9 @@ fun AuthChooseScreen(
                             onError = { err ->
                                 isGoogleLoading = false
                                 inlineError = err
+                            },
+                            onCancel = {
+                                isGoogleLoading = false
                             }
                         )
                     }
@@ -274,7 +277,7 @@ fun AuthChooseScreen(
                 shape = RoundedCornerShape(28.dp),
                 border = BorderStroke(1.dp, Ink.copy(alpha = 0.35f)),
                 colors = ButtonDefaults.outlinedButtonColors(
-                    containerColor = Color.White.copy(alpha = 0.85f),
+                    containerColor = Cream.copy(alpha = 0.85f),
                     contentColor = Ink
                 )
             ) {
@@ -433,7 +436,8 @@ fun AuthSignUpScreen(
     var isGoogleLoading by remember { mutableStateOf(false) }
     var inlineError by remember { mutableStateOf<String?>(null) }
 
-    val keptCount = remember { AffirmationRepository.getSaved().size }
+    val keptRows by com.makarios.app.data.local.KeptRepository.getAllFlow().collectAsState(initial = emptyList())
+    val keptCount = keptRows.size
 
     BackHandler { onBack() }
 
@@ -566,7 +570,7 @@ fun AuthSignUpScreen(
 
             if (inlineError != null) {
                 Spacer(modifier = Modifier.height(14.dp))
-                AuthInlineError(message = inlineError!!)
+                inlineError?.let { AuthInlineError(message = it) }
             }
 
             Spacer(modifier = Modifier.height(28.dp))
@@ -676,6 +680,9 @@ fun AuthSignUpScreen(
                             onError = { err ->
                                 isGoogleLoading = false
                                 inlineError = err
+                            },
+                            onCancel = {
+                                isGoogleLoading = false
                             }
                         )
                     }
@@ -687,7 +694,7 @@ fun AuthSignUpScreen(
                 shape = RoundedCornerShape(28.dp),
                 border = BorderStroke(1.dp, Ink.copy(alpha = 0.35f)),
                 colors = ButtonDefaults.outlinedButtonColors(
-                    containerColor = Color.White.copy(alpha = 0.85f),
+                    containerColor = Cream.copy(alpha = 0.85f),
                     contentColor = Ink
                 )
             ) {
@@ -900,7 +907,7 @@ fun AuthSignInScreen(
             // Inline error under the field (red #7A2012, 2dp outline, error icon, never toast)
             if (inlineError != null) {
                 Spacer(modifier = Modifier.height(8.dp))
-                AuthInlineError(message = inlineError!!)
+                inlineError?.let { AuthInlineError(message = it) }
             }
 
             if (resetEmailSentTo != null) {
@@ -909,21 +916,21 @@ fun AuthSignInScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(12.dp))
-                        .background(Color(0xFFE8F5E9))
+                        .background(Cream)
                         .padding(horizontal = 14.dp, vertical = 10.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.CheckCircle,
                         contentDescription = null,
-                        tint = Color(0xFF2E7D32),
+                        tint = Olive,
                         modifier = Modifier.size(18.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "Check your email. We sent a reset link to $resetEmailSentTo.",
                         style = MakariosTypography.bodySmall.copy(fontSize = 13.sp),
-                        color = Color(0xFF1B5E20)
+                        color = Olive
                     )
                 }
             }
@@ -1072,6 +1079,9 @@ fun AuthSignInScreen(
                             onError = { err ->
                                 isGoogleLoading = false
                                 inlineError = err
+                            },
+                            onCancel = {
+                                isGoogleLoading = false
                             }
                         )
                     }
@@ -1083,7 +1093,7 @@ fun AuthSignInScreen(
                 shape = RoundedCornerShape(28.dp),
                 border = BorderStroke(1.dp, Ink.copy(alpha = 0.35f)),
                 colors = ButtonDefaults.outlinedButtonColors(
-                    containerColor = Color.White.copy(alpha = 0.85f),
+                    containerColor = Cream.copy(alpha = 0.85f),
                     contentColor = Ink
                 )
             ) {
@@ -1197,7 +1207,7 @@ private fun AuthTextField(
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default
 ) {
-    val errorBorderColor = Color(0xFF7A2012)
+    val errorBorderColor = MakError
     val normalBorderColor = Ink.copy(alpha = 0.22f)
 
     OutlinedTextField(
@@ -1222,9 +1232,9 @@ private fun AuthTextField(
             .clip(RoundedCornerShape(16.dp)),
         shape = RoundedCornerShape(16.dp),
         colors = OutlinedTextFieldDefaults.colors(
-            focusedContainerColor = Color(0xFFFFF4E4).copy(alpha = 0.55f),
-            unfocusedContainerColor = Color(0xFFFFF4E4).copy(alpha = 0.55f),
-            errorContainerColor = Color(0xFFFFF4E4).copy(alpha = 0.55f),
+            focusedContainerColor = Cream.copy(alpha = 0.55f),
+            unfocusedContainerColor = Cream.copy(alpha = 0.55f),
+            errorContainerColor = Cream.copy(alpha = 0.55f),
             focusedBorderColor = if (isError) errorBorderColor else Ink,
             unfocusedBorderColor = if (isError) errorBorderColor else normalBorderColor,
             errorBorderColor = errorBorderColor,
@@ -1246,7 +1256,7 @@ fun AuthInlineError(message: String) {
         Icon(
             imageVector = Icons.Outlined.ErrorOutline,
             contentDescription = "Error",
-            tint = Color(0xFF7A2012),
+            tint = MakError,
             modifier = Modifier.size(16.dp)
         )
         Spacer(modifier = Modifier.width(6.dp))
@@ -1256,7 +1266,7 @@ fun AuthInlineError(message: String) {
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Medium
             ),
-            color = Color(0xFF7A2012)
+            color = MakError
         )
     }
 }
@@ -1267,7 +1277,7 @@ private fun GuestMigrationBanner(keptCount: Int) {
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(14.dp))
-            .background(Color(0xFFFFF4E4).copy(alpha = 0.85f))
+            .background(Cream.copy(alpha = 0.85f))
             .border(1.dp, Ink.copy(alpha = 0.15f), RoundedCornerShape(14.dp))
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -1288,7 +1298,7 @@ private fun GuestMigrationBanner(keptCount: Int) {
         }
         Spacer(modifier = Modifier.width(12.dp))
         Text(
-            text = "Your $keptCount kept declarations will move to your account.",
+            text = "Your $keptCount saved declarations will move to your account.",
             style = MakariosTypography.bodyMedium.copy(
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium
@@ -1335,3 +1345,5 @@ private fun TermsAndPrivacyFooter(context: Context) {
             }
     )
 }
+
+

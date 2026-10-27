@@ -29,11 +29,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.makarios.app.data.AffirmationRepository
+import com.makarios.app.data.local.KeptEntity
+import com.makarios.app.data.local.KeptRepository
 import com.makarios.app.ui.components.Pairing
 import com.makarios.app.ui.theme.*
 import com.makarios.app.util.ShareHelper
+import com.makarios.app.ui.components.ShareSheet
+import com.makarios.app.ui.components.ShareContent
 import java.util.Calendar
 import kotlin.math.sin
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.catch
+import com.makarios.app.util.CrashReporter
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -44,14 +51,22 @@ fun HomeScreen(
     onNavigateToReader: ((book: String, chapter: Int, verse: Int?) -> Unit)? = null
 ) {
     val context = LocalContext.current; val haptic = LocalHapticFeedback.current
-    var light by remember { mutableStateOf(Light.forNow()) }
+    val coroutineScope = rememberCoroutineScope()
+    val keptIds by produceState<List<String>>(initialValue = emptyList()) {
+        KeptRepository.getAllIdsFlow()
+            .catch { t ->
+                CrashReporter.logNonFatal("HomeScreen", t)
+                emit(emptyList())
+            }
+            .collect { value = it }
+    }
+    val light = LocalLight.current
     var picker by remember { mutableStateOf(false) }
     var swiped by remember { mutableStateOf(false) }
+    var shareContentToOpen by remember { mutableStateOf<ShareContent?>(null) }
 
-    LaunchedEffect(light) {
-        onLightChanged(light)
-    }
     SystemBarsController(light)
+    ProvideActiveLight(light, "Today") {}
 
     val affirmations = remember { AffirmationRepository.getAll() }
     val initialPage = affirmations.indexOfFirst { it.id == initialAffirmationId }.coerceAtLeast(0)
@@ -62,9 +77,13 @@ fun HomeScreen(
     }
 
     Box(modifier.fillMaxSize()) {
-        VerticalPager(state = pager, modifier = Modifier.fillMaxSize()) { page ->
+        VerticalPager(
+            state = pager,
+            key = { affirmations[it].id },
+            modifier = Modifier.fillMaxSize()
+        ) { page ->
             val affirmation = affirmations[page]
-            var kept by remember(affirmation.id) { mutableStateOf(AffirmationRepository.isSaved(affirmation.id)) }
+            val kept = affirmation.id in keptIds
             BoxWithConstraints(
                 Modifier
                     .fillMaxSize()
@@ -88,18 +107,33 @@ fun HomeScreen(
                 ) {
                     IconRailButton(Icons.Default.Share, "Share declaration", light) {
                         ProfileActivityLog.recordShared(context)
-                        ShareHelper.shareGeneric(context, affirmation, light)
+                        shareContentToOpen = ShareContent(
+                            declaration = affirmation.declaration,
+                            verse = affirmation.scriptureText,
+                            reference = affirmation.reference,
+                            initialLightName = light.name,
+                            declarationId = affirmation.id,
+                            source = "today",
+                            contentType = "declaration"
+                        )
                     }
                     IconRailButton(
                         if (kept) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                        if (kept) "Remove from Kept" else "Keep declaration",
+                        if (kept) "Remove" else "Save declaration",
                         light
                     ) {
                         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        AffirmationRepository.toggleSave(affirmation.id)
-                        kept = !kept
-                        if (kept) ProfileActivityLog.recordKept(context)
-                        Toast.makeText(context, if (kept) "Saved to Kept" else "Removed from Kept", Toast.LENGTH_SHORT).show()
+                        coroutineScope.launch {
+                            val existing = KeptRepository.getById(affirmation.id)
+                            if (existing == null) {
+                                KeptRepository.save(KeptEntity(affirmation.id, affirmation.declaration, affirmation.scriptureText, affirmation.reference, light.name, "", sourceType = "bank"))
+                                ProfileActivityLog.recordKept(context)
+                                Toast.makeText(context, "Saved", Toast.LENGTH_SHORT).show()
+                            } else {
+                                KeptRepository.softDelete(affirmation.id)
+                                Toast.makeText(context, "Removed", Toast.LENGTH_SHORT).show()
+                            }
+                        }
                     }
                     if (onNavigateToReader != null) {
                         IconRailButton(Icons.Outlined.MenuBook, "Read chapter", light) {
@@ -109,7 +143,7 @@ fun HomeScreen(
                             }
                         }
                     }
-                    IconRailButton(Icons.Outlined.Lightbulb, "Change Light", light) { picker = true }
+                    IconRailButton(Icons.Outlined.Lightbulb, "Your Light", light) { picker = true }
                 }
                 if (!swiped) {
                     Text(
@@ -125,11 +159,13 @@ fun HomeScreen(
             }
         }
     }
+    shareContentToOpen?.let { share ->
+        ShareSheet(content = share, onDismiss = { shareContentToOpen = null })
+    }
     if (picker) {
         LightPicker(
             current = light,
             choose = {
-                light = it
                 onLightChanged(it)
                 picker = false
             },
@@ -138,5 +174,10 @@ fun HomeScreen(
     }
 }
 private fun hourDiscPosition(size: androidx.compose.ui.geometry.Size): androidx.compose.ui.geometry.Offset { val now = Calendar.getInstance(); val hour = now.get(Calendar.HOUR_OF_DAY) + now.get(Calendar.MINUTE) / 60f; val phase = ((hour - 5.5f) / 14f).coerceIn(0f, 1f); return androidx.compose.ui.geometry.Offset(size.width * (.25f + .5f * phase), size.height * (.65f - .2f * sin(Math.PI * phase).toFloat())) }
-@Composable private fun LightPicker(current: Light, choose: (Light) -> Unit, close: () -> Unit) { Dialog(onDismissRequest = close) { Column(Modifier.clip(RoundedCornerShape(24.dp)).background(Color(0xFFFBF9F5)).padding(20.dp)) { Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) { Text("Choose Light", style = MakariosTypography.displaySmall, color = Ink); TextButton(onClick = close) { Text("Done", color = Ink) } }; listOf(Light.Dawn, Light.Midday, Light.Mist, Light.Rain, Light.Ember, Light.Dusk, Light.Grove, Light.Night).chunked(4).forEach { row -> Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) { row.forEach { item -> Box(Modifier.weight(1f).padding(vertical = 6.dp).size(52.dp).clip(RoundedCornerShape(12.dp)).lightBackground(item).clickable { choose(item) }, contentAlignment = Alignment.Center) { if (item == current) Text("\u2713", color = item.text) } } } } } } }
+private val LightPickerRows = listOf(Light.Dawn, Light.Midday, Light.Mist, Light.Rain, Light.Ember, Light.Dusk, Light.Grove, Light.Night).chunked(4)
+@Composable private fun LightPicker(current: Light, choose: (Light) -> Unit, close: () -> Unit) { Dialog(onDismissRequest = close) { Column(Modifier.clip(RoundedCornerShape(24.dp)).background(Cream).padding(20.dp)) { Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) { Text("Choose Light", style = MakariosTypography.displaySmall, color = Ink); TextButton(onClick = close) { Text("Done", color = Ink) } }; LightPickerRows.forEach { row -> Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) { row.forEach { item -> Box(Modifier.weight(1f).padding(vertical = 6.dp).size(52.dp).clip(RoundedCornerShape(12.dp)).lightBackground(item).clickable { choose(item) }, contentAlignment = Alignment.Center) { if (item == current) Text("\u2713", color = item.text) } } } } } } }
 @Composable fun IconRailButton(icon: androidx.compose.ui.graphics.vector.ImageVector, contentDescription: String, light: Light, onClick: () -> Unit) { IconButton(onClick = onClick, modifier = Modifier.size(48.dp).clip(CircleShape).background(light.text.copy(alpha = .14f))) { Icon(icon, contentDescription, tint = light.text) } }
+
+
+
+

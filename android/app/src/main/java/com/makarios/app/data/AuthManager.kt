@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.tasks.await
+import timber.log.Timber
 
 /**
  * AuthManager
@@ -57,8 +58,8 @@ object AuthManager {
             return when {
                 user == null -> "Guest"
                 user.isAnonymous -> "Guest"
-                !user.displayName.isNullOrBlank() -> user.displayName!!
-                !user.email.isNullOrBlank() -> user.email!!.substringBefore('@').replaceFirstChar { it.uppercase() }
+                !user.displayName.isNullOrBlank() -> user.displayName ?: "Friend"
+                !user.email.isNullOrBlank() -> (user.email ?: "Friend").substringBefore('@').replaceFirstChar { it.uppercase() }
                 else -> "Friend"
             }
         }
@@ -277,9 +278,9 @@ object AuthManager {
     }
 
     /**
-     * Resolves the Web Client ID for Google Sign-In from resources.
+     * Resolves the Web Client ID for Google Sign-In from resources, with constant fallback.
      */
-    fun getGoogleServerClientId(context: Context): String? {
+    fun getGoogleServerClientId(context: Context): String {
         val defaultIdRes = context.resources.getIdentifier("default_web_client_id", "string", context.packageName)
         if (defaultIdRes != 0) {
             val id = context.getString(defaultIdRes)
@@ -290,6 +291,15 @@ object AuthManager {
             val id = context.getString(manualIdRes)
             if (id.isNotBlank()) return id
         }
+        return "10687276915-3m2l9utkihjc6okfpbomh4cqmv4ngov0.apps.googleusercontent.com"
+    }
+
+    private fun Context.findActivity(): android.app.Activity? {
+        var ctx = this
+        while (ctx is android.content.ContextWrapper) {
+            if (ctx is android.app.Activity) return ctx
+            ctx = ctx.baseContext
+        }
         return null
     }
 
@@ -299,16 +309,21 @@ object AuthManager {
     suspend fun signInWithGoogle(
         context: Context,
         onSuccess: () -> Unit,
-        onError: (String) -> Unit
+        onError: (String) -> Unit,
+        onCancel: () -> Unit = {}
     ) {
         val serverClientId = getGoogleServerClientId(context)
-        if (serverClientId.isNullOrBlank()) {
-            onError("Google Sign-In is currently unavailable. Please sign in with email.")
+        Timber.tag("AuthManager").d("Initiating Google Sign-In with serverClientId=$serverClientId")
+
+        val activity = context.findActivity()
+        if (activity == null) {
+            Timber.tag("AuthManager").e("Failed to find Activity context for CredentialManager. Context=$context")
+            onError("Cannot launch Google Sign-In (no active window).")
             return
         }
 
         try {
-            val credentialManager = CredentialManager.create(context)
+            val credentialManager = CredentialManager.create(activity)
             val googleIdOption = GetGoogleIdOption.Builder()
                 .setFilterByAuthorizedAccounts(false)
                 .setServerClientId(serverClientId)
@@ -319,37 +334,41 @@ object AuthManager {
                 .addCredentialOption(googleIdOption)
                 .build()
 
+            Timber.tag("AuthManager").d("Requesting credentials from CredentialManager...")
             val result = credentialManager.getCredential(
                 request = request,
-                context = context
+                context = activity
             )
 
             val credential = result.credential
             if (credential is CustomCredential && credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
                 val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
+                Timber.tag("AuthManager").d("Received Google ID Token. Authenticating with Firebase...")
                 val authCredential = GoogleAuthProvider.getCredential(googleIdTokenCredential.idToken, null)
-                auth.signInWithCredential(authCredential)
-                    .addOnSuccessListener { authResult ->
-                        currentUser = authResult.user
-                        onSuccess()
-                    }
-                    .addOnFailureListener { e ->
-                        onError(friendlyAuthError(e))
-                    }
+                val authResult = auth.signInWithCredential(authCredential).await()
+                currentUser = authResult.user
+                Timber.tag("AuthManager").i("Firebase Google auth succeeded for user: ${authResult.user?.uid}")
+                onSuccess()
             } else {
-                onError("Could not complete sign in with Google. Please use email instead.")
+                Timber.tag("AuthManager").w("Unexpected credential type: ${credential::class.java.name}")
+                onError("Could not complete sign in with Google (unsupported credential type).")
             }
         } catch (e: GetCredentialCancellationException) {
-            // User dismissed or tapped outside Google account picker: silently return
+            Timber.tag("AuthManager").d("Google sign-in was cancelled by user")
+            onCancel()
         } catch (e: GetCredentialException) {
+            Timber.tag("AuthManager").e(e, "Google sign-in GetCredentialException: ${e.message}")
             val msg = e.message.orEmpty()
             if (msg.contains("10", ignoreCase = true) || msg.contains("DEVELOPER_ERROR", ignoreCase = true)) {
-                onError("Google Sign-In is temporarily unavailable. Please sign in with email.")
+                onError("Google Sign-In configuration error (10: DEVELOPER_ERROR). Check SHA-1/SHA-256 and Google provider in Firebase Console.")
+            } else if (msg.contains("16", ignoreCase = true) || msg.contains("Cannot find a matching credential", ignoreCase = true)) {
+                onError("No Google accounts found on this device.")
             } else {
-                onError(friendlyAuthError(e))
+                onError("Google sign-in error (${e.javaClass.simpleName}): ${e.localizedMessage ?: e.message}")
             }
         } catch (e: Exception) {
-            onError("Google sign-in failed. Please try again.")
+            Timber.tag("AuthManager").e(e, "Google sign-in exception: ${e.message}")
+            onError(friendlyAuthError(e))
         }
     }
 
@@ -389,10 +408,11 @@ object AuthManager {
                 "You are offline. You can continue as a guest."
             msg.contains("ERROR_OPERATION_NOT_ALLOWED", ignoreCase = true) ||
             msg.contains("disabled for this project", ignoreCase = true) ->
-                "This sign-in method is temporarily unavailable. Please sign in with email."
+                "Google Sign-In is disabled in Firebase Console. Enable it under Authentication > Sign-in method."
             msg.contains("firebase", ignoreCase = true) ->
-                "Service is currently unavailable. Please try again shortly."
-            else -> "Authentication failed. Please try again."
+                "Service is currently unavailable (${e.javaClass.simpleName}: ${e.message ?: "unknown"})."
+            else -> "Authentication failed (${e.javaClass.simpleName}: ${e.message ?: "unknown"})."
         }
     }
 }
+
